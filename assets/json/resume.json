@@ -1,0 +1,171 @@
+{
+  "basics": {
+    "name": "Yuanhao Chen",
+    "label": "Graduate Student",
+    "image": "",
+    "email": "yuanhaochen999@gmail.com",
+    "location": {
+      "address": "2712 Broadway St",
+      "postalCode": "CA 94115",
+      "city": "San Francisco",
+      "countryCode": "US",
+      "region": "California"
+    },
+    "profiles": [
+      {
+        "network": "Twitter",
+        "username": "AlbertEinstein",
+        "url": "https://twitter.com/AlbertEinstein"
+      }
+    ]
+  },
+  "education": [
+    {
+      "institution": "Southern Illinois University Edwardsville",
+      "location": "Illinois, USA",
+      "url": "javascript:(0)",
+      "area": "Mechatronics and Robotics Engineering",
+      "studyType": "B.S.",
+      "startDate": "2019-08-01",
+      "endDate": "2022-05-01",
+      "score": "10",
+      "courses": ["Dynamics and Control Laboratory"]
+    },
+    {
+      "institution": "Arizona State University",
+      "location": "Arizona, USA",
+      "url": "javascript:(0)",
+      "area": "Robotics and Autonomous Systems (Mechanical and Aerospace Engineering)",
+      "studyType": "M.S.",
+      "startDate": "2023-01-01",
+      "endDate": "Present",
+      "score": "10",
+      "courses": ["Neuromuscular Control and Human Robotics Laboratory"]
+    }
+  ],
+  "awards": [
+    {
+      "title": "Member of The Hornor Society of Phi Kappa Phi",
+      "date": "2021-01-01",
+      "awarder": "",
+      "url": "javascript:(0)",
+      "summary": ""
+    },
+    {
+      "title": "The University Dean’s List",
+      "date": "2021-03-01",
+      "awarder": "",
+      "url": "",
+      "summary": ""
+    }
+  ],
+  "certificates": [
+    {
+      "name": "Project Management",
+      "date": "2021-08",
+      "issuer": "Project Management Essentials Management & Strategy Institute",
+      "url": "javascript:(0)",
+      "icon": "fa-solid fa-clipboard-check"
+    },
+    {
+      "name": "Lean Six Sigma",
+      "date": "2021-08",
+      "issuer": "Lean Six Sigma White Belt Management & Strategy Institute",
+      "url": "javascript:(0)",
+      "icon": "fa-solid fa-clipboard-check"
+    },
+    {
+      "name": "Crack Leaked Password",
+      "date": "2021-08",
+      "issuer": "Crack Leaked Password Database Virtual Program Forage",
+      "url": "javascript:(0)",
+      "icon": "fa-solid fa-clipboard-check"
+    },
+    {
+      "name": "Machine Learning",
+      "date": "2022-09",
+      "issuer": "Modeling, and Simulation Principles Massachusetts Institute of Technology",
+      "url": "javascript:(0)",
+      "icon": "fa-solid fa-clipboard-check"
+    },
+    {
+      "name": "Supervised Machine Learning",
+      "date": "2022-11",
+      "issuer": "Regression and Classification Stanford University",
+      "url": "javascript:(0)",
+      "icon": "fa-solid fa-clipboard-check"
+    },
+    {
+      "name": "Modern Robotics",
+      "date": "2022-11",
+      "issuer": "Foundations of Robot Motion Northwestern University",
+      "url": "javascript:(0)",
+      "icon": "fa-solid fa-clipboard-check"
+    }
+  ],
+  "publications": [
+    {
+      "name": "Clairvoyance  –  vision-impaired friendly assistive mobile device",
+      "publisher": "Applied and Computational Engineering",
+      "releaseDate": "2024-02-01",
+      "url": "javascript:(0)",
+      "summary": "This paper presents a wearable device with webcams, a Jetson TX2 board, and vibrators that helps visually impaired individuals navigate safely by predicting the trajectory of obstacles and providing directional feedback through vibration."
+    },
+    {
+      "name": "Nonlinear Vibration and Bifurcations of a Bending-Twisting Rotor System",
+      "publisher": "International  Mechanical Engineering  Congress  and  Exposition (ASME 2024)",
+      "releaseDate": "2024-06-01",
+      "url": "javascript:(0)",
+      "summary": "This paper presents an analytical study of the nonlinear vibrations and bifurcations in a bending-twisting rotor system, revealing the motion complexity and stability through eigenvalue analysis and frequency-amplitude characteristics, with results applicable to controlling the rotor under environmental noise."
+    },
+    {
+      "name": "A Novel Model for Heart Beating Rhythms",
+      "publisher": "International  Mechanical Engineering  Congress  and  Exposition (ASME 2024)",
+      "releaseDate": "2024-07-01",
+      "url": "javascript:(0)",
+      "summary": "This study presents an improved cardiac conduction system model, incorporating key pacemakers and heart muscles using modified van der Pol oscillators and Hindmarsh-Rose neuron systems. By simulating heart dynamics and predicting waveform bifurcations, the research offers new insights into the nonlinear behavior and stability of heartbeats."
+    }
+  ],
+  "volunteer": [
+    {
+      "organization": "Chinese Students Association",
+      "location": "Illinois, USA",
+      "position": "Publicity Director",
+      "url": "javascript:(0)",
+      "startDate": "2020-07-01",
+      "endDate": "2021-07-01",
+      "summary": "",
+      "highlights": ["Helped students combat COVID-19, applied for and distributed epidemic prevention supplies to students.", "Helped freshmen integrate into American campus life faster.", "Organized outdoor activities for holidays."]
+    }
+  ],
+  "skills": [
+    {
+      "name": "Programming Languages",
+      "level": "Master",
+      "icon": "fa-solid fa-hashtag",
+      "keywords": [
+        "C,  C++,  Matlab,  Python,  R,  FPGA,  VB,  PLC"
+      ]
+    },
+    {
+      "name": "Software",
+      "level": "Master",
+      "icon": "fa-solid fa-hashtag",
+      "keywords": [
+        "Arduino, OpenSim, Vicon Nexus, LTspice, LabView, PSoC Creator"
+      ]
+    }
+  ],
+  "languages": [
+    {
+      "language": "Chinese",
+      "fluency": "Native speaker",
+      "icon": ""
+    },
+    {
+      "language": "English",
+      "fluency": "Fluent",
+      "icon": ""
+    }
+  ]
+}
