@@ -6512,6 +6512,7 @@ document.addEventListener('click',e=>{ if(!e.target.closest('#helpPop')&&!e.targ
 $('#tip').addEventListener('click',()=>{ $('#tip').hidden=true; });
 function closeConfirm(){ $('#confirm').hidden=true; sfx('close'); }
 $('#hintBtn').addEventListener('click',showLead);
+addEventListener('storage',e=>{ if(e.key!=='ychen-lang') return; const v=e.newValue==='zh'?'zh':'en'; if(v!==LANG) setLang(v); }); // one language for the whole site
 function setLang(l,init){
   LANG=l==='zh'?'zh':'en'; try{ localStorage.setItem('ychen-lang',LANG); }catch(e){}
   document.documentElement.lang=LANG==='zh'?'zh-CN':'en'; document.body.classList.toggle('zh',LANG==='zh');
