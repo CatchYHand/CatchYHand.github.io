@@ -452,6 +452,7 @@ addEventListener('keydown',e=>{
   if(e.key==='Escape'){ e.preventDefault(); if(!$('#modal').hidden) closeModal(); else if(!$('#rdr').hidden) closeReader(); else askMenu(); return; }
   if($('#rdr').hidden||!$('#modal').hidden) return; const J=DATA.journal;
   if(e.key==='ArrowRight'&&rIdx<J.length-1){ rIdx++; drawReader(); snd('page'); } if(e.key==='ArrowLeft'&&rIdx>0){ rIdx--; drawReader(); snd('page'); } });
+addEventListener('storage',e=>{ if(e.key!=='ychen-lang') return; const v=e.newValue==='zh'?'zh':'en'; if(v!==LANG){ LANG=v; render(); } }); // one language for the whole site
 $('#langBtn').onclick=()=>{ const to=LANG==='zh'?'en':'zh';
   ask({tag:'[ LANGUAGE · 语言 ]',en:to==='zh'?'Switch to Chinese?':'Switch to English?',zh:to==='zh'?'切换为中文？':'切换为英文？',no:'Cancel · 取消',yes:'Switch · 切换',
     ok:()=>{ LANG=to; try{ localStorage.setItem('ychen-lang',LANG); }catch(e){} render(); }}); };

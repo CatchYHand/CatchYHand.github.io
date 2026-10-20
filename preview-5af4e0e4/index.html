@@ -509,7 +509,9 @@ function invade(done){ // the breach: the page tears, corrupt blocks eat it, a t
 let menuTitle=document.title;
 function hostPage(url,which){ if(which){ try{ history.pushState({host:which},'','#'+(which==='std'?'resume':'game')); }catch(e){} } const f=document.createElement('iframe'); f.id='host'; f.src=url; f.allow='fullscreen; autoplay'; f.setAttribute('allowfullscreen',''); document.body.appendChild(f);
   f.addEventListener('load',()=>{ f.classList.add('on'); try{ f.contentWindow.focus(); document.title=f.contentDocument.title||menuTitle; }catch(e){} setTimeout(()=>{ fx.style.display='none'; },300); },{once:true}); }
-window.__ychenHost=from=>{ const c=$('#cover'), f=$('#host'); c.style.transition='none'; c.style.background=from==='game'?'#050607':'#F5F3EE'; c.style.opacity='1';
+/* one language for the whole site: whichever page changes it, every other page follows */
+addEventListener('storage',e=>{ if(e.key!=='ychen-lang') return; const v=e.newValue==='zh'?'zh':'en'; if(v!==LANG){ LANG=v; applyLang(); } });
+window.__ychenHost=from=>{ { let v='en'; try{ v=localStorage.getItem('ychen-lang')==='zh'?'zh':'en'; }catch(e){} if(v!==LANG){ LANG=v; applyLang(); } } const c=$('#cover'), f=$('#host'); c.style.transition='none'; c.style.background=from==='game'?'#050607':'#F5F3EE'; c.style.opacity='1';
   if(f) f.remove(); document.title=menuTitle; picked=false; fx.style.display='none'; activate(null); if(/^#(resume|game)$/.test(location.hash)){ try{ history.replaceState(null,'',location.pathname+location.search); }catch(e){} }
   requestAnimationFrame(()=>requestAnimationFrame(()=>{ c.style.transition='opacity .7s ease'; c.style.opacity='0'; })); };
 
