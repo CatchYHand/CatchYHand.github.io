@@ -307,6 +307,17 @@ button:disabled,.brk.off{cursor:not-allowed}
 .ftable th{white-space:nowrap;font:600 1.02rem var(--f-head);letter-spacing:.12em;text-align:left;padding:.6rem .8rem;border-bottom:3px solid var(--corp);text-transform:uppercase;position:sticky;top:var(--hh);background:var(--paper);z-index:3}
 .ftable td{padding:.85rem .8rem;border-bottom:1px solid var(--line);vertical-align:middle}
 .ftable tbody tr{cursor:pointer;transition:background .2s}
+#app.hack .ftable tbody tr{cursor:default}#app.hack .ftable tbody tr:hover{background:none}
+/* new activity: a slanted blue scan sweeps each fresh row, top to bottom, 0.2 s apart */
+.table-wrap{position:relative}
+.fsweep{position:absolute;left:0;right:0;pointer-events:none;overflow:hidden;z-index:2}
+.fsweep i{position:absolute;top:0;bottom:0;left:0;width:100%;transform:translateX(-105%) skewX(-24deg);
+  background:linear-gradient(90deg,rgba(91,149,238,0) 0,rgba(91,149,238,.10) 55%,rgba(120,180,255,.32) 92%,rgba(220,238,255,.95) 97%,rgba(120,190,255,0) 100%);
+  box-shadow:6px 0 18px rgba(110,170,255,.55);animation:fsweep .95s cubic-bezier(.45,.05,.3,1) forwards}
+.fsweep b{position:absolute;inset:0;background:linear-gradient(90deg,rgba(91,149,238,.14),rgba(91,149,238,.04));opacity:0;animation:fsglow 1.6s ease-out .55s forwards}
+@keyframes fsweep{to{transform:translateX(112%) skewX(-24deg)}}
+@keyframes fsglow{0%{opacity:0}25%{opacity:1}100%{opacity:0}}
+@media (prefers-reduced-motion:reduce){.fsweep i{display:none}}
 .ftable tbody tr:hover{background:rgba(33,99,217,.05)}
 .ftable .st{width:2.2rem;text-align:center;color:var(--corp)}
 .ftable .st i{display:inline-block;width:.85rem;height:.85rem;border:2px solid var(--corp)}
@@ -379,7 +390,8 @@ button:disabled,.brk.off{cursor:not-allowed}
 .post .meta{align-items:center;gap:.6rem;flex-wrap:wrap;margin-bottom:.5rem}
 .post .ptags{display:flex;gap:.35rem;flex-wrap:wrap}
 .post .ptags i{font:600 .7rem/1 var(--f-body);font-style:normal;letter-spacing:.02em;color:var(--corp-deep);background:rgba(44,111,227,.1);border:1px solid rgba(44,111,227,.28);padding:.28rem .5rem;border-radius:.3rem}
-.post .pr{display:flex;gap:.7rem;align-items:center;white-space:nowrap}
+.post .pr{display:flex;gap:.7rem;align-items:baseline;white-space:nowrap}
+.post .pr .pts{font:500 .7rem var(--f-mono);color:var(--ink3);letter-spacing:.02em;white-space:nowrap}
 .post .pr .kind{color:var(--ink3);text-transform:uppercase;letter-spacing:.08em;font-size:.68rem}
 .post .at{color:var(--corp);background:rgba(44,111,227,.1);padding:0 .22em;border-radius:.25em;font-weight:600;white-space:nowrap}
 .post.me .at{color:var(--corp)}
@@ -1465,8 +1477,9 @@ body.zh #tut button.tb{letter-spacing:.06em;font-size:.82rem}
 .dm-th li:last-child{border-bottom:0}
 .dm-th li::before{content:"#";color:var(--red2);font:700 .8rem var(--f-mono)}
 .dm-th .none{color:#9a6b6e}
-@media (max-height:940px){.dmeta{gap:.55rem}.dm-kv{gap:.2rem .7rem;padding:.55rem .85rem;font-size:.74rem;line-height:1.35}.dm-h{padding:.42rem .85rem}.xf-route{padding:.55rem .85rem .2rem}.xf-map{gap:2px}.xf-map i{height:.42rem}.xf-log{height:3.78rem;margin-top:.4rem}.xf-log li:nth-last-child(n+4){display:none}.xf-msg{padding-top:.4rem;font-size:.7rem}.dm-xfer{padding-bottom:.6rem}}
-@media (max-height:820px){.dm-deny{margin:.55rem .85rem 0;padding:.4rem;font-size:.8rem}.xf-path{display:none}.dm-logbox{display:none!important}}
+@media (max-height:1100px){.dmeta{gap:.55rem}.dm-kv{gap:.2rem .7rem;padding:.55rem .85rem;font-size:.74rem;line-height:1.35}.dm-h{padding:.42rem .85rem}.xf-route{padding:.55rem .85rem .2rem}.xf-map{gap:2px}.xf-map i{height:.42rem}.xf-log{height:3.78rem;margin-top:.4rem}.xf-log li:nth-last-child(n+4){display:none}.xf-msg{padding-top:.4rem;font-size:.7rem}.dm-xfer{padding-bottom:.6rem}}
+@media (max-height:1000px){.dm-deny{margin:.5rem .85rem 0;padding:.3rem;font-size:.74rem!important}.xf-path{display:none}.dm-kv{gap:.1rem .7rem;padding:.45rem .85rem;font-size:.72rem;line-height:1.3}.dm-kv dt{font-size:.64rem}.xf-route{padding:.4rem .85rem .1rem}.xf-node svg{width:1.35rem;height:1.35rem;padding:.15rem}.xf-map{padding-bottom:.4rem}.xf-map i{height:.34rem}.xf-log{height:3.2rem;font-size:.64rem;line-height:1.35}.xf-log li:nth-last-child(n+3){display:none}.dm-h{padding:.34rem .85rem;font-size:.66rem}.dmeta{gap:.45rem}.dmeta>.dm-logbox{min-height:5.6rem}}
+@media (max-height:720px){.dm-deny{display:none}.dm-logbox{display:none!important}}
 @media (max-width:1180px){#dossier .body{grid-template-columns:19rem minmax(0,1fr)}.dmeta{display:none}}
 /* dossier columns still scroll (wheel / touch / keys), but without a visible scrollbar */
 #dossier .doc,#dossier nav,.dmeta{scrollbar-width:none;-ms-overflow-style:none}
@@ -3570,7 +3583,9 @@ const ZH={
 "Images go through Compliance review. Estimated wait: six to eight weeks.": "图片要经过合规审查，预计等待六到八周。",
 "The Omniscience Emoji Pack: $2.99 per emoji. I would not.": "Omniscience 表情包：每个 $2.99。我不建议。",
 "Compliance classified GIFs as \"too much fun\". I have no further comment.": "合规部把 GIF 定性为“太好玩了”。我不予置评。",
-"EDUCATION & ACTIVITIES": "教育与活动"
+"EDUCATION & ACTIVITIES": "教育与活动",
+"FORUM ACTIVITY": "论坛动态",
+"NEW REPLIES": "新回复"
 };
 const zz=s=>{ const c=s.trim(); return Object.prototype.hasOwnProperty.call(ZH,c)?ZH[c]:s; };
 const zList=s=>s.split(', ').map(zz).join('、');
@@ -4471,6 +4486,28 @@ try{ const s=JSON.parse(localStorage.getItem(STORE)||'null'); if(s&&s.order) S=O
 let PV=null; // animation preview: a throwaway copy of the state that is never saved
 const save=()=>{ if(PV) return; try{localStorage.setItem(STORE,JSON.stringify(S));}catch(e){}};
 S.order.forEach(id=>{ if(!S.log[id]&&THREADS[id]) S.log[id]=THREADS[id].base.map(p=>({...p})); });
+/* ---------- forum clock: every post carries an in-world timestamp that follows the order things actually happen ----------
+   The story opens Thu 29 Mar 2035, 09:14. Threads that already exist at the start are dated over the days before it.
+   From then on each new post moves the clock forward by a few minutes, so whatever you send first is stamped first,
+   and every answer to you lands after you. Stamps are stored with the post, so they never change on reload. */
+const CLK0=Date.UTC(2035,2,29,9,14);
+const hshT=s=>{ let h=2166136261; for(const c of String(s)){ h^=c.charCodeAt(0); h=Math.imul(h,16777619); } h^=h>>>13; h=Math.imul(h,1274126177); return (h^(h>>>16))>>>0; };
+function tick(min,max){ min=min==null?1:min; max=max==null?4:max; const step=(min+Math.random()*(max-min))*60000; S.clk=Math.max(S.clk||CLK0,CLK0)+Math.round(step/60000)*60000; return S.clk; }
+function backdate(id,n,slot){ // posts of a thread that existed before the story starts
+  const h=hshT(id), day=Math.floor(CLK0/86400000)-(slot+1), start=day*86400000+(8+(h%9))*3600000+(h%57)*60000, out=[]; let t=start;
+  for(let i=0;i<n;i++){ out.push(t); t+=(4+(hshT(id+'#'+i)%100)*(hshT(id+'@'+i)%3===0?2.2:.7))*60000|0; if(t>CLK0-60000) t=CLK0-60000-(n-i)*60000; }
+  return out; }
+function stampAll(){ let changed=false; const slotOf={}; let k=0;
+  S.order.forEach(id=>{ const L=S.log[id]; if(!L) return; if(L.every(p=>p.ts)) return;
+    if(BASE_THREADS.includes(id)&&L.length&&!L.some(p=>p.ts)){ const d=backdate(id,(THREADS[id]?THREADS[id].base.length:L.length),BASE_THREADS.indexOf(id)); L.forEach((p,i)=>{ if(i<d.length){ p.ts=d[i]; } }); }
+    L.forEach(p=>{ if(!p.ts){ p.ts=tick(); } }); changed=true; });
+  // keep each thread in order even for old saves
+  S.order.forEach(id=>{ const L=S.log[id]; if(!L) return; for(let i=1;i<L.length;i++) if(L[i].ts<=L[i-1].ts){ L[i].ts=L[i-1].ts+60000; changed=true; if(L[i].ts>(S.clk||0)) S.clk=L[i].ts; } });
+  if(changed) save(); }
+function fmtTs(ts){ if(!ts) return ''; const d=new Date(ts), M=d.getUTCMonth(), D=d.getUTCDate(), h=String(d.getUTCHours()).padStart(2,'0'), m=String(d.getUTCMinutes()).padStart(2,'0');
+  return LANG==='zh'?`${M+1}月${D}日 ${h}:${m}`:`${['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][M]} ${D}, ${h}:${m}`; }
+const tsOf=p=>p&&p.ts?`<time class="pts" data-noi18n datetime="${new Date(p.ts).toISOString()}">${fmtTs(p.ts)}</time>`:'';
+if(!S.clk) S.clk=CLK0; stampAll();
 S.order.forEach((id,i)=>{ if(S.act[id]==null) S.act[id]=i; });
 
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
@@ -4631,6 +4668,7 @@ function sfx(name){
     case 'open': noise(t,.25,.1,800,3000,1); tone(300,t,.18,'triangle',.08,600); break;
     case 'close': tone(600,t,.12,'triangle',.08,300); break;
     case 'toast': tone(1320,t,.09,'sine',.07); tone(1760,t+.08,.12,'sine',.06); break;
+    case 'sweep': noise(t,.42,.07,2200,9000,2.4); tone(1980,t+.04,.22,'sine',.035,2640); tone(990,t,.3,'triangle',.025,1320); break;
     case 'type': tone(2400+Math.random()*600,t,.015,'square',.015); break;
     case 'vgather': noise(t,.8,0.208,300,6500,1.4); tone(70,t,.8,'sawtooth',0.08,150); for(let i=0;i<9;i++) tone(700+Math.random()*2200,t+i*.08,.03,'square',.03); break;
     case 'vtick': noise(t,.014,0.112,4200,4200,6); tone(2100,t,.01,'square',0.019); break;
@@ -4782,8 +4820,9 @@ function pinSticky(){ const corp=$('#corp'); if(!corp) return; const cr=corp.get
    ===================================================================== */
 const delay=()=>reduce?60:650+Math.random()*650;
 function bump(th){ S.act[th]=++S.tick; }
-function addThread(id){ if(S.order.includes(id)) return; S.order.push(id); S.log[id]=[...THREADS[id].base.map(p=>({...p})),...(S.log[id]||[])]; bump(id); }
-function addPost(th,p){ (S.log[th]=S.log[th]||[]).push({...p}); bump(th); }
+function addThread(id){ if(S.order.includes(id)) return; S.order.push(id); const early=S.log[id]||[];
+  S.log[id]=[...THREADS[id].base.map((p,i)=>({...p,ts:tick(i?1:2,i?5:6)})),...early.map(p=>({...p,ts:tick()}))]; bump(id); }
+function addPost(th,p){ (S.log[th]=S.log[th]||[]).push({...p,ts:tick(p.u===ME?1:1,p.u===ME?2:4)}); bump(th); }
 function steps(key){
   const [kind,a,b,c]=key.split(':');
   if(kind==='ev') return EVENTS[a];
@@ -4810,9 +4849,21 @@ function notify(th,isNew,u){
   const t=threadDef(th);
   if(view==='thread'&&thread===th){ appendLive(th); sfx('pop'); return; }
   if(mode==='hack') return;
-  const tt=zh(t.title); toast(isNew?'NEW THREAD':'NEW REPLY', (isNew?U[t.by].name+': ':U[u].name+' in ')+'"'+tt.slice(0,46)+(tt.length>46?'…':'')+'"','blue');
-  if(view==='forum') render();
+  if(view==='forum'){ render(); if(!isNew) return; }      // on the forum list the row sweep is the notice; only brand-new threads also get MOSS
+  const NF=(S.nfy=S.nfy||{}), sn=S.seen[th]||0;
+  if(!isNew&&NF[th]===sn) return;                         // already told you about this thread since you last read it
+  NF[th]=sn; (notify.q=notify.q||[]).push({th,isNew,u});    // a short window gathers bursts into one message
+  clearTimeout(notify.tm); notify.tm=setTimeout(notifyFlush,reduce?0:1400);
 }
+function notifyFlush(){ const q=notify.q||[]; notify.q=[]; if(!q.length||mode==='hack') return;
+  const ttl=th=>{ const tt=zh(threadDef(th).title); return '“'+tt.slice(0,46)+(tt.length>46?'…':'')+'”'; };
+  const nt=q.filter(x=>x.isNew), nr=q.filter(x=>!x.isNew), n=q.length;
+  if(n===1){ const x=q[0], t=threadDef(x.th);
+    if(x.isNew) toast('NEW THREAD',LL(`${U[t.by].name} just opened ${ttl(x.th)}.`,`${U[t.by].name} 刚发了新帖 ${ttl(x.th)}。`),'blue');
+    else toast('NEW REPLY',LL(`${U[x.u].name} replied in ${ttl(x.th)}.`,`${U[x.u].name} 在 ${ttl(x.th)} 里回复了。`),'blue');
+    return; }
+  toast(nt.length?'FORUM ACTIVITY':'NEW REPLIES',LL(`${nt.length?nt.length+' new thread'+(nt.length>1?'s':'')+(nr.length?' and ':''):''}${nr.length?'new replies in '+nr.length+' thread'+(nr.length>1?'s':''):''}. Check the Forum.`,
+    `${nt.length?nt.length+' 个新帖'+(nr.length?'，':''):''}${nr.length?nr.length+' 个帖子有新回复':''}。去论坛看看。`),'blue'); }
 function runScript(key,instant){
   const st=steps(key); if(!st) return; if(S.prog[key]==null) S.prog[key]=0; save();
   const next=()=>{ if(S.prog[key]>=st.length) return; applyStep(st[S.prog[key]]); S.prog[key]++; save(); updTyping(); if(S.prog[key]<st.length) setTimeout(next,key.startsWith('end:')?1900+Math.random()*900:delay()); };
@@ -4859,7 +4910,7 @@ function choose(id,ri,oi,btn){
 function createPost(m,btn){
   if(S.att<POST_ATT){ shake(btn); toast('NOT ENOUGH ATTENTION',LL('A new thread costs '+pE(POST_ATT)+'. Current balance is insufficient.','发一个新帖要 '+pE(POST_ATT)+'，当前余额不足。'),'bad'); return; }
   S.att-=POST_ATT; S.dec+=POST_GAIN; S.my[m.id]=1; const id='my-'+m.id;
-  S.order.push(id); S.log[id]=[P(ME,m.body)]; S.readPaid[id]=1; bump(id); save(); refresh(); closeSheet(); sfx('send');
+  S.order.push(id); S.log[id]=[{...P(ME,m.body),ts:tick(1,2)}]; S.readPaid[id]=1; bump(id); save(); refresh(); closeSheet(); sfx('send');
   toast('THREAD POSTED · '+pH('+'+POST_GAIN),LL('Thread is live. Attention spent: ','帖子已发布。消耗注意力：')+pE('−'+POST_ATT)); go('thread',id); runScript('mp:'+m.id);
 }
 function availablePosts(){ return MYPOSTS.filter(m=>!S.my[m.id]&&(!m.need||nTasks()>=m.need)); }
@@ -5087,6 +5138,15 @@ function vHome(){
   </div>
   ${TK()?`<div class="cookie taken" data-noi18n><span>🍪 ${LL('<b>No cookies here.</b> Omniscience took them on its way out. The papers are free, though.','<b>这里没有 Cookie 了。</b>Omniscience 走的时候顺手带走了，论文倒是随便拿。')}</span></div>`:`<div class="cookie ${ck?'done':''}" data-t="cookie"><span>🍪 <b>Omniscience uses cookies</b> to know you better than you know yourself.</span><span class="cbtn">${ck?'<span>REJECTED ALL · BY UNKNOWN OPERATOR</span>':'<span data-ck="1">ACCEPT</span><span data-ck="5">ACCEPT HARDER</span>'}</span>`}</div>`;
 }
+/* one sweep per unread burst: a row sweeps when it has posts you haven't read AND it hasn't swept since you last read it.
+   S.swept[id] stores the read mark (S.seen) at the time of the sweep, so more replies pile up silently until you open the thread again */
+function forumSweep(){ if(view!=='forum') return; const tw=document.querySelector('#v-forum .table-wrap'); if(!tw) return; const SW=(S.swept=S.swept||{});
+  const rows=[...tw.querySelectorAll('tbody tr[data-th]')].filter(r=>{ const id=r.dataset.th, sn=S.seen[id]||0; return sn<(S.log[id]||[]).length&&SW[id]!==sn; });
+  if(!rows.length) return; rows.forEach(r=>SW[r.dataset.th]=S.seen[r.dataset.th]||0); save();
+  const tr0=tw.getBoundingClientRect();
+  rows.forEach((r,i)=>setTimeout(()=>{ if(!r.isConnected) return; const rr=r.getBoundingClientRect(), tr=tw.getBoundingClientRect();
+    const el=document.createElement('div'); el.className='fsweep'; el.style.top=(rr.top-tr.top+tw.scrollTop)+'px'; el.style.height=rr.height+'px'; el.innerHTML='<b></b><i></i>';
+    tw.appendChild(el); sfx('sweep'); setTimeout(()=>el.remove(),2300); },reduce?0:i*100)); }
 function vForum(){
   const ids=[...S.order].sort((a,b)=>(threadDef(b).pinned?1e9:0)+S.act[b]-((threadDef(a).pinned?1e9:0)+S.act[a]));
   const canPost=S.flags.posting&&!S.flags.closed&&!S.flags.ending&&availablePosts().length>0&&mode!=='hack';
@@ -5109,7 +5169,7 @@ function vForum(){
        <td><div class="who">${av(t.by)}<div><b>${U[t.by].name}</b><small>${U[t.by].title}</small></div></div></td>
        <td class="n hide-s">${L.length-1}</td>
        <td class="n hide-s">${fmt(views(id))}</td>
-       <td class="hide-s">${t.noReply?'<span class="nolast">—</span>':`<div class="who">${av(last)}<div><b>${U[last].name}</b></div></div>`}</td></tr>`;}).join('')}</tbody></table></div>
+       <td class="hide-s">${t.noReply?'<span class="nolast">—</span>':`<div class="who">${av(last)}<div><b>${U[last].name}</b><small data-noi18n>${fmtTs(L[L.length-1].ts)}</small></div></div>`}</td></tr>`;}).join('')}</tbody></table></div>
 </div>
   </div></div>`;
 }
@@ -5130,7 +5190,7 @@ function postHTML(p,i,anim,tid){ tid=tid||thread;
   const gift=p.gift&&!S.tabs[p.gift]&&etching.tab!==p.gift;
   return `<article class="${cls} ${p.tp&&!tam?'hint':''} ${gift?'has-gift':''}" ${anim?`style="animation-delay:${Math.min(i,14)*45}ms"`:''} ${p.tp&&!tam?`data-t="${p.tp}"`:xopen?`data-t="${p.x}"`:''}>
     <div class="pa">${av(p.u)}<b>${u.name}</b></div>
-    <div class="pb"><div class="meta"><span class="ptags" data-noi18n>${(LANG==='zh'?zh(u.title):u.title).split(' · ').map(t=>`<i>${t}</i>`).join('')}</span><span class="pr"><span class="kind">${i===0?'Original post':'Reply'}</span><span>♥ ${likes(tid,i,p.u)} · #${i+1}</span></span></div>
+    <div class="pb"><div class="meta"><span class="ptags" data-noi18n>${(LANG==='zh'?zh(u.title):u.title).split(' · ').map(t=>`<i>${t}</i>`).join('')}</span><span class="pr"><span class="kind">${i===0?'Original post':'Reply'}</span>${tsOf(p)}<span>♥ ${likes(tid,i,p.u)} · #${i+1}</span></span></div>
      ${p.st||EMOJI_ONLY.test(text)?`<div class="sticker">${p.st||text}</div>`:''}${(p.st&&p.t===p.st)||(!p.st&&EMOJI_ONLY.test(text))?'':`<p data-noi18n${p.letter?' class="letter"':''}>${mention(LANG==='zh'?(p.zh||zh(text)):text,tam?null:p.u)}</p>`}
      ${tam?`<span class="edited">${struck?T.alt:'Edited by unknown operator'}</span>`:xdone?`<span class="edited">Protocol revoked by unknown operator</span>`:''}${gift?`<button class="gift" data-gift="${p.gift}" title="Open" aria-label="Open the gift"><i class="gl"></i><i class="gb"></i></button>`:''}</div>${p.endBtn&&S.flags.closed?`<button class="endbtn ${p.endBtn}" data-endbtn ${gameDone()?'':'aria-disabled="true"'}>${p.endBtn==='open'?'Enter Hidden Ending':'Enter Normal Ending'}<i>→</i></button>`:''}</article>`;
 }
@@ -5527,7 +5587,7 @@ function render(){ stickyCache=null; requestAnimationFrame(()=>{ measureHeader()
   const keep=same?{c:$('#corp').scrollTop,t:$('#tlwrap')?$('#tlwrap').scrollTop:null}:null;
   renderNav();
   $$('.view').forEach(s=>s.classList.toggle('on', s.id==='v-'+view)); $('#corp').classList.toggle('nsb',view==='pubs');
-  $('#v-'+view).innerHTML=VIEWS[view](); measureHeader(); if(view==='pubs'||view==='projects') requestAnimationFrame(fixPubRows);
+  $('#v-'+view).innerHTML=VIEWS[view](); measureHeader(); if(view==='forum'&&!booting) setTimeout(forumSweep,reduce?0:120); if(view==='pubs'||view==='projects') requestAnimationFrame(fixPubRows);
   if(keep){ $('#corp').scrollTop=keep.c; const tw=$('#tlwrap'); if(tw&&keep.t!=null) tw.scrollTop=keep.t; }
   markDone(); requestAnimationFrame(placeReticle);
   if(pendingReveal&&view==='thread'){ const id=pendingReveal; pendingReveal=null; requestAnimationFrame(()=>revealNew(id)); }
@@ -6424,7 +6484,7 @@ function revealAll(ending){ const hid=ending==='open';
   const flush=()=>Object.keys(S.prog).forEach(k=>{ const st=steps(k); if(k!=='ev:evClose'&&k!=='ev:evOpen'&&st&&S.prog[k]<st.length) runScript(k,true); });
   evs(); flush();
   for(let pass=0,moved=true;moved&&pass<40;pass++){ moved=false;
-    MYPOSTS.forEach(m=>{ if(S.my[m.id]) return; S.my[m.id]=1; const id='my-'+m.id; if(!S.order.includes(id)) S.order.push(id); S.log[id]=[P(ME,m.body)]; S.readPaid[id]=1; bump(id); runScript('mp:'+m.id,true); moved=true; });
+    MYPOSTS.forEach(m=>{ if(S.my[m.id]) return; S.my[m.id]=1; const id='my-'+m.id; if(!S.order.includes(id)) S.order.push(id); S.log[id]=[{...P(ME,m.body),ts:tick(1,2)}]; S.readPaid[id]=1; bump(id); runScript('mp:'+m.id,true); moved=true; });
     S.order.slice().forEach(id=>{ let o; while((o=openOpts(id,true)[0])){ const first=!roundPicked(id,o.ri);
       (S.picked[id]=S.picked[id]||[]).push(o.ri+':'+o.oi); addPost(id,P(ME,threadDef(id).rounds[o.ri].opts[o.oi].l)); runScript(`op:${id}:${o.ri}:${o.oi}${first?':f':''}`,true); moved=true; } });
     evs(); flush(); }
@@ -6484,7 +6544,7 @@ $('#corp').addEventListener('click',e=>{
   const colEl=e.target.closest('.cc.open[data-col]'); if(colEl&&mode!=='hack'){ openReader(colEl.dataset.col,colEl); return; }
   const envC=e.target.closest('.nb.sf.done .sf-env'); if(envC&&mode!=='hack'){ ltShow(); return; }
   if(mode==='hack'){ const t=e.target.closest('[data-t]'); if(t&&!t.classList.contains('done')&&!e.target.closest('a')){ e.preventDefault(); select(t.dataset.t); return; } }
-  const row=e.target.closest('[data-th]'); if(row){ if(mode==='hack'){ shake(row); toast('NAVIGATION LOCKED','Leave breach mode (Tab) before opening another thread.','bad'); return; } go('thread',row.dataset.th); return; }
+  const row=e.target.closest('[data-th]'); if(row){ if(mode==='hack') return; go('thread',row.dataset.th); return; }
   if(e.target.closest('button')) sfx('click');
 });
 $('#corp').addEventListener('scroll',placeReticle,{passive:true});

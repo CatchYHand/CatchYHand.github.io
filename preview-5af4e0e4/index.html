@@ -86,6 +86,13 @@ body.zh .lede{font-size:clamp(17px,1.28vw,21px);line-height:1.8}
 .std .btn.dark{background:#F1ECD8;color:#163D20;box-shadow:0 10px 30px -12px rgba(190,230,150,.45)}
 .std .btn.dark:hover{filter:none;background:#fff;box-shadow:0 12px 34px -10px rgba(190,230,150,.6)} .brc .lede{color:#f1d3d4}
 
+/* when one half is pulled narrow, its words keep their shape and simply slide under the edge, instead of re-wrapping into a heap */
+@media (min-width:821px){
+  .door .copy{flex:none;width:calc(50vw - 2*max(24px,4.4vw))}
+  .door h1,.go-wrap .btn{white-space:nowrap}
+  .door .go-wrap{flex:none}
+  .brc .copy{align-self:flex-end;margin-left:0!important}
+}
 /* the red half mirrors the paper half: copy and button on the right */
 .brc .copy{text-align:right;margin-left:auto}
 .brc .lede{margin-left:auto}
