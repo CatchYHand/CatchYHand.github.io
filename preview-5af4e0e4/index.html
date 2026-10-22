@@ -93,6 +93,16 @@ body.zh .lede{font-size:clamp(17px,1.28vw,21px);line-height:1.8}
   .door .go-wrap{flex:none}
   .brc .copy{align-self:flex-end;margin-left:0!important}
 }
+.tools{position:relative}
+#sndBtn .mx{display:none}#sndBtn.muted .mx{display:inline}#sndBtn.muted .wv{display:none}
+.mixer{position:absolute;right:0;top:calc(100% + 10px);width:260px;background:#0E1820;border:1px solid rgba(255,255,255,.18);box-shadow:0 18px 40px -12px rgba(0,0,0,.7);padding:14px 16px 16px;z-index:30;color:#fff}
+.mixer[hidden]{display:none}
+.mixer h4{margin:0 0 10px;font:600 11px var(--f-mono);letter-spacing:.18em;color:#9fb1bd}
+.mixer label{display:grid;grid-template-columns:74px 1fr 30px;align-items:center;gap:10px;font:600 13px var(--f-body);margin:8px 0}
+.mixer input{accent-color:#7EC27A;width:100%}
+.mixer output{font:600 12px var(--f-mono);text-align:right;color:#cfdbe2}
+.mixer #sMute{margin-top:8px;width:100%;height:34px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.2);color:#fff;font:var(--f-btn);font-size:12px;letter-spacing:.12em;cursor:pointer}
+.mixer #sMute:hover{background:rgba(255,255,255,.16)}
 /* the red half mirrors the paper half: copy and button on the right */
 .brc .copy{text-align:right;margin-left:auto}
 .brc .lede{margin-left:auto}
@@ -147,6 +157,11 @@ body.breaching>*:not(#fx):not(script){animation:brkJit .5s steps(1) both}
   <div class="bn-l"><svg class="fic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2.5H7a2 2 0 0 0-2 2v15a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7.5z"/><path d="M14 2.5v5h5M8.5 12.5h7M8.5 16h7M8.5 9h3"/></svg><b data-en="Yuanhao Chen’s Resume Website" data-zh="Yuanhao Chen 的个人简历网站">Yuanhao Chen’s Resume Website</b></div>
   <div class="tools">
     <button class="tbtn" id="langBtn" aria-label="Switch language · 切换语言"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9.5"/><path d="M2.5 12h19M12 2.5c3 3 3 16 0 19M12 2.5c-3 3-3 16 0 19"/></svg><span class="tl" data-en="Language" data-zh="语言">Language</span><span class="segs"><span class="seg" data-l="en">EN</span><span class="seg" data-l="zh">中</span></span></button>
+    <button class="tbtn" id="sndBtn" aria-label="Sound"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9v6h4l5 4V5L8 9z"/><path class="wv" d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12"/><path class="mx" d="M16.5 9.5l5 5M21.5 9.5l-5 5"/></svg><span data-en="Sound" data-zh="声音">Sound</span></button>
+    <div class="mixer" id="mixer" hidden role="dialog" aria-label="Sound"><h4 data-en="SOUND · THIS PAGE" data-zh="声音 · 本页">SOUND · THIS PAGE</h4>
+      <label><span data-en="Music" data-zh="音乐">Music</span><input type="range" id="vMus" min="0" max="100"><output id="oMus"></output></label>
+      <label><span data-en="Ambience" data-zh="环境音">Ambience</span><input type="range" id="vSfx" min="0" max="100"><output id="oSfx"></output></label>
+      <button id="sMute" data-en-off="Mute all" data-en-on="Unmute" data-zh-off="全部静音" data-zh-on="取消静音">Mute all</button></div>
     <button class="tbtn" id="fsBtn" aria-label="Full screen" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><g class="fs-in"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></g><g class="fs-out"><path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5"/></g></svg><span class="tl" id="fsLbl">Full Screen</span></button>
   </div>
 </header>
@@ -233,7 +248,7 @@ let LANG=(()=>{ try{ return localStorage.getItem('ychen-lang')==='zh'?'zh':'en';
 
 /* ---------- language: instant swap, but always asked first (in both languages) ---------- */
 function applyLang(){ document.documentElement.lang=LANG==='zh'?'zh-CN':'en'; document.body.classList.toggle('zh',LANG==='zh');
-  $$('[data-en]').forEach(el=>{ el.innerHTML=el.dataset[LANG]; }); if(window.__fsLbl) window.__fsLbl();
+  $$('[data-en]').forEach(el=>{ el.innerHTML=el.dataset[LANG]; }); if(window.__fsLbl) window.__fsLbl(); if(window.__applyMS) window.__applyMS();
   $$('#langBtn .seg').forEach(s=>s.classList.toggle('on',s.dataset.l===LANG)); }
 applyLang();
 $('#langBtn').addEventListener('click',()=>{ snd('open'); const to=LANG==='zh'?'en':'zh';
@@ -411,6 +426,9 @@ let tPrev=performance.now(); const T0=tPrev;
 function seamFrame(now){ const dt=Math.min(.05,(now-tPrev)/1000), t=(now-T0)/1000; tPrev=now;
   const tgt=force||(reduce?0:(mxN===null?(touch?Math.sin(t*.45)*.85:0):clamp((mxN-.5)/.3,-1,1)));
   P+=(tgt-P)*Math.min(1,dt*(force?6:3.2));
+  // the seam leans CUT px over its height, so the emblem (at 62% down) sits left of the seam's top; widen green's basis so the emblem itself rests on screen centre and travels equally far into either half
+  // (border-box: a basis below the padding is ignored, so the padding is added in)
+  if(narrow.matches) dStd.style.flexBasis=''; else { const cs=getComputedStyle(dStd); dStd.style.flexBasis=(parseFloat(cs.paddingLeft)+parseFloat(cs.paddingRight)+2*CUT*.62).toFixed(1)+'px'; }
   if(!narrow.matches){ dStd.style.flexGrow=(1+.38*Math.max(0,-P)).toFixed(3); dBrc.style.flexGrow=(1+.38*Math.max(0,P)).toFixed(3); }
   layoutEmblem(); drawEmblem(reduce?0:t); drawBattle(dt); drawAmbient(dt,t);
   requestAnimationFrame(seamFrame); }
@@ -419,7 +437,7 @@ requestAnimationFrame(seamFrame);
 /* ---------- picking a door: that side swallows the other, then the page changes ---------- */
 const fx=$('#fx'); let ctx=null;
 function sizeFx(){ const d=Math.min(2,devicePixelRatio||1); fx.width=innerWidth*d; fx.height=innerHeight*d; ctx=fx.getContext('2d'); ctx.setTransform(d,0,0,d,0,0); }
-function go(which){ if(picked) return; picked=true; unlock(); snd('click'); activate(which==='std'?'std':'brc');
+function go(which){ if(picked) return; picked=true; unlock(); menuSoundOut(); snd('click'); activate(which==='std'?'std':'brc');
   const dest=which==='std'?ROUTES.resume:ROUTES.game;
   const leave=()=>{ const url=dest+(dest.includes('?')?'&':'?')+'from=menu';
     // the résumé and the game always open inside this page, so there is one full-screen state for the whole site:
@@ -512,13 +530,83 @@ function invade(done){ // the breach: the page tears, corrupt blocks eat it, a t
     if(t<T) requestAnimationFrame(f); else { ctx.fillStyle='#050607'; ctx.fillRect(0,0,W,H); done(); } };
   requestAnimationFrame(f); }
 
+/* ---------- menu sound: background music, pointer-driven ambience on each half, and a small mixer ----------
+   Music starts on this page (or as soon as the browser allows audio), restarts whenever you come back to it,
+   and loops with a 3 s rest between plays. The ambience follows the pointer: the further into the green half,
+   the more wind, leaves and birdsong; the further into the red half, the more machine hum and data noise.
+   A band in the middle is silent. Picking a mode fades both out in under half a second. */
+const MS=(()=>{ try{ return Object.assign({music:.55,sfx:.7,muted:false},JSON.parse(localStorage.getItem('ychen-menu-snd')||'{}')); }catch(e){ return {music:.55,sfx:.7,muted:false}; } })();
+const saveMS=()=>{ try{ localStorage.setItem('ychen-menu-snd',JSON.stringify(MS)); }catch(e){} };
+const bgm=new Audio('assets/audio/menu.mp3'); bgm.preload='auto'; let bgmOn=false, bgmGap=0, bgmFade=0;
+const mVol=()=>MS.muted?0:MS.music;
+function bgmPlay(restart){ clearTimeout(bgmGap); cancelAnimationFrame(bgmFade); if(restart) try{ bgm.currentTime=0; }catch(e){} bgm.volume=mVol(); bgmOn=true;
+  const p=bgm.play(); if(p&&p.catch) p.catch(()=>{ bgmOn=false; }); }
+bgm.addEventListener('ended',()=>{ if(!bgmOn) return; bgmGap=setTimeout(()=>{ if(bgmOn) bgmPlay(true); },3000); });
+function bgmStop(ms){ bgmOn=false; clearTimeout(bgmGap); cancelAnimationFrame(bgmFade); const v0=bgm.volume, t0=performance.now();
+  const f=now=>{ const k=Math.min(1,(now-t0)/ms); bgm.volume=v0*(1-k); if(k<1) bgmFade=requestAnimationFrame(f); else bgm.pause(); }; bgmFade=requestAnimationFrame(f); }
+// browsers block sound until the first click or key press: start then if needed
+const kick=()=>{ if(!bgmOn&&!picked&&!$('#host')) bgmPlay(false); ambStart(); };
+addEventListener('pointerdown',kick,{capture:true}); addEventListener('keydown',kick,{capture:true});
+bgmPlay(true);
+
+let SA=null;
+function noiseBuf(sec){ const b=AC.createBuffer(1,AC.sampleRate*sec,AC.sampleRate), d=b.getChannelData(0); let last=0; for(let i=0;i<d.length;i++){ const w=Math.random()*2-1; last=(last+.02*w)/1.02; d[i]=w*.6+last*3; } return b; }
+function loopNoise(dest){ const n=AC.createBufferSource(); n.buffer=noiseBuf(4); n.loop=true; n.connect(dest); n.start(); return n; }
+const AMBK=.55; // ambience sits well under the music by default
+let dataBuf=null; function loadData(){ if(dataBuf||!AC) return; fetch('assets/audio/data.mp3').then(r=>r.arrayBuffer()).then(b=>AC.decodeAudioData(b)).then(d=>{ dataBuf=d; }).catch(()=>{}); }
+function ambStart(){ unlock(); if(!AC||SA) return; if(AC.state==='suspended') AC.resume(); loadData();
+  const out=AC.createGain(); out.gain.value=MS.muted?0:MS.sfx*AMBK; out.connect(AC.destination);
+  const L=AC.createGain(), R=AC.createGain(); L.gain.value=0; R.gain.value=0; L.connect(out); R.connect(out);
+  // green: a soft wind bed, leaves that rustle only when a gust passes, and the odd bird
+  const wf=AC.createBiquadFilter(); wf.type='lowpass'; wf.frequency.value=420; wf.Q.value=.6; const wg=AC.createGain(); wg.gain.value=.32; loopNoise(wf); wf.connect(wg).connect(L);
+  const wl=AC.createOscillator(), wld=AC.createGain(); wl.frequency.value=.09; wld.gain.value=180; wl.connect(wld).connect(wf.frequency); wl.start();
+  const lf=AC.createBiquadFilter(); lf.type='bandpass'; lf.frequency.value=3600; lf.Q.value=.7; const lsh=AC.createBiquadFilter(); lsh.type='lowpass'; lsh.frequency.value=7000;
+  const lg=AC.createGain(); lg.gain.value=0; loopNoise(lf); lf.connect(lsh).connect(lg).connect(L);
+  const birdBus=AC.createGain(); birdBus.gain.value=.4; birdBus.connect(L);
+  // red: a quiet machine-room fan, and short fragments of the data sound now and then
+  const ff=AC.createBiquadFilter(); ff.type='lowpass'; ff.frequency.value=260; const fg=AC.createGain(); fg.gain.value=.22; loopNoise(ff); ff.connect(fg).connect(R);
+  const dataBus=AC.createBiquadFilter(); dataBus.type='lowpass'; dataBus.frequency.value=4200; const dg=AC.createGain(); dg.gain.value=.5; dataBus.connect(dg).connect(R);
+  SA={out,L,R,lg,birdBus,dataBus,l:0,r:0,next:{bird:0,gust:0,frag:0}};
+  ambLoop(); }
+function chirp(t,dest){ const n=2+(Math.random()*3|0), base=2600+Math.random()*1600;
+  for(let i=0;i<n;i++){ const o=AC.createOscillator(), g=AC.createGain(), s=t+i*(.08+Math.random()*.06), f=base*(.9+Math.random()*.25);
+    o.type='sine'; o.frequency.setValueAtTime(f,s); o.frequency.exponentialRampToValueAtTime(f*(1.25+Math.random()*.35),s+.05); o.frequency.exponentialRampToValueAtTime(f*.85,s+.09);
+    g.gain.setValueAtTime(.0001,s); g.gain.exponentialRampToValueAtTime(.14,s+.015); g.gain.exponentialRampToValueAtTime(.0001,s+.1); o.connect(g).connect(dest); o.start(s); o.stop(s+.12); } }
+// one 0.3–0.5 s slice of the data sound, faded in and out, from a random point in its busy middle
+function fragment(t,dest){ if(!dataBuf) return; const len=1+Math.random()*.3, from=2+Math.random()*(Math.min(dataBuf.duration,10.4)-2-len);
+  const s=AC.createBufferSource(), g=AC.createGain(); s.buffer=dataBuf; g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(1,t+.04); g.gain.setValueAtTime(1,t+len-.15); g.gain.linearRampToValueAtTime(0,t+len);
+  s.connect(g).connect(dest); s.start(t,from,len); }
+let ambOff=false;
+function ambLoop(){ if(!SA) return; requestAnimationFrame(ambLoop); const t=AC.currentTime, A=SA, DEAD=.08;
+  const x=ambOff||picked||$('#host')||mxN===null||touch?.5:mxN;
+  const tl=Math.pow(Math.max(0,(.5-x)-DEAD)/(.5-DEAD),1.25), tr=Math.pow(Math.max(0,(x-.5)-DEAD)/(.5-DEAD),1.25);
+  A.l+=(tl-A.l)*.08; A.r+=(tr-A.r)*.08;
+  if(!A.fading){ A.L.gain.setTargetAtTime(A.l*.9,t,.08); A.R.gain.setTargetAtTime(A.r*.75,t,.08); }
+  if(t>A.next.gust){ const up=.6+Math.random()*.6, hold=.4+Math.random()*.8, pk=.06+Math.random()*.12;   // a gust: leaves swell, then settle back to almost nothing
+    A.lg.gain.cancelScheduledValues(t); A.lg.gain.setTargetAtTime(pk,t,up/3); A.lg.gain.setTargetAtTime(.004,t+up+hold,.7); A.next.gust=t+4+Math.random()*2; }
+  if(A.l>.15&&t>A.next.bird){ chirp(t+.02,A.birdBus); A.next.bird=t+3+Math.random()*(7-3*A.l); }
+  if(A.r>.12&&t>A.next.frag){ fragment(t+.02,A.dataBus); A.next.frag=t+1.6+Math.random()*(4.2-1.8*A.r); } }
+addEventListener('pointerleave',()=>{ mxN=null; }); document.addEventListener('mouseleave',()=>{ mxN=null; });
+// leaving the menu: both fade out fast (under half a second), then go silent
+function menuSoundOut(){ bgmStop(380); if(SA&&AC){ const t=AC.currentTime; SA.fading=true; [SA.L,SA.R].forEach(g=>{ g.gain.cancelScheduledValues(t); g.gain.setValueAtTime(g.gain.value,t); g.gain.linearRampToValueAtTime(0,t+.35); }); } }
+function menuSoundIn(){ if(SA) SA.fading=false; bgmPlay(true); }
+function applyMS(){ bgm.volume=bgmOn?mVol():bgm.volume; if(SA&&AC) SA.out.gain.setTargetAtTime(MS.muted?0:MS.sfx*AMBK,AC.currentTime,.05); if(bus&&AC) bus.gain.setTargetAtTime(MS.muted?0:.7,AC.currentTime,.05);
+  const b=$('#sndBtn'); if(b) b.classList.toggle('muted',MS.muted); $('#vMus').value=Math.round(MS.music*100); $('#vSfx').value=Math.round(MS.sfx*100); $('#oMus').textContent=Math.round(MS.music*100); $('#oSfx').textContent=Math.round(MS.sfx*100);
+  $('#sMute').innerHTML=MS.muted?$('#sMute').dataset[LANG+'On']:$('#sMute').dataset[LANG+'Off']; }
+$('#sndBtn').addEventListener('click',e=>{ e.stopPropagation(); kick(); $('#mixer').hidden=!$('#mixer').hidden; snd('click'); });
+$('#mixer').addEventListener('click',e=>e.stopPropagation()); document.addEventListener('click',()=>{ $('#mixer').hidden=true; });
+$('#vMus').addEventListener('input',e=>{ MS.music=e.target.value/100; MS.muted=false; applyMS(); saveMS(); });
+$('#vSfx').addEventListener('input',e=>{ MS.sfx=e.target.value/100; MS.muted=false; applyMS(); saveMS(); });
+$('#sMute').addEventListener('click',()=>{ MS.muted=!MS.muted; applyMS(); saveMS(); });
+applyMS(); window.__applyMS=applyMS;
+
 /* ---------- hosting the résumé / game in full screen ---------- */
 let menuTitle=document.title;
 function hostPage(url,which){ if(which){ try{ history.pushState({host:which},'','#'+(which==='std'?'resume':'game')); }catch(e){} } const f=document.createElement('iframe'); f.id='host'; f.src=url; f.allow='fullscreen; autoplay'; f.setAttribute('allowfullscreen',''); document.body.appendChild(f);
   f.addEventListener('load',()=>{ f.classList.add('on'); try{ f.contentWindow.focus(); document.title=f.contentDocument.title||menuTitle; }catch(e){} setTimeout(()=>{ fx.style.display='none'; },300); },{once:true}); }
 /* one language for the whole site: whichever page changes it, every other page follows */
 addEventListener('storage',e=>{ if(e.key!=='ychen-lang') return; const v=e.newValue==='zh'?'zh':'en'; if(v!==LANG){ LANG=v; applyLang(); } });
-window.__ychenHost=from=>{ { let v='en'; try{ v=localStorage.getItem('ychen-lang')==='zh'?'zh':'en'; }catch(e){} if(v!==LANG){ LANG=v; applyLang(); } } const c=$('#cover'), f=$('#host'); c.style.transition='none'; c.style.background=from==='game'?'#050607':'#F5F3EE'; c.style.opacity='1';
+window.__ychenHost=from=>{ setTimeout(menuSoundIn,250); { let v='en'; try{ v=localStorage.getItem('ychen-lang')==='zh'?'zh':'en'; }catch(e){} if(v!==LANG){ LANG=v; applyLang(); } } const c=$('#cover'), f=$('#host'); c.style.transition='none'; c.style.background=from==='game'?'#050607':'#F5F3EE'; c.style.opacity='1';
   if(f) f.remove(); document.title=menuTitle; picked=false; fx.style.display='none'; activate(null); if(/^#(resume|game)$/.test(location.hash)){ try{ history.replaceState(null,'',location.pathname+location.search); }catch(e){} }
   requestAnimationFrame(()=>requestAnimationFrame(()=>{ c.style.transition='opacity .7s ease'; c.style.opacity='0'; })); };
 
