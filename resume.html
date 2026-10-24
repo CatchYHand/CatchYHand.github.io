@@ -379,7 +379,7 @@ const RCOL_FONT='https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..
 .rcol:focus-visible{outline:3px solid var(--g);outline-offset:3px}
 .rcol.lift{visibility:hidden}
 @media (max-width:760px){.rcols{grid-template-columns:1fr;max-width:420px}}
-#colFrame{position:fixed;inset:0;width:100%;height:100%;border:0;z-index:300;background:transparent;visibility:hidden;pointer-events:none;color-scheme:light}
+#colFrame{position:fixed;left:0;right:0;bottom:0;top:var(--cft,0px);width:100%;height:calc(100% - var(--cft,0px));border:0;z-index:55;background:transparent;visibility:hidden;pointer-events:none;color-scheme:light}
 #colFrame.on{visibility:visible;pointer-events:auto}`; document.head.appendChild(st); })();
 let colF=null, colReady=null, colCard=null;
 function colFrame(){ if(colF) return colReady; colF=document.createElement('iframe'); colF.id='colFrame'; colF.title='Column'; colF.setAttribute('aria-hidden','true');
@@ -389,8 +389,10 @@ function colFrame(){ if(colF) return colReady; colF=document.createElement('ifra
     if(d.t==='rd-closed'){ if(colCard){ colCard.classList.remove('lift'); try{ colCard.focus({preventScroll:true}); }catch(e){} } colCard=null; colF.classList.remove('on'); colF.setAttribute('aria-hidden','true'); } }); });
   colF.src=ROUTES.game+(ROUTES.game.includes('?')?'&':'?')+'embed=1'; document.body.appendChild(colF); return colReady; }
 async function openCol(btn){ if(colCard) return; colCard=btn; snd('open'); await colFrame(); if(colCard!==btn) return;
+  // the column sits under the résumé's own top bar, so language, full screen and main menu stay visible and on top (their dialogs sit above it too)
+  const bar=$('.bar'), bb=bar?bar.getBoundingClientRect():null, top=bb&&bb.bottom>0&&bb.top<=1?Math.round(bb.bottom):0; colF.style.setProperty('--cft',top+'px');
   const r=btn.getBoundingClientRect(); colF.classList.add('on'); colF.removeAttribute('aria-hidden');
-  colF.contentWindow.postMessage({t:'open',br:btn.dataset.col,html:btn.outerHTML,r:{l:r.left,t:r.top,w:r.width,h:r.height}},location.origin); }
+  colF.contentWindow.postMessage({t:'open',br:btn.dataset.col,html:btn.outerHTML,r:{l:r.left,t:r.top-top,w:r.width,h:r.height}},location.origin); }
 const HEAD=(i,k)=>`<div class="eyebrow">${String(i).padStart(2,'0')}</div><h2 class="st">${tr(k)}</h2>`;
 const me=a=>esc(a).replace(/Y\. Chen/g,'<b>Y. Chen</b>');
 const SEC={
@@ -452,7 +454,12 @@ function render(){
   $$('[data-t]').forEach(el=>el.textContent=tr(el.dataset.t));
   $$('#langBtn [data-l]').forEach(s=>s.classList.toggle('on',s.dataset.l===LANG));
   renderSide(); renderPage(); $('#crumb').textContent=tr(SECS.find(s=>s[0]===cur)[1]); syncFs&&syncFs();
-  if(!$('#rdr').hidden) drawReader(); }
+  if(!$('#rdr').hidden) drawReader(); relinkCol(); }
+function relinkCol(){ // a re-render (e.g. a language switch) while a column is open: keep the open cover hidden, in view, and tell the reader where it is now
+  if(!colCard||!colF) return; const nb=$(`.rcol[data-col="${colCard.dataset.col}"]`); if(!nb) return; colCard=nb; nb.classList.add('lift');
+  const m=$('#main'), sc=m&&m.scrollHeight>m.clientHeight?m:document.scrollingElement; const top=parseFloat(getComputedStyle(colF).getPropertyValue('--cft'))||0;
+  nb.scrollIntoView({block:'center'}); $$('.sec.rv').forEach(x=>x.classList.add('in'));
+  const r=nb.getBoundingClientRect(); colF.contentWindow.postMessage({t:'move',html:nb.outerHTML,r:{l:r.left,t:r.top-top,w:r.width,h:r.height}},location.origin); }
 $('#main').addEventListener('scroll',spy,{passive:true}); addEventListener('scroll',spy,{passive:true}); addEventListener('resize',()=>{ movePill(); watch(); });
 function toast(m){ const t=$('#toast'); t.textContent=m; t.classList.add('on'); clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove('on'),1500); }
 
@@ -486,7 +493,8 @@ function askMenu(){ ask({tag:LANG==='zh'?'[ 主菜单 ]':'[ MAIN MENU ]',en:LANG
 $('#menuBtn').onclick=askMenu;
 // Esc: close what's open first; with nothing open it asks to go back to the main menu
 addEventListener('keydown',e=>{
-  if(e.key==='Escape'){ e.preventDefault(); if(!$('#modal').hidden) closeModal(); else if(!$('#rdr').hidden) closeReader(); else askMenu(); return; }
+  if(e.key==='Escape'){ e.preventDefault(); if(!$('#modal').hidden) closeModal(); else if(colCard&&colF&&colF.classList.contains('on')) colF.contentWindow.postMessage({t:'close'},location.origin); else if(!$('#rdr').hidden) closeReader(); else askMenu(); return; }
+  if(colCard&&colF&&colF.classList.contains('on')&&$('#modal').hidden&&(e.key==='ArrowLeft'||e.key==='ArrowRight')){ e.preventDefault(); colF.contentWindow.postMessage({t:'key',key:e.key},location.origin); return; }
   if($('#rdr').hidden||!$('#modal').hidden) return; const J=DATA.journal;
   if(e.key==='ArrowRight'&&rIdx<J.length-1){ rIdx++; drawReader(); snd('page'); } if(e.key==='ArrowLeft'&&rIdx>0){ rIdx--; drawReader(); snd('page'); } });
 addEventListener('storage',e=>{ if(e.key!=='ychen-lang') return; const v=e.newValue==='zh'?'zh':'en'; if(v!==LANG){ LANG=v; render(); } }); // one language for the whole site
