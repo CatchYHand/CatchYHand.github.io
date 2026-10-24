@@ -174,6 +174,13 @@ button:disabled,.brk.off{cursor:not-allowed}
 @keyframes gainIn{from{opacity:0;transform:translateY(8px) scale(.6)}}
 .tab.gaining{pointer-events:none;clip-path:polygon(0 -3rem,100% -3rem,100% calc(100% - .9rem),calc(100% - .9rem) 100%,0 100%)}
 .attn b{font:700 1.7rem/1 var(--f-head);color:var(--ink);font-variant-numeric:tabular-nums;letter-spacing:.02em}
+/* once the ledger is patched the counter stays readable, but carries the breach: a red eye and a frozen glitch across the word */
+.attn.done svg{color:var(--red)}
+.attn.done svg .lid{animation:none}
+.attn.done span{position:relative;color:var(--ink2);text-shadow:1.5px 0 rgba(226,38,47,.55),-1.5px 0 rgba(30,170,210,.45)}
+.attn.done span::before{content:"";position:absolute;left:45%;right:-.1rem;top:18%;height:2px;background:var(--red);opacity:.8;pointer-events:none}
+.attn.done span::after{content:"";position:absolute;left:-.1rem;width:58%;top:66%;height:.2rem;background:linear-gradient(90deg,rgba(226,38,47,.55) 0 30%,transparent 30% 46%,rgba(17,26,36,.55) 46% 100%);pointer-events:none}
+.attn.done b{text-shadow:1px 0 rgba(226,38,47,.45),-1px 0 rgba(30,170,210,.35)}
 .views{position:relative}
 .view{display:none}
 .view.on{display:block;animation:vin .45s cubic-bezier(.2,.8,.2,1)}
@@ -782,6 +789,11 @@ body:not(.zh) .cc.open figcaption b{font-size:min(clamp(1rem,1.35vw,1.45rem),13.
 .cc.open figcaption{left:.55rem;right:.5rem}
 .cc.open figcaption small{display:block;font:600 .58rem var(--f-mono);letter-spacing:.18em;color:rgba(255,255,255,.72)}
 .cc.open figcaption b{display:block;font:700 clamp(1rem,1.35vw,1.45rem)/1.08 var(--f-head);letter-spacing:.02em;margin:.25rem 0 0;white-space:nowrap}
+/* Chinese: the column title runs down from the top-right corner like an old book, with its kind pressed beside it as a vermilion seal */
+body.zh .cc.open figcaption{position:static}
+body.zh .cc.open .cc-shade{background:radial-gradient(75% 55% at 100% 0%,rgba(4,8,14,.6),rgba(4,8,14,0) 70%),linear-gradient(180deg,rgba(0,0,0,0) 55%,rgba(4,8,14,.5) 100%)}
+body.zh .cc.open figcaption b{position:absolute;top:.65rem;right:.75rem;margin:0;writing-mode:vertical-rl;text-orientation:upright;white-space:nowrap;font:400 clamp(1.5rem,2.1vw,2.2rem)/1.1 'Ma Shan Zheng','Noto Serif SC',serif;letter-spacing:.08em;color:#fff;text-shadow:0 2px 10px rgba(0,0,0,.5)}
+body.zh .cc.open figcaption small{position:absolute;top:.8rem;right:calc(.75rem + clamp(1.5rem,2.1vw,2.2rem) * 1.1 + .4rem);writing-mode:vertical-rl;text-orientation:upright;padding:.3rem .16rem;border-radius:2px;background:#B8322A;color:#FBEDE4;font:600 .62rem/1 'Noto Serif SC',serif;letter-spacing:.2em}
 .cc.slot{background:repeating-linear-gradient(-45deg,transparent 0 11px,rgba(127,140,160,.05) 11px 22px);border:1px dashed var(--line);overflow:hidden}
 .cc.slot .cc-top .cc-no{-webkit-text-stroke:1px var(--line)}
 .cc.slot .tape{position:absolute;left:-22%;right:-22%;top:50%;height:2.2rem;transform:translateY(-50%) rotate(-14deg);background:#f2c200;display:grid;place-items:center;box-shadow:0 4px 10px -4px rgba(0,0,0,.45)}
@@ -905,6 +917,15 @@ body.zh .lt-ty{font-family:'Long Cang','Caveat',cursive;font-size:1.35rem}
 /* ===== column reader: a full window, one tab per topic. Portrait photos sit beside the text, landscape photos above it, text pages stand alone. ===== */
 .reader{position:absolute;inset:clamp(.5rem,1.4vw,1.2rem);z-index:21;display:none;flex-direction:column;background:var(--paper);box-shadow:0 30px 90px rgba(0,0,0,.45);overflow:hidden;--cx:var(--corp);--cdk:#0c1420;--cdk2:#14223a;--cln:rgba(122,165,235,.15)}
 .reader.on{display:flex}
+html.embed,html.embed body{background:transparent!important;overflow:hidden}
+html.embed body>*:not(#reader):not(#sheetBg):not(.rd-flip):not(.rd-proxy):not(svg):not(script){display:none!important}
+html.embed body>svg{position:absolute;width:0;height:0;overflow:hidden}
+html.embed #reader{position:fixed}
+html.embed .rd-crumb .rd-no{display:none}
+html.embed #sheetBg{position:fixed}
+.rd-proxy{position:fixed;visibility:hidden;pointer-events:none;z-index:1}
+.rd-proxy>*{position:absolute;inset:0;width:100%;height:100%;margin:0}
+.rd-flip .fr>.rcol{position:absolute;inset:0;width:100%;height:100%;margin:0;transform:none!important;box-shadow:none}
 body:has(#reader.on.still) *:not(#reader):not(#reader *){animation-play-state:paused!important}
 .reader.prep{visibility:hidden}
 .reader>*{will-change:transform} /* the window's parts sit on their own layers, so growing the clip only repaints its mask */
@@ -5134,11 +5155,11 @@ function usLightbox(i){ const q=rdCol&&rdCol.posts[rdIdx]; if(!q||!q.photos) ret
 function usLbClose(){ const lb=$('#reader .us-lb'); if(lb&&lb.classList.contains('on')){ lb.classList.remove('on'); return true; } return false; }
 const COLS=[ // each column's six-digit key sits in one reward terminal
  {br:'research', code:'676767', cap:'Earthly Delights', capSub:'a secret kitchen of dishes from home', kind:'Secret Menu', style:'food', cover:'/assets/img/food/00-cover-s.webp', posts:FOOD},
- {br:'publications', code:'996007', cap:'Placeholder · City at Night', kind:'Column', hue:[250,320], posts:POSTS0()},
- {br:'projects', code:'233333', cap:'Placeholder · Lab B at 2 A.M.', kind:'Column', hue:[350,20], posts:POSTS0()},
+ {br:'publications', code:'996007', cap:'XXX', kind:'Column', hue:[250,320], posts:POSTS0()},
+ {br:'projects', code:'233333', cap:'XXX', kind:'Column', hue:[350,20], posts:POSTS0()},
  {br:'events', code:'114514', cap:'Distant Reverie', capSub:'a travel journal of Japan', kind:'Travel Journal', cover:'/assets/img/japan/01-fuji-s.webp', posts:JAPAN},
  {br:'personal', code:'810975', cap:'God Bless Happyland', capCard:'God’s Happyland', capSub:'postcards from wherever I happened to be', kind:'Postcards', style:'post', cover:'/assets/img/us/00-cover-s.webp', posts:USA},
- {br:'contact', code:'170001', cap:'Placeholder · Coastline', kind:'Column', hue:[190,230], posts:POSTS0()}
+ {br:'contact', code:'170001', cap:'XXX', kind:'Column', hue:[190,230], posts:POSTS0()}
 ];
 const COL_SLOTS=12; // empty slots stay on the page for future columns
 const colBg=c=>c.cover?`background-image:url(${c.cover})`:c.img?`background-image:url(${c.img})`:`background-image:linear-gradient(160deg,hsl(${c.hue[0]} 55% 62%),hsl(${c.hue[1]} 45% 30%))`;
@@ -5348,6 +5369,8 @@ S.order.forEach((id,i)=>{ if(S.act[id]==null) S.act[id]=i; });
 
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const EMBED=/[?&]embed=1\b/.test(location.search); // the standard résumé borrows the column reader: just the book, no game around it
+let rdOpenHook=null, rdClosedHook=null;
 const fmt=n=>typeof n==='string'?n:n.toLocaleString('en-US');
 const nTasks=()=>TASK_IDS.filter(k=>S.done[k]).length;
 const nRew=()=>TOPO.filter(b=>S.nodes[b.nodes[2].id]).length;
@@ -6343,10 +6366,10 @@ function openReader(br,card){ const c=COLS.find(x=>x.br===br); if(!c||rdBusy) re
   const anim=rdCard&&!reduce; if(anim){ r.classList.add('on','prep'); }
   const imgs=[...r.querySelectorAll('img')].map(im=>im.decode?im.decode().catch(()=>{}):0);
   const go=()=>{ r.classList.remove('prep'); r.classList.add('on'); $('#sheetBg').classList.add('on','rdbg'); sfx('whoosh');
-    if(anim) rdTurn(rdCard,true,()=>{ rdBusy=false; rdCard.classList.remove('turn'); rdStill(true); }); else { rdBusy=false; rdStill(true); } };
+    rdOpenHook&&rdOpenHook(); if(anim) rdTurn(rdCard,true,()=>{ rdBusy=false; rdCard.classList.remove('turn'); rdStill(true); }); else { rdBusy=false; rdStill(true); } };
   if(anim){ rdCard.classList.add('turn'); Promise.all([Promise.all(imgs),new Promise(k=>setTimeout(k,170))]).then(()=>requestAnimationFrame(go)); } else go(); }
 function closeReader(quiet){ if(!readerOpen()||rdBusy) return; rdStill(false); const r=$('#reader'); if(!quiet) sfx('unwhoosh'); $('#sheetBg').classList.remove('on'); setTimeout(()=>$('#sheetBg').classList.remove('rdbg'),320);
-  if(rdCard&&rdCard.isConnected&&!reduce){ rdBusy=true; rdTurn(rdCard,false,()=>{ r.classList.remove('on'); rdBusy=false; }); } else r.classList.remove('on'); }
+  if(rdCard&&rdCard.isConnected&&!reduce){ rdBusy=true; rdTurn(rdCard,false,()=>{ r.classList.remove('on'); rdBusy=false; rdClosedHook&&rdClosedHook(); }); } else { r.classList.remove('on'); rdClosedHook&&rdClosedHook(); } }
 const RD_SEP=(rest)=>'<div class="rd-sep" aria-hidden="true"><svg viewBox="0 0 330 48"><defs><linearGradient id="rdStaff" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="330" y2="0"><stop offset="0" stop-color="currentColor" stop-opacity="0"/><stop offset=".38" stop-color="currentColor" stop-opacity=".9"/><stop offset=".62" stop-color="currentColor" stop-opacity=".9"/><stop offset="1" stop-color="currentColor" stop-opacity="0"/></linearGradient></defs><g stroke="url(#rdStaff)" stroke-width="1"><line x1="0" x2="330" y1="8" y2="8"/><line x1="0" x2="330" y1="16" y2="16"/><line x1="0" x2="330" y1="24" y2="24"/><line x1="0" x2="330" y1="32" y2="32"/><line x1="0" x2="330" y1="40" y2="40"/></g>'+(rest==='2'?'<rect x="152" y="18.6" width="26" height="5.8" fill="currentColor"/>':rest==='8'?'<g transform="translate(0 2)"><circle cx="159.5" cy="17.5" r="3.6" fill="currentColor"/><path d="M157 19.4 Q164 22.6 171.5 15.2" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M171.5 15.2 L163.6 35" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></g>':'<path fill="currentColor" transform="translate(165 24) scale(1.36) translate(-120.6 -19)" d="M117.6 5.2 L125 13.6 Q121 17 121 19.6 Q121 22.2 126.4 26 L124.9 27.5 Q120.2 25.4 118.6 27 Q117.6 29 120.9 32.2 L120.2 32.8 Q113.4 28.4 115.5 25.2 Q117.6 22.6 122.3 24.2 L115.4 16.8 Q119.6 13.6 119.6 11 Q119.6 8.4 116.7 6 Z"/>')+'</svg></div>'; // a staff that fades out at both ends, a quarter rest (prologue/epilogue) or an eighth rest (stops) in the middle: a breath before the coda
 const REP_START='<svg viewBox="0 0 24 32" aria-hidden="true"><rect x="3" y="3" width="4.2" height="26" fill="currentColor"/><rect x="10" y="3" width="1.4" height="26" fill="currentColor"/><circle cx="16" cy="12.5" r="1.9" fill="currentColor"/><circle cx="16" cy="19.5" r="1.9" fill="currentColor"/></svg>';
 const REP_END='<svg viewBox="0 0 24 32" aria-hidden="true"><circle cx="8" cy="12.5" r="1.9" fill="currentColor"/><circle cx="8" cy="19.5" r="1.9" fill="currentColor"/><rect x="12.6" y="3" width="1.4" height="26" fill="currentColor"/><rect x="16.8" y="3" width="4.2" height="26" fill="currentColor"/></svg>';
@@ -6538,7 +6561,7 @@ function runTask(id,el){
   if(id==='stamp'){ sfx('success'); }
   else if(tgt&&!reduce&&id.startsWith('ph-')){ CRK.add(id); vaultFx(tgt,COLS.find(c=>'ph-'+c.br===id).code,()=>{ CRK.delete(id); render(); }); }
   else if(tgt&&!reduce&&id==='album'){ CRK.add(id); safeFx(tgt,()=>{ CRK.delete(id); render(); }); }
-  else if(tgt&&!reduce){ const els=[tgt,...$$(`[data-tw~="${id}"]`)]; const rects=corruptRects(els); els.forEach(e=>{ e.classList.add('ow'); scrambleEl(e,600); }); sfx('corrupt'); corruptFx(rects,820,()=>{ render(); }); }
+  else if(tgt&&!reduce){ const els=[tgt,...$$(`[data-tw~="${id}"]`)]; const rects=corruptRects(els); const undo=els.map(e=>{ e.classList.add('ow'); return scrambleEl(e,600); }); sfx('corrupt'); corruptFx(rects,820,()=>{ if(id==='attn'){ undo.forEach(f=>f()); tgt.classList.remove('ow'); refresh(); } render(); }); }
   else { sfx('overwrite'); render(); sfx('success'); }
   const freed=Object.values(NODE).filter(n=>!S.nodes[n.id]&&n.c());
   conRun([...xcode,...(a.gain?[`[*] decrypt cycles +${a.gain}`]:[]),...(freed.length?[`[*] topology: ${freed.length} node(s) unlocked upstream`]:[])],true);
@@ -6555,7 +6578,8 @@ function runTask(id,el){
 function scrambleEl(el,ms){ // glyph rot that eats the text from the right end
   const w=document.createTreeWalker(el,NodeFilter.SHOW_TEXT); const ns=[]; while(w.nextNode()){ if(w.currentNode.nodeValue.trim()) ns.push(w.currentNode); }
   const orig=ns.map(n=>n.nodeValue), ch='01#%&▓▒░<>/\\$@!?'; let k=0; const N=Math.max(6,Math.round((ms||650)/55));
-  const it=setInterval(()=>{ k++; ns.forEach((n,j)=>{ const o=orig[j], keep=Math.floor(o.length*Math.max(0,1-k/N)); n.nodeValue=o.slice(0,keep)+o.slice(keep).replace(/[^\s]/g,()=>ch[Math.random()*ch.length|0]); }); if(k>=N+2) clearInterval(it); },55); }
+  const it=setInterval(()=>{ k++; ns.forEach((n,j)=>{ const o=orig[j], keep=Math.floor(o.length*Math.max(0,1-k/N)); n.nodeValue=o.slice(0,keep)+o.slice(keep).replace(/[^\s]/g,()=>ch[Math.random()*ch.length|0]); }); if(k>=N+2) clearInterval(it); },55);
+  return ()=>{ clearInterval(it); ns.forEach((n,j)=>{ n.nodeValue=orig[j]; }); }; } // put the words back (for parts of the page that render() never rebuilds, like the header)
 /* red code front that sweeps right → left over a component: 'in' covers it, then the page re-renders under it, 'out' clears it */
 function corruptRects(els){ const fr=$('#frame').getBoundingClientRect(), hd=$('#corpTop').getBoundingClientRect();
   return els.map(el=>{ const r=el.getBoundingClientRect(), inH=!!el.closest('.corp-top'); const L=Math.max(r.left,fr.left), R=Math.min(r.right,fr.right), T=Math.max(r.top,inH?fr.top:hd.bottom), B=Math.min(r.bottom,fr.bottom); return R-L>6&&B-T>6?{x:L,y:T,w:R-L,h:B-T}:null; }).filter(Boolean); }
@@ -7750,7 +7774,23 @@ window.__econ=()=>{
 };
 
 zhObs.observe(document.body,{subtree:true,childList:true,characterData:true}); setLang(LANG,true);
-makeTextures(); resumeScripts(); booting=false; delete S.flags.revealPending; if(S.flags.opened&&S.flags.complete){ applyTakeover(); render(); } renderWho(); if(S.flags.closed) $('#hintBtn').hidden=true; if((S.ev.evClose||S.ev.evOpen)&&!S.flags.ending) S.flags.ending=S.ev.evOpen?'open':'close'; if(S.flags.ending&&!S.flags.closed&&S.prog['end:'+S.flags.ending]>=steps('end:'+S.flags.ending).length) S.flags.closed=1; if(S.flags.closed&&!S.flags.complete&&nTasks()===TASK_IDS.length&&nRew()===6) setTimeout(maybeComplete,1500); if((S.queue||[]).length) setTimeout(flushQueue,1500); render(); refresh(); renderPanel(); syncMixer(); boot(); measureHeader();
+function embedInit(){ // résumé mode: a throwaway copy of the save (nothing is written back), no boot, no game; the parent page drives it by postMessage
+  PV=JSON.stringify(S); booting=false; document.documentElement.classList.add('embed'); $('#boot').hidden=true;
+  document.body.appendChild($('#sheetBg')); document.body.appendChild($('#reader'));
+  const tell=m=>{ try{ parent.postMessage(m,location.origin); }catch(e){} };
+  let proxy=null;
+  rdOpenHook=()=>tell({t:'rd-hide'});
+  rdClosedHook=()=>{ tell({t:'rd-closed'}); if(proxy){ proxy.remove(); proxy=null; } };
+  addEventListener('message',e=>{ if(e.origin!==location.origin) return; const d=e.data||{};
+    if(d.t==='style'&&!$('#embCss')){ const st=document.createElement('style'); st.id='embCss'; st.textContent=d.css||''; document.head.appendChild(st);
+      if(d.font){ const l=document.createElement('link'); l.rel='stylesheet'; l.href=d.font; document.head.appendChild(l); } }
+    if(d.t==='open'&&!readerOpen()&&!rdBusy){ const c=COLS.find(x=>x.br===d.br); if(!c) return;
+      proxy=document.createElement('div'); proxy.className='rd-proxy'; proxy.style.cssText=`left:${d.r.l}px;top:${d.r.t}px;width:${d.r.w}px;height:${d.r.h}px`; proxy.innerHTML=d.html; document.body.appendChild(proxy);
+      if(document.body.classList.contains('zh')!==(LANG==='zh')) setLang(LANG,true);
+      openReader(d.br,proxy.firstElementChild); setTimeout(()=>{ try{ window.focus(); }catch(e){} },60); }
+    if(d.t==='close'&&readerOpen()) closeReader(); });
+  tell({t:'rd-ready'}); }
+if(EMBED) embedInit(); else { makeTextures(); resumeScripts(); booting=false; delete S.flags.revealPending; if(S.flags.opened&&S.flags.complete){ applyTakeover(); render(); } renderWho(); if(S.flags.closed) $('#hintBtn').hidden=true; if((S.ev.evClose||S.ev.evOpen)&&!S.flags.ending) S.flags.ending=S.ev.evOpen?'open':'close'; if(S.flags.ending&&!S.flags.closed&&S.prog['end:'+S.flags.ending]>=steps('end:'+S.flags.ending).length) S.flags.closed=1; if(S.flags.closed&&!S.flags.complete&&nTasks()===TASK_IDS.length&&nRew()===6) setTimeout(maybeComplete,1500); if((S.queue||[]).length) setTimeout(flushQueue,1500); render(); refresh(); renderPanel(); syncMixer(); boot(); measureHeader(); }
 if(/[?&]from=/.test(location.search)) history.replaceState(null,'',location.pathname+location.hash);
 })();
 </script>
