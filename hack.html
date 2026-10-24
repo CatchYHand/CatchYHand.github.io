@@ -905,6 +905,7 @@ body.zh .lt-ty{font-family:'Long Cang','Caveat',cursive;font-size:1.35rem}
 /* ===== column reader: a full window, one tab per topic. Portrait photos sit beside the text, landscape photos above it, text pages stand alone. ===== */
 .reader{position:absolute;inset:clamp(.5rem,1.4vw,1.2rem);z-index:21;display:none;flex-direction:column;background:var(--paper);box-shadow:0 30px 90px rgba(0,0,0,.45);overflow:hidden;--cx:var(--corp);--cdk:#0c1420;--cdk2:#14223a;--cln:rgba(122,165,235,.15)}
 .reader.on{display:flex}
+body:has(#reader.on.still) *:not(#reader):not(#reader *){animation-play-state:paused!important}
 .reader.prep{visibility:hidden}
 .reader>*{will-change:transform} /* the window's parts sit on their own layers, so growing the clip only repaints its mask */
 .sheet-bg.rdbg{backdrop-filter:none;-webkit-backdrop-filter:none;background:rgba(10,16,24,.5)}
@@ -976,18 +977,27 @@ body.zh .lt-ty{font-family:'Long Cang','Caveat',cursive;font-size:1.35rem}
 .usm-head h2{margin:.35rem 0 .5rem;font:500 clamp(3rem,5vw,4.4rem)/1 'Caveat',cursive;color:var(--us-navy)}
 body.zh .usm-head h2{font:400 clamp(2.8rem,4.6vw,4rem)/1.1 'Long Cang','Ma Shan Zheng',serif;letter-spacing:.12em}
 .usm-head p{margin:0;font:400 1rem/1.7 var(--f-body);color:var(--us-ink2)}
-.usm-map{margin:0 auto;max-width:min(62rem,calc((100vh - 21rem) * 1.75));animation:rdUp .6s .06s cubic-bezier(.2,.8,.2,1) both}
+.usm-map{position:relative;margin:0 auto;max-width:min(62rem,calc((100vh - 21rem) * 1.75));animation:rdUp .6s .06s cubic-bezier(.2,.8,.2,1) both}
 .usm-map svg{display:block;width:100%;height:auto;overflow:visible}
-.usm-map .land{fill:#FBF7EE;stroke:var(--us-navy);stroke-width:1.6;stroke-linejoin:round;filter:drop-shadow(0 8px 14px rgba(31,58,95,.18))}
+.usm-map .land{fill:#FBF7EE;stroke:var(--us-navy);stroke-width:1.6;stroke-linejoin:round}
+.usm-map .usm-base{will-change:transform}
+.usm-map .land-sh{fill:rgba(31,58,95,.10);stroke:rgba(31,58,95,.06);stroke-width:6;stroke-linejoin:round}
+.usm-map .usm-svg{position:absolute;inset:0;height:100%;will-change:transform}
 .usm-map .st{fill:none;stroke:rgba(255,255,255,.28);stroke-width:.8;stroke-dasharray:3 3}
 .usm-map .land{fill:#2B3F6E}
 .usm-map .land-ph{pointer-events:none}
-.usm-map .land-stars{fill:#fff;pointer-events:none}.usm-map .land-stars circle{animation:usTw 4s ease-in-out infinite;opacity:.25}
+.usm-fx{position:absolute;inset:0;pointer-events:none;transition:opacity .3s}
+.usm-svg.flying~.usm-fx{opacity:0}
+.usm-fx i{position:absolute;display:block;border-radius:50%;will-change:transform,opacity}
+.usm-fx .sr{width:calc(var(--s) * .1026%);aspect-ratio:1;margin:calc(var(--s) * -.0513%) 0 0 calc(var(--s) * -.0513%);background:#fff;box-shadow:0 0 3px #fff;opacity:.25;animation:usTw 4s ease-in-out infinite}
+.usm-fx .rg{width:2.462%;aspect-ratio:1;margin:-1.231% 0 0 -1.231%;border:1.4px solid var(--us-red);box-sizing:border-box;opacity:.6;animation:usPing 2.4s ease-out infinite}
 @keyframes usTw{0%,100%{opacity:.2}50%{opacity:.85}}
-@media (prefers-reduced-motion:reduce){.usm-map .land-stars circle{animation:none;opacity:.5}}
+@media (prefers-reduced-motion:reduce){.usm-fx i{animation:none!important}.usm-fx .sr{opacity:.5}.usm-fx .rg{opacity:0}}
 .usm-map .land-ln{fill:none;stroke:var(--us-navy);stroke-width:1.6;stroke-linejoin:round;pointer-events:none}
-.usm-svg.flying .land-ln{stroke-width:calc(1.6px / var(--z,1))}
-.usm-map .us-pin .ld{stroke:#fff;opacity:.9;filter:drop-shadow(0 0 1px rgba(31,58,95,.9))}
+.usm-base.flying .land-ln{stroke-width:calc(1.6px / var(--z,1))}
+.usm-map .us-pin .ld{stroke:#fff;opacity:.9}
+.usm-map .us-pin .ldh{stroke:rgba(31,58,95,.75);stroke-width:2.6;fill:none}
+.usm-svg.flying .us-pin .ldh{opacity:0}
 .us-pin{cursor:pointer;outline:none}
 .us-pin .dot{fill:var(--us-red);stroke:#fff;stroke-width:1.8}
 .us-pin .ring{fill:none;stroke:var(--us-red);stroke-width:1.4;opacity:.6;transform-box:fill-box;transform-origin:center;animation:usPing 2.4s ease-out infinite}
@@ -999,8 +1009,8 @@ body.zh .us-pin .nm{font-size:12.5px;font-family:'Noto Sans SC',sans-serif}
 .us-pin:hover rect,.us-pin:focus-visible rect{fill:var(--us-navy)}
 .us-pin:hover .nm,.us-pin:focus-visible .nm{fill:#fff}
 .usm-svg.flying .us-pin{opacity:0;transition:opacity .3s}
-.usm-svg.flying .land{stroke-width:calc(1.6px / var(--z,1))}
-.usm-svg.flying .st{stroke-width:calc(.8px / var(--z,1))}
+.usm-base.flying .land{stroke-width:calc(1.6px / var(--z,1))}
+.usm-base.flying .st{stroke-width:calc(.8px / var(--z,1))}
 .us-gps{pointer-events:none}
 .us-gps .pin{fill:var(--us-red);stroke:#fff;stroke-width:1.4;transform-box:fill-box;transform-origin:50% 100%;animation:gpsDrop .85s ease-out both}
 .us-gps .pin circle{fill:#fff;stroke:none}
@@ -1215,12 +1225,12 @@ body:not(.zh) .fdm-card b{font:600 1.15rem/1.2 'Fredoka',sans-serif;letter-spaci
 .rd-main{min-height:0;position:relative;overflow:hidden}
 .rd-main.noanim *,.rd-snap *{animation:none!important}
 /* the map's living bits keep running after a page turn (noanim only meant to skip entrance animations) */
-.rd-main.noanim:not(.rd-snap) > .rd-page .us-pin .ring{animation:usPing 2.4s ease-out infinite!important}
-.rd-main.noanim:not(.rd-snap) > .rd-page .land-stars circle{animation:usTw 4s ease-in-out infinite!important}
+.rd-main.noanim:not(.rd-snap) > .rd-page .usm-fx .rg{animation:usPing 2.4s ease-out infinite!important}
+.rd-main.noanim:not(.rd-snap) > .rd-page .usm-fx .sr{animation:usTw 4s ease-in-out infinite!important}
 .rd-main.noanim .us-gps .pin{animation:gpsDrop .85s ease-out both!important}
 .rd-main.noanim .us-gps .r1,.rd-main.noanim .us-gps .r2{animation:gpsRing 1s ease-out .26s both!important}
 .rd-main.noanim .us-gps .r2{animation-delay:.6s!important}
-@media (prefers-reduced-motion:reduce){.rd-main.noanim .land-stars circle{animation:none!important}}
+@media (prefers-reduced-motion:reduce){.rd-main.noanim .usm-fx i{animation:none!important}}
 .rd-leaf.rd-under{z-index:0}
 .rd-leaf{position:absolute;inset:0;z-index:5;background:var(--paper);pointer-events:none;overflow:hidden}
 .rd-flapw{position:absolute;inset:0;z-index:6;pointer-events:none;filter:drop-shadow(-5px -5px 10px rgba(10,16,24,.28))}
@@ -5084,16 +5094,17 @@ const pcMark=(P)=>{ const s=P.when?P.when.replace(/\s/g,''):P.kind.en.toUpperCas
   <text font-size="9" letter-spacing="2"><textPath href="#pmB${P.pm.length}" startOffset="50%" text-anchor="middle">★ U.S. MAIL ★</textPath></text>
   <text x="60" y="64" font-size="${s.length>8?8.5:10}" text-anchor="middle" letter-spacing=".5">${s}</text></svg>
   <svg class="pc-wave" viewBox="0 0 220 60" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="2.2">${[10,22,34,46].map(y=>`<path d="M0 ${y} q13.75 -8 27.5 0 t27.5 0 t27.5 0 t27.5 0 t27.5 0 t27.5 0 t27.5 0 t27.5 0"/>`).join('')}</g></svg>`; };
+const USSTARS='<i class="sr" style="left:15.303%;top:11.623%;--s:1.10;animation-delay:-0.36s"></i><i class="sr" style="left:46.267%;top:19.492%;--s:1.18;animation-delay:-0.89s"></i><i class="sr" style="left:62.503%;top:21.902%;--s:1.80;animation-delay:-1.59s"></i><i class="sr" style="left:26.769%;top:14.590%;--s:1.90;animation-delay:-1.49s"></i><i class="sr" style="left:31.836%;top:14.443%;--s:1.74;animation-delay:-3.5s"></i><i class="sr" style="left:45.754%;top:18.098%;--s:1.22;animation-delay:-1.96s"></i><i class="sr" style="left:15.446%;top:16.311%;--s:2.08;animation-delay:-2.29s"></i><i class="sr" style="left:50.236%;top:16.230%;--s:1.08;animation-delay:-2.81s"></i>';
 const USBG='/assets/img/us/map-sunset.webp';
 function usMap(c){ const zh=LANG==='zh', L=zh?'zh':'en', ps=c.posts.filter(q=>q.place);
   const pins=ps.map(q=>{ const P=PLACES[q.place], [x,y]=P.pt, j=c.posts.indexOf(q), [dx,dy]=P.lab, r=P.ra||dx>0, nm=P[L], w=Math.round(nm.length*(zh?13:7.6)+22), lx=x+dx, ly=y+dy;
-    return `<g class="us-pin" data-usfly="${j}" tabindex="0" role="button" aria-label="${nm}"><path d="M${x} ${y} L${lx} ${ly}" class="ld"/><circle cx="${x}" cy="${y}" r="12" class="ring"/><circle cx="${x}" cy="${y}" r="4.5" class="dot"/>
+    return `<g class="us-pin" data-usfly="${j}" tabindex="0" role="button" aria-label="${nm}"><path d="M${x} ${y} L${lx} ${ly}" class="ldh"/><path d="M${x} ${y} L${lx} ${ly}" class="ld"/><circle cx="${x}" cy="${y}" r="4.5" class="dot"/>
      <g class="lb" transform="translate(${lx} ${ly})"><rect x="${r?0:-w}" y="-11" width="${w}" height="22" rx="11"/><text x="${r?w/2:-w/2}" y="4.5" text-anchor="middle" class="nm">${nm}</text></g></g>`; }).join('');
   const cards=ps.map(q=>{ const P=PLACES[q.place], j=c.posts.indexOf(q);
     return `<button class="us-tag" data-rdi="${j}"><span class="us-tag-ph" style="background-image:url(${q.cover.th})${P.fo?';background-position:'+P.fo:''}"></span><span class="us-tag-tx"><em>${P.kind[L]}${P.when?' · '+P.when:''}</em><b>${P[L]}</b><small>${P.city[L]}</small><i>${P.blurb[L]}</i></span><span class="us-tag-n">${usN(q)}<small>${zh?'张':'photos'}</small></span></button>`; }).join('');
   return `<div class="rd-page us usm" data-noi18n><div class="us-wrap"><header class="usm-head"><div class="usm-kick">${zh?'你好美国 · 想到哪里是哪里':'POSTMARKED U.S.A. · NO PARTICULAR ORDER'}</div><h2>${zh?'神佑之地':'God Bless Happyland'}</h2>
    <p>${zh?'没有路线，也没有计划。住在这里，去过的地方东一处西一处：校园、地标、博物馆，还有一些叫不上名字的地方。每到一处，就寄一张明信片回来。':'No route and no plan. Living here, I end up in all sorts of places: campuses, landmarks, museums and spots I could not name if you asked. From each one, a postcard.'}</p></header>
-   <figure class="usm-map"><svg class="usm-svg" viewBox="0 0 975 610" aria-label="${zh?'美国地图':'Map of the United States'}"><defs><clipPath id="usLandClip"><path d="${USMAP.n}"/></clipPath></defs><path class="land" d="${USMAP.n}"/><image class="land-ph" href="${USBG}" x="0" y="-52" width="975" height="731.25" preserveAspectRatio="none" clip-path="url(#usLandClip)"/><g class="land-stars" clip-path="url(#usLandClip)"><circle cx="372.6" cy="36.4" r="0.96" style="animation-delay:-0.29s"/><circle cx="538.0" cy="62.6" r="0.54" style="animation-delay:-2.03s"/><circle cx="149.2" cy="70.9" r="0.55" style="animation-delay:-0.36s"/><circle cx="451.1" cy="118.9" r="0.59" style="animation-delay:-0.89s"/><circle cx="609.4" cy="133.6" r="0.9" style="animation-delay:-1.59s"/><circle cx="881.5" cy="23.7" r="1.1" style="animation-delay:-1.16s"/><circle cx="232.5" cy="32.4" r="0.72" style="animation-delay:-3.26s"/><circle cx="261.0" cy="89.0" r="0.95" style="animation-delay:-1.49s"/><circle cx="547.2" cy="25.7" r="0.54" style="animation-delay:-0.82s"/><circle cx="650.7" cy="70.2" r="0.72" style="animation-delay:-2.34s"/><circle cx="473.5" cy="54.6" r="1.06" style="animation-delay:-2.8s"/><circle cx="310.4" cy="88.1" r="0.87" style="animation-delay:-3.5s"/><circle cx="689.0" cy="53.1" r="1.19" style="animation-delay:-0.47s"/><circle cx="446.1" cy="110.4" r="0.61" style="animation-delay:-1.96s"/><circle cx="150.6" cy="99.5" r="1.04" style="animation-delay:-2.29s"/><circle cx="802.9" cy="56.3" r="0.99" style="animation-delay:-2.38s"/><circle cx="572.3" cy="73.7" r="1.09" style="animation-delay:-3.78s"/><circle cx="489.8" cy="99.0" r="0.54" style="animation-delay:-2.81s"/></g><path class="land-ln" d="${USMAP.n}"/><path class="st" d="${USMAP.s}"/>${pins}</svg></figure>
+   <figure class="usm-map"><svg class="usm-base" viewBox="0 0 975 610" aria-hidden="true"><defs><clipPath id="usLandClip"><path d="${USMAP.n}"/></clipPath></defs><path class="land-sh" d="${USMAP.n}" transform="translate(0 7)"/><path class="land" d="${USMAP.n}"/><image class="land-ph" href="${USBG}" x="0" y="-52" width="975" height="731.25" preserveAspectRatio="none" clip-path="url(#usLandClip)"/><path class="land-ln" d="${USMAP.n}"/><path class="st" d="${USMAP.s}"/></svg><svg class="usm-svg" viewBox="0 0 975 610" aria-label="${zh?'美国地图':'Map of the United States'}">${pins}</svg><div class="usm-fx" aria-hidden="true">${USSTARS}${ps.map(q=>{ const [x,y]=PLACES[q.place].pt; return `<i class="rg" style="left:${(x/9.75).toFixed(3)}%;top:${(y/6.1).toFixed(3)}%"></i>`; }).join('')}</div></figure>
    <div class="us-tags">${cards}</div></div></div>`; }
 function usPage(c,q){ if(q.map) return usMap(c); const zh=LANG==='zh', L=zh?'zh':'en', P=PLACES[q.place], no=String(c.posts.indexOf(q)).padStart(2,'0'), k=c.posts.indexOf(q), rot=[-1.4,1.1,-.7][k%3], rr=[-1.6,1.2,-.6,1.5,-1.1,.7];
   const gal=q.photos.map((p,i)=>`<figure class="us-ph" style="--r:${rr[i%6]}deg" data-uslb="${i}" tabindex="0"><img src="${p.img}" loading="lazy" alt="${p.cap[L]}"><figcaption>${p.cap[L]}</figcaption></figure>`).join('');
@@ -5109,11 +5120,11 @@ let usFlying=false;
 function usFly(j){ if(usFlying||!rdCol) return; const q=rdCol.posts[j], P=PLACES[q.place], sv=$('#reader .usm-svg'); if(!sv||reduce){ rdFlipTo(j); return; }
   usFlying=true; const [x,y]=P.pt, NS='http://www.w3.org/2000/svg', g=document.createElementNS(NS,'g'); g.setAttribute('class','us-gps'); g.setAttribute('transform',`translate(${x} ${y}) scale(1.6)`);
   g.innerHTML='<circle class="r1" r="6"/><circle class="r2" r="6"/><g class="pin"><path d="M0 0C-3-6-10-10-10-17a10 10 0 0 1 20 0c0 7-7 11-10 17z"/><circle cy="-17" r="3.8"/></g>';
-  sv.appendChild(g); sv.classList.add('flying'); sv.querySelectorAll('.us-pin').forEach(p=>p.classList.toggle('pick',+p.dataset.usfly===j));
+  const bs=$('#reader .usm-base'); sv.appendChild(g); sv.classList.add('flying'); bs&&bs.classList.add('flying'); sv.querySelectorAll('.us-pin').forEach(p=>p.classList.toggle('pick',+p.dataset.usfly===j));
   setTimeout(()=>sfx('gps'),250);
   const v0=[0,0,975,610], W=240, H=W*610/975, v1=[x-W/2,y-H*.58,W,H], t0=performance.now()+1050, D=950, ease=t=>t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;
   setTimeout(()=>sfx('whoosh'),1050);
-  const st=now=>{ if(!sv.isConnected){ usFlying=false; return; } const k=Math.max(0,Math.min(1,(now-t0)/D)), e=ease(k); const vb=v0.map((v,i)=>v+(v1[i]-v)*e), z=975/vb[2]; sv.setAttribute('viewBox',vb.map(v=>v.toFixed(2)).join(' ')); sv.style.setProperty('--z',z.toFixed(2)); g.setAttribute('transform',`translate(${x} ${y}) scale(${(1.6/z).toFixed(3)})`);
+  const st=now=>{ if(!sv.isConnected){ usFlying=false; return; } const k=Math.max(0,Math.min(1,(now-t0)/D)), e=ease(k); const vb=v0.map((v,i)=>v+(v1[i]-v)*e), z=975/vb[2]; const vbs=vb.map(v=>v.toFixed(2)).join(' '); sv.setAttribute('viewBox',vbs); sv.style.setProperty('--z',z.toFixed(2)); if(bs){ bs.setAttribute('viewBox',vbs); bs.style.setProperty('--z',z.toFixed(2)); } g.setAttribute('transform',`translate(${x} ${y}) scale(${(1.6/z).toFixed(3)})`);
     if(k<1) requestAnimationFrame(st); else setTimeout(()=>{ usFlying=false; rdFlipTo(j); },140); };
   requestAnimationFrame(st); }
 function usLightbox(i){ const q=rdCol&&rdCol.posts[rdIdx]; if(!q||!q.photos) return; const p=q.photos[i], L=LANG==='zh'?'zh':'en'; let lb=$('#reader .us-lb');
@@ -6308,6 +6319,8 @@ function ltBack(){ if(!ltOn||ltBusy) return; const ov=$('#ltOv'), sheet=ov.query
 /* column reader: the card turns like a book page into a full window; each topic is a tab */
 let rdCol=null, rdIdx=0, rdCard=null, rdBusy=false;
 const RD_D=900, RD_E='cubic-bezier(.62,0,.2,1)';
+// while a column is open nothing behind it is visible, so its looping animations are paused to keep the reader smooth
+const rdStill=on=>$('#reader').classList.toggle('still',!!on);
 function readerOpen(){ return $('#reader').classList.contains('on'); }
 function rdRect(el){ const r=el.getBoundingClientRect(); return {l:r.left,t:r.top,w:r.width,h:r.height}; }
 function rdClip(el){ const r=$('#reader'), rr=r.getBoundingClientRect(), k=rr.width/(r.offsetWidth||1); if(!el||!el.isConnected) return null; const c=el.getBoundingClientRect();
@@ -6324,15 +6337,15 @@ function rdTurn(card,open,done){ // the cover page swings open (or shut) from it
   a2.onfinish=()=>{ f.remove(); a1.cancel(); a3.cancel(); done&&done(); }; }
 function letterHTML(write){ const zh=LANG==='zh', L=zh?LETTER.zh:LETTER.en, [to,hi,...ps]=L;
   return `<div class="hwl ${zh?'zh':'en'}${write?' write':''}" data-noi18n lang="${zh?'zh-CN':'en'}"><h2 class="lt-to">${to}</h2><p class="lt-hi">${hi}</p>${ps.map((t,i)=>`<p${!zh&&i===3?' class="lt-em"':''}>${t}</p>`).join('')}</div>`; }
-function openReader(br,card){ const c=COLS.find(x=>x.br===br); if(!c||rdBusy) return; pageBufs(); rdCol=c; rdIdx=0; rdCard=card||null; const r=$('#reader');
+function openReader(br,card){ const c=COLS.find(x=>x.br===br); if(!c||rdBusy) return; pageBufs(); rdCol=c; rdIdx=0; rdCard=card||null; const r=$('#reader'); rdStill(false);
   r.classList.toggle('endc',!!(S.flags.closed&&!S.flags.opened&&!TK())); drawReader(true); rdBusy=true;
   // lay the window out and decode its pictures while the card lifts, so the turn itself only has to move pixels
   const anim=rdCard&&!reduce; if(anim){ r.classList.add('on','prep'); }
   const imgs=[...r.querySelectorAll('img')].map(im=>im.decode?im.decode().catch(()=>{}):0);
   const go=()=>{ r.classList.remove('prep'); r.classList.add('on'); $('#sheetBg').classList.add('on','rdbg'); sfx('whoosh');
-    if(anim) rdTurn(rdCard,true,()=>{ rdBusy=false; rdCard.classList.remove('turn'); }); else { rdBusy=false; } };
+    if(anim) rdTurn(rdCard,true,()=>{ rdBusy=false; rdCard.classList.remove('turn'); rdStill(true); }); else { rdBusy=false; rdStill(true); } };
   if(anim){ rdCard.classList.add('turn'); Promise.all([Promise.all(imgs),new Promise(k=>setTimeout(k,170))]).then(()=>requestAnimationFrame(go)); } else go(); }
-function closeReader(quiet){ if(!readerOpen()||rdBusy) return; const r=$('#reader'); if(!quiet) sfx('unwhoosh'); $('#sheetBg').classList.remove('on'); setTimeout(()=>$('#sheetBg').classList.remove('rdbg'),320);
+function closeReader(quiet){ if(!readerOpen()||rdBusy) return; rdStill(false); const r=$('#reader'); if(!quiet) sfx('unwhoosh'); $('#sheetBg').classList.remove('on'); setTimeout(()=>$('#sheetBg').classList.remove('rdbg'),320);
   if(rdCard&&rdCard.isConnected&&!reduce){ rdBusy=true; rdTurn(rdCard,false,()=>{ r.classList.remove('on'); rdBusy=false; }); } else r.classList.remove('on'); }
 const RD_SEP=(rest)=>'<div class="rd-sep" aria-hidden="true"><svg viewBox="0 0 330 48"><defs><linearGradient id="rdStaff" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="330" y2="0"><stop offset="0" stop-color="currentColor" stop-opacity="0"/><stop offset=".38" stop-color="currentColor" stop-opacity=".9"/><stop offset=".62" stop-color="currentColor" stop-opacity=".9"/><stop offset="1" stop-color="currentColor" stop-opacity="0"/></linearGradient></defs><g stroke="url(#rdStaff)" stroke-width="1"><line x1="0" x2="330" y1="8" y2="8"/><line x1="0" x2="330" y1="16" y2="16"/><line x1="0" x2="330" y1="24" y2="24"/><line x1="0" x2="330" y1="32" y2="32"/><line x1="0" x2="330" y1="40" y2="40"/></g>'+(rest==='2'?'<rect x="152" y="18.6" width="26" height="5.8" fill="currentColor"/>':rest==='8'?'<g transform="translate(0 2)"><circle cx="159.5" cy="17.5" r="3.6" fill="currentColor"/><path d="M157 19.4 Q164 22.6 171.5 15.2" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M171.5 15.2 L163.6 35" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></g>':'<path fill="currentColor" transform="translate(165 24) scale(1.36) translate(-120.6 -19)" d="M117.6 5.2 L125 13.6 Q121 17 121 19.6 Q121 22.2 126.4 26 L124.9 27.5 Q120.2 25.4 118.6 27 Q117.6 29 120.9 32.2 L120.2 32.8 Q113.4 28.4 115.5 25.2 Q117.6 22.6 122.3 24.2 L115.4 16.8 Q119.6 13.6 119.6 11 Q119.6 8.4 116.7 6 Z"/>')+'</svg></div>'; // a staff that fades out at both ends, a quarter rest (prologue/epilogue) or an eighth rest (stops) in the middle: a breath before the coda
 const REP_START='<svg viewBox="0 0 24 32" aria-hidden="true"><rect x="3" y="3" width="4.2" height="26" fill="currentColor"/><rect x="10" y="3" width="1.4" height="26" fill="currentColor"/><circle cx="16" cy="12.5" r="1.9" fill="currentColor"/><circle cx="16" cy="19.5" r="1.9" fill="currentColor"/></svg>';
