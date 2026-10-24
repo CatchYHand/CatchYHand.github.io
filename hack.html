@@ -793,10 +793,21 @@ body:not(.zh) .cc.open figcaption b{font-size:min(clamp(1rem,1.35vw,1.45rem),13.
 .cc.open figcaption small{display:block;font:600 .58rem var(--f-mono);letter-spacing:.18em;color:rgba(255,255,255,.72)}
 .cc.open figcaption b{display:block;font:700 clamp(1rem,1.35vw,1.45rem)/1.08 var(--f-head);letter-spacing:.02em;margin:.25rem 0 0;white-space:nowrap}
 /* Chinese: the column title runs down from the top-right corner like an old book, with its kind pressed beside it as a vermilion seal */
-body.zh .cc.open figcaption{position:static}
-body.zh .cc.open .cc-shade{background:radial-gradient(75% 55% at 100% 0%,rgba(4,8,14,.6),rgba(4,8,14,0) 70%),linear-gradient(180deg,rgba(0,0,0,0) 55%,rgba(4,8,14,.5) 100%)}
-body.zh .cc.open figcaption b{position:absolute;top:.65rem;right:.75rem;margin:0;writing-mode:vertical-rl;text-orientation:upright;white-space:nowrap;font:400 clamp(1.5rem,2.1vw,2.2rem)/1.1 'Ma Shan Zheng','Noto Serif SC',serif;letter-spacing:.08em;color:#fff;text-shadow:0 2px 10px rgba(0,0,0,.5)}
+body.zh .cc.open figcaption{position:static;container-type:normal}
+body.zh .cc.open .cc-shade{background:radial-gradient(70% 55% at 100% 0%,rgba(8,12,10,.55),rgba(8,12,10,0) 70%),linear-gradient(180deg,rgba(0,0,0,0) 38%,rgba(8,12,10,.78) 100%)}
+body.zh .cc.open{container-type:inline-size}
+body.zh .cc.open figcaption b{position:absolute;top:6.6cqw;right:6.6cqw;margin:0;writing-mode:vertical-rl;text-orientation:upright;white-space:nowrap;font:400 15.5cqw/1.1 'Ma Shan Zheng','Noto Serif SC',serif;letter-spacing:.08em;color:#fff;text-shadow:0 2px 12px rgba(0,0,0,.45)}
 body.zh .cc.open figcaption small{position:absolute;top:.8rem;right:calc(.75rem + clamp(1.5rem,2.1vw,2.2rem) * 1.1 + .4rem);writing-mode:vertical-rl;text-orientation:upright;padding:.3rem .16rem;border-radius:2px;background:#B8322A;color:#FBEDE4;font:600 .62rem/1 'Noto Serif SC',serif;letter-spacing:.2em}
+.cc-seal,.cc-d,.cc-go{display:none}
+/* the seal is built letter by letter so it is centred exactly, whatever font the browser ends up with */
+body.zh .cc.open figcaption:has(.cc-seal) small{display:none}
+body.zh .cc.open .cc-seal{position:absolute;top:8cqw;right:calc(6.6cqw + 15.5cqw * 1.1 + 3cqw);display:flex;flex-direction:column;align-items:center;gap:1.1cqw;padding:2.6cqw 1.5cqw;border-radius:2px;background:#B8322A;color:#FBEDE4;font:600 4.6cqw/1 'Noto Serif SC',serif;opacity:.95}
+body.zh .cc.open .cc-seal span{display:block;width:1em;height:1em;text-align:center}
+body.zh .cc.open .cc-d{display:flex;flex-direction:column;gap:.1em;position:absolute;left:7.4cqw;right:7.4cqw;bottom:7cqw;font:500 5.9cqw/1.6 'Noto Serif SC','Songti SC',serif;font-style:normal;letter-spacing:.2em;white-space:nowrap;color:rgba(255,255,255,.92);text-shadow:0 1px 8px rgba(0,0,0,.55)}
+body.zh .cc.open .cc-d span{display:block}
+body.zh .cc.open .cc-go{display:none}
+body.zh .cc.open .cc-no{display:none}
+body.zh .cc.open figcaption>*{z-index:3}
 .cc.slot{background:repeating-linear-gradient(-45deg,transparent 0 11px,rgba(127,140,160,.05) 11px 22px);border:1px dashed var(--line);overflow:hidden}
 .cc.slot .cc-top .cc-no{-webkit-text-stroke:1px var(--line)}
 .cc.slot .tape{position:absolute;left:-22%;right:-22%;top:50%;height:2.2rem;transform:translateY(-50%) rotate(-14deg);background:#f2c200;display:grid;place-items:center;box-shadow:0 4px 10px -4px rgba(0,0,0,.45)}
@@ -5160,12 +5171,12 @@ function usLightbox(i){ const q=rdCol&&rdCol.posts[rdIdx]; if(!q||!q.photos) ret
   lb.classList.add('on'); }
 function usLbClose(){ const lb=$('#reader .us-lb'); if(lb&&lb.classList.contains('on')){ lb.classList.remove('on'); return true; } return false; }
 const COLS=[ // each column's six-digit key sits in one reward terminal
- {br:'research', code:'676767', cap:'Earthly Delights', capSub:'a secret kitchen of dishes from home', kind:'Secret Menu', style:'food', cover:'/assets/img/food/00-cover-s.webp', posts:FOOD},
- {br:'publications', code:'996007', cap:'XXX', kind:'Column', hue:[250,320], posts:POSTS0()},
- {br:'projects', code:'233333', cap:'XXX', kind:'Column', hue:[350,20], posts:POSTS0()},
- {br:'events', code:'114514', cap:'Distant Reverie', capSub:'a travel journal of Japan', kind:'Travel Journal', cover:'/assets/img/japan/01-fuji-s.webp', posts:JAPAN},
- {br:'personal', code:'810975', cap:'God Bless Happyland', capCard:'God’s Happyland', capSub:'postcards from wherever I happened to be', kind:'Postcards', style:'post', cover:'/assets/img/us/00-cover-s.webp', posts:USA},
- {br:'contact', code:'170001', cap:'XXX', kind:'Column', hue:[190,230], posts:POSTS0()}
+ {br:'research', code:'676767', cap:'Earthly Delights', capSub:'a secret kitchen of dishes from home', kind:'Secret Menu', kindZh:'寻味中国', zhD:['银壶金樽复美酒','与君同销万古愁'], style:'food', cover:'/assets/img/food/00-cover-s.webp', posts:FOOD},
+ {br:'publications', code:'996007', cap:'XXX', kind:'Column', kindZh:'专栏', hue:[250,320], posts:POSTS0()},
+ {br:'projects', code:'233333', cap:'XXX', kind:'Column', kindZh:'专栏', hue:[350,20], posts:POSTS0()},
+ {br:'events', code:'114514', cap:'Distant Reverie', capSub:'a travel journal of Japan', kind:'Travel Journal', kindZh:'旅行手记', zhD:['辞别沧溟渡星阶','归舟轻系柳烟斜'], cover:'/assets/img/japan/01-fuji-s.webp', posts:JAPAN},
+ {br:'personal', code:'810975', cap:'God Bless Happyland', capCard:'God’s Happyland', capSub:'postcards from wherever I happened to be', kind:'Postcards', kindZh:'你好美国', zhD:['天下熙熙皆为利来','天下攘攘皆为利往'], style:'post', cover:'/assets/img/us/00-cover-s.webp', posts:USA},
+ {br:'contact', code:'170001', cap:'XXX', kind:'Column', kindZh:'专栏', hue:[190,230], posts:POSTS0()}
 ];
 const COL_SLOTS=12; // empty slots stay on the page for future columns
 const colBg=c=>c.cover?`background-image:url(${c.cover})`:c.img?`background-image:url(${c.img})`:`background-image:linear-gradient(160deg,hsl(${c.hue[0]} 55% 62%),hsl(${c.hue[1]} 45% 30%))`;
@@ -6238,7 +6249,7 @@ function vGallery(){
   const cards=COLS.map((p,i)=>{ const id='ph-'+p.br, o=S.done[id]&&!CRK.has(id), br=TOPO.find(b=>b.rec===p.br), k=!!S.nodes[br.nodes[2].id];
     return o?`<figure class="cc open done" data-t="${id}" data-col="${p.br}" tabindex="0"><div class="cc-img" style="${colBg(p)}"></div><div class="cc-shade"></div>
       <div class="cc-top"><span class="cc-no" data-noi18n>${pad2(i+1)}</span></div>
-      <figcaption><small>${p.kind}</small><b${p.capCard?' class="lng"':''}>${p.capCard||p.cap}</b></figcaption></figure>`
+      <figcaption><small>${p.kind}</small>${p.kindZh?`<span class="cc-seal" data-noi18n>${[...p.kindZh].map(ch=>`<span>${ch}</span>`).join('')}</span>`:''}${p.zhD?`<i class="cc-d" data-noi18n>${p.zhD.map(l=>`<span>${l}</span>`).join('')}</i><span class="cc-go" data-noi18n>翻开 →</span>`:''}<b${p.capCard?' class="lng"':''}>${p.capCard||p.cap}</b></figcaption></figure>`
     :`<figure class="cc locked${k?' keyed':''}" data-t="${id}"><div class="cc-grid"></div><div class="cc-scan"></div>
       <div class="cc-top"><span class="cc-no" data-noi18n>${pad2(i+1)}</span><span class="cc-tag">${br.label}</span></div>
       <div class="cc-mid">${ICON.lock}<b>ENCRYPTED</b><div class="cc-dig" data-noi18n>${[...p.code].map(()=>'<i>•</i>').join('')}</div></div>
