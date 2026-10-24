@@ -7790,7 +7790,9 @@ function embedInit(){ // résumé mode: a throwaway copy of the save (nothing is
       proxy=document.createElement('div'); proxy.className='rd-proxy'; proxy.style.cssText=`left:${d.r.l}px;top:${d.r.t}px;width:${d.r.w}px;height:${d.r.h}px`; proxy.innerHTML=d.html; document.body.appendChild(proxy);
       if(document.body.classList.contains('zh')!==(LANG==='zh')) setLang(LANG,true);
       openReader(d.br,proxy.firstElementChild); setTimeout(()=>{ try{ window.focus(); }catch(e){} },60); }
-    if(d.t==='close'&&readerOpen()) closeReader(); });
+    if(d.t==='close'&&readerOpen()) closeReader();
+    if(d.t==='key'&&readerOpen()&&!rdBusy) rdGo(d.key==='ArrowLeft'?-1:1);
+    if(d.t==='move'&&proxy){ proxy.style.cssText=`left:${d.r.l}px;top:${d.r.t}px;width:${d.r.w}px;height:${d.r.h}px`; proxy.innerHTML=d.html; if(rdCard) rdCard=proxy.firstElementChild; } });
   tell({t:'rd-ready'}); }
 if(EMBED) embedInit(); else { makeTextures(); resumeScripts(); booting=false; delete S.flags.revealPending; if(S.flags.opened&&S.flags.complete){ applyTakeover(); render(); } renderWho(); if(S.flags.closed) $('#hintBtn').hidden=true; if((S.ev.evClose||S.ev.evOpen)&&!S.flags.ending) S.flags.ending=S.ev.evOpen?'open':'close'; if(S.flags.ending&&!S.flags.closed&&S.prog['end:'+S.flags.ending]>=steps('end:'+S.flags.ending).length) S.flags.closed=1; if(S.flags.closed&&!S.flags.complete&&nTasks()===TASK_IDS.length&&nRew()===6) setTimeout(maybeComplete,1500); if((S.queue||[]).length) setTimeout(flushQueue,1500); render(); refresh(); renderPanel(); syncMixer(); boot(); measureHeader(); }
 if(/[?&]from=/.test(location.search)) history.replaceState(null,'',location.pathname+location.hash);
