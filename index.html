@@ -85,12 +85,26 @@ body.zh .lede{font-size:clamp(17px,1.28vw,21px);line-height:1.8}
 .std .btn.dark{background:#F1ECD8;color:#163D20;box-shadow:0 10px 30px -12px rgba(190,230,150,.45)}
 .std .btn.dark:hover{filter:none;background:#fff;box-shadow:0 12px 34px -10px rgba(190,230,150,.6)} .brc .lede{color:#f1d3d4}
 
+.dbg{display:none}
 /* when one half is pulled narrow, its words keep their shape and simply slide under the edge, instead of re-wrapping into a heap */
 @media (min-width:821px){
   .door .copy{flex:none;width:calc(50vw - 2*max(24px,4.4vw))}
   .door h1,.go-wrap .btn{white-space:nowrap}
   .door .go-wrap{flex:none}
   .brc .copy{align-self:flex-end;margin-left:0!important}
+  /* the seam slides by resizing the two halves every frame; everything heavy inside them is a fixed-size layer pinned to its own side,
+     so a resize only moves the cut instead of repainting full-screen gradients (and reallocating the leaf / data canvases) each frame */
+  .door.std{background:#173F21}.door.brc{background:#2A0709}
+  .dbg{display:block;position:absolute;top:0;bottom:0;z-index:0;pointer-events:none;will-change:transform}
+  .std .dbg{left:0;width:100vw;background:radial-gradient(60vw 95% at 14vw 38%,#2F6B37 0%,#173F21 56%,#0A1F10 100%)}
+  .brc .dbg{right:0;width:calc(64vw + 90px);background:radial-gradient(calc(60vw + 108px) 90% at calc(49vw + 63px) 40%,#5a1015 0%,var(--blood) 60%,#100203 100%)}
+  .std::before{left:-10vw;right:auto;width:70vw;will-change:transform}
+  .std::after{right:auto;width:64vw;will-change:transform}
+  .brc::before{left:auto;width:calc(64vw + 90px);will-change:transform}
+  .std .amb{right:auto;width:64vw}
+  .brc .amb{left:auto;width:64vw}
+  .sun{right:auto;width:64vw}
+  .door .copy,.door .go-wrap{will-change:transform}
 }
 .tools{position:relative}
 #sndBtn .mx{display:none}#sndBtn.muted .mx{display:inline}#sndBtn.muted .wv{display:none}
@@ -121,9 +135,9 @@ body.zh .lede{font-size:clamp(17px,1.28vw,21px);line-height:1.8}
 
 
 body.blooming>*:not(#fx):not(script){animation:bloomPulse .7s cubic-bezier(.2,.8,.2,1) both}
-@keyframes bloomPulse{0%{filter:none;transform:none}30%{filter:brightness(1.18) saturate(1.25);transform:scale(1.01)}100%{filter:none;transform:none}}
+@keyframes bloomPulse{0%{transform:none}30%{transform:scale(1.01)}100%{transform:none}}
 body.breaching>*:not(#fx):not(script){animation:brkJit .5s steps(1) both}
-@keyframes brkJit{0%{transform:translate(0)}10%{transform:translate(-14px,3px) skewX(-6deg);filter:drop-shadow(6px 0 0 rgba(255,0,40,.8)) drop-shadow(-6px 0 0 rgba(0,220,255,.7))}22%{transform:translate(10px,-2px);filter:contrast(1.8) saturate(0)}34%{transform:translate(-4px,0) scaleY(1.02);filter:invert(1) hue-rotate(160deg)}46%{transform:translate(18px,4px) skewX(8deg);filter:drop-shadow(-8px 0 0 rgba(255,0,40,.8))}60%{transform:translate(-6px,-3px);filter:brightness(.6)}75%{transform:translate(3px,1px);filter:none}100%{transform:none;filter:none}}
+@keyframes brkJit{0%{transform:translate(0)}10%{transform:translate(-14px,3px) skewX(-6deg)}22%{transform:translate(10px,-2px)}34%{transform:translate(-4px,0) scaleY(1.02)}46%{transform:translate(18px,4px) skewX(8deg)}60%{transform:translate(-6px,-3px)}75%{transform:translate(3px,1px)}100%{transform:none}} /* transforms only: full-screen filters on every layer were the costliest part of the breach */
 #fx{position:fixed;inset:0;width:100%;height:100%;z-index:40;pointer-events:none;display:none}
 #cover{position:fixed;inset:0;z-index:45;pointer-events:none;opacity:0}
 
@@ -167,6 +181,7 @@ body.breaching>*:not(#fx):not(script){animation:brkJit .5s steps(1) both}
 
 <main class="doors">
   <section class="door std" id="dStd" aria-labelledby="hStd">
+    <i class="dbg" aria-hidden="true"></i>
     <canvas class="amb" id="ambL" aria-hidden="true"></canvas>
     <i class="sun" id="sun" aria-hidden="true"></i>
     <div class="copy">
@@ -178,6 +193,7 @@ body.breaching>*:not(#fx):not(script){animation:brkJit .5s steps(1) both}
   </section>
 
   <section class="door brc" id="dBrc" aria-labelledby="hBrc">
+    <i class="dbg" aria-hidden="true"></i>
     <canvas class="amb" id="ambR" aria-hidden="true"></canvas>
     <div class="copy">
       <div class="eyebrow" data-en="Mode 02 · Hacker" data-zh="模式 02 · 黑客模式">Mode 02 · Hacker</div>
@@ -422,7 +438,9 @@ function drawAmbient(dt,t){ if(reduce||narrow.matches){ AMB.forEach(a=>{ if(a.ct
     c.globalAlpha=1; } }
 /* one loop drives it all */
 let tPrev=performance.now(); const T0=tPrev;
-function seamFrame(now){ const dt=Math.min(.05,(now-tPrev)/1000), t=(now-T0)/1000; tPrev=now;
+let menuCovered=false; // once a mode's transition fully covers the menu, stop drawing (and compositing) what's underneath
+const coverMenu=on=>{ menuCovered=on; ['.doors','#battle','#emblem'].forEach(q=>{ const e=$(q); if(e) e.style.visibility=on?'hidden':''; }); };
+function seamFrame(now){ const dt=Math.min(.05,(now-tPrev)/1000), t=(now-T0)/1000; tPrev=now; if(menuCovered){ requestAnimationFrame(seamFrame); return; }
   const tgt=force||(reduce?0:(mxN===null?(touch?Math.sin(t*.45)*.85:0):clamp((mxN-.5)/.3,-1,1)));
   P+=(tgt-P)*Math.min(1,dt*(force?6:3.2));
   // the seam leans CUT px over its height, so the emblem (at 62% down) sits left of the seam's top; widen green's basis so the emblem itself rests on screen centre and travels equally far into either half
@@ -477,7 +495,8 @@ function grow(done){ // the bloom: a soft pulse, vines race in from the edges an
   const onL=(fn,o,s)=>{ const c=ctx; ctx=L2; fn(o,s); ctx=c; };
   const covered=Math.hypot(W,H)/2; let hideLeaves=false;
   const f=now=>{ const t=Math.max(0,now-t0); ctx.clearRect(0,0,W,H);
-    const shade=Math.min(1,Math.max(0,(t-500)/1100)); if(shade>0){ ctx.globalAlpha=ease(shade); ctx.fillStyle=floor; ctx.fillRect(0,0,W,H); ctx.globalAlpha=1; }
+    const shade=Math.min(1,Math.max(0,(t-500)/1100)); if(shade>=1&&!menuCovered) coverMenu(true); if(shade>0){ ctx.globalAlpha=ease(shade); ctx.fillStyle=floor; ctx.fillRect(0,0,W,H); ctx.globalAlpha=1; }
+    if(t<320){ ctx.fillStyle=`rgba(225,255,200,${(.13*(1-t/320)).toFixed(3)})`; ctx.fillRect(0,0,W,H); } // the brief bright pulse as the bloom starts
     if(t<700){ const k=t/700, r=ease(k)*Math.hypot(W,H)*.6; ctx.strokeStyle=`rgba(200,240,170,${.5*(1-k)})`; ctx.lineWidth=18*(1-k)+2; ctx.beginPath(); ctx.arc(W*.25,H*.82,r,0,7); ctx.stroke(); }
     if(!hideLeaves){
       for(const v of vines){ if(v.done>=v.pts.length-1) continue; const grown=Math.floor((t-v.start)*1.35/7); if(grown<1) continue; const m=Math.min(v.pts.length-1,grown); if(m<=v.done) continue;
@@ -508,6 +527,7 @@ function invade(done){ // the breach: the page tears, corrupt blocks eat it, a t
     // A: tear bands while the page itself jitters (CSS)
     if(t<700){ const n=t<380?14:6; for(let i=0;i<n;i++){ const y=Math.random()*H, h=2+Math.random()*(t<380?38:14); ctx.fillStyle=Math.random()<.6?'rgba(5,6,7,.85)':Math.random()<.5?'rgba(226,38,47,.55)':'rgba(40,220,255,.25)'; ctx.fillRect(Math.random()*W*.4-60,y,W*(.4+Math.random()*.8),h); } }
     // B: corrupt blocks, centre first, until the page is gone
+    if(t>1800&&!menuCovered) coverMenu(true);
     ctx.font=`600 ${Math.round(B*.28)}px ${mono}`; ctx.textBaseline='middle';
     for(const c of cells){ if(t<c.at) break; const age=t-c.at, X=c.x*B, Y=c.y*B;
       if(age<90&&c.k<.45){ ctx.fillStyle=c.k<.15?'#ff2b37':'#3a0a0e'; ctx.fillRect(X,Y,B,B); }
@@ -538,11 +558,19 @@ const MS=(()=>{ try{ return Object.assign({music:.55,sfx:.7,muted:false},JSON.pa
 const saveMS=()=>{ try{ localStorage.setItem('ychen-menu-snd',JSON.stringify(MS)); }catch(e){} };
 const bgm=new Audio('assets/audio/menu.mp3'); bgm.preload='auto'; let bgmOn=false, bgmGap=0, bgmFade=0;
 const mVol=()=>MS.muted?0:MS.music;
-function bgmPlay(restart){ clearTimeout(bgmGap); cancelAnimationFrame(bgmFade); if(restart) try{ bgm.currentTime=0; }catch(e){} bgm.volume=mVol(); bgmOn=true;
+function bgmPlay(restart){ clearTimeout(bgmGap); cancelAnimationFrame(bgmFade); if(restart) try{ bgm.currentTime=0; }catch(e){} bgm.volume=mVol(); bgmOn=true; claimAudio();
   const p=bgm.play(); if(p&&p.catch) p.catch(()=>{ bgmOn=false; }); }
 bgm.addEventListener('ended',()=>{ if(!bgmOn) return; bgmGap=setTimeout(()=>{ if(bgmOn) bgmPlay(true); },3000); });
 function bgmStop(ms){ bgmOn=false; clearTimeout(bgmGap); cancelAnimationFrame(bgmFade); const v0=bgm.volume, t0=performance.now();
   const f=now=>{ const k=Math.min(1,(now-t0)/ms); bgm.volume=v0*(1-k); if(k<1) bgmFade=requestAnimationFrame(f); else bgm.pause(); }; bgmFade=requestAnimationFrame(f); }
+/* only one tab (or page) of the site makes sound at a time, and a hidden tab goes quiet: the same channel the game uses.
+   Without this, two open tabs (or a tab left in the background) each play the menu music on top of each other. */
+let audioBC=null, heldMusic=false; try{ audioBC=new BroadcastChannel('ychen-breach-audio'); }catch(e){}
+function claimAudio(){ try{ audioBC&&audioBC.postMessage('claim'); }catch(e){} }
+function yieldAudio(){ if(bgmOn){ heldMusic=true; bgmOn=false; clearTimeout(bgmGap); cancelAnimationFrame(bgmFade); bgm.pause(); } if(AC&&AC.state==='running') AC.suspend(); }
+function takeAudioBack(){ if(document.hidden) return; if(AC&&AC.state==='suspended') AC.resume(); if(heldMusic&&!picked&&!$('#host')){ heldMusic=false; bgmPlay(false); } }
+if(audioBC) audioBC.onmessage=e=>{ if(e.data==='claim') yieldAudio(); };
+document.addEventListener('visibilitychange',()=>{ if(document.hidden) yieldAudio(); else takeAudioBack(); });
 // browsers block sound until the first click or key press: start then if needed
 const kick=()=>{ if(!bgmOn&&!picked&&!$('#host')) bgmPlay(false); ambStart(); };
 addEventListener('pointerdown',kick,{capture:true}); addEventListener('keydown',kick,{capture:true});
@@ -587,8 +615,8 @@ function ambLoop(){ if(!SA) return; requestAnimationFrame(ambLoop); const t=AC.c
   if(A.r>.12&&t>A.next.frag){ fragment(t+.02,A.dataBus); A.next.frag=t+1.6+Math.random()*(4.2-1.8*A.r); } }
 addEventListener('pointerleave',()=>{ mxN=null; }); document.addEventListener('mouseleave',()=>{ mxN=null; });
 // leaving the menu: both fade out fast (under half a second), then go silent
-function menuSoundOut(){ bgmStop(380); if(SA&&AC){ const t=AC.currentTime; SA.fading=true; [SA.L,SA.R].forEach(g=>{ g.gain.cancelScheduledValues(t); g.gain.setValueAtTime(g.gain.value,t); g.gain.linearRampToValueAtTime(0,t+.35); }); } }
-function menuSoundIn(){ if(SA) SA.fading=false; bgmPlay(true); }
+function menuSoundOut(){ heldMusic=false; bgmStop(380); if(SA&&AC){ const t=AC.currentTime; SA.fading=true; [SA.L,SA.R].forEach(g=>{ g.gain.cancelScheduledValues(t); g.gain.setValueAtTime(g.gain.value,t); g.gain.linearRampToValueAtTime(0,t+.35); }); } }
+function menuSoundIn(){ heldMusic=false; if(AC&&AC.state==='suspended') AC.resume(); if(SA) SA.fading=false; bgmPlay(true); }
 function applyMS(){ bgm.volume=bgmOn?mVol():bgm.volume; if(SA&&AC) SA.out.gain.setTargetAtTime(MS.muted?0:MS.sfx*AMBK,AC.currentTime,.05); if(bus&&AC) bus.gain.setTargetAtTime(MS.muted?0:.7,AC.currentTime,.05);
   const b=$('#sndBtn'); if(b) b.classList.toggle('muted',MS.muted); $('#vMus').value=Math.round(MS.music*100); $('#vSfx').value=Math.round(MS.sfx*100); $('#oMus').textContent=Math.round(MS.music*100); $('#oSfx').textContent=Math.round(MS.sfx*100);
   $('#sMute').innerHTML=MS.muted?$('#sMute').dataset[LANG+'On']:$('#sMute').dataset[LANG+'Off']; }
@@ -606,14 +634,14 @@ function hostPage(url,which){ if(which){ try{ history.pushState({host:which},'',
 /* one language for the whole site: whichever page changes it, every other page follows */
 addEventListener('storage',e=>{ if(e.key!=='ychen-lang') return; const v=e.newValue==='zh'?'zh':'en'; if(v!==LANG){ LANG=v; applyLang(); } });
 window.__ychenHost=from=>{ setTimeout(menuSoundIn,250); { let v='en'; try{ v=localStorage.getItem('ychen-lang')==='zh'?'zh':'en'; }catch(e){} if(v!==LANG){ LANG=v; applyLang(); } } const c=$('#cover'), f=$('#host'); c.style.transition='none'; c.style.background=from==='game'?'#050607':'#F5F3EE'; c.style.opacity='1';
-  if(f) f.remove(); document.title=menuTitle; picked=false; fx.style.display='none'; activate(null); if(/^#(resume|game)$/.test(location.hash)){ try{ history.replaceState(null,'',location.pathname+location.search); }catch(e){} }
+  if(f) f.remove(); document.title=menuTitle; picked=false; coverMenu(false); fx.style.display='none'; activate(null); if(/^#(resume|game)$/.test(location.hash)){ try{ history.replaceState(null,'',location.pathname+location.search); }catch(e){} }
   requestAnimationFrame(()=>requestAnimationFrame(()=>{ c.style.transition='opacity .7s ease'; c.style.opacity='0'; })); };
 
 /* ---------- coming back from the résumé or the game ---------- */
 (()=>{ const q=new URLSearchParams(location.search), from=q.get('from'); if(!from) return; history.replaceState(null,'',location.pathname);
   const c=$('#cover'); c.style.background=from==='game'?'#050607':'#F5F3EE'; c.style.opacity='1';
   requestAnimationFrame(()=>requestAnimationFrame(()=>{ c.style.transition='opacity .7s ease'; c.style.opacity='0'; })); })();
-addEventListener('pageshow',e=>{ if(e.persisted){ picked=false; fx.style.display='none'; activate(null); } });
+addEventListener('pageshow',e=>{ if(e.persisted){ picked=false; coverMenu(false); fx.style.display='none'; activate(null); } });
 // browser Back while the résumé or game is open: close it and stay on the menu (full screen untouched)
 addEventListener('popstate',()=>{ if($('#host')&&!/^#(resume|game)$/.test(location.hash)) window.__ychenHost($('#host').src.includes('resume')?'resume':'game'); });
 // a refresh or a shared link with #resume / #game reopens that page inside the menu
