@@ -926,7 +926,8 @@ html.embed #sheetBg{position:fixed}
 .rd-proxy{position:fixed;visibility:hidden;pointer-events:none;z-index:1}
 .rd-proxy>*{position:absolute;inset:0;width:100%;height:100%;margin:0}
 .rd-flip .fr>.rcol{position:absolute;inset:0;width:100%;height:100%;margin:0;transform:none!important;box-shadow:none}
-body:has(#reader.on.still) *:not(#reader):not(#reader *){animation-play-state:paused!important}
+/* only the portal hidden behind an open column pauses; dialogs, toasts, the bottom bar and the sound panel keep animating */
+body:has(#reader.on.still) :is(#corp,#panel,.amb,#topo,#dossier) *:not(#reader):not(#reader *){animation-play-state:paused!important}
 .reader.prep{visibility:hidden}
 .reader>*{will-change:transform} /* the window's parts sit on their own layers, so growing the clip only repaints its mask */
 .sheet-bg.rdbg{backdrop-filter:none;-webkit-backdrop-filter:none;background:rgba(10,16,24,.5)}
