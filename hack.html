@@ -518,6 +518,15 @@ body.zh .item h4,body.zh .feat h4{letter-spacing:.01em}
 #cBody .cpara{display:block}
 #fsBtn .fs-out{display:none}
 #allBtn,#pvBtn{color:#f2c200!important;font:600 .8rem var(--f-body)!important;border:1px dashed rgba(242,194,0,.55)!important;margin-right:.3rem}
+#allBtn.tt-in,#pvBtn.tt-in{animation:ttIn 1.5s cubic-bezier(.2,1.4,.4,1) both,ttGlow 1s ease-in-out 1.5s 3 both}
+#pvBtn.tt-in{animation-delay:.16s,1.66s}
+@keyframes ttIn{0%{opacity:0;transform:translateY(140%) scale(.4);filter:brightness(4) blur(3px)}40%{opacity:1;transform:translateY(-22%) scale(1.25);filter:brightness(2.2)}62%{transform:translateY(6%) scale(.95)}100%{opacity:1;transform:none;filter:none}}
+@keyframes ttGlow{0%,100%{box-shadow:0 0 0 0 rgba(242,194,0,0)}50%{box-shadow:0 0 0 .35rem rgba(242,194,0,.28),0 0 1.4rem .3rem rgba(242,194,0,.7);background:rgba(242,194,0,.16)}}
+.tt-flash{position:fixed;inset:0;z-index:9990;pointer-events:none;background:radial-gradient(ellipse at 80% 100%,rgba(242,194,0,.45),transparent 60%);animation:ttFlash 1.3s ease-out forwards}
+@keyframes ttFlash{0%{opacity:0}18%{opacity:1}100%{opacity:0}}
+.tt-tag{position:fixed;z-index:9991;pointer-events:none;transform:translate(-50%,-100%);font:700 .74rem var(--f-mono,monospace);letter-spacing:.12em;color:#f2c200;background:#111;border:1px solid #f2c200;padding:.3rem .6rem;white-space:nowrap;animation:ttTag 3.4s ease forwards}
+@keyframes ttTag{0%{opacity:0;margin-top:10px}12%{opacity:1;margin-top:-8px}80%{opacity:1;margin-top:-8px}100%{opacity:0;margin-top:-14px}}
+@media (prefers-reduced-motion:reduce){#allBtn.tt-in,#pvBtn.tt-in,.tt-flash,.tt-tag{animation-duration:.01s}}
 .pvp{position:fixed;left:50%;bottom:calc(var(--bar) + .8rem);transform:translateX(-50%);z-index:9998;background:#15171a;color:#eee;border:1px solid #f2c200;box-shadow:0 18px 40px rgba(0,0,0,.5);padding:.9rem 1rem 1rem;width:min(34rem,94vw);font:500 .85rem var(--f-body)}
 .pvp[hidden]{display:none}
 .pvp h6{margin:0 0 .25rem;font:700 .95rem var(--f-body);color:#f2c200;display:flex;justify-content:space-between;align-items:center}
@@ -2259,6 +2268,8 @@ body.zh .fin-h{font-weight:900;letter-spacing:.12em;font-size:clamp(2.8rem,8.4vw
       <button id="escBtn"><span class="key">Esc</span>Back</button>
       <button id="hintBtn"><span class="key">H</span>Hint</button>
       <span class="sp"></span>
+      <button id="allBtn" hidden data-noi18n>🔓 解锁全部</button>
+      <button id="pvBtn" hidden data-noi18n>🎬 动画预览</button>
       <button id="fsBtn" aria-label="Enter full screen" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><g class="fs-in"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></g><g class="fs-out"><path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5"/></g></svg><span id="fsLbl">Full Screen</span></button>
       <button id="resetBtn" aria-label="Reset progress"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3.5 12a8.5 8.5 0 1 0 2.6-6.1"/><path d="M3.5 3.5v5h5"/></svg>Reset</button>
       <button id="langBtn" data-noi18n data-l="en" role="switch" aria-checked="false" aria-label="Language: English / 中文"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9.5"/><path d="M2.5 12h19M12 2.5c3 3 3 16 0 19M12 2.5c-3 3-3 16 0 19"/></svg><span class="lsw" id="langLbl"><i></i><b class="e">EN</b><b class="z">中</b></span></button>
@@ -5350,7 +5361,7 @@ const NODE={}; TOPO.forEach(b=>b.nodes.forEach((n,i)=>{ n.branch=b; n.idx=i; NOD
    STATE
    ===================================================================== */
 /* DEV: the animation preview button only shows on non-production hosts, or on github.io with ?dev in the URL. */
-const DEV=false; // release build: no test tools
+const DEV=false; // release build: test tools only via the secret code
 const STORE='ychen-omni-v9';
 const BASE_THREADS=['conv','piano','hire','ann'];
 const fresh=()=>({att:START_ATT, dec:0, done:{}, flags:{}, nodes:{}, key:false,
@@ -7487,6 +7498,7 @@ function setLang(l,init){
   if(LANG==='en') zhRestore();
   if(ltOn) ltRelang();
   if(!init){ render(); renderPanel(); refresh(); if(openOv==='topo') drawTopo(); if(openOv==='dossier') renderDossier(); if(openOv==='final') finalIn(true); if(readerOpen()) drawReader(true); cueButtons(); if(TK()) applyTakeover(); renderWho(); window.__fsSync&&window.__fsSync(); sfx('click'); }
+  ttLabel(); pvRender();
   if(LANG==='zh') zhNode(document.body);
 }
 $('#langBtn').addEventListener('click',()=>{ const to=LANG==='zh'?'en':'zh';
@@ -7501,18 +7513,18 @@ let confirmNo=null;
 function askConfirm(o){ confirmNo=o.onNo||null; $('#cTag').textContent=o.tag||'[ WARNING ]'; $('#cTitle').textContent=o.title; $('#cBody').innerHTML=''; (Array.isArray(o.body)?o.body:[o.body]).forEach(t=>{ const s=document.createElement('span'); s.className='cpara'; s.textContent=t; $('#cBody').appendChild(s); }); $('#confirm').classList.toggle('even',!!o.even); $('#cNo').textContent=o.no||'No'; $('#cYes').textContent=o.yes||'Yes'; confirmYes=o.onYes; sfx('open'); $('#confirm').hidden=false; $('#cNo').focus(); }
 /* ---------- DEV: animation preview. Pick an animation, it plays on a throwaway copy of the state, then everything goes back exactly as it was. ---------- */
 const PV_LIST=[
- {k:'col', t:'专栏破解', d:'六位滚轮开锁 + 乱码侵蚀', page:'gallery', prep:()=>{ delete S.done['ph-events']; S.nodes.evtT=1; }, run:()=>runTask('ph-events')},
- {k:'nb', t:'保险箱开锁', d:'转盘逐位输入 → 液晶核对 → 面板向上抽走', page:'gallery', prep:()=>{ delete S.done.album; }, run:()=>runTask('album')},
- {k:'env', t:'第一次拆信', d:'点信封 → 解绳 → 信纸飘出（谢谢后放回）', page:'gallery', hack:false, prep:()=>{ S.done.album=1; delete S.flags.letterRead; }, run:()=>{ const e=$('.nb.sf.done .sf-env'); if(e) e.click(); }},
- {k:'rd', t:'专栏翻书打开 / 合上', d:'卡片翻页展开阅读窗口，2.5 秒后合上', page:'gallery', hack:false, prep:()=>{ S.done['ph-events']=1; }, run:()=>{ const c=$('.cc.open[data-col="events"]'); openReader('events',c); setTimeout(()=>closeReader(),2600); }},
- {k:'stamp', t:'审稿印章吹散', d:'论文页 UNDER REVIEW 印章', page:'pubs', prep:()=>{ delete S.done.stamp; }, run:()=>runTask('stamp')},
- {k:'ow', t:'组件覆写', d:'主页肖像的红色代码覆写', page:'home', prep:()=>{ delete S.done.portrait; }, run:()=>runTask('portrait')},
- {k:'node', t:'拓扑节点打通', d:'奖励网络里打通一个终端', page:null, prep:()=>{ S.nodes.evt1=1; S.nodes.evt2=1; delete S.nodes.evtT; }, run:()=>{ open('topo'); setTimeout(()=>unlockNode(NODE.evtT,null),900); }},
- {k:'tab', t:'新菜单蚀刻', d:'激光飞到菜单栏刻出「专栏 / Columns」，跟随当前语言', page:'forum', hack:false, prep:()=>{ delete S.tabs.gallery; }, run:()=>{ const b=document.createElement('button'); b.style.cssText='position:fixed;left:50%;top:55%;width:2px;height:2px;opacity:0;pointer-events:none'; document.body.appendChild(b); claimTab('gallery',b); }},
- {k:'byeN', t:'MOSS 道别 · 普通结局', d:'线缆降下 → 开机 → 道别 → 鞠躬断电 → 收回', page:'home', hack:false, prep:()=>{ delete S.flags.mossBye; delete S.flags.opened; S.flags.ending='close'; }, run:()=>mossBye()},
- {k:'byeH', t:'MOSS 道别 · 隐藏结局', d:'同上，隐藏结局的台词', page:'home', hack:false, prep:()=>{ delete S.flags.mossBye; S.flags.ending='open'; }, run:()=>mossBye()},
- {k:'tut', t:'MOSS 新手引导', d:'进游戏时的询问 + 完整引导', page:'home', hack:false, prep:()=>{ delete S.flags.tut; }, run:()=>tutAsk()},
- {k:'pub', t:'论文价格清零', d:'商店价格改成 $0.00', page:'pubs', prep:()=>{ S.done.stamp=1; delete S.done['pub-nonlinear']; }, run:()=>runTask('pub-nonlinear')}
+ {k:'col', te:'Column Breach', de:'Six-wheel combination lock + garbled-code erosion', t:'专栏破解', d:'六位滚轮开锁 + 乱码侵蚀', page:'gallery', prep:()=>{ delete S.done['ph-events']; S.nodes.evtT=1; }, run:()=>runTask('ph-events')},
+ {k:'nb', te:'Safe Unlock', de:'Dial in digit by digit → LCD check → panel slides up and away', t:'保险箱开锁', d:'转盘逐位输入 → 液晶核对 → 面板向上抽走', page:'gallery', prep:()=>{ delete S.done.album; }, run:()=>runTask('album')},
+ {k:'env', te:'First Letter Opening', de:'Click the envelope → untie the string → the letter floats out (put back after “Thank you”)', t:'第一次拆信', d:'点信封 → 解绳 → 信纸飘出（谢谢后放回）', page:'gallery', hack:false, prep:()=>{ S.done.album=1; delete S.flags.letterRead; }, run:()=>{ const e=$('.nb.sf.done .sf-env'); if(e) e.click(); }},
+ {k:'rd', te:'Column Book Open / Close', de:'The card turns like a page into the reading window, then closes after 2.5 s', t:'专栏翻书打开 / 合上', d:'卡片翻页展开阅读窗口，2.5 秒后合上', page:'gallery', hack:false, prep:()=>{ S.done['ph-events']=1; }, run:()=>{ const c=$('.cc.open[data-col="events"]'); openReader('events',c); setTimeout(()=>closeReader(),2600); }},
+ {k:'stamp', te:'Review Stamp Blown Away', de:'The UNDER REVIEW stamp on the Publications page', t:'审稿印章吹散', d:'论文页 UNDER REVIEW 印章', page:'pubs', prep:()=>{ delete S.done.stamp; }, run:()=>runTask('stamp')},
+ {k:'ow', te:'Component Overwrite', de:'Red code overwrites the portrait on the Home page', t:'组件覆写', d:'主页肖像的红色代码覆写', page:'home', prep:()=>{ delete S.done.portrait; }, run:()=>runTask('portrait')},
+ {k:'node', te:'Topology Node Breach', de:'Break through a terminal in the reward network', t:'拓扑节点打通', d:'奖励网络里打通一个终端', page:null, prep:()=>{ S.nodes.evt1=1; S.nodes.evt2=1; delete S.nodes.evtT; }, run:()=>{ open('topo'); setTimeout(()=>unlockNode(NODE.evtT,null),900); }},
+ {k:'tab', te:'New Menu Etching', de:'A laser flies to the menu bar and etches “Columns / 专栏”, following the current language', t:'新菜单蚀刻', d:'激光飞到菜单栏刻出「专栏 / Columns」，跟随当前语言', page:'forum', hack:false, prep:()=>{ delete S.tabs.gallery; }, run:()=>{ const b=document.createElement('button'); b.style.cssText='position:fixed;left:50%;top:55%;width:2px;height:2px;opacity:0;pointer-events:none'; document.body.appendChild(b); claimTab('gallery',b); }},
+ {k:'byeN', te:'MOSS Farewell · Normal Ending', de:'Cable lowers → power on → farewell → bow and power off → retract', t:'MOSS 道别 · 普通结局', d:'线缆降下 → 开机 → 道别 → 鞠躬断电 → 收回', page:'home', hack:false, prep:()=>{ delete S.flags.mossBye; delete S.flags.opened; S.flags.ending='close'; }, run:()=>mossBye()},
+ {k:'byeH', te:'MOSS Farewell · Hidden Ending', de:'Same as above, with the Hidden Ending lines', t:'MOSS 道别 · 隐藏结局', d:'同上，隐藏结局的台词', page:'home', hack:false, prep:()=>{ delete S.flags.mossBye; S.flags.ending='open'; }, run:()=>mossBye()},
+ {k:'tut', te:'MOSS Walkthrough', de:'The prompt on entering the game + the full walkthrough', t:'MOSS 新手引导', d:'进游戏时的询问 + 完整引导', page:'home', hack:false, prep:()=>{ delete S.flags.tut; }, run:()=>tutAsk()},
+ {k:'pub', te:'Paper Price Zeroed', de:'Store prices change to $0.00', t:'论文价格清零', d:'商店价格改成 $0.00', page:'pubs', prep:()=>{ S.done.stamp=1; delete S.done['pub-nonlinear']; }, run:()=>runTask('pub-nonlinear')}
 ];
 let pvCur=null;
 function pvOpen(){ const pnl=$('#pvp'); pnl.hidden=!pnl.hidden; sfx('click'); }
@@ -7521,16 +7533,34 @@ function pvPlay(k){ const it=PV_LIST.find(x=>x.k===k); if(!it) return; $('#pvp')
   closeReader(true); closeOv(true); if(mode==='hack') setMode('browse'); select(null);
   S.dec=99999; S.att=99999; TAB_ORDER.forEach(t=>S.tabs[t]=1); it.prep();
   if(it.page){ view=it.page; thread=null; } render(); refresh();
-  $('#pvbar').hidden=false; $('#pvName').textContent='预览中：'+it.t;
+  $('#pvbar').hidden=false; $('#pvName').textContent=LANG==='zh'?'预览中：'+it.t:'Previewing: '+it.te;
   setTimeout(()=>{ if(it.hack!==false&&it.page) setMode('hack'); setTimeout(()=>{ try{ it.run(); }catch(e){ console.error(e); } }, it.hack!==false&&it.page?1100:300); },350); }
 function pvEnd(){ if(!PV) return; ltKill(); { const t=$('#tut'); if(t){ t.hidden=true; t.classList.remove('bye','lit','lift'); const c=t.querySelector('.t-cable'); if(c) c.remove(); } clearInterval(TUT.timer); TUT.i=-1; TUT.wait=null; } closeReader(true); closeOv(true); if(mode==='hack') setMode('browse'); select(null); CRK.clear();
   S=JSON.parse(PV); PV=null; pvCur=null; $('#pvbar').hidden=true; render(); refresh(); renderPanel(); sfx('click'); }
-if(DEV){ $('#pvBtn').hidden=false; $('#allBtn').hidden=false; $('#pvBtn').addEventListener('click',pvOpen);
-  document.body.insertAdjacentHTML('beforeend',`<div class="pvp" id="pvp" hidden data-noi18n><h6>🎬 动画预览（调试用）<button data-pvx>✕</button></h6><p>点一个动画直接播放。播放用的是临时数据，不会存档，结束后游戏回到原来的样子。</p><div class="g">${PV_LIST.map(x=>`<button data-pv="${x.k}">${x.t}<small>${x.d}</small></button>`).join('')}</div></div>
-   <div class="pvbar" id="pvbar" hidden data-noi18n><span id="pvName"></span><button data-pvr>↻ 再看一次</button><button class="o" data-pvm>换一个</button><button class="o" data-pve>结束预览</button></div>`);
+let ttOn=false;
+function pvRender(){ const pnl=$('#pvp'), bar=$('#pvbar'); if(!pnl||!bar) return; const Z=LANG==='zh';
+  pnl.innerHTML=`<h6>${Z?'🎬 动画预览（调试用）':'🎬 Animation Preview (Debug)'}<button data-pvx>✕</button></h6><p>${Z?'点一个动画直接播放。播放用的是临时数据，不会存档，结束后游戏回到原来的样子。':'Click an animation to play it. Playback uses temporary data and is not saved; the game returns to how it was when you finish.'}</p><div class="g">${PV_LIST.map(x=>`<button data-pv="${x.k}">${Z?x.t:x.te}<small>${Z?x.d:x.de}</small></button>`).join('')}</div>`;
+  bar.querySelector('[data-pvr]').textContent=Z?'↻ 再看一次':'↻ Replay'; bar.querySelector('[data-pvm]').textContent=Z?'换一个':'Pick Another'; bar.querySelector('[data-pve]').textContent=Z?'结束预览':'End Preview';
+  const it=PV_LIST.find(x=>x.k===pvCur); if(it) $('#pvName').textContent=Z?'预览中：'+it.t:'Previewing: '+it.te; }
+function ttLabel(){ const a=$('#allBtn'), p=$('#pvBtn'); if(!a||!p) return; a.textContent=LANG==='zh'?'🔓 解锁全部':'🔓 Unlock All'; p.textContent=LANG==='zh'?'🎬 动画预览':'🎬 Animation Preview'; }
+function enableTestTools(fx){ if(ttOn) return; ttOn=true; ttLabel(); const a=$('#allBtn'), p=$('#pvBtn'); a.hidden=false; p.hidden=false; p.addEventListener('click',pvOpen);
+  if(fx&&!reduce){ [a,p].forEach(b=>{ b.classList.remove('tt-in'); void b.offsetWidth; b.classList.add('tt-in'); b.addEventListener('animationend',ev=>{ if(ev.animationName==='ttGlow') b.classList.remove('tt-in'); }); });
+    const f=document.createElement('div'); f.className='tt-flash'; document.body.appendChild(f); setTimeout(()=>f.remove(),1400);
+    requestAnimationFrame(()=>{ const r=a.getBoundingClientRect(), r2=p.getBoundingClientRect(); const t=document.createElement('div'); t.className='tt-tag'; t.setAttribute('data-noi18n',''); t.textContent=LANG==='zh'?'▲ 测试工具已解锁':'▲ TEST TOOLS UNLOCKED'; t.style.left=((r.left+r2.right)/2)+'px'; t.style.top=(a.parentElement.getBoundingClientRect().top-8)+'px'; document.body.appendChild(t); setTimeout(()=>t.remove(),3500); }); }
+  if(fx){ try{ glitch(); }catch(e){} sfx('reward'); toast(LANG==='zh'?'测试工具已解锁':'TEST TOOLS UNLOCKED',LANG==='zh'?'↑↑↓↓←→←→BABA · 底部控制栏多了「解锁全部」和「动画预览」':'↑↑↓↓←→←→BABA · “Unlock All” and “Animation Preview” are now in the bottom bar','blue'); }
+  document.body.insertAdjacentHTML('beforeend',`<div class="pvp" id="pvp" hidden data-noi18n></div><div class="pvbar" id="pvbar" hidden data-noi18n><span id="pvName"></span><button data-pvr></button><button class="o" data-pvm></button><button class="o" data-pve></button></div>`); pvRender();
   document.addEventListener('click',e=>{ const b=e.target.closest('[data-pv]'); if(b){ pvPlay(b.dataset.pv); return; }
     if(e.target.closest('[data-pvx]')){ $('#pvp').hidden=true; return; } if(e.target.closest('[data-pvr]')){ pvPlay(pvCur); return; }
     if(e.target.closest('[data-pvm]')){ $('#pvp').hidden=false; return; } if(e.target.closest('[data-pve]')){ pvEnd(); return; } }); }
+if(DEV) enableTestTools(false);
+/* secret code: ↑↑↓↓←→←→BABA — exact sequence, nothing extra, all 12 keys within 5 s */
+{ const SEQ=['ArrowUp','ArrowUp','ArrowDown','ArrowDown','ArrowLeft','ArrowRight','ArrowLeft','ArrowRight','b','a','b','a']; let pos=0, t0=0;
+  addEventListener('keydown',e=>{ if(ttOn||EMBED||e.repeat) return; const tg=e.target; if(tg&&(tg.tagName==='INPUT'||tg.tagName==='TEXTAREA'||tg.isContentEditable)) return;
+    if(['Shift','Control','Alt','Meta','CapsLock'].includes(e.key)) return;
+    const k=e.key.length===1?e.key.toLowerCase():e.key, now=performance.now();
+    if(pos>0&&now-t0>5000) pos=0;
+    if(k===SEQ[pos]){ if(pos===0) t0=now; pos++; } else { pos=0; if(k===SEQ[0]){ t0=now; pos=1; } }
+    if(pos===SEQ.length){ pos=0; if(now-t0<=5000) enableTestTools(true); } },true); }
 document.body.appendChild($('#mixer')); // the sound panel floats above every window and overlay
 const ROUTES={menu:'index.html',resume:'resume.html'};
 
@@ -7540,19 +7570,16 @@ function toMenu(){ const c=document.createElement('div'); c.className='exitfx'; 
 const askMenu=()=>askConfirm({tag:'[ MAIN MENU ]',title:'Back to the Main Menu?',body:'Your progress is saved. You can pick up where you left off any time.',no:'No, Stay',yes:'Yes, Go Back',onYes:toMenu});
 $('#menuBtn').addEventListener('click',askMenu); $('#bootMenu').addEventListener('click',()=>{ sfx('click'); askMenu(); }); $('#bootFs').addEventListener('click',()=>$('#fsBtn').click());
 $('#resetBtn').addEventListener('click',()=>askConfirm({title:'Reset All Progress?',body:'Points, breaches, forum history, unlocked tabs and rewards will be wiped. This can’t be undone.',no:'No, Go Back',yes:'Yes, Reset',onYes:()=>{ try{ localStorage.removeItem(STORE); }catch(e){} sfx('overwrite'); location.reload(); }}));
-$('#allBtn')&&$('#allBtn').addEventListener('click',()=>{ if(PV) pvEnd(); askConfirm({tag:'[ CONFIRM ]',title:'Unlock Everything?',body:'Are you sure you want to unlock all content? Unlocking everything ends the game experience immediately. You can choose Reset in the control bar at the bottom right of the screen to return to the start of the game.',no:'No',yes:'Yes',onYes:()=>{ const go2=end=>{ $('#confirm').hidden=true; revealAll(end); glitch(); sfx('reward'); renderDossier(); setTimeout(()=>{ if(mode==='hack') setMode('browse'); open('final'); },420); };
+$('#allBtn').addEventListener('click',()=>{ if(PV) pvEnd(); askConfirm({tag:'[ CONFIRM ]',title:'Unlock Everything?',body:'Are you sure you want to unlock all content? Unlocking everything ends the game experience immediately. You can choose Reset in the control bar at the bottom right of the screen to return to the start of the game.',no:'No',yes:'Yes',onYes:()=>{ const go2=end=>{ $('#confirm').hidden=true; revealAll(end); glitch(); sfx('reward'); renderDossier(); setTimeout(()=>{ if(mode==='hack') setMode('browse'); open('final'); },420); };
     setTimeout(()=>askConfirm({tag:'[ ENDING ]',title:'Choose an Ending',body:['Normal Ending: Compliance closes the forum and the archive goes free.','Hidden Ending: Somebody deletes the kill switch first, and the forum can never be closed again.'],no:'Normal Ending',yes:'Hidden Ending',even:true,onNo:()=>go2('close'),onYes:()=>go2('open')}),60); }}); });
 $('#cNo').addEventListener('click',()=>{ if(confirmNo){ const f=confirmNo; confirmNo=null; f(); } else closeConfirm(); });
 $('#confirm').addEventListener('click',e=>{ if(e.target.id==='confirm') closeConfirm(); });
 $('#cYes').addEventListener('click',()=>{ if(confirmYes) confirmYes(); });
 
-const KONAMI=['ArrowUp','ArrowUp','ArrowDown','ArrowDown','ArrowLeft','ArrowRight','ArrowLeft','ArrowRight','b','a']; let kpos=0;
 addEventListener('keydown',e=>{
   if(!$('#boot').hidden){ if(!$('#confirm').hidden){ if(e.key==='Escape'){ e.preventDefault(); closeConfirm(); } return; } if(e.key==='Escape'){ e.preventDefault(); askMenu(); return; } if(e.key==='Enter'||e.key===' '){ e.preventDefault(); if($('#bootCta').classList.contains('on')) startApp(); else if(boot.skip) boot.skip(); } return; }
   if(TUT.i>=0&&$('#tut')&&!$('#tut').hidden){ if(e.key==='Tab'&&TUT.wait==='hack'){} else { if(e.key==='Enter'){ e.preventDefault(); const n=$('#tut [data-tn]'); if(n) n.click(); } else if(['Tab','Escape','h','H'].includes(e.key)) e.preventDefault(); return; } }
   if(e.target.tagName==='INPUT'){ return; }
-  kpos=(e.key===KONAMI[kpos])?kpos+1:(e.key===KONAMI[0]?1:0);
-  if(kpos===KONAMI.length){ kpos=0; revealAll(); glitch(); sfx('reward'); toast('GOD MODE','↑↑↓↓←→←→BA · everything unlocked'); return; }
   if(openOv==='dossier'&&dosSel==='personal'&&$('#pianoWrap')&&!e.ctrlKey&&!e.metaKey&&!e.altKey&&pianoKey(e,true)) return;
   if(readerOpen()&&$('#reader .us-lb.on')&&(e.key==='ArrowLeft'||e.key==='ArrowRight')){ e.preventDefault(); const lb=$('#reader .us-lb'), q=rdCol.posts[rdIdx], j=+lb.dataset.i+(e.key==='ArrowLeft'?-1:1); if(j>=0&&j<q.photos.length) usLightbox(j); return; }
   if(readerOpen()&&(e.key==='ArrowLeft'||e.key==='ArrowRight')){ e.preventDefault(); rdGo(e.key==='ArrowLeft'?-1:1); return; }
