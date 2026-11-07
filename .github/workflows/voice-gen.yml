@@ -25,7 +25,7 @@ jobs:
       - name: Install IndexTTS-2.5 (CPU)
         run: |
           sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg >/dev/null
-          sudo mkdir -p /mnt/itts && sudo chown $USER /mnt/itts
+          sudo mkdir -p /mnt/itts /mnt/hf && sudo chown $USER /mnt/itts /mnt/hf
           git clone --depth 1 https://github.com/index-tts/index-tts /mnt/itts
           pip install -q "torch==2.8.*" "torchaudio==2.8.*" --index-url https://download.pytorch.org/whl/cpu
           pip install -q -e /mnt/itts "huggingface-hub[cli]"
