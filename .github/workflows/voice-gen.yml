@@ -1,0 +1,52 @@
+name: voice-gen
+on:
+  push:
+    branches: [voice-gen]
+    paths: ['.github/workflows/voice-gen.yml','vg/run.txt']
+  workflow_dispatch:
+    inputs:
+      voices: {description: 'JSON list of voices', default: '["zh_zv_m1", "zh_zv_m2", "zh_zv_m3", "zh_zv_m4", "zh_zv_f1", "zh_zv_f2", "zh_zv_f3", "zh_zv_f4", "en_am_michael", "en_am_adam", "en_am_liam", "en_bm_george", "en_bm_lewis", "en_am_onyx", "en_am_puck", "en_am_fenrir", "en_af_heart", "en_bf_emma", "en_af_sky", "en_af_nicole", "en_af_bella", "en_af_sarah"]'}
+      keys: {description: 'comma list of phrase keys (empty = all)', default: ''}
+permissions: {contents: write}
+concurrency: {group: voice-gen, cancel-in-progress: true}
+jobs:
+  gen:
+    runs-on: ubuntu-latest
+    timeout-minutes: 240
+    strategy:
+      fail-fast: false
+      max-parallel: 20
+      matrix:
+        voice: ${{ fromJSON(github.event.inputs.voices || '["zh_zv_m1", "zh_zv_m2", "zh_zv_m3", "zh_zv_m4", "zh_zv_f1", "zh_zv_f2", "zh_zv_f3", "zh_zv_f4", "en_am_michael", "en_am_adam", "en_am_liam", "en_bm_george", "en_bm_lewis", "en_am_onyx", "en_am_puck", "en_am_fenrir", "en_af_heart", "en_bf_emma", "en_af_sky", "en_af_nicole", "en_af_bella", "en_af_sarah"]') }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - name: Install IndexTTS-2.5 (CPU)
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg >/dev/null
+          sudo mkdir -p /mnt/itts && sudo chown $USER /mnt/itts
+          git clone --depth 1 https://github.com/index-tts/index-tts /mnt/itts
+          pip install -q "torch==2.8.*" "torchaudio==2.8.*" --index-url https://download.pytorch.org/whl/cpu
+          pip install -q -e /mnt/itts "huggingface-hub[cli]"
+          hf download IndexTeam/IndexTTS-2.5 --local-dir /mnt/itts/checkpoints
+          df -h /mnt | tail -1
+      - name: Generate
+        env: {HF_HOME: /mnt/hf}
+        run: cd /mnt/itts && python $GITHUB_WORKSPACE/vg/gen.py ${{ matrix.voice }} "${{ github.event.inputs.keys }}"
+      - name: Encode
+        run: |
+          cd out/${{ matrix.voice }} && for f in *.wav; do ffmpeg -loglevel error -y -i "$f" "${f%.wav}.flac" && rm "$f"; done; ls | wc -l
+      - uses: actions/upload-artifact@v4
+        with: {name: '${{ matrix.voice }}', path: out/}
+  collect:
+    needs: gen
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with: {path: out, merge-multiple: true}
+      - run: |
+          git config user.name "voice-gen bot"; git config user.email "actions@users.noreply.github.com"
+          git add out && git commit -m "Generated voice clips (${{ github.run_id }})" && git push || echo nothing
