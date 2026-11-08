@@ -22,7 +22,9 @@ for j in jobs:
   t=time.time()
   try:
     kw=dict(spk_audio_prompt=f'{W}/vg/prompts/{voice}.wav',text=text,output_path=f'{out}/{k}.wav',lang=lang,use_random=False)
-    if url: kw.update(emo_audio_prompt=ref(url),emo_alpha=0.85)
+    n=len(text.strip('！!。，, '))
+    kw['duration_factor']=1.7 if n<=1 else 1.35 if n==2 else 1.12 if n==3 else 1.0
+    if url: kw.update(emo_audio_prompt=ref(url),emo_alpha=0.6)
     else: kw.update(emo_vector=emo)
     tts.infer(**kw)
     print('OK',k,round(time.time()-t,1),flush=True)
