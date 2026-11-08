@@ -2766,6 +2766,18 @@ html:not([lang=zh]) .gt-phase b,.gt-phase.en b{font-family:'Newsreader','Noto Se
 .gt-res.amiss .rs-rib span{font-size:1rem;padding:.55rem 1.3rem .5rem}
 .fx-badge.royal{z-index:9!important}
 .gs-fan.ins .gb{transition:left .35s cubic-bezier(.3,.8,.3,1),top .35s cubic-bezier(.3,.8,.3,1)}
+/* v24 match entrance and exit */
+.intro .gs{opacity:0;pointer-events:none}
+.intro .gs.in{animation:gsIn .75s cubic-bezier(.2,1.25,.4,1) forwards}
+@keyframes gsIn{0%{opacity:0;translate:var(--ix,0) var(--iy,0);scale:.55;filter:blur(6px) brightness(2.2) hue-rotate(-60deg)}55%{opacity:1;filter:blur(0) brightness(1.5) hue-rotate(-20deg)}100%{opacity:1;translate:0 0;scale:1;filter:none}}
+.gs.gs-leave{animation:gsOut .6s cubic-bezier(.5,0,.8,.4) forwards;pointer-events:none}
+@keyframes gsOut{0%{opacity:1;translate:0 0;scale:1;filter:none}100%{opacity:0;translate:var(--ix,0) var(--iy,0);scale:.6;filter:blur(5px) brightness(2) hue-rotate(-60deg)}}
+.intro .gt-act,.intro .gt-sortb{visibility:hidden}
+.gdk-in{position:absolute;width:0;height:0;z-index:6}
+.gdk-in .gi-st{position:absolute;left:0;top:0}
+.gdk-in .gb{position:absolute;left:0;top:0}
+.gi-fly{pointer-events:none}
+.outro .gt-act,.outro .gt-sortb{visibility:hidden}
 /* ===== Pages & Frames: a reading room, green-leather rail and paper pages ===== */
 #reader.shelf{--sh-bg:#F3EEE3;--sh-ink:#23201A;--sh-ink2:#6B6252;--sh-acc:#8B2B22;--sh-green:#1F3329;--sh-line:#DCD2BF;--cx:#8B2B22}
 #reader.shelf .rd-main,#reader.shelf .rd-leaf{background:var(--sh-bg) linear-gradient(90deg,rgba(80,60,30,.05) 1px,transparent 1px) 0 0/22px 100%}
@@ -7787,6 +7799,11 @@ function snd(k){ try{ if(!AC) initAudio(); if(!AC||SND.muted) return; const t=AC
   else if(k==='siren'){ for(let i=0;i<3;i++){ osc('sawtooth',700,t+i*.42,.21,.05,1050,.02); osc('sawtooth',1050,t+i*.42+.21,.21,.05,700,.02); } osc('square',1400,t,1.2,.012); }
   else if(k==='win'){ [523,659,784,1047,1319,1568].forEach((f,i)=>pluck(f,t+i*.07,.09,.9)); }
   else if(k==='lose'){ [392,330,262,196].forEach((f,i)=>osc('triangle',f,t+i*.16,.5,.07)); }
+  else if(k==='ghost'){ nz(t,1.6,.07,'bandpass',300,1400,6,.5); osc('sine',220,t,1.6,.04,247,.4); osc('sine',330,t+.2,1.4,.03,311,.4); osc('triangle',659,t+.3,1.3,.015,622,.5); }
+  else if(k==='ignite'){ nz(t,.35,.12,'bandpass',900,2600,2,.02); osc('sine',880,t,.35,.03,1320,.01); }
+  else if(k==='seat'){ nz(t,.06,.18,'lowpass',500,0,1); osc('sine',140,t,.12,.12,90); pluck(1175,t+.06,.05,.7); pluck(1568,t+.1,.035,.6); }
+  else if(k==='mech'){ for(let i=0;i<5;i++) nz(t+i*.07,.05,.12,'bandpass',1800-i*200,0,4); osc('square',62,t,.45,.05,48,.02); osc('sine',98,t+.3,.5,.08,73); }
+  else if(k==='suck'){ nz(t,1.1,.1,'bandpass',2400,300,3,.6); osc('sine',660,t,1.1,.04,110,.3); }
   else if(k==='swUs'){ [523,659,784,1047,1319].forEach((f,i)=>pluck(f,t+i*.07,.09,.9)); [1047,1568,2093].forEach((f,i)=>osc('sine',f,t+.36+i*.05,1.1,.05,f)); osc('sine',262,t,.6,.12,392,.02); nz(t+.3,.9,.05,'highpass',7500,0,.4,.2); }
   else if(k==='swThem'){ [784,698,622,523,415].forEach((f,i)=>pluck(f,t+i*.09,.08,.7)); osc('triangle',311,t+.45,1,.07,294); osc('triangle',370,t+.45,1,.05,349); osc('sine',73,t,1,.22,55,.03); nz(t,.6,.06,'lowpass',400,0,1,.1); }
   else if(k==='adrop'){ osc('sawtooth',880,t,1.1,.06,110,.03); osc('sine',440,t,1.1,.08,55,.03); nz(t+.9,.9,.18,'lowpass',260,0,2,.1); osc('sine',49,t+.9,1.4,.3,36,.02); }
@@ -7862,7 +7879,7 @@ function seatHTML(s){ const p=P[s], d=DIR()[s];
   return `<div class="gs gs${s} t${s%2}" data-seat="${s}"><div class="gs-id"><div class="gs-av"><svg viewBox="0 0 40 40">${AV[p.k]}</svg><i class="gs-ring"></i><i class="gs-crown"></i></div>
     <div class="gs-tx"><b>${p.name}</b></div><div class="gs-cnt"><b></b><small>${T('cards','张')}</small><i class="beacon"><i class="bc-beam"><i class="bc-rot"><i class="bm r"></i><i class="bm b"></i></i></i>${sirenSVG()}</i></div><span class="gs-dir"><i>${d[0]}</i></span><div class="gs-say"></div></div>
     ${s===0?'':`<div class="gs-fan"></div>`}</div>`; }
-function buildTable(){ fdPreload(); dkImg('gd-table-dm'); dkImg('gd-table-om'); root.className='on table'+(tut?' tutm':''); root.style.setProperty('--gbk',`url(${GIMG('gd-back')})`); root.style.setProperty('--gbkh',`url(${GIMG('gd-back-h')})`);
+function buildTable(){ fdPreload(); dkImg('gd-table-dm'); dkImg('gd-table-om'); root.className='on table'+(tut?' tutm':'')+(H&&H._intro?' intro':''); root.style.setProperty('--gbk',`url(${GIMG('gd-back')})`); root.style.setProperty('--gbkh',`url(${GIMG('gd-back-h')})`);
   paint(head(T('Dragon Gate','跃龙门'))+`<main class="gt"><div class="gt-felt"><div class="gt-cloth">
       <div class="gt-ring"><div class="dk-all"><img src="${GIMG('gd-table')}" alt=""><canvas class="dk-fx"></canvas><canvas class="dk-cv"></canvas></div></div><i class="gt-frame"></i></div>
     <div class="gl"></div>
@@ -8138,7 +8155,7 @@ async function sweepPlayed(){ const zs=$$g('.gp .gp-cards, .gp .gp-pass'); if(zs
   H.played=[[],[],[],[]]; for(let s=0;s<4;s++) drawPlayed(s); }
 // a small status strip above the disc while tribute is being paid, so players know what is happening
 // before the first play: the first player's compass mark on the disc flashes red three times, and their seat pulses
-async function leadFlash(){ if(!H||tut) return; const s=H.turn; if(s==null||s<0) return; busy=true; const av=$g('.gs'+s+' .gs-av');
+async function leadFlash(){ if(!H||tut||H.phase==='idle') return; const s=H.turn; if(s==null||s<0) return; busy=true; const av=$g('.gs'+s+' .gs-av');
   dragonGlow('#ff3a2a',{sweep:520,hold:700,fade:700,op:.55,eye:false}); snd('lead');
   for(let i=0;i<3;i++) setTimeout(()=>ornLight(s,'#ff3a2a',{inn:120,hold:220,out:260}),i*520);
   if(av) av.classList.add('lead'); await wait(reduce?300:1750); if(av) av.classList.remove('lead'); busy=false; }
@@ -8359,15 +8376,98 @@ function diskPass(from,to,ret){ const C=ret?['#7ef0c0','126,240,192']:['#ffd36a'
   if(!ret) dragonGlow('#ffcf5a',{sweep:900,hold:900,fade:900,op:.55,eye:false}); }
 
 /* ---------- deal: a deck in the middle is shuffled, cut and dealt round the table ---------- */
-async function dealAnim(){ H.hands.forEach(h=>{ h._full=h.slice(); }); if(reduce){ refreshAll(); return; }
-  const real=H.hands, hidden=real.map(()=>[]); H.hands=hidden; refreshAll(); const h0=H;
+/* ---------- a new match: ghost fires on the four quarters, the players take their seats, the disc's centre opens and hands up two decks;
+   a finished match: the cards are drawn back into the disc, the players leave ---------- */
+function fxStage(){ const fx=$g('.gt-fx'), R=felt.getBoundingClientRect(), rg=$g('.gt-ring').getBoundingClientRect(), d=Math.min(2,devicePixelRatio||1);
+  const RX=p=>({x:rg.left-R.left+rg.width*p[0]/100,y:rg.top-R.top+rg.height*p[1]/100}), marks=ORN.map(RX), C=RX(RC), rw=rg.width;
+  const cv=document.createElement('canvas'); cv.className='fx-stage'; cv.width=R.width*d; cv.height=R.height*d; cv.style.cssText=`position:absolute;left:0;top:0;width:${R.width}px;height:${R.height}px;pointer-events:none;z-index:4`; fx.appendChild(cv);
+  const g=cv.getContext('2d'); g.scale(d,d);
+  const S={C,marks,rw,fire:[0,0,0,0],fireT:[0,0,0,0],wisps:[],parts:[],iris:0,irisT:0,spin:0,alive:true};
+  const W=rw*.05;
+  const loop=now=>{ if(!S.alive||!cv.isConnected){ cv.remove(); return; } g.clearRect(0,0,R.width,R.height);
+    // ease every fire and the iris toward their targets
+    for(let i=0;i<4;i++) S.fire[i]+=(S.fireT[i]-S.fire[i])*.08; S.iris+=(S.irisT-S.iris)*.075; S.spin+=.004+S.iris*.02;
+    // ghost fire: cold blue-green flames licking up off each quarter's mark
+    g.globalCompositeOperation='lighter';
+    marks.forEach((m,i)=>{ const a=S.fire[i]; if(a<.01) return; const fl=.85+.15*Math.sin(now*.017+i*2)+.08*Math.sin(now*.041+i);
+      const hg=g.createRadialGradient(m.x,m.y,0,m.x,m.y,W*2.6*fl); hg.addColorStop(0,`rgba(120,255,220,${.42*a})`); hg.addColorStop(.45,`rgba(40,200,190,${.16*a})`); hg.addColorStop(1,'rgba(0,120,140,0)'); g.fillStyle=hg; g.beginPath(); g.arc(m.x,m.y,W*2.6*fl,0,7); g.fill();
+      for(let k=0;k<4;k++) if(Math.random()<a) S.parts.push({k:'f',x:m.x+(Math.random()-.5)*W*.7,y:m.y+W*.2,vx:(Math.random()-.5)*.2,vy:-(.8+Math.random()*1.1)*W/20,r:W*(.22+Math.random()*.2),l:1,dl:.022+Math.random()*.014,ph:Math.random()*7,i}); });
+    for(let j=S.parts.length-1;j>=0;j--){ const p=S.parts[j]; p.l-=p.dl; if(p.l<=0){ S.parts.splice(j,1); continue; }
+      if(p.k==='f'){ p.x+=p.vx+Math.sin(now*.006+p.ph)*.25; p.y+=p.vy; const r=p.r*(.35+.65*p.l), al=Math.min(1,p.l*1.4)*Math.max(.15,S.fire[p.i]), gr=g.createRadialGradient(p.x,p.y,0,p.x,p.y,r);
+        gr.addColorStop(0,`rgba(225,255,250,${.7*al})`); gr.addColorStop(.35,`rgba(90,250,215,${.42*al})`); gr.addColorStop(.75,`rgba(30,150,220,${.14*al})`); gr.addColorStop(1,'rgba(20,80,200,0)'); g.fillStyle=gr; g.save(); g.translate(p.x,p.y); g.scale(.75,1.9-p.l*.6); g.translate(-p.x,-p.y); g.beginPath(); g.arc(p.x,p.y,r,0,7); g.fill(); g.restore(); }
+      else { p.x+=p.vx; p.y+=p.vy; p.vx*=.96; p.vy*=.96; g.fillStyle=`rgba(${p.c},${p.l})`; g.beginPath(); g.arc(p.x,p.y,p.r*p.l,0,7); g.fill(); } }
+    // wisps: a will-o'-the-wisp flying between a mark and a seat
+    S.wisps=S.wisps.filter(w=>{ const u=Math.min(1,(now-w.t0)/w.dur), e=u<.5?2*u*u:1-Math.pow(-2*u+2,2)/2, mx=(w.a.x+w.b.x)/2+(w.b.y-w.a.y)*.25, my=(w.a.y+w.b.y)/2-(w.b.x-w.a.x)*.25;
+      const x=(1-e)*(1-e)*w.a.x+2*(1-e)*e*mx+e*e*w.b.x, y=(1-e)*(1-e)*w.a.y+2*(1-e)*e*my+e*e*w.b.y;
+      for(let k=0;k<3;k++) S.parts.push({k:'s',x:x+(Math.random()-.5)*4,y:y+(Math.random()-.5)*4,vx:(Math.random()-.5)*.6,vy:(Math.random()-.5)*.6-.2,r:1.2+Math.random()*2.4,l:1,dl:.035,c:Math.random()<.5?'140,255,225':'210,255,250'});
+      const hg=g.createRadialGradient(x,y,0,x,y,W*1.1); hg.addColorStop(0,'rgba(235,255,252,.95)'); hg.addColorStop(.35,'rgba(110,255,220,.55)'); hg.addColorStop(1,'rgba(30,160,200,0)'); g.fillStyle=hg; g.beginPath(); g.arc(x,y,W*1.1,0,7); g.fill();
+      if(u>=1){ w.done&&w.done(); return false; } return true; });
+    g.globalCompositeOperation='source-over';
+    // the mechanism in the disc's centre: a bronze iris whose eight leaves slide back into the rim
+    const o=S.iris; if(o>.01){ const r=rw*.105, cx=C.x, cy=C.y;
+      const pit=g.createRadialGradient(cx,cy,0,cx,cy,r*1.05); pit.addColorStop(0,`rgba(255,244,200,${o})`); pit.addColorStop(.35,`rgba(255,196,90,${.85*o})`); pit.addColorStop(.8,`rgba(120,50,8,${.9*o})`); pit.addColorStop(1,`rgba(30,12,2,${o})`);
+      g.fillStyle=pit; g.beginPath(); g.arc(cx,cy,r*1.06,0,7); g.fill();
+      g.save(); g.beginPath(); g.arc(cx,cy,r*1.08,0,7); g.clip(); const op=Math.min(1,o*1.15);
+      for(let i=0;i<8;i++){ const a0=i*Math.PI/4+S.spin*.5+op*.7, dd=op*r*.98, a1=a0+Math.PI/4*1.08;
+        g.fillStyle=i%2?'#4a2e10':'#5a3814'; g.strokeStyle='rgba(255,214,120,.85)'; g.lineWidth=1.2; g.beginPath();
+        g.moveTo(cx+Math.cos(a0)*dd,cy+Math.sin(a0)*dd); g.lineTo(cx+Math.cos(a0)*r*1.3,cy+Math.sin(a0)*r*1.3); g.lineTo(cx+Math.cos(a1)*r*1.3,cy+Math.sin(a1)*r*1.3); g.lineTo(cx+Math.cos(a1)*dd,cy+Math.sin(a1)*dd); g.closePath(); g.globalAlpha=Math.min(1,(1-op)*1.6+.05); g.fill(); g.stroke(); g.globalAlpha=1; }
+      g.restore();
+      // the rim, with turning engraved ticks
+      g.globalAlpha=Math.min(1,o*2); g.lineWidth=r*.16; g.strokeStyle='#6a4512'; g.beginPath(); g.arc(cx,cy,r*1.16,0,7); g.stroke(); g.lineWidth=1.5; g.strokeStyle='#ffd77a'; g.beginPath(); g.arc(cx,cy,r*1.08,0,7); g.stroke(); g.beginPath(); g.arc(cx,cy,r*1.24,0,7); g.stroke();
+      for(let i=0;i<24;i++){ const a=i/24*Math.PI*2-S.spin; g.strokeStyle=i%3?'rgba(255,215,120,.55)':'rgba(255,240,190,.95)'; g.beginPath(); g.moveTo(cx+Math.cos(a)*r*1.1,cy+Math.sin(a)*r*1.1); g.lineTo(cx+Math.cos(a)*r*(i%3?1.17:1.22),cy+Math.sin(a)*r*(i%3?1.17:1.22)); g.stroke(); }
+      g.globalAlpha=1; }
+    requestAnimationFrame(loop); };
+  requestAnimationFrame(loop);
+  S.wisp=(a,b,dur)=>new Promise(res=>S.wisps.push({a,b,dur:dur||520,t0:performance.now(),done:res}));
+  S.end=()=>{ S.alive=false; };
+  return S; }
+const seatOut=[[0,1],[1,0],[0,-1],[-1,0]];
+async function matchIntro(){ root.classList.add('intro'); const h0=H; if(reduce){ h0._intro=false; root.classList.remove('intro'); return; } const ok=()=>H===h0&&open;
+  const S=fxStage(); bgm(1);
+  // 1. the disc wakes in jade, the four quarters catch ghost fire one by one (south, east, north, west: the order of play)
+  dragonGlow('#3cf0c4',{sweep:1500,hold:5200,fade:1400,op:.6,eye:false}); snd('ghost');
+  for(let s=0;s<4;s++){ S.fireT[s]=1; snd('ignite'); await wait(330); if(!ok()){ S.end(); return; } }
+  await wait(250);
+  // 2. the players arrive in turn: a wisp leaves their quarter's fire and they appear at the seat
+  for(let s=0;s<4;s++){ const a=S.marks[s], b=seatPt(s); await S.wisp(a,b,480); if(!ok()){ S.end(); return; }
+    const el=$g('.gs'+s); if(el){ el.style.setProperty('--ix',seatOut[s][0]*cw*.5+'px'); el.style.setProperty('--iy',seatOut[s][1]*cw*.5+'px'); el.classList.add('in'); }
+    burst(b.x,b.y,26,{c:['#bffff0','#5ff2cf','#ffffff'],v:3.2,g:0,dec:.025,k:'tw',r:2}); snd('seat'); await wait(260); }
+  await wait(300); if(!ok()){ S.end(); return; }
+  // 3. the centre opens and hands up two decks, which settle into one
+  S.irisT=1; snd('mech'); await wait(650); if(!ok()){ S.end(); return; }
+  const fx=$g('.gt-fx'), C=S.C, box=document.createElement('div'); box.className='gdk-in'; box.style.left=C.x+'px'; box.style.top=C.y+'px';
+  const stacks=[0,1].map(i=>{ const st=document.createElement('div'); st.className='gi-st'; for(let k=0;k<9;k++){ const b=document.createElement('i'); b.className='gb'; b.style.transform=`translate(-50%,calc(-50% - ${k*.6}px))`; st.appendChild(b); } box.appendChild(st); return st; }); fx.appendChild(box);
+  snd('riffle'); await Promise.all(stacks.map((st,i)=>st.animate([{transform:'translateY(0) scale(.25)',opacity:0},{transform:`translate(${(i?1:-1)*cw*.42}px,${-cw*.95}px) scale(1.12)`,opacity:1,offset:.6},{transform:`translate(${(i?1:-1)*cw*.42}px,${-cw*.25}px) scale(1)`,opacity:1}],{duration:900,easing:'cubic-bezier(.25,1.1,.4,1)',fill:'forwards'}).finished.catch(()=>{})));
+  S.irisT=0; snd('mech');
+  await Promise.all(stacks.map((st,i)=>st.animate([{transform:`translate(${(i?1:-1)*cw*.42}px,${-cw*.25}px) scale(1)`},{transform:`translate(0,0) scale(1)`}],{duration:420,easing:'cubic-bezier(.5,0,.3,1)',fill:'forwards'}).finished.catch(()=>{})));
+  snd('cut'); await wait(250);
+  // the fires sink low but keep burning through the shuffle, then go out
+  for(let s=0;s<4;s++) S.fireT[s]=.35; setTimeout(()=>{ for(let s=0;s<4;s++) S.fireT[s]=0; setTimeout(()=>S.end(),1600); },1800);
+  box.remove(); h0._intro=false; root.classList.remove('intro'); $$g('.gs.in').forEach(e=>e.classList.remove('in')); }
+async function matchOutro(){ if(!felt||!$g('.gt-ring')) return; $$g('.gt-res,.gt-win,.gr-pop').forEach(n=>n.remove()); clearTimeout(timer); busy=true; if(H){ H.phase='idle'; H.result=null; } drawAct();
+  if(reduce){ return; } root.classList.add('outro'); const S=fxStage(), R=felt.getBoundingClientRect(), fx=$g('.gt-fx'), C=S.C;
+  for(let s=0;s<4;s++) S.fireT[s]=.9; snd('ghost'); dragonGlow('#3cf0c4',{sweep:900,hold:2600,fade:1000,op:.5,eye:false}); await wait(450);
+  // every card left on the table is drawn back into the opening centre
+  S.irisT=1; snd('mech'); await wait(500);
+  const els=[...$$g('#gtHand .gc'),...$$g('.gs-fan .gb'),...$$g('.gp .gc')].filter(e=>{ const r=e.getBoundingClientRect(); return r.width>2; });
+  const fl=els.map(e=>{ const r=e.getBoundingClientRect(), c=e.cloneNode(true); c.classList.add('gi-fly'); c.style.cssText=`position:absolute;left:${r.left-R.left+r.width/2}px;top:${r.top-R.top+r.height/2}px;width:${r.width}px;height:${r.height}px;transform:translate(-50%,-50%);margin:0;z-index:5`; return c; });
+  ['#gtHand','.gs-fan','.gp'].forEach(q=>$$g(q).forEach(e=>e.style.visibility='hidden')); fl.forEach(c=>fx.appendChild(c)); snd('suck');
+  await Promise.all(fl.map((c,i)=>{ const x=parseFloat(c.style.left), y=parseFloat(c.style.top), sp=(Math.random()-.5)*720; return c.animate([{transform:'translate(-50%,-50%)',opacity:1},{transform:`translate(calc(-50% + ${(C.x-x)*.55}px),calc(-50% + ${(C.y-y)*.55}px)) rotate(${sp*.4}deg) scale(.8)`,opacity:1,offset:.55},{transform:`translate(calc(-50% + ${C.x-x}px),calc(-50% + ${C.y-y}px)) rotate(${sp}deg) scale(.12)`,opacity:0}],{duration:760,delay:Math.min(900,i*9),easing:'cubic-bezier(.5,0,.6,1)',fill:'forwards'}).finished.catch(()=>{}); }));
+  fl.forEach(c=>c.remove()); S.irisT=0; snd('mech'); await wait(500);
+  // the players leave in reverse order, each fire going out as its player goes
+  for(let s=3;s>=0;s--){ const el=$g('.gs'+s), b=seatPt(s); if(el){ el.style.setProperty('--ix',seatOut[s][0]*cw*.5+'px'); el.style.setProperty('--iy',seatOut[s][1]*cw*.5+'px'); el.classList.add('gs-leave'); }
+    snd('seat'); await S.wisp(b,S.marks[s],420); S.fireT[s]=0; snd('ignite'); await wait(120); }
+  await wait(500); S.end(); }
+async function dealAnim(){ H.hands.forEach(h=>{ h._full=h.slice(); }); if(reduce){ root.classList.remove('intro'); refreshAll(); return; }
+  const real=H.hands, hidden=real.map(()=>[]); H.hands=hidden; refreshAll(); const h0=H, intro=!!H._intro;
+  if(intro){ await matchIntro(); if(H!==h0){ return; } }
   const R=felt.getBoundingClientRect(), rg=$g('.gt-ring').getBoundingClientRect(), cx=rg.left-R.left+rg.width*RC[0]/100, cy=rg.top-R.top+rg.height*RC[1]/100;
   const fx=$g('.gt-fx'), deck=document.createElement('div'); deck.className='gdk'; deck.style.left=cx+'px'; deck.style.top=cy+'px'; fx.appendChild(deck);
   const NC=18, cards=[]; for(let i=0;i<NC;i++){ const b=document.createElement('i'); b.className='gb gdk-c'; b.style.setProperty('--z',i); deck.appendChild(b); cards.push(b); }
-  dragonGlow('#ffd36a',{sweep:700,hold:1500,fade:900,op:.6});
+  if(!intro) dragonGlow('#ffd36a',{sweep:700,hold:1500,fade:900,op:.6});
   const W2=ms=>wait(ms), lift=i=>`translate(-50%,calc(-50% - ${i*.6}px))`;
   cards.forEach((b,i)=>{ b.style.transform=lift(i); });
-  await deck.animate([{opacity:0,transform:'translate(-50%,-50%) scale(.6)'},{opacity:1,transform:'translate(-50%,-50%) scale(1)'}],{duration:220,easing:'cubic-bezier(.3,1.4,.5,1)',fill:'forwards'}).finished.catch(()=>{});
+  if(!intro) await deck.animate([{opacity:0,transform:'translate(-50%,-50%) scale(.6)'},{opacity:1,transform:'translate(-50%,-50%) scale(1)'}],{duration:220,easing:'cubic-bezier(.3,1.4,.5,1)',fill:'forwards'}).finished.catch(()=>{});
   // riffle shuffle, twice: split into halves, bend, then interleave back
   const off=cw*.42;
   for(let pass=0;pass<2;pass++){ snd('riffle');
@@ -8423,7 +8523,7 @@ async function dealAnim(){ H.hands.forEach(h=>{ h._full=h.slice(); }); if(reduce
       if(kk%2===0) snd('deal'); const left=Math.max(0,Math.round(NC*(1-(kk+1)/seq.length))); cards.forEach(c=>{ c.style.visibility=+c.style.zIndex<left+(cutEl&&cutEl.parentNode===deck&&+c.style.zIndex>cutLay?1:0)?'':'hidden'; });
       setTimeout(next,STEP); }; next(); });
   deck.remove(); RB.end(); if(H!==h0){ if(cutEl) cutEl.remove(); dealFlat=false; return; }
-  H.hands=real.map(h=>h.filter(notCut)); for(let s=1;s<4;s++) drawSeat(s); await W2(250);
+  H.hands=real.map(h=>h.filter(notCut)); for(let s=1;s<4;s++) drawSeat(s); await W2(250); if(H!==h0){ if(cutEl) cutEl.remove(); return; }
   // the owner takes the turned card into the hand the way a player would: the hand opens a gap and the card slides in
   const cx0=cutEl?parseFloat(cutEl.style.left):0, cy0=cutEl?parseFloat(cutEl.style.top):0, at=(x,y)=>`translate(calc(-50% + ${x-cx0}px),calc(-50% + ${y-cy0}px))`;
   if(cutEl&&cutAt&&cutSeat>0){ const s=cutSeat, fz=$g('.gs'+s+' .gs-fan');
@@ -8436,11 +8536,13 @@ async function dealAnim(){ H.hands.forEach(h=>{ h._full=h.slice(); }); if(reduce
     const tx=fr.left-R.left+(side?fr.width/2:mid*st1+cw*.28), ty=fr.top-R.top+(side?mid*st1+cw*.28:fr.height/2), ox=s===1?cw*.9:s===3?-cw*.9:0, oy=s===2?-cw*.9:0, rot=side?90:0;
     await cutEl.animate([{transform:at(cutAt.x,cutAt.y)+' scale(1)'},{transform:at(tx+ox,ty+oy)+` rotate(${rot}deg)`}],{duration:520,easing:'cubic-bezier(.4,.1,.3,1)',fill:'forwards'}).finished.catch(()=>{});
     snd('deal'); await cutEl.animate([{transform:at(tx+ox,ty+oy)+` rotate(${rot}deg)`},{transform:at(tx,ty)+` rotate(${rot}deg)`}],{duration:300,easing:'cubic-bezier(.3,.8,.3,1)',fill:'forwards'}).finished.catch(()=>{});
-    if(sl) sl.style.visibility=''; cutEl.remove(); if(fz) setTimeout(()=>fz.classList.remove('ins'),400); drawSeat(s); }
+    if(sl) sl.style.visibility=''; cutEl.remove(); if(fz) setTimeout(()=>fz.classList.remove('ins'),400); if(H!==h0) return; drawSeat(s); }
   const cutMine=cutEl&&cutSeat===0;
   // one smooth sort: every card slides from the dealt row into its column
+  if(H!==h0){ if(cutEl) cutEl.remove(); dealFlat=false; return; }
   const hd=$g('#gtHand'); if(hd) hd.classList.add('sorting'); dealFlat=false; drawHand(); drawSeat(0); snd('sweep');
   await W2(750); if(hd) hd.classList.remove('sorting');
+  if(H!==h0){ if(cutEl) cutEl.remove(); return; }
   if(cutMine&&cutAt){ H.hands[0]=real[0]; if(hd) hd.classList.add('sorting'); drawHand(); drawSeat(0); const ce=$g(`#gtHand .gc[data-id="${H.cut.card.id}"]`);
     if(ce){ ce.style.visibility='hidden'; const hr=$g('#gtHand').getBoundingClientRect(), tx=hr.left-R.left+(+ce.dataset.x)+cw/2, ty=hr.top-R.top+(+ce.dataset.y)+cw*.7, k=1/.6;
       await cutEl.animate([{transform:at(cutAt.x,cutAt.y)+' scale(1.15)'},{transform:at(tx,ty-cw*1.25)+` scale(${k}) rotate(-4deg)`}],{duration:480,easing:'cubic-bezier(.4,.1,.3,1)',fill:'forwards'}).finished.catch(()=>{});
@@ -8810,7 +8912,8 @@ function askLeave(){ if(!H||M&&M.over) { toLobby(); return; } confirmPop(T('Leav
 function toLobby(){ clearTimeout(timer); endTut(true); H=null; M=null; scr='lobby'; render(); bgm(1); }
 function confirmPop(title,text,yes,fn){ const p=document.createElement('div'); p.className='gr-pop'; p.innerHTML=`<div class="gr-dlg sm"><h3>${title}</h3><p>${text}</p><div class="gr-row"><button data-a="popx">${T('Cancel','取消')}</button><button class="pri" id="popYes">${yes}</button></div></div>`; root.appendChild(p); snd('pop'); p.querySelector('#popYes').onclick=()=>{ snd('btn'); p.remove(); fn(); }; }
 /* ---------- a game ---------- */
-function startGame(fresh){ tribPick=null; loadAI(); $$g('.gr-pop,.gr-tut').forEach(n=>n.remove()); endTut(true); clearTimeout(timer); M=GDM.newMatch(); if(!P||fresh) pickPlayers(); else loadVox(); scr='table'; sortMode=0;
+let restarting=false;
+async function startGame(fresh){ if(restarting) return; if(fresh&&scr==='table'&&H&&!H._intro&&$g('.gt-ring')&&!tut){ restarting=true; clearTimeout(timer); H=Object.assign({},H,{phase:'idle'}); /* every flow still running for the old hand sees H change and stops */ $$g('.gdk,.gdk-cut,.gdk-in').forEach(n=>n.remove()); try{ await matchOutro(); }catch(e){} restarting=false; if(!open) return; } tribPick=null; loadAI(); $$g('.gr-pop,.gr-tut').forEach(n=>n.remove()); endTut(true); clearTimeout(timer); M=GDM.newMatch(); if(!P||fresh) pickPlayers(); else loadVox(); scr='table'; sortMode=0;
   if(!fresh){ H=null; buildTable0(); welcome(); return; }
   newHand(); }
 function welcome(){ $$g('.gr-pop').forEach(n=>n.remove()); bgm(1); const p=document.createElement('div'); p.className='gr-pop lock wel';
@@ -8823,8 +8926,8 @@ function welcome(){ $$g('.gr-pop').forEach(n=>n.remove()); bgm(1); const p=docum
   p.addEventListener('click',e=>{ const b=e.target.closest('[data-w]'); if(!b) return; snd('btn'); const k=b.dataset.w;
     if(k==='back'){ p.remove(); toLobby(); return; } if(k==='rules'){ p.remove(); rules(welcome); } else if(k==='tut'){ p.remove(); startTut(); } else { try{ localStorage.setItem('gd-tut','1'); }catch(er){} p.remove(); newHand(); } }); }
 function closePop(p){ if(!p) return; p.remove(); if(p._after) p._after(); }
-function buildTable0(){ H={L:2,hands:[[],[],[],[]],order:[],turn:-1,trick:null,played:[[],[],[],[]],log:[],phase:'idle'}; buildTable(); }
-async function newHand(){ clearTimeout(timer); loadVox(); loadAI(); H=GDM.newHand(M); if(H.phase==='play'&&!tut) H.phase='pre'; sel.clear(); hintList=null; ret=null; tribPick=null; warned=new Set(); busy=true; buildTable(); const h0=H;
+function buildTable0(){ H={L:2,hands:[[],[],[],[]],order:[],turn:-1,trick:null,played:[[],[],[],[]],log:[],phase:'idle',_intro:!reduce}; buildTable(); }
+async function newHand(){ clearTimeout(timer); loadVox(); loadAI(); H=GDM.newHand(M); if(H.phase==='play'&&!tut) H.phase='pre'; H._intro=M.hand===0&&!tut&&!reduce; sel.clear(); hintList=null; ret=null; tribPick=null; warned=new Set(); busy=true; buildTable(); const h0=H;
   await dealAnim(); if(H!==h0||!open) return; busy=false; if(!tut) bgm(2);
   if(H.tribute&&(H.tribute.anti||H.tribute.pairs.length)) await doTribute(); if(H!==h0||!open) return;
   if(!ret) { await leadFlash(); if(H!==h0||!open) return; H.phase='play'; step(); } }
@@ -8938,7 +9041,7 @@ function rules(after){ const p=document.createElement('div'); p.className='gr-po
     bomb(T('Straight flush','同花顺'),T('A straight in a single suit. Beats any five- or four-card bomb.','同一花色的顺子，比五张和四张炸弹都大。'),run(9,[2,2,2,2,2]),T('Straight Flush!','同花顺！'),'sflush',0),
     bomb(T('5-card bomb','五张炸弹'),T('Five cards of one rank.','五张同点数的牌。'),ex(5,r5),BL(5),'bomb',1),
     bomb(T('4-card bomb','四张炸弹'),T('Four cards of one rank.','四张同点数的牌。'),ex(4,r4),T('Bomb!','炸弹！'),'bomb',0)];
-  const NAV=[['table',T('The table','牌桌')],['level',T('Level & wild','级牌与逢人配')],['types',T('Combinations','普通牌型')],['bombs',T('Bombs','炸弹')],['sort',T('Your hand','理牌')],['trick',T('Playing a trick','出牌与一圈')],['win',T('Levelling up','升级与过 A')],['trib',T('Tribute','进贡还贡')]];
+  const NAV=[['table',T('The table','牌桌')],['types',T('Combinations','普通牌型')],['bombs',T('Bombs','炸弹')],['level',T('Level & wild','级牌与逢人配')],['sort',T('Your hand','理牌')],['trick',T('Playing a trick','出牌与一圈')],['win',T('Levelling up','升级与过 A')],['trib',T('Tribute','进贡还贡')]];
   // a small but real-looking table: felt, the dragon disc, four seats with their avatars
   const avk=P?[0,1,2,3].map(i=>P[i].k):Object.keys(AV).slice(0,4), nm=i=>P?pname(i):[T('You','你'),T('Next','下家'),T('Partner','对家'),T('Prev','上家')][i];
   const seat4=(cls)=>`<div class="mt ${cls||''}"><i class="mt-felt"></i><img class="mt-disc" src="${GIMG('gd-table')}" alt="">${[0,1,2,3].map(i=>`<span class="mt-seat s${i} t${i%2}"><span class="mt-av"><svg viewBox="0 0 40 40">${AV[avk[i]]}</svg><i class="mt-ring"></i><i class="mt-crown"></i></span><b>${nm(i)}</b><em>${[T('You','你'),T('Next','下家'),T('Partner','对家'),T('Prev','上家')][i]}</em></span>`).join('')}<div class="rd-plays"></div><div class="rd-stage"></div></div>`;
@@ -8949,13 +9052,13 @@ function rules(after){ const p=document.createElement('div'); p.className='gr-po
     <div class="rd rd-order">${seat4()}<small class="rd-cap">${T('Counter-clockwise: you → next → partner → previous','逆时针：你 → 下家 → 对家 → 上家')}</small></div>
     ${fig('table',T('A hand in progress.','对局中的牌桌。'),TM)}
     ${leg([T('You. Your hand runs along the bottom.','你。手牌在最下方。'),T('Next player, on your right.','下家，在你右边。'),T('Partner, opposite you.','对家，坐你对面，是你的盟友。'),T('Previous player, on your left.','上家，在你左边。'),T('Level panel: this hand’s level card and both teams’ levels. The dragon’s eye glows green for good news and red for bad.','级牌面板：本局级牌和两队级数。龙眼发绿光是好消息，发红光是坏消息。'),T('Your buttons on your turn: Pass, Hint, Play.','轮到你时的按钮：不出、提示、出牌。'),T('Sort: bombs move to the left.','理牌：炸弹排到最左边。'),T('The dragon disc. Its four marks stand for the four seats; it lights up for tribute, borrowing the wind and bombs, and a pearl circles to whoever acts next.','龙盘。四个方位对应四个座位；进贡、接风、炸弹时会亮起，还有一颗龙珠绕到下一个该出牌的人那边。')])}`)}
-  ${sec('level',2,T('Level card and wild card','级牌与逢人配'),`<p>${T(`Each hand is played at a level, starting at 2. Cards of the level rank (now ${LV(L)}) jump up to sit just under the jokers. Watch the order:`,`每局都有一个级数，从 2 开始。级数对应的那个点数（本局是 ${LV(L)}）会提到最前面，只排在大小王后面。看下面的顺序：`)}</p>
+  ${sec('types',2,T('Normal combinations','普通牌型'),`<p class="gr-note">${T('To beat a normal combination, play the same type with the same number of cards, only higher. Suits never matter.','要压住普通牌型，必须出同一种牌型、同样张数、点数更大的牌。花色不分大小。')}</p><div class="rc-grid">${NORMAL.join('')}</div>`,'gr-sec')}
+  ${sec('bombs',3,T('Bombs','炸弹'),`<p class="gr-note">${T('A bomb beats every normal combination. Between bombs, strongest first:','炸弹能压住任何普通牌型。炸弹之间，从大到小依次是：')}</p><ol class="rc-bombs">${BOMBS.join('')}</ol>`,'gr-sec bomb')}
+  ${sec('level',4,T('Level card and wild card','级牌与逢人配'),`<p>${T(`Each hand is played at a level, starting at 2. Cards of the level rank (now ${LV(L)}) jump up to sit just under the jokers. Watch the order:`,`每局都有一个级数，从 2 开始。级数对应的那个点数（本局是 ${LV(L)}）会提到最前面，只排在大小王后面。看下面的顺序：`)}</p>
     <div class="rd rd-rank"><div class="rd-stage"></div><small class="rd-cap">${T('Big Joker › Small Joker › level card › A › K › … › 2','大王 › 小王 › 级牌 › A › K › … › 2')}</small></div>
     <p>${T('Inside a straight, plank or steel plate, the level card goes back to its natural place.','在顺子、木板、钢板这些连牌里，级牌按原本的点数排。')}</p>
     <p>${T(`The heart level card (${SUIT[1]}${LV(L)}) is the wild card, “meets-anyone”: it can stand in for any card except a joker.`,`红心级牌（${SUIT[1]}${LV(L)}）叫“逢人配”，可以当作除大小王以外的任何一张牌。`)}</p>
     <div class="rd rd-wild"><div class="rd-stage"></div><small class="rd-cap">${T('Three of a kind + the wild card = a four-card bomb','三张同点 + 逢人配 = 四张炸弹')}</small></div>`)}
-  ${sec('types',3,T('Normal combinations','普通牌型'),`<p class="gr-note">${T('To beat a normal combination, play the same type with the same number of cards, only higher. Suits never matter.','要压住普通牌型，必须出同一种牌型、同样张数、点数更大的牌。花色不分大小。')}</p><div class="rc-grid">${NORMAL.join('')}</div>`,'gr-sec')}
-  ${sec('bombs',4,T('Bombs','炸弹'),`<p class="gr-note">${T('A bomb beats every normal combination. Between bombs, strongest first:','炸弹能压住任何普通牌型。炸弹之间，从大到小依次是：')}</p><ol class="rc-bombs">${BOMBS.join('')}</ol>`,'gr-sec bomb')}
   ${sec('sort',5,T('Your hand and Sort','手牌与理牌'),`<p>${T('Cards of one rank stack into a column with the biggest ranks on the left. Press Sort and every bomb, straight flush and the four jokers move to the far left with a stamp on the front card. Tap a stamp to pick up the whole bomb; tap it again to put it down. With Sort on, three of a kind plus a wild card already shows as a bomb.','同点数的牌叠成一列，大牌在左边。按“理牌”，所有炸弹、同花顺和四大天王会排到最左边，最前面那张牌上有标记。点标记可以一次选中整组，再点一次取消。理牌后，三张同点加逢人配会直接显示成炸弹。')}</p>
     <div class="rd rd-sort"><div class="rd-stage"></div><small class="rd-cap rd-sortcap"></small></div>`)}
   ${sec('trick',6,T('Playing a trick','出牌与一圈'),`<p>${T('Whoever leads may play any combination. Each next player beats it with the same type and size, plays a bomb, or passes. The play to beat always glows. When everyone else has passed, the last player to play takes the trick and leads again.','领出的人可以出任何牌型。后面的人要么出同牌型、同张数且更大的牌，要么出炸弹，要么不出。桌上发光的那一组，就是现在要压的牌。其余三人都不出时，最后出牌的人赢下这一圈，再次领出。')}</p>
