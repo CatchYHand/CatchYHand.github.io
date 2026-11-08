@@ -7897,7 +7897,12 @@ async function animLevel(res){ const g=$g('.gl'); if(!g) return; const du=res.af
 function floatAt(el,text,cls){ const r=el.getBoundingClientRect(), R=root.getBoundingClientRect(), f=document.createElement('div'); f.className='gr-float '+(cls||''); f.textContent=text; f.style.left=(r.left-R.left+r.width/2)+'px'; f.style.top=(r.top-R.top)+'px'; root.appendChild(f); setTimeout(()=>f.remove(),2200); }
 /* seats */
 function markPlays(){ if(!H) return; const top=H.trick?H.trick.seat:-1, live=H.phase==='play'&&!H.revealed;
-  for(let k=0;k<4;k++){ const z=$g('.gp'+k); if(!z) continue; const has=!!z.children.length; z.classList.toggle('top',live&&k===top&&has); const t=H.turn, nx=t>=0?GDM.nextSeat(H,t):-1; z.classList.toggle('gone',live&&has&&k!==top&&k===t); z.classList.toggle('old',live&&has&&k!==top&&k===nx&&k!==t); z.classList.remove('next'); }
+  // the seat to act clears its last play; the next live seat dims. Finished seats clear once beaten.
+  // Two players left: a pass simply hands the lead back, so PASS is never shown.
+  const t=H.turn, nx=t>=0?GDM.nextSeat(H,t):-1, act=[0,1,2,3].filter(k=>GDM.active(H,k)).length;
+  for(let k=0;k<4;k++){ const z=$g('.gp'+k); if(!z) continue; const has=!!z.children.length, pass=H.played[k]==='pass';
+    const gone=live&&has&&k!==top&&(k===t||!GDM.active(H,k)||(act<=2&&pass));
+    z.classList.toggle('top',live&&k===top&&has); z.classList.toggle('gone',gone); z.classList.toggle('old',live&&has&&!gone&&k!==top&&k===nx); z.classList.remove('next'); }
   // a dragon pearl rides the ring to whoever acts next (always travelling counter-clockwise, the way play goes)
   const tp=$g('.gt-pearl'); if(tp){ const on=live&&H.turn>=0&&!H.order.includes(H.turn); tp.classList.toggle('on',on); if(on){ const want=[180,90,0,270][H.turn]; let cur=tp._a==null?want:tp._a; let d=((cur-want)%360+360)%360; if(d===0&&tp._a!=null) d=0; const nx=cur-d; tp._a=nx; tp.style.setProperty('--ta',nx+'deg'); } } }
 function drawSeat(s){ markPlays(); const el=$g('.gs'+s); if(!el) return; const n=H.hands[s].length, out=H.order.indexOf(s), fin=outN();
