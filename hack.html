@@ -2356,6 +2356,8 @@ html[lang=en] .wl-story p,.wl-story:lang(en) p{text-indent:0}
 .gt-phase.ret b{background:linear-gradient(180deg,#f0fff8,#8ff0c8 55%,#2f9c72)!important;-webkit-background-clip:text!important;background-clip:text!important;filter:drop-shadow(0 3px 0 #06301f) drop-shadow(0 0 14px rgba(90,230,170,.5))}
 .gt-phase{z-index:41!important;padding:.35rem 1.6rem .45rem!important;border-radius:1rem!important;background:radial-gradient(closest-side,rgba(8,6,3,.85),rgba(8,6,3,.55) 70%,transparent)!important}
 .gt-phase b{font-size:clamp(3rem,calc(var(--ts,600px)*.14),5rem)!important}
+.gs-av.lead{animation:leadPulse .52s ease-in-out 3!important}
+@keyframes leadPulse{0%,100%{box-shadow:0 0 0 3px rgba(255,58,42,.0)}45%{box-shadow:0 0 0 4px rgba(255,58,42,.95),0 0 26px 6px rgba(255,40,20,.7)}}
 /* ===== Pages & Frames: a reading room, green-leather rail and paper pages ===== */
 #reader.shelf{--sh-bg:#F3EEE3;--sh-ink:#23201A;--sh-ink2:#6B6252;--sh-acc:#8B2B22;--sh-green:#1F3329;--sh-line:#DCD2BF;--cx:#8B2B22}
 #reader.shelf .rd-main,#reader.shelf .rd-leaf{background:var(--sh-bg) linear-gradient(90deg,rgba(80,60,30,.05) 1px,transparent 1px) 0 0/22px 100%}
@@ -7338,6 +7340,7 @@ function snd(k){ try{ if(!AC) initAudio(); if(!AC||SND.muted) return; const t=AC
   else if(k==='roarG'){ osc('sawtooth',100,t,1.6,.16,64,.12); osc('sawtooth',103,t,1.6,.13,62,.12); osc('square',50,t,1.5,.07,36,.15); nz(t,1.7,.4,'bandpass',600,220,2,.15);
     [262,330,392,523,659,784,1047].forEach((f,i)=>{ osc('sawtooth',f,t+.5,2.6,.022,0,.25); osc('sawtooth',f*1.006,t+.5,2.6,.018,0,.25); osc('sine',f*2,t+.55,2.4,.015,0,.3); });
     for(let i=0;i<30;i++) nz(t+.8+Math.random()*1.6,.02+Math.random()*.03,.1+Math.random()*.12,'highpass',3000+Math.random()*5000,0,1); [1568,2093,2637,3136].forEach((f,i)=>osc('sine',f,t+.9+i*.09,1.2,.03)); }
+  else if(k==='lead'){ [0,.52,1.04].forEach((d,i)=>{ osc('triangle',880,t+d,.22,.07,660); osc('sine',1320,t+d,.18,.04); nz(t+d,.06,.08,'bandpass',3000,0,4); }); osc('sine',523,t+1.2,.6,.06); osc('sine',784,t+1.25,.7,.05); }
   else if(k==='eyegood'){ [1047,1319,1568,2093,2637].forEach((f,i)=>osc('sine',f,t+i*.055,.9,.045)); osc('triangle',392,t,.8,.05,523,.05); nz(t+.1,.7,.05,'highpass',7500,0,.4,.15); }
   else if(k==='eyebad'){ osc('sawtooth',86,t,1.1,.12,62,.08); osc('sawtooth',88,t,1.1,.1,61,.08); nz(t,1.1,.18,'bandpass',320,180,3,.1); osc('triangle',233,t+.1,.8,.05); osc('triangle',247,t+.1,.8,.05); }
   else if(k==='thunder'){ nz(t,.06,.8,'highpass',4000,0,.5); for(let i=0;i<5;i++) nz(t+i*.05,.04,.4,'bandpass',6000-i*700,0,2); nz(t+.12,2.4,.65,'lowpass',900,60,.8,.05); osc('sine',48,t+.1,1.8,.6,24,.05); [988,1319,1760].forEach((f,i)=>osc('sine',f,t+.5+i*.08,1.2,.04)); }
@@ -7437,6 +7440,7 @@ async function testFx(type){ if(!H) return; const s=TEST.seat; let id=7000; cons
 async function testEv(k){ if(!H) return; const s=TEST.seat||1, me=s===0?2:0;
   if(k==='trib'){ const to=(s+1)%4; eyeMood(to%2===0?'good':'bad'); const c={id:7101,r:14,s:3}; phaseTip(T('Tribute','进贡'),T(`${pname(s)} pays ${desc1(c)} to ${pname(to)}`,`${pname(s)} 把 ${desc1(c)} 进贡给 ${pname(to)}`),'trib'); await wait(500); await flyCard(c,s,to,false); phaseTip(null); }
   else if(k==='ret'){ const c={id:7102,r:5,s:0}; phaseTip(T('Return','还贡'),T(`${pname((s+1)%4)} returns ${desc1(c)} to ${pname(s)}`,`${pname((s+1)%4)} 把 ${desc1(c)} 还给 ${pname(s)}`),'ret'); await flyCard(c,(s+1)%4,s,true); phaseTip(null); }
+  else if(k==='lead'){ const h0=H, t0=H.turn; H.turn=s; await leadFlash(); if(H===h0) H.turn=t0; }
   else if(k==='redeal'){ const h0=H; busy=true; await dealAnim(); if(H===h0){ busy=false; refreshAll(); } }
   else if(k==='anti') await antiFx([{id:7103,r:17,s:4},{id:7104,r:17,s:4}],[s,s]);
   else if(k==='wind') windBanner(s);
@@ -7454,7 +7458,7 @@ function testPanel(){ let p=$g('.gr-test'); if(p){ p.remove(); TEST.on=TEST.hold
   p.innerHTML=`<header><b>${T('TEST MODE','测试模式')}</b><small>↑↑↓↓←→←→BABA</small><button data-t="x" class="x">×</button></header>
     <section><h6>${T('Seat','出牌座位')}</h6><div class="seg">${[0,1,2,3].map(s=>B('seat:'+s,[T('You','你'),T('Next','下家'),T('Partner','对家'),T('Prev','上家')][s],TEST.seat===s?'on':'')).join('')}</div></section>
     <section><h6>${T('Combos','牌型动画')}</h6><div class="grid">${TY}</div></section>
-    <section><h6>${T('Events','事件动画')}</h6><div class="grid">${B('ev:trib',T('Tribute','进贡'))}${B('ev:ret',T('Return','还贡'))}${B('ev:anti',T('Refuse tribute','抗贡'))}${B('ev:wind',T('Borrow wind','接风'))}${B('ev:lvup',T('Level up','升级'))}${B('ev:heart',T('Ace miss','过A失败'))}${B('ev:deal',T('Switch level side','换打级方'))}${B('ev:resW',T('Hand won','本局胜'))}${B('ev:resL',T('Hand lost','本局负'))}${B('ev:winW',T('Match won','整场胜'))}${B('ev:winL',T('Match lost','整场负'))}${B('ev:redeal',T('Shuffle & deal','洗牌发牌'))}</div></section>
+    <section><h6>${T('Events','事件动画')}</h6><div class="grid">${B('ev:trib',T('Tribute','进贡'))}${B('ev:ret',T('Return','还贡'))}${B('ev:anti',T('Refuse tribute','抗贡'))}${B('ev:wind',T('Borrow wind','接风'))}${B('ev:lvup',T('Level up','升级'))}${B('ev:heart',T('Ace miss','过A失败'))}${B('ev:deal',T('Switch level side','换打级方'))}${B('ev:resW',T('Hand won','本局胜'))}${B('ev:resL',T('Hand lost','本局负'))}${B('ev:winW',T('Match won','整场胜'))}${B('ev:winL',T('Match lost','整场负'))}${B('ev:redeal',T('Shuffle & deal','洗牌发牌'))}${B('ev:lead',T('First lead','先手提示'))}</div></section>
     <section><h6>${T('Table','牌桌')}</h6><div class="grid">${B('peek',T('Show all hands','明牌'),TEST.peek?'on':'')}${B('hold',T('Pause bots','暂停 AI'),TEST.hold?'on':'')}</div></section>`;
   root.appendChild(p);
   p.addEventListener('click',e=>{ const b=e.target.closest('button[data-t]'); if(!b) return; const [k,v]=b.dataset.t.split(':'); snd('btn');
@@ -7479,7 +7483,7 @@ async function animLevel(res){ const g=$g('.gl'); if(!g) return; g.classList.add
       floatAt(el,b>a?`+${b-a}`:`→ ${LV(b)}`,b>a?'up':'down'); } }
   await wait(Math.max(1800,...[0,1].map(t=>Math.abs(res.after[t]-res.before[t])*330+900)));
   for(const t of [0,1]){ if(res.aFail===t){ await breakHeart(t); } }
-  g.classList.remove('hot'); }
+  g.classList.remove('hot'); await wait(reduce?50:650); }
 function floatAt(el,text,cls){ const r=el.getBoundingClientRect(), R=root.getBoundingClientRect(), f=document.createElement('div'); f.className='gr-float '+(cls||''); f.textContent=text; f.style.left=(r.left-R.left+r.width/2)+'px'; f.style.top=(r.top-R.top)+'px'; root.appendChild(f); setTimeout(()=>f.remove(),2200); }
 /* seats */
 function drawSeat(s){ const el=$g('.gs'+s); if(!el) return; const n=H.hands[s].length, out=H.order.indexOf(s), fin=outN();
@@ -7581,7 +7585,10 @@ function buildHints(){ const tg=target(), hand=H.hands[0], L=H.L, ms=GD.moves(ha
     sc+=m.cards.filter(c=>c.r===L&&!GD.isWild(c,L)).length*2.5+m.cards.filter(c=>c.r>=16).length*3;
     sc+=(GD.plan(GD.without(hand,m.cards),L).s-base)*2.2+(m.combo.key||0)*.06;
     if(key(m)===bk) sc-=1.5; return sc; };
-  ms.map(m=>({m,s:score(m)})).sort((a,b)=>a.s-b.s).forEach(({m})=>{ const k2=m.combo.type+':'+m.combo.key+':'+m.cards.map(c=>(GD.isWild(c,L)?'w':c.r)).sort().join(','); if(seen.has(k2)) return; seen.add(k2); out.push(m); });
+  // never offer a play that splits a bomb (part of a 4+ group): a 6-bomb is not cut down to 5, nor broken for a single
+  const whole=m=>{ if(m.cards.length===hand.length) return true; const used={}; m.cards.forEach(c=>{ if(!GD.isWild(c,L)&&c.r<16) used[c.r]=(used[c.r]||0)+1; }); return Object.keys(used).every(r=>cnt[r]<4||used[r]===cnt[r]); };
+  const pool=ms.filter(whole);
+  (pool.length?pool:ms).map(m=>({m,s:score(m)})).sort((a,b)=>a.s-b.s).forEach(({m})=>{ const k2=m.combo.type+':'+m.combo.key+':'+m.cards.map(c=>(GD.isWild(c,L)?'w':c.r)).sort().join(','); if(seen.has(k2)) return; seen.add(k2); out.push(m); });
   if(tut&&tut.st&&tut.st.ids) { hintList=[{cards:tut.st.ids.map(i=>hand.find(c=>c.id===i)),combo:GD.judge(tut.st.ids.map(i=>hand.find(c=>c.id===i)),L,tg)}]; }
   else hintList=tut?[]:out; hintI=-1; }
 function updatePre(){ const pre=$g('#gtPre'); if(ret&&H.phase!=='play'){ const b=$g('[data-a=retok]'); if(b) b.disabled=!selected().some(retOk); return; } const cs=selected(), tg=myTurn()?target():null; const play=$g('.ga-play');
@@ -7630,6 +7637,11 @@ async function sweepPlayed(){ const zs=$$g('.gp .gp-cards, .gp .gp-pass'); if(zs
     await wait(380); }
   H.played=[[],[],[],[]]; for(let s=0;s<4;s++) drawPlayed(s); }
 // a small status strip above the disc while tribute is being paid, so players know what is happening
+// before the first play: the first player's compass mark on the disc flashes red three times, and their seat pulses
+async function leadFlash(){ if(!H||tut) return; const s=H.turn; if(s==null||s<0) return; busy=true; const av=$g('.gs'+s+' .gs-av');
+  dragonGlow('#ff3a2a',{sweep:520,hold:700,fade:700,op:.55,eye:false}); snd('lead');
+  for(let i=0;i<3;i++) setTimeout(()=>ornLight(s,'#ff3a2a',{inn:120,hold:220,out:260}),i*520);
+  if(av) av.classList.add('lead'); await wait(reduce?300:1750); if(av) av.classList.remove('lead'); busy=false; }
 function phaseTip(title,text,kind){ const f=$g('.gt-felt'); if(!f) return; let e=f.querySelector('.gt-phase'); if(!title){ if(e){ e.classList.add('out'); setTimeout(()=>e.remove(),300); } return; }
   if(!e){ e=document.createElement('div'); e.className='gt-phase'; f.appendChild(e); } if(e.dataset.t===title) return; e.dataset.t=title; e.className='gt-phase '+(kind||''); e.innerHTML=`<b>${title}</b>`; e.animate([{opacity:.3,transform:'translate(-50%,-6px)'},{opacity:1,transform:'translate(-50%,0)'}],{duration:260,easing:'ease-out'}); }
 function crownBanner(s,k){ const m=$g('.gt-ban'); if(!m) return; const b=document.createElement('div'); b.className='gb-msg crown c'+k; b.innerHTML=`<i>${CROWN[k]}</i><span>${pname(s)}</span><b>${RANKN()[k]}</b>`; m.appendChild(b); setTimeout(()=>b.remove(),1900); }
@@ -8169,7 +8181,7 @@ function buildTable0(){ H={L:2,hands:[[],[],[],[]],order:[],turn:-1,trick:null,p
 async function newHand(){ clearTimeout(timer); loadVox(); loadAI(); H=GDM.newHand(M); sel.clear(); hintList=null; ret=null; warned=new Set(); busy=true; buildTable(); const h0=H;
   await dealAnim(); if(H!==h0||!open) return; busy=false; bgm(2);
   if(H.tribute&&(H.tribute.anti||H.tribute.pairs.length)) await doTribute(); if(H!==h0||!open) return;
-  if(!ret) { H.phase='play'; step(); } }
+  if(!ret) { await leadFlash(); if(H!==h0||!open) return; H.phase='play'; step(); } }
 /* ---------- tribute ---------- */
 const FIST_SVG='<svg viewBox="0 0 100 150"><defs><linearGradient id="gfs" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FFE9A6"/><stop offset=".55" stop-color="#E5A53A"/><stop offset="1" stop-color="#9A5A12"/></linearGradient></defs><g stroke="#3a2004" stroke-width="3.5" stroke-linejoin="round" fill="url(#gfs)"><path d="M34 92h34v52H34z"/><rect x="18" y="58" width="64" height="44" rx="16"/><rect x="18" y="22" width="17" height="44" rx="8.5"/><rect x="34" y="16" width="17" height="48" rx="8.5"/><rect x="50" y="18" width="17" height="46" rx="8.5"/><rect x="66" y="26" width="16" height="40" rx="8"/><path d="M16 66q-2-16 12-16h24q8 0 8 8t-8 8H30" /></g><path d="M40 108v26M52 108v26M64 108v26" stroke="#9a5a12" stroke-width="2" opacity=".5"/></svg>';
 const desc1=c=>c.r>=16?(c.r===17?T('Big Joker','大王'):T('Small Joker','小王')):SUIT[c.s]+GD.rname(c.r);
@@ -8194,7 +8206,7 @@ const retFit=c=>c.r<=10&&c.r!==H.L&&c.r<16;
 const retOk=c=>{ if(!c) return false; const any=H.hands[0].some(retFit); return any?retFit(c):c===GD.sortHand(H.hands[0].filter(x=>x.r!==H.L),H.L).slice(-1)[0]; };
 function pickReturn(id){ const c=H.hands[0].find(x=>x.id===id); if(!retOk(c)){ snd('err'); return; } sel=new Set([id]); snd('pick'); layoutHand(); const b=$g('[data-a=retok]'); if(b) b.disabled=false; }
 async function confirmReturn(){ const c=H.hands[0].find(x=>sel.has(x.id)); if(!c||!retOk(c)) return; const from=ret.from; ret=null; sel.clear(); $$g('#gtHand .gc').forEach(e=>e.classList.remove('dim','got')); drawAct();
-  GDM.giveBack(H,0,from,c); drawHand(); await flyCard(c,0,from,true); for(let s=0;s<4;s++) drawSeat(s); phaseTip(null); H.phase='play'; step(); }
+  GDM.giveBack(H,0,from,c); drawHand(); await flyCard(c,0,from,true); for(let s=0;s<4;s++) drawSeat(s); phaseTip(null); const h1=H; await leadFlash(); if(H!==h1) return; H.phase='play'; step(); }
 /* ---------- end of hand ---------- */
 async function endHand(){ if(H.settled) return; H.settled=true; clearTimeout(timer); for(let s=0;s<4;s++) drawSeat(s);
   if(tut){ drawAct(); tutEnd(); return; }
@@ -8255,7 +8267,7 @@ function rules(after){ const p=document.createElement('div'); p.className='gr-po
   const lg=zh()?'zh':'en', fig=(k,cap,marks)=>`<figure class="gr-fig"><div class="gr-fw"><img src="${GIMG('gd-r-'+k+'-'+lg)}" alt="" loading="lazy">${(marks||[]).map(([x,y],i)=>`<i class="gr-mk" style="left:${x}%;top:${y}%">${i+1}</i>`).join('')}</div><figcaption>${cap}</figcaption></figure>`;
   const leg=list=>`<ol class="gr-leg">${list.map((t,i)=>`<li><i class="gr-mk st">${i+1}</i><span>${t}</span></li>`).join('')}</ol>`;
   const NAV=[['table',T('Table','牌桌')],['level',T('Levels','级牌')],['types',T('Combos','牌型')],['bombs',T('Bombs','炸弹')],['win',T('Leveling up','升级')],['trib',T('Tribute','进贡')]];
-  const TM=[[12,77],[88,37],[41.5,4],[12,37],[23,6],[66,60],[85,75],[61,40]];
+  const TM=[[12.5,78],[88,38],[31,5],[12,38],[25,7],[36,60],[86,77],[62,40]];
   p.innerHTML=`<div class="gr-dlg wide rules r2"><header class="gr-rban"><div><small>${T('RULES','规则')}</small><h3>${T('How Dragon Gate works','跃龙门怎么玩')}</h3></div><button class="gr-x" data-a="popx" aria-label="${T('Close','关闭')}">×</button></header>
   <div class="gr-rwrap"><nav class="gr-rnav">${NAV.map(([k,t],i)=>`<button data-r="${k}"${i?'':' class="on"'}><i>${String(i+1).padStart(2,'0')}</i>${t}</button>`).join('')}</nav><div class="gr-rbody"><div class="gr-rules">
    <section id="gr-r-table"><h4><i>01</i>${T('The table','牌桌')}</h4><p class="gr-note">${T('Dragon Gate follows the rules of Guandan, a folk card game from northern Jiangsu.','跃龙门的玩法源自苏北民间的掼蛋。')}</p><p>${T('Two decks with jokers (108 cards), four players, 27 cards each. You and the player opposite are one team. Play goes counter-clockwise: you, your next player, your partner, your previous player.','两副牌共 108 张，四人每人 27 张。你和对面的人是一队。出牌按逆时针：你 → 下家 → 对家 → 上家。')}</p>
