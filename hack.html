@@ -2810,6 +2810,24 @@ html:not([lang=zh]) .gt-phase b,.gt-phase.en b{font-family:'Newsreader','Noto Se
 .bd-cap{font-size:.8rem;opacity:.75;text-align:center;margin:.1rem 0 .6rem}
 .ga-play[disabled]{opacity:.42!important;filter:grayscale(.55) brightness(.75);box-shadow:none!important;cursor:not-allowed!important}
 .bd-li .gc-bd.st{--cw:6rem}
+/* v26 badges: matte deep fills so they read on white cards; dark count chip */
+.gc-bd{background:var(--c3)!important;border:2px solid var(--c2)!important;box-shadow:0 0 0 1.5px rgba(0,0,0,.55),0 2px 4px rgba(0,0,0,.4)!important;animation:none!important}
+.gc-bd::after{content:"";position:absolute;inset:2px;border-radius:50%;box-shadow:inset 0 0 0 1px rgba(255,255,255,.12);pointer-events:none}
+.gc-bd .bd-ic svg{stroke:rgba(0,0,0,.55);stroke-width:1.2;filter:none}
+.gc-bd .bd-ic svg .fu{stroke:#fff;stroke-width:1.7;filter:none}
+.gc-bd .bd-ic svg .sp{fill:#ffd36a;stroke:none}
+.gc-bd em{background:#14100c!important;color:#fff!important;border:1.5px solid var(--c2)!important;font-size:calc(var(--cw)*.125)!important;right:-22%!important;top:-20%!important;min-width:50%!important;height:48%!important;box-shadow:0 1px 3px rgba(0,0,0,.55)!important}
+.gc-bd.t-b4{--c2:#ff8a3a;--c3:#8a2c0a}
+.gc-bd.t-b5{--c2:#ff4a3a;--c3:#7a0e0a}
+.gc-bd.t-b6{--c2:#c27cff;--c3:#4a1478}
+.gc-bd.t-b7{--c2:#8a7cff;--c3:#22187a}
+.gc-bd.t-b8{--c2:#4fd8ff;--c3:#0a4a74}
+.gc-bd.t-sf{--c2:#5aa8ff;--c3:#0e2f78}
+.gc-bd.t-kb{--c2:#ffd36a;--c3:#3a0e62}
+.gc-bd:hover{filter:brightness(1.25)}
+.gc.hc.up .gc-bd{border-color:#7fdcff!important}
+.gc-bd em{top:auto!important;bottom:-16%!important;right:-24%!important}
+.gc-bd .bd-ic{width:70%;height:70%}
 /* ===== Pages & Frames: a reading room, green-leather rail and paper pages ===== */
 #reader.shelf{--sh-bg:#F3EEE3;--sh-ink:#23201A;--sh-ink2:#6B6252;--sh-acc:#8B2B22;--sh-green:#1F3329;--sh-line:#DCD2BF;--cx:#8B2B22}
 #reader.shelf .rd-main,#reader.shelf .rd-leaf{background:var(--sh-bg) linear-gradient(90deg,rgba(80,60,30,.05) 1px,transparent 1px) 0 0/22px 100%}
@@ -8091,12 +8109,12 @@ function layoutHand(){ const h=$g('#gtHand'); if(!h||!h._cols) return; const col
   h.querySelectorAll('.gc-full').forEach(e=>{ if(!keep.has(e.dataset.k)) e.remove(); });
   if(tut&&tut.hl) markTut(); }
 // sorted groups wear a round badge on the front card: a white outlined icon on the colour of the group's play effect
-const BD_ICO={bomb:'<svg viewBox="0 0 24 24"><path d="M14.4 8.4l2.1-2.1 1.6 1.6-2.1 2.1z"/><circle cx="10.4" cy="13.6" r="6.6"/><path d="M17.2 6.1c.4-1.9 2.3-2.8 3.9-1.8" class="fu"/><path class="sp" d="M21.2 1.6l.6 1.5 1.5.6-1.5.6-.6 1.5-.6-1.5-1.5-.6 1.5-.6z"/><path class="hl" d="M6.9 12.2a3.8 3.8 0 0 1 2.9-2.7"/></svg>',
+const BD_ICO={bomb:'<svg viewBox="0 0 24 24"><circle cx="10.2" cy="14.2" r="7.6"/><path d="M14.6 6.6l2.3-1.4 1.7 2.8-2.3 1.4z"/><path class="fu" d="M17.8 5.9c.7-1.5 1.9-2.1 3.1-1.8"/><path class="sp" d="M21.6 1.5l.5 1.4 1.4.5-1.4.5-.5 1.4-.5-1.4-1.4-.5 1.4-.5z"/></svg>',
   sf:'<svg viewBox="0 0 24 24"><path d="M13.8 1.8L4.6 13.6h6.2L9.2 22.2l10.2-12.6h-6.4l2.2-7.8z"/></svg>',
   kb:'<svg viewBox="0 0 24 24"><path d="M2.6 8.6l4.9 3.7L12 5.2l4.5 7.1 4.9-3.7-1.8 9.7H4.4z"/><path d="M4.4 19.6h15.2v2.4H4.4z"/><circle cx="2.7" cy="7.4" r="1.6"/><circle cx="12" cy="3.6" r="1.6"/><circle cx="21.3" cy="7.4" r="1.6"/></svg>'};
 const bdTier=(kind,n)=>kind==='sf'?'sf':kind==='kb'?'kb':'b'+Math.max(4,Math.min(8,n));
 const bdHTML=(kind,n)=>`<i class="bd-ic">${BD_ICO[kind]||BD_ICO.bomb}</i>${kind==='bomb'||!kind?`<em>${n}</em>`:''}`;
-const bdLegend=()=>`<div class="bd-leg">${[['bomb',4],['bomb',5],['bomb',6],['bomb',7],['bomb',8]].map(([k,n])=>`<span class="bd-li"><i class="gc-bd t-${bdTier(k,n)} st">${bdHTML(k,n)}</i><small>${T(`${n}${n===8?'+':''} cards`,`${n}${n===8?' 张及以上':' 张'}`)}</small></span>`).join('')}<span class="bd-li"><i class="gc-bd t-sf st">${bdHTML('sf',5)}</i><small>${T('Straight flush','同花顺')}</small></span><span class="bd-li"><i class="gc-bd t-kb st">${bdHTML('kb',4)}</i><small>${T('Joker Bomb','四大天王')}</small></span></div><p class="bd-cap">${T('Each badge takes the colour of its play effect; a bomb also shows how many cards it has.','徽标的颜色和出牌特效一致；炸弹徽标上还标着张数。')}</p>`;
+const bdLegend=()=>`<div class="bd-leg">${[['bomb',4],['bomb',5],['bomb',6],['bomb',7],['bomb',8]].map(([k,n])=>`<span class="bd-li"><i class="gc-bd t-${bdTier(k,n)} st">${bdHTML(k,n)}</i><small>${T(`${n}${n===8?'+':''} cards`,`${n}${n===8?' 张及以上':' 张'}`)}</small></span>`).join('')}<span class="bd-li"><i class="gc-bd t-sf st">${bdHTML('sf',5)}</i><small>${T('Straight flush','同花顺')}</small></span><span class="bd-li"><i class="gc-bd t-kb st">${bdHTML('kb',4)}</i><small>${T('Joker Bomb','四大天王')}</small></span></div><p class="bd-cap">${T('Each badge takes the colour of its play effect; a bomb also shows how many cards it has, from 4 up to 10.','徽标的颜色和出牌特效一致；炸弹徽标上还标着张数，从 4 到 10。')}</p>`;
 const bdTitle=(kind,n)=>kind==='sf'?T('Straight flush: tap to select','同花顺：点一下选中'):kind==='kb'?T('Joker Bomb: tap to select','四大天王：点一下选中'):T(`${n}-card bomb: tap to select`,`${n} 张炸弹：点一下选中`);
 function markSel(){ layoutHand(); updatePre(); requestAnimationFrame(selChip); }
 /* ---------- action bar: shown only on your turn, above your hand ---------- */
@@ -8448,9 +8466,11 @@ function fxStage(){ const fx=$g('.gt-fx'), R=felt.getBoundingClientRect(), rg=$g
       g.save(); g.globalAlpha=al;
       // dark lacquer ground
       const gd=g.createRadialGradient(cx,cy,0,cx,cy,r*1.4); gd.addColorStop(0,'rgba(8,16,14,.92)'); gd.addColorStop(1,'rgba(4,8,8,0)'); g.fillStyle=gd; g.beginPath(); g.arc(cx,cy,r*1.4,0,7); g.fill();
-      // jade light rising from the opening
-      g.globalCompositeOperation='lighter'; const pit=g.createRadialGradient(cx,cy,0,cx,cy,r*1.05); pit.addColorStop(0,`rgba(235,255,248,${.95*op})`); pit.addColorStop(.35,`rgba(110,250,214,${.7*op})`); pit.addColorStop(.8,`rgba(30,150,140,${.35*op})`); pit.addColorStop(1,'rgba(10,60,60,0)'); g.fillStyle=pit; g.beginPath(); g.arc(cx,cy,r*1.05,0,7); g.fill();
-      if(op>.3){ const lc=g.createLinearGradient(cx,cy,cx,cy-r*4); lc.addColorStop(0,`rgba(150,255,225,${.32*op})`); lc.addColorStop(1,'rgba(150,255,225,0)'); g.fillStyle=lc; g.beginPath(); g.moveTo(cx-r*.55,cy); g.lineTo(cx-r*.25,cy-r*4); g.lineTo(cx+r*.25,cy-r*4); g.lineTo(cx+r*.55,cy); g.closePath(); g.fill(); }
+      // jade light from the opening: dim and breathing, with a few motes drifting up
+      g.globalCompositeOperation='lighter'; const br=.82+.18*Math.sin(now*.004), pit=g.createRadialGradient(cx,cy,0,cx,cy,r*1.15);
+      pit.addColorStop(0,`rgba(150,240,210,${.34*op*br})`); pit.addColorStop(.45,`rgba(60,180,160,${.2*op*br})`); pit.addColorStop(1,'rgba(10,60,60,0)'); g.fillStyle=pit; g.beginPath(); g.arc(cx,cy,r*1.15,0,7); g.fill();
+      const halo=g.createRadialGradient(cx,cy-r*.6,0,cx,cy-r*.6,r*2.6); halo.addColorStop(0,`rgba(120,220,195,${.1*op*br})`); halo.addColorStop(1,'rgba(120,220,195,0)'); g.fillStyle=halo; g.beginPath(); g.arc(cx,cy-r*.6,r*2.6,0,7); g.fill();
+      if(op>.2&&Math.random()<.5*op) S.parts.push({k:'s',x:cx+(Math.random()-.5)*r*1.2,y:cy+(Math.random()-.5)*r*.6,vx:(Math.random()-.5)*.15,vy:-.25-Math.random()*.45,r:.8+Math.random()*1.3,l:1,dl:.01+Math.random()*.01,c:Math.random()<.5?'170,240,215':'220,250,235'});
       g.globalCompositeOperation='source-over';
       // eight lotus petals of ink with gold edges, folding back into the rim as it opens
       for(let i=0;i<8;i++){ const a=i*Math.PI/4+S.spin*.35, pa=Math.max(0,1-op*1.05); if(pa<=0) continue; const sp=1-op*.35, push=op*r*.55;
