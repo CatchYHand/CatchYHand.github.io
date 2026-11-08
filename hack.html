@@ -2350,6 +2350,12 @@ html[lang=en] .wl-story p,.wl-story:lang(en) p{text-indent:0}
 .gt-phase.ret{border-color:#5fd6a8}.gt-phase.ret b{background:linear-gradient(180deg,#9ff3cf,#3fae84)}
 .gt-phase.anti{border-color:#ff8a6a}.gt-phase.anti b{background:linear-gradient(180deg,#ffb8a0,#d0563a);color:#fff}
 .gt-phase.out{opacity:0}
+/* tribute / return: one big word above the disc */
+.gt-phase{padding:0!important;background:none!important;border:0!important;box-shadow:none!important;gap:0!important}
+.gt-phase b{font:400 clamp(2.4rem,calc(var(--ts,600px)*.11),4.2rem)/1 'GD Display ZH','GD Display','Noto Sans SC',sans-serif!important;letter-spacing:.18em;padding:0 0 0 .18em!important;border-radius:0!important;background:linear-gradient(180deg,#fff7dc,#ffd66e 55%,#c88a22)!important;-webkit-background-clip:text!important;background-clip:text!important;color:transparent!important;filter:drop-shadow(0 3px 0 #3a2404) drop-shadow(0 0 14px rgba(255,200,80,.55))}
+.gt-phase.ret b{background:linear-gradient(180deg,#f0fff8,#8ff0c8 55%,#2f9c72)!important;-webkit-background-clip:text!important;background-clip:text!important;filter:drop-shadow(0 3px 0 #06301f) drop-shadow(0 0 14px rgba(90,230,170,.5))}
+.gt-phase{z-index:41!important;padding:.35rem 1.6rem .45rem!important;border-radius:1rem!important;background:radial-gradient(closest-side,rgba(8,6,3,.85),rgba(8,6,3,.55) 70%,transparent)!important}
+.gt-phase b{font-size:clamp(3rem,calc(var(--ts,600px)*.14),5rem)!important}
 /* ===== Pages & Frames: a reading room, green-leather rail and paper pages ===== */
 #reader.shelf{--sh-bg:#F3EEE3;--sh-ink:#23201A;--sh-ink2:#6B6252;--sh-acc:#8B2B22;--sh-green:#1F3329;--sh-line:#DCD2BF;--cx:#8B2B22}
 #reader.shelf .rd-main,#reader.shelf .rd-leaf{background:var(--sh-bg) linear-gradient(90deg,rgba(80,60,30,.05) 1px,transparent 1px) 0 0/22px 100%}
@@ -7258,7 +7264,14 @@ function nnMove(s){ try{ if(!GDAI.ready()) return null; const tg=H.trick&&H.tric
     for(const m of raw){ const x=GDAIX.mapMove(m,H.L), k=x.kind+':'+x.key+':'+x.cards.join(','); if(seen.has(k)) continue; seen.add(k); cand.push(m.cards); mm.push(x); }
     if(tg){ cand.push([]); mm.push({kind:0,key:0,cards:[]}); } if(!mm.length) return null; if(mm.length===1) return cand[0];
     const q=GDAI.qvals(GDAIX.view(H,M,s),mm); let bi=0; for(let i=1;i<q.length;i++) if(q[i]>q[bi]) bi=i; return cand[bi]; }catch(e){ console.warn('gdai',e); return null; } }
-const botMove=s=>{ const r=nnMove(s); return r!=null?r:GDM.botMove(H,s); };
+// teamwork on top of the network (which already sees seats relative to itself): don't trample a partner's winning play, and feed a partner who is about to go out
+function coop(s,cards){ try{ const L=H.L, hand=H.hands[s], pt=(s+2)%4, pn=H.hands[pt].length, tr=H.trick, ctl=c=>c.r>=16||c.r===L||GD.isWild(c,L);
+    if(tr&&tr.seat===pt&&cards&&cards.length){ const j=GD.judge(cards,L,tr.combo); const finish=cards.length===hand.length;
+      if(!finish&&j){ const bomb=GD.isBomb(j), big=(tr.combo.key||0)>=13||GD.isBomb(tr.combo), costly=cards.some(ctl), oppLow=Math.min(H.hands[(s+1)%4].length||99,H.hands[(s+3)%4].length||99)<=3;
+        if(pn<=6||bomb||big||costly||!oppLow&&(tr.combo.key||0)>=10) return []; } }
+    if((!tr||tr.seat===s)&&pn>0&&pn<=2&&H.order.indexOf(pt)<0){ const ms=GD.moves(hand,L,null).filter(m=>!GD.isBomb(m.combo)&&m.combo.type===(pn===1?'single':'pair')&&!m.cards.some(ctl)).sort((a,b)=>a.combo.key-b.combo.key); if(ms.length&&ms.length<hand.length) return ms[0].cards; }
+  }catch(e){} return cards; }
+const botMove=s=>{ const r=nnMove(s); return coop(s,r!=null?r:GDM.botMove(H,s)); };
 const loadAI=()=>{ try{ GDAI.load(AI_URL()).catch(()=>{}); }catch(e){} };
 const voxBuf={}, voxLoading={}; let voxFree=0;
 const VOL={voice:1}; try{ Object.assign(VOL,JSON.parse(localStorage.getItem('gd-vol')||'{}')); }catch(e){}
@@ -7422,8 +7435,8 @@ async function testFx(type){ if(!H) return; const s=TEST.seat; let id=7000; cons
   const cb=GD.judge(cards,L,null); if(!cb) return; const prev=H.played[s]; H.played[s]=cards; drawPlayed(s); const z=$g('.gp'+s); if(z&&cards.length>1) z.insertAdjacentHTML('beforeend',comboTag(cb));
   voxPlay(s,cb,cards,true); await comboFx(s,cb); await wait(600); if(H.played[s]===cards){ H.played[s]=prev; drawPlayed(s); } }
 async function testEv(k){ if(!H) return; const s=TEST.seat||1, me=s===0?2:0;
-  if(k==='trib'){ const to=(s+1)%4; eyeMood(to%2===0?'good':'bad'); const c={id:7101,r:14,s:3}; phaseTip(T('Tribute','进贡阶段'),T(`${pname(s)} pays ${desc1(c)} to ${pname(to)}`,`${pname(s)} 把 ${desc1(c)} 进贡给 ${pname(to)}`),'trib'); await wait(500); await flyCard(c,s,to,false); phaseTip(null); }
-  else if(k==='ret'){ const c={id:7102,r:5,s:0}; phaseTip(T('Return','还贡阶段'),T(`${pname((s+1)%4)} returns ${desc1(c)} to ${pname(s)}`,`${pname((s+1)%4)} 把 ${desc1(c)} 还给 ${pname(s)}`),'ret'); await flyCard(c,(s+1)%4,s,true); phaseTip(null); }
+  if(k==='trib'){ const to=(s+1)%4; eyeMood(to%2===0?'good':'bad'); const c={id:7101,r:14,s:3}; phaseTip(T('Tribute','进贡'),T(`${pname(s)} pays ${desc1(c)} to ${pname(to)}`,`${pname(s)} 把 ${desc1(c)} 进贡给 ${pname(to)}`),'trib'); await wait(500); await flyCard(c,s,to,false); phaseTip(null); }
+  else if(k==='ret'){ const c={id:7102,r:5,s:0}; phaseTip(T('Return','还贡'),T(`${pname((s+1)%4)} returns ${desc1(c)} to ${pname(s)}`,`${pname((s+1)%4)} 把 ${desc1(c)} 还给 ${pname(s)}`),'ret'); await flyCard(c,(s+1)%4,s,true); phaseTip(null); }
   else if(k==='redeal'){ const h0=H; busy=true; await dealAnim(); if(H===h0){ busy=false; refreshAll(); } }
   else if(k==='anti') await antiFx([{id:7103,r:17,s:4},{id:7104,r:17,s:4}],[s,s]);
   else if(k==='wind') windBanner(s);
@@ -7480,7 +7493,7 @@ function layoutFan(s){ const f=$g('.gs'+s+' .gs-fan'); if(!f) return;
   if(f.classList.contains('peek')){ f.classList.remove('peek'); f.dataset.k=''; f.innerHTML=''; }
   const n=H.revealed?0:H.hands[s].length; if(f.children.length!==n) f.innerHTML=backHTML(n);
   const side=s!==2, avail=side?Math.min(felt.clientHeight*.36,cw*3.2):Math.min(felt.clientWidth*.25,cw*4.2), bw=cw*.56, step=n>1?Math.min(bw*.42,(avail-bw)/(n-1)):0;
-  f.style.setProperty('--st',step+'px'); f.style[side?'height':'width']=(bw*(side?1:1)+(n-1)*step)+'px'; f.style[side?'width':'height']=''; }
+  f.style.setProperty('--st',step+'px'); const full=bw+26*Math.min(bw*.42,(avail-bw)/26); f.style[side?'height':'width']=full+'px'; f.style[side?'width':'height']=''; } // the box keeps its full size so the avatar never shifts as cards go
 function sayBubble(s,text,cls){ const b=$g('.gs'+s+' .gs-say'); if(!b) return; b.textContent=text; b.className='gs-say on '+(cls||''); clearTimeout(b._t); b._t=setTimeout(()=>b.classList.remove('on'),1500); }
 /* played cards */
 function drawPlayed(s){ const z=$g('.gp'+s); if(!z) return; const p=H.played[s];
@@ -7618,7 +7631,7 @@ async function sweepPlayed(){ const zs=$$g('.gp .gp-cards, .gp .gp-pass'); if(zs
   H.played=[[],[],[],[]]; for(let s=0;s<4;s++) drawPlayed(s); }
 // a small status strip above the disc while tribute is being paid, so players know what is happening
 function phaseTip(title,text,kind){ const f=$g('.gt-felt'); if(!f) return; let e=f.querySelector('.gt-phase'); if(!title){ if(e){ e.classList.add('out'); setTimeout(()=>e.remove(),300); } return; }
-  if(!e){ e=document.createElement('div'); e.className='gt-phase'; f.appendChild(e); } e.className='gt-phase '+(kind||''); e.innerHTML=`<b>${title}</b><span>${text}</span>`; e.animate([{opacity:.3,transform:'translate(-50%,-6px)'},{opacity:1,transform:'translate(-50%,0)'}],{duration:260,easing:'ease-out'}); }
+  if(!e){ e=document.createElement('div'); e.className='gt-phase'; f.appendChild(e); } if(e.dataset.t===title) return; e.dataset.t=title; e.className='gt-phase '+(kind||''); e.innerHTML=`<b>${title}</b>`; e.animate([{opacity:.3,transform:'translate(-50%,-6px)'},{opacity:1,transform:'translate(-50%,0)'}],{duration:260,easing:'ease-out'}); }
 function crownBanner(s,k){ const m=$g('.gt-ban'); if(!m) return; const b=document.createElement('div'); b.className='gb-msg crown c'+k; b.innerHTML=`<i>${CROWN[k]}</i><span>${pname(s)}</span><b>${RANKN()[k]}</b>`; m.appendChild(b); setTimeout(()=>b.remove(),1900); }
 function windBanner(s){ const m=$g('.gt-ban.hi'); if(!m) return; dragonGlow('#7fe0d0',{sweep:620,hold:1100,fade:1000}); ornLight(s,'#ffe28a',{delay:560,inn:220,hold:880,out:1000}); snd('wind'); const b=document.createElement('div'); b.className='gb-msg wind';
   b.innerHTML=`<svg class="wd-ic" viewBox="0 0 48 32" aria-hidden="true"><path d="M2 10h26a6 6 0 1 0-6-6"/><path d="M2 18h36a6 6 0 1 1-6 6"/><path d="M2 26h16"/></svg><span class="wd-t">${T('Borrow the wind','借风')}</span>`;
@@ -8089,7 +8102,7 @@ function sirenAlert(s,n){ const fx=$g('.gt-fx'); if(!fx||reduce) return; const R
 let gdBus=null, BGM={cur:null,k:null,tr:{}};
 function bgmTrack(k){ if(BGM.tr[k]) return BGM.tr[k]; if(typeof Track==='undefined'||!AC) return null;
   if(!gdBus){ gdBus=AC.createGain(); gdBus.gain.value=.75; gdBus.connect(musicBus||AC.destination); }
-  const t=new Track(VOX_URL('gd-bgm'+k),3); const seg=t.seg.bind(t); t.seg=(at,off,fade)=>{ const sg=seg(at,off,fade); try{ sg.g.disconnect(); sg.g.connect(gdBus); }catch(e){} return sg; }; return BGM.tr[k]=t; }
+  const t=new Track(VOX_URL('gd-bgm'+k),3); t.schedule=function(){ const c=this.cur, endAt=c.at+(this.le-c.offset), nextAt=endAt+this.gap, lead=Math.max(0,(nextAt-AC.currentTime-1)*1000); this.timer=setTimeout(()=>{ if(!this.playing) return; this.cur=this.seg(Math.max(AC.currentTime+.05,nextAt),this.ls,0); this.schedule(); },lead); }; const seg=t.seg.bind(t); t.seg=(at,off,fade)=>{ const sg=seg(at,off,fade); try{ sg.g.disconnect(); sg.g.connect(gdBus); }catch(e){} return sg; }; return BGM.tr[k]=t; }
 function bgm(k){ try{ if(!AC) initAudio(); if(!AC) return; if(k){ [TR.bgm,TR.decode].forEach(t=>{ if(t&&t.playing){ t.pause(.5); if(!bgmHeld.includes(t)) bgmHeld.push(t); } }); } if(BGM.k===k&&BGM.cur&&BGM.cur.playing) return; const old=BGM.cur, t=k?bgmTrack(k):null; BGM.k=k;
     if(old&&old!==t){ old.pause(typeof SWITCH_XF!=='undefined'?SWITCH_XF:1.4); }
     BGM.cur=t; if(t){ t.pos=null; if(t.buf) t.pos=t.ls; t.play(old?(typeof SWITCH_XF!=='undefined'?SWITCH_XF:1.4):.6); } }catch(e){} }
@@ -8167,21 +8180,21 @@ async function flyCard(c,from,to,isRet){ const a=seatPt(from), b=seatPt(to), R=f
   e.remove(); }
 async function doTribute(){ const t=H.tribute; drawLevel();
   if(t.anti){ const holders=[0,1,2,3].filter(s=>H.hands[s].some(c=>c.r===17)&&(M.last.slice(2).includes(s)));
-    const own=H.hands.flatMap((h,s)=>holders.includes(s)?h.filter(c=>c.r===17).map(c=>[c,s]):[]).slice(0,2); phaseTip(T('Tribute refused','抗贡'),T('The players who owe tribute hold both Big Jokers, so no tribute this hand. The 1st player leads.','要进贡的一方手握两张大王，本局免贡，由头游先出牌。'),'anti'); await antiFx(own.map(x=>x[0]),own.map(x=>x[1])); setTimeout(()=>phaseTip(null),1500); H.phase='play'; return; }
-  eyeMood(t.pairs[0].to%2===0?'good':'bad'); phaseTip(T('Tribute','进贡阶段'),t.pairs.length>1?T('Double tribute: the losing pair each give their highest card to the winners.','双下：输的两人各把最大的一张牌交给赢家。'):T('The 4th player gives their highest card to the 1st player.','下游把手里最大的一张牌交给头游。'),'trib'); await wait(900);
-  for(const p of t.pairs){ phaseTip(T('Tribute','进贡阶段'),T(`${pname(p.from)} pays ${desc1(p.card)} to ${pname(p.to)}`,`${pname(p.from)} 把 ${desc1(p.card)} 进贡给 ${pname(p.to)}`),'trib'); sayBubble(p.from,T('Tribute','进贡')+' '+desc1(p.card)); await flyCard(p.card,p.from,p.to,false); await wait(300); }
+    const own=H.hands.flatMap((h,s)=>holders.includes(s)?h.filter(c=>c.r===17).map(c=>[c,s]):[]).slice(0,2); await antiFx(own.map(x=>x[0]),own.map(x=>x[1])); H.phase='play'; return; }
+  eyeMood(t.pairs[0].to%2===0?'good':'bad'); phaseTip(T('Tribute','进贡'),t.pairs.length>1?T('Double tribute: the losing pair each give their highest card to the winners.','双下：输的两人各把最大的一张牌交给赢家。'):T('The 4th player gives their highest card to the 1st player.','下游把手里最大的一张牌交给头游。'),'trib'); await wait(900);
+  for(const p of t.pairs){ phaseTip(T('Tribute','进贡'),T(`${pname(p.from)} pays ${desc1(p.card)} to ${pname(p.to)}`,`${pname(p.from)} 把 ${desc1(p.card)} 进贡给 ${pname(p.to)}`),'trib'); sayBubble(p.from,T('Tribute','进贡')+' '+desc1(p.card)); await flyCard(p.card,p.from,p.to,false); await wait(300); }
   GDM.giveTribute(H); for(let s=0;s<4;s++) drawSeat(s); drawHand();
   const mine=t.pairs.find(p=>p.to===0);
-  for(const p of t.pairs.filter(p=>p.to!==0)){ const c=GD.returnCard(H.hands[p.to],H.L); GDM.giveBack(H,p.to,p.from,c); p.back=c; phaseTip(T('Return','还贡阶段'),T(`${pname(p.to)} returns ${desc1(c)} to ${pname(p.from)}`,`${pname(p.to)} 把 ${desc1(c)} 还给 ${pname(p.from)}`),'ret'); sayBubble(p.to,T('Return','还贡')+' '+desc1(c)); await flyCard(c,p.to,p.from,true); await wait(300); for(let s=0;s<4;s++) drawSeat(s); if(p.from===0){ drawHand(); const e=$g(`#gtHand .gc[data-id="${c.id}"]`); if(e){ e.classList.add('got'); setTimeout(()=>e.classList.remove('got'),2500); } } }
-  if(mine){ phaseTip(T('Your return','轮到你还贡'),T(`Pick a card of 10 or lower (not a level card) and give it back to ${pname(mine.from)}.`,`选一张 10 或以下、不是级牌的牌，还给 ${pname(mine.from)}。`),'ret'); ret=mine; drawHand(); const e=$g(`#gtHand .gc[data-id="${mine.card.id}"]`); e&&e.classList.add('got');
+  for(const p of t.pairs.filter(p=>p.to!==0)){ const c=GD.returnCard(H.hands[p.to],H.L); GDM.giveBack(H,p.to,p.from,c); p.back=c; phaseTip(T('Return','还贡'),T(`${pname(p.to)} returns ${desc1(c)} to ${pname(p.from)}`,`${pname(p.to)} 把 ${desc1(c)} 还给 ${pname(p.from)}`),'ret'); sayBubble(p.to,T('Return','还贡')+' '+desc1(c)); await flyCard(c,p.to,p.from,true); await wait(300); for(let s=0;s<4;s++) drawSeat(s); if(p.from===0){ drawHand(); const e=$g(`#gtHand .gc[data-id="${c.id}"]`); if(e){ e.classList.add('got'); setTimeout(()=>e.classList.remove('got'),2500); } } }
+  if(mine){ phaseTip(T('Return','还贡'),'','ret'); ret=mine; drawHand(); const e=$g(`#gtHand .gc[data-id="${mine.card.id}"]`); e&&e.classList.add('got');
 drawAct();
     $$g('#gtHand .gc').forEach(e=>{ const c=H.hands[0].find(x=>x.id==e.dataset.id); e.classList.toggle('dim',!retOk(c)); }); return; }
-  phaseTip(T('Tribute done','进贡完毕'),T('Play begins now.','开始出牌。'),'done'); setTimeout(()=>phaseTip(null),1400); H.phase='play'; }
+  phaseTip(null); H.phase='play'; }
 const retFit=c=>c.r<=10&&c.r!==H.L&&c.r<16;
 const retOk=c=>{ if(!c) return false; const any=H.hands[0].some(retFit); return any?retFit(c):c===GD.sortHand(H.hands[0].filter(x=>x.r!==H.L),H.L).slice(-1)[0]; };
 function pickReturn(id){ const c=H.hands[0].find(x=>x.id===id); if(!retOk(c)){ snd('err'); return; } sel=new Set([id]); snd('pick'); layoutHand(); const b=$g('[data-a=retok]'); if(b) b.disabled=false; }
 async function confirmReturn(){ const c=H.hands[0].find(x=>sel.has(x.id)); if(!c||!retOk(c)) return; const from=ret.from; ret=null; sel.clear(); $$g('#gtHand .gc').forEach(e=>e.classList.remove('dim','got')); drawAct();
-  GDM.giveBack(H,0,from,c); drawHand(); await flyCard(c,0,from,true); for(let s=0;s<4;s++) drawSeat(s); phaseTip(T('Tribute done','进贡完毕'),T('Play begins now.','开始出牌。'),'done'); setTimeout(()=>phaseTip(null),1400); H.phase='play'; step(); }
+  GDM.giveBack(H,0,from,c); drawHand(); await flyCard(c,0,from,true); for(let s=0;s<4;s++) drawSeat(s); phaseTip(null); H.phase='play'; step(); }
 /* ---------- end of hand ---------- */
 async function endHand(){ if(H.settled) return; H.settled=true; clearTimeout(timer); for(let s=0;s<4;s++) drawSeat(s);
   if(tut){ drawAct(); tutEnd(); return; }
