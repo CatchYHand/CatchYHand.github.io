@@ -7807,7 +7807,8 @@ function fitRing(handH){ if(!felt) return; const Hf=felt.clientHeight, Wf=felt.c
   const plH=cw*1.12; handH=cw*1.4+cw*.28*3+cw*.32; const actTop=Hf-(handH||cw*1.6)-rem*1.6-Math.max(rem*3.8,plH*.55), ts=Math.round(Math.max(Math.min(Wf*.46,Hf*.56,(actTop-top)/.8),Math.min(Wf,Hf)*.4)), cy=Math.round(Math.min(top+ts/2,Hf*.5)); // the lower rim may slip under your buttons, the dragon's body never
   root.style.setProperty('--ts',ts+'px'); root.style.setProperty('--tcy',cy+'px');
   // side players line up with the 東 / 西 marks on the disc
-  const my=cy-ts*.5+ts*.47; [1,3].forEach(s=>{ const g=$g('.gs'+s), a=g&&g.querySelector('.gs-av'); if(!g||!a) return; g.style.top='0px'; g.style.transform='none'; const off=a.getBoundingClientRect().top-g.getBoundingClientRect().top+a.offsetHeight/2; g.style.top=(my-off)+'px'; }); root.style.setProperty('--sideY',my+'px'); }
+  const my=cy-ts*.5+ts*.47; [3,1].forEach(s=>{ const g=$g('.gs'+s), a=g&&g.querySelector('.gs-av'); if(!g||!a) return; g.style.top='0px'; g.style.transform='none'; const off=a.getBoundingClientRect().top-g.getBoundingClientRect().top+a.offsetHeight/2; g.style.top=(my-off)+'px'; });
+  const la=$g('.gs3 .gs-av'), ra=$g('.gs1 .gs-av'), g1=$g('.gs1'); if(la&&ra&&g1){ const d=(la.getBoundingClientRect().top+la.offsetHeight/2)-(ra.getBoundingClientRect().top+ra.offsetHeight/2); if(Math.abs(d)>.5) g1.style.top=(parseFloat(g1.style.top)+d)+'px'; } root.style.setProperty('--sideY',my+'px'); }
 function sizeVars(){ felt=$g('.gt-felt'); if(!felt) return; const r=felt.getBoundingClientRect();
   cw=Math.round(Math.max(56,Math.min(140,Math.min(r.width*.072,r.height*.108)))); root.style.setProperty('--cw',cw+'px'); root.style.setProperty('--ts',Math.round(Math.min(r.width,r.height)*.49)+'px'); }
 function seatHTML(s){ const p=P[s], d=DIR()[s];
@@ -7889,6 +7890,9 @@ async function animLevel(res){ const g=$g('.gl'); if(!g) return; const du=res.af
   await wait(Math.max(1500,...[0,1].map(t=>Math.abs(res.after[t]-res.before[t])*330+700)));
   for(const t of [0,1]){ if(res.aFail===t){ await breakHeart(t); } }
   if(placeHi.last!=null&&placeHi.last!==M.dealer){ g.querySelectorAll('.glt').forEach(e=>e.classList.toggle('cur',e.classList.contains('t'+M.dealer))); placeHi(M.dealer); await wait(reduce?50:1100); }
+  // the level card flips to next hand's level while the panel is still open
+  const nextL=M&&M.lv?M.lv[M.dealer]:null, tl=g.querySelector('.gl-tile'), im=tl&&tl.querySelector('.gl-face');
+  if(im&&nextL!=null&&nextL!==g._L){ if(!reduce){ tl.classList.remove('flip'); void tl.offsetWidth; tl.classList.add('flip'); snd('tick'); setTimeout(()=>{ im.src=GC_IMG(cimg({r:nextL,s:1})); },260); await wait(950); tl.classList.remove('flip'); } else im.src=GC_IMG(cimg({r:nextL,s:1})); g._L=nextL; }
   await wait(250); eyeOff(); g.classList.remove('hot'); await wait(reduce?50:700); }
 function floatAt(el,text,cls){ const r=el.getBoundingClientRect(), R=root.getBoundingClientRect(), f=document.createElement('div'); f.className='gr-float '+(cls||''); f.textContent=text; f.style.left=(r.left-R.left+r.width/2)+'px'; f.style.top=(r.top-R.top)+'px'; root.appendChild(f); setTimeout(()=>f.remove(),2200); }
 /* seats */
@@ -7937,14 +7941,15 @@ function columns(){ const L=H.L, hand=H.hands[0].slice(), out=[]; if(dealFlat) r
     // try both orders — straight flushes first, or same-rank bombs first — and keep whichever leaves the stronger set of bombs (ties go to straight flushes)
     const plan=sfFirst=>{ let rest=hand.slice(); const cols=[]; const take=ids=>{ rest=rest.filter(c=>!ids.includes(c)); };
       const J=rest.filter(c=>c.r>=16); if(J.length===4){ cols.push({cards:J.sort((a,b)=>a.r-b.r),tag:T('Joker Bomb','四大天王'),bomb:1,kind:'kb'}); take(J); }
-      const sfs=()=>{ let found=true; while(found){ found=false; const W=rest.filter(c=>GD.isWild(c,L));
+      const sfs=(useW)=>{ let found=true; while(found){ found=false; const W=useW?rest.filter(c=>GD.isWild(c,L)):[];
           outer: for(let lo=10;lo>=1;lo--) for(let su=0;su<4;su++){ const cs=[]; let wl=0; for(let r=lo;r<lo+5;r++){ const rr=r===1?14:r; const c=rest.find(x=>x.s===su&&x.r===rr&&!GD.isWild(x,L)); if(c) cs.push(c); else { if(wl>=W.length){ cs.length=0; break; } cs.push(W[wl++]); } }
             if(cs.length===5){ cols.push({cards:cs,tag:T('ST. FLUSH','同花顺'),bomb:1,kind:'sf'}); take(cs); found=true; break outer; } } } };
-      const same=()=>{ const g={}; rest.forEach(c=>{ if(!GD.isWild(c,L)&&c.r<16) (g[c.r]=g[c.r]||[]).push(c); }); const rk=Object.keys(g).map(Number).sort((a,b)=>GD.val(b,L)-GD.val(a,L));
+      const same=(useW)=>{ const g={}; rest.forEach(c=>{ if(!GD.isWild(c,L)&&c.r<16) (g[c.r]=g[c.r]||[]).push(c); }); const rk=Object.keys(g).map(Number).sort((a,b)=>GD.val(b,L)-GD.val(a,L));
         rk.forEach(r=>{ if(g[r].length>=4){ cols.push({cards:g[r].sort((a,b)=>a.s-b.s),tag:T('BOMB','炸弹'),bomb:1,kind:'bomb'}); take(g[r]); } });
-        rk.forEach(r=>{ const W0=rest.filter(c=>GD.isWild(c,L)); if(g[r].length===3&&W0.length){ const cs=g[r].sort((a,b)=>a.s-b.s).concat([W0[0]]); cols.push({cards:cs,tag:T('BOMB','炸弹'),bomb:1,kind:'bomb'}); take(cs); } });
-        rk.forEach(r=>{ const W0=rest.filter(c=>GD.isWild(c,L)); if(g[r].length===2&&W0.length>=2){ const cs=g[r].sort((a,b)=>a.s-b.s).concat(W0.slice(0,2)); cols.push({cards:cs,tag:T('BOMB','炸弹'),bomb:1,kind:'bomb'}); take(cs); } }); };
-      if(sfFirst){ sfs(); same(); } else { same(); sfs(); }
+        if(useW) rk.forEach(r=>{ const W0=rest.filter(c=>GD.isWild(c,L)); if(g[r].length===3&&W0.length){ const cs=g[r].sort((a,b)=>a.s-b.s).concat([W0[0]]); cols.push({cards:cs,tag:T('BOMB','炸弹'),bomb:1,kind:'bomb'}); take(cs); } });
+        if(useW) rk.forEach(r=>{ const W0=rest.filter(c=>GD.isWild(c,L)); if(g[r].length===2&&W0.length>=2){ const cs=g[r].sort((a,b)=>a.s-b.s).concat(W0.slice(0,2)); cols.push({cards:cs,tag:T('BOMB','炸弹'),bomb:1,kind:'bomb'}); take(cs); } }); };
+      // natural groups first, wild cards only to complete what is left
+      if(sfFirst){ sfs(false); same(false); sfs(true); same(true); } else { same(false); sfs(false); same(true); sfs(true); }
       const val=c=>c.kind==='kb'?100:c.kind==='sf'?17:({4:10,5:14,6:20,7:24,8:28}[c.cards.length]||30), score=cols.reduce((a,c)=>a+val(c),0)+cols.length*.5+(sfFirst?.01:0);
       return {cols,rest,score}; };
     const A=plan(true), B=plan(false), P0=A.score>=B.score?A:B; out.push(...P0.cols); const rest=P0.rest;
@@ -8007,9 +8012,14 @@ function buildHints(){ const tg=target(), hand=H.hands[0], L=H.L, ms=GD.moves(ha
     sc+=(GD.plan(GD.without(hand,m.cards),L).s-base)*2.2+(m.combo.key||0)*.06;
     if(key(m)===bk) sc-=1.5; return sc; };
   // never offer a play that splits a bomb (part of a 4+ group): a 6-bomb is not cut down to 5, nor broken for a single
-  const whole=m=>{ if(m.cards.length===hand.length) return true; const used={}; m.cards.forEach(c=>{ if(!GD.isWild(c,L)&&c.r<16) used[c.r]=(used[c.r]||0)+1; }); return Object.keys(used).every(r=>cnt[r]<4||used[r]===cnt[r]); };
-  const pool=ms.filter(whole);
-  (pool.length?pool:ms).map(m=>({m,s:score(m)})).sort((a,b)=>a.s-b.s).forEach(({m})=>{ const k2=m.combo.type+':'+m.combo.key+':'+m.cards.map(c=>(GD.isWild(c,L)?'w':c.r)).sort().join(','); if(seen.has(k2)) return; seen.add(k2); out.push(m); });
+  // the groups Sort would make (four jokers, straight flushes, bombs) are kept whole: a play either is one of them or touches none of their cards
+  const sm0=sortMode; sortMode=1; const groups=columns().filter(c=>c.bomb).map(c=>new Set(c.cards.map(x=>x.id))); sortMode=sm0; const reserved=new Set(groups.flatMap(g=>[...g]));
+  const whole=m=>{ if(m.cards.length===hand.length) return true; const ids=m.cards.map(c=>c.id); if(groups.some(g=>g.size===ids.length&&ids.every(i=>g.has(i)))) return true;
+    if(ids.some(i=>reserved.has(i))) return false; const used={}; m.cards.forEach(c=>{ if(!GD.isWild(c,L)&&c.r<16) used[c.r]=(used[c.r]||0)+1; }); return Object.keys(used).every(r=>cnt[r]<4||used[r]===cnt[r]); };
+  const swap=m=>{ if(!m.cards.some(c=>reserved.has(c.id))) return m; const ids=new Set(m.cards.map(c=>c.id)); const out=m.cards.map(c=>{ if(!reserved.has(c.id)) return c; const alt=hand.find(x=>!reserved.has(x.id)&&!ids.has(x.id)&&(GD.isWild(c,L)?GD.isWild(x,L):x.r===c.r&&!GD.isWild(x,L)&&(m.combo.type!=='sflush'||x.s===c.s))); if(alt){ ids.add(alt.id); return alt; } return null; });
+    if(out.some(c=>!c)) return m; const j=GD.judge(out,L,tg); return j&&j.type===m.combo.type&&j.key===m.combo.key?{cards:out,combo:j}:m; };
+  const ms2=ms.map(swap), pool=ms2.filter(whole);
+  (pool.length?pool:ms2).map(m=>({m,s:score(m)})).sort((a,b)=>a.s-b.s).forEach(({m})=>{ const k2=m.combo.type+':'+m.combo.key+':'+m.cards.map(c=>(GD.isWild(c,L)?'w':c.r)).sort().join(','); if(seen.has(k2)) return; seen.add(k2); out.push(m); });
   if(tut&&tut.st&&tut.st.ids) { hintList=[{cards:tut.st.ids.map(i=>hand.find(c=>c.id===i)),combo:GD.judge(tut.st.ids.map(i=>hand.find(c=>c.id===i)),L,tg)}]; }
   else hintList=tut?[]:out; hintI=-1; }
 // what your selection makes: a small tag that floats right above the raised cards, styled unlike the table's combo tags
