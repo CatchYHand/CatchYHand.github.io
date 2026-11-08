@@ -7356,7 +7356,9 @@ function beats(a,b){ if(!b) return true; const ta=tier(a), tb=tier(b);
   if(ta||tb){ if(ta!==tb) return ta>tb; return a.key>b.key; }
   return a.type===b.type&&a.n===b.n&&a.key>b.key; }
 // the best reading of `cards` that beats `target` (or the natural reading when leading)
-function judge(cards,L,target){ const rs=readings(cards,L); if(!rs.length) return null;
+function judge(cards,L,target){ let rs=readings(cards,L); if(!rs.length) return null;
+  // five cards of one suit in a row are always a straight flush (a bomb), never a plain straight
+  if(rs.some(r=>r.type==='sflush')) rs=rs.filter(r=>r.type!=='straight');
   if(!target){ const nb=rs.filter(r=>!isBomb(r)); const pool=nb.length?nb:rs; return pool.sort((a,b)=>tier(b)-tier(a)||b.key-a.key)[0]; }
   const ok=rs.filter(r=>beats(r,target)); if(!ok.length) return null;
   return ok.sort((a,b)=>(isBomb(a)-isBomb(b))||tier(a)-tier(b)||a.key-b.key)[0]; }
@@ -7780,7 +7782,10 @@ const pname=s=>s===0?(zh()?'你':'You'):P[s].name;
 /* ---------- recorded voice lines: one MP3 sprite per voice and language ---------- */
 const VOX_URL=k=>'/assets/aud/gd/'+k+'.mp3';
 const AI_URL=()=>VOX_URL('gd-ai').replace(/\.mp3$/,'.wasm');
-function nnMove(s){ try{ if(!GDAI.ready()) return null; const tg=H.trick&&H.trick.seat!==s?H.trick.combo:null; const raw=GD.moves(H.hands[s],H.L,tg); const seen=new Set(), cand=[], mm=[];
+function nnMove(s){ try{ if(!GDAI.ready()) return null; const tg=H.trick&&H.trick.seat!==s?H.trick.combo:null; let raw=GD.moves(H.hands[s],H.L,tg); const seen=new Set(), cand=[], mm=[];
+    // never open a trick with a bomb (straight flushes included) while the hand is still long and nobody on the other side is close to going out
+    if(!tg){ const hl=H.hands[s].length, oppMin=Math.min(...[1,3].map(d=>(s+d)%4).filter(o=>GDM.active(H,o)).map(o=>H.hands[o].length),99), safe=raw.filter(m=>!GD.isBomb(m.combo)||m.cards.length===hl);
+      if(hl>8&&oppMin>6&&safe.length) raw=safe; }
     for(const m of raw){ const x=GDAIX.mapMove(m,H.L), k=x.kind+':'+x.key+':'+x.cards.join(','); if(seen.has(k)) continue; seen.add(k); cand.push(m.cards); mm.push(x); }
     if(tg){ cand.push([]); mm.push({kind:0,key:0,cards:[]}); } if(!mm.length) return null; if(mm.length===1) return cand[0];
     const q=GDAI.qvals(GDAIX.view(H,M,s),mm); let bi=0; for(let i=1;i<q.length;i++) if(q[i]>q[bi]) bi=i; return cand[bi]; }catch(e){ console.warn('gdai',e); return null; } }
@@ -9330,7 +9335,7 @@ async function antiFx(jj,seats){ const R=felt.getBoundingClientRect(), x=R.width
   await wait(1100); fly.forEach(o=>o.e.remove()); [rays,f].forEach(e=>e.remove()); }
 async function demoAnti(){ await wait(400); if(!tut||tut.demo!=='anti') return; snd('shield'); const R=felt.getBoundingClientRect();
   antiFx([{id:-1,r:17,s:4},{id:-2,r:17,s:4}]); }
-return {open:openRoom, close:closeRoom, isOpen:()=>open, _wind:s=>windBanner(s), _res:(g,w)=>showResult({winner:w?0:1,up:2,order:w?[0,2,1,3]:[1,3,0,2],before:[5,3],after:w?[7,3]:[5,5],gameOver:g},!!w,3), _drg:()=>{ const R=felt.getBoundingClientRect(); return flyDragon($g('.gt-fx'),R.width,R.height,{dur:6000}); }, _s:()=>({M,H,tut}), _redraw:()=>refreshAll(), _step:()=>{ busy=false; step(); }, _newHand:()=>newHand(), _trib:()=>doTribute(), _bgm:()=>({k:BGM.k,playing:!!(BGM.cur&&BGM.cur.playing),buf:!!(BGM.cur&&BGM.cur.buf),site:!!(TR.bgm&&TR.bgm.playing)}), _siren:(s,n)=>{ warned.add(s); drawSeat(s); snd("siren"); sirenAlert(s,n); bgm(3); }, _hints:()=>{ buildHints(); return hintList.map(m=>m.combo.type+":"+m.cards.map(c=>GD.isWild(c,H.L)?"W":c.r).join(",")); }, _nh:()=>newHand(), _anti:()=>antiFx([{id:-1,r:17,s:4},{id:-2,r:17,s:4}],[1,1]), _vox:()=>({loaded:Object.keys(voxBuf),loading:Object.keys(voxLoading)}), _fx:async(s,spec)=>{ const cards=spec.map(([r,su],i)=>({id:5000+i,r,s:r>=16?4:su})); H.played[s]=cards; H.trick={seat:s,combo:GD.judge(cards,H.L,null),cards}; drawPlayed(s); await comboFx(s,H.trick.combo); }, relang:()=>{ if(open){ loadVox(); render(); if(tut&&tut.i>=0){ const st=GD_TUT.steps[tut.i]; if(st&&(st.say)) tutCard(st); } } }};
+return {_nn:s=>nnMove(s), open:openRoom, close:closeRoom, isOpen:()=>open, _wind:s=>windBanner(s), _res:(g,w)=>showResult({winner:w?0:1,up:2,order:w?[0,2,1,3]:[1,3,0,2],before:[5,3],after:w?[7,3]:[5,5],gameOver:g},!!w,3), _drg:()=>{ const R=felt.getBoundingClientRect(); return flyDragon($g('.gt-fx'),R.width,R.height,{dur:6000}); }, _s:()=>({M,H,tut}), _redraw:()=>refreshAll(), _step:()=>{ busy=false; step(); }, _newHand:()=>newHand(), _trib:()=>doTribute(), _bgm:()=>({k:BGM.k,playing:!!(BGM.cur&&BGM.cur.playing),buf:!!(BGM.cur&&BGM.cur.buf),site:!!(TR.bgm&&TR.bgm.playing)}), _siren:(s,n)=>{ warned.add(s); drawSeat(s); snd("siren"); sirenAlert(s,n); bgm(3); }, _hints:()=>{ buildHints(); return hintList.map(m=>m.combo.type+":"+m.cards.map(c=>GD.isWild(c,H.L)?"W":c.r).join(",")); }, _nh:()=>newHand(), _anti:()=>antiFx([{id:-1,r:17,s:4},{id:-2,r:17,s:4}],[1,1]), _vox:()=>({loaded:Object.keys(voxBuf),loading:Object.keys(voxLoading)}), _fx:async(s,spec)=>{ const cards=spec.map(([r,su],i)=>({id:5000+i,r,s:r>=16?4:su})); H.played[s]=cards; H.trick={seat:s,combo:GD.judge(cards,H.L,null),cards}; drawPlayed(s); await comboFx(s,H.trick.combo); }, relang:()=>{ if(open){ loadVox(); render(); if(tut&&tut.i>=0){ const st=GD_TUT.steps[tut.i]; if(st&&(st.say)) tutCard(st); } } }};
 })();
 
 const COL_SLOTS=12; // empty slots stay on the page for future columns
