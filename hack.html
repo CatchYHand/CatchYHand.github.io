@@ -7898,11 +7898,11 @@ function floatAt(el,text,cls){ const r=el.getBoundingClientRect(), R=root.getBou
 /* seats */
 function markPlays(){ if(!H) return; const top=H.trick?H.trick.seat:-1, live=H.phase==='play'&&!H.revealed;
   // the seat to act clears its last play; the next live seat dims. Finished seats clear once beaten.
-  // Two players left: a pass simply hands the lead back, so PASS is never shown.
+  // Two players left: a PASS stays fully lit until it is replaced.
   const t=H.turn, nx=t>=0?GDM.nextSeat(H,t):-1, act=[0,1,2,3].filter(k=>GDM.active(H,k)).length;
   for(let k=0;k<4;k++){ const z=$g('.gp'+k); if(!z) continue; const has=!!z.children.length, pass=H.played[k]==='pass';
-    const gone=live&&has&&k!==top&&(k===t||!GDM.active(H,k)||(act<=2&&pass));
-    z.classList.toggle('top',live&&k===top&&has); z.classList.toggle('gone',gone); z.classList.toggle('old',live&&has&&!gone&&k!==top&&k===nx); z.classList.remove('next'); }
+    const keep=act<=2&&pass, gone=live&&has&&k!==top&&!keep&&(k===t||!GDM.active(H,k));
+    z.classList.toggle('top',live&&k===top&&has); z.classList.toggle('gone',gone); z.classList.toggle('old',live&&has&&!gone&&!keep&&k!==top&&k===nx); z.classList.remove('next'); }
   // a dragon pearl rides the ring to whoever acts next (always travelling counter-clockwise, the way play goes)
   const tp=$g('.gt-pearl'); if(tp){ const on=live&&H.turn>=0&&!H.order.includes(H.turn); tp.classList.toggle('on',on); if(on){ const want=[180,90,0,270][H.turn]; let cur=tp._a==null?want:tp._a; let d=((cur-want)%360+360)%360; if(d===0&&tp._a!=null) d=0; const nx=cur-d; tp._a=nx; tp.style.setProperty('--ta',nx+'deg'); } } }
 function drawSeat(s){ markPlays(); const el=$g('.gs'+s); if(!el) return; const n=H.hands[s].length, out=H.order.indexOf(s), fin=outN();
@@ -8728,7 +8728,7 @@ function rules(after){ const p=document.createElement('div'); p.className='gr-po
   const sec=(k,i,title,body,cls)=>`<section id="gr-r-${k}" class="${cls||''}"><h4><i>${String(i).padStart(2,'0')}</i>${title}</h4>${body}</section>`;
   const lg=zh()?'zh':'en', fig=(k,cap,marks)=>`<figure class="gr-fig"><div class="gr-fw"><img src="${GIMG('gd-r-'+k+'-'+lg)}" alt="" loading="lazy">${(marks||[]).map(([x,y],i)=>`<i class="gr-mk" style="left:${x}%;top:${y}%">${i+1}</i>`).join('')}</div><figcaption>${cap}</figcaption></figure>`;
   const leg=list=>`<ol class="gr-leg">${list.map((t,i)=>`<li><i class="gr-mk st">${i+1}</i><span>${t}</span></li>`).join('')}</ol>`;
-  const TM=[[12,78],[88,38],[31,4.5],[12,38],[25,7],[36,67.5],[87,79],[62,38]];
+  const TM=[[12,78],[89,40],[31,4.5],[10.5,34],[25,7],[36,67.5],[87,79],[62,38]];
   const combo=(name,desc,list,type)=>`<div class="rc-combo"><div class="rc-cards">${row(list)}</div><div class="rc-tx"><b>${name}</b><span>${desc}</span></div>${type?`<em class="gr-pv">${badgeStatic(GD.TYPE[type][zh()?1:0],type)}</em>`:''}</div>`;
   const a=rk(0), b=rk(1);
   const NORMAL=[
@@ -8799,7 +8799,7 @@ function rulesDemos(p,L){ const alive=()=>p.isConnected, sleep=ms=>new Promise(r
     while(alive()){ if(box._vis||reduce){ await fn(box); } else await sleep(400); } io.disconnect(); };
   // level ranking: natural order, then the level cards rise to the front behind the jokers
   loop('.rd-rank',async box=>{ const st=box.querySelector('.rd-stage'); st.innerHTML=''; const nat=[2,3,4,5,6,7,8,9,10,11,12,13,14];
-    const els=[mk(17,4,1),mk(16,4,1)].concat(nat.slice().reverse().map(r=>{ const e=mk(r,r===L?1:[0,3,2,0][r%4],r!==L); if(r===L) e.classList.add('lv'); return e; })); els.forEach(e=>st.appendChild(e));
+    const els=[mk(17,4,1),mk(16,4,1)].concat(nat.slice().reverse().map(r=>{ const e=mk(r,r===L?0:[0,3,2,0][r%4],1); if(r===L) e.classList.add('lv'); return e; })); els.forEach(e=>st.appendChild(e));
     await sleep(1500); if(!alive()) return; const lv=els.find(e=>e.classList.contains('lv')); lv.classList.add('rise'); await sleep(450);
     flip(els,()=>{ st.insertBefore(lv,els[2]); },900); await sleep(1100); lv.classList.remove('rise'); lv.classList.add('top'); await sleep(2600); });
   // wild card: three 9s, then the heart level card slides in and the column becomes a bomb
