@@ -2765,6 +2765,7 @@ html:not([lang=zh]) .gt-phase b,.gt-phase.en b{font-family:'Newsreader','Noto Se
 @keyframes hzIn{0%{transform:translateY(-22px) scale(.2) rotate(-30deg);opacity:0}55%{transform:translateY(2px) scale(1.35) rotate(6deg);opacity:1}100%{transform:none;opacity:1}}
 .gt-res.amiss .rs-rib span{font-size:1rem;padding:.55rem 1.3rem .5rem}
 .fx-badge.royal{z-index:9!important}
+.gs-fan.ins .gb{transition:left .35s cubic-bezier(.3,.8,.3,1),top .35s cubic-bezier(.3,.8,.3,1)}
 /* ===== Pages & Frames: a reading room, green-leather rail and paper pages ===== */
 #reader.shelf{--sh-bg:#F3EEE3;--sh-ink:#23201A;--sh-ink2:#6B6252;--sh-acc:#8B2B22;--sh-green:#1F3329;--sh-line:#DCD2BF;--cx:#8B2B22}
 #reader.shelf .rd-main,#reader.shelf .rd-leaf{background:var(--sh-bg) linear-gradient(90deg,rgba(80,60,30,.05) 1px,transparent 1px) 0 0/22px 100%}
@@ -8327,7 +8328,7 @@ function dkTick(now){ dkRaf=0; const r=dkAll(); if(!r){ DKFX=[]; return; } const
   if(!dkOff) dkOff=document.createElement('canvas'); if(dkOff.width!==PX){ dkOff.width=dkOff.height=PX; } const o=dkOff.getContext('2d');
   const cx=PX*RC[0]/100, cy=PX*RC[1]/100, dm=dkImg('gd-table-dm'), om=dkImg('gd-table-om'); DKFX=DKFX.filter(f=>now-f.t0<f.D+(f.delay||0));
   for(const f of DKFX){ const t=now-f.t0-(f.delay||0); if(t<0) continue;
-    if(f.k==='sweep'&&dm){ const u=Math.min(1,t/f.sw), e=f.lin?u:1-Math.pow(1-u,2.2), ext=f.lin?e*400:-40+e*460, al=f.op*(t<f.sw+f.hold?1:Math.max(0,1-(t-f.sw-f.hold)/f.fade));
+    if(f.k==='sweep'&&dm){ const u=f.prog?(f.pu=(f.pu||0)+(Math.min(1,f.prog())-(f.pu||0))*.18):Math.min(1,t/f.sw), e=f.lin?u:1-Math.pow(1-u,2.2), ext=f.lin?e*400:-40+e*460, te=f.prog?(f.endT?now-f.endT:-1):t-f.sw, al=f.op*(te<f.hold?1:Math.max(0,1-(te-f.hold)/f.fade));
       o.globalCompositeOperation='source-over'; o.clearRect(0,0,PX,PX); o.drawImage(dm,0,0,PX,PX); o.globalCompositeOperation='source-in'; let gr; if(f.rainbow&&o.createConicGradient){ gr=o.createConicGradient(((72-90)*Math.PI/180)+now*.0012,cx,cy); ['#ff4d6d','#ffb02e','#ffe94a','#5cf07a','#3ec8ff','#8a6bff','#ff5ad1','#ff4d6d'].forEach((c,i,a)=>gr.addColorStop(i/(a.length-1),c)); } else { gr=o.createRadialGradient(PX*EYE[0]/100,PX*EYE[1]/100,0,PX*EYE[0]/100,PX*EYE[1]/100,PX*.7); gr.addColorStop(0,'#fff'); gr.addColorStop(.18,f.col); gr.addColorStop(1,f.col); } o.fillStyle=gr; o.fillRect(0,0,PX,PX);
       if(!dkMask) dkMask=document.createElement('canvas'); if(dkMask.width!==PX){ dkMask.width=dkMask.height=PX; } const mk=dkMask.getContext('2d'); mk.clearRect(0,0,PX,PX); mk.fillStyle='#000'; const a0=(72-90)*Math.PI/180;
       const R2=(s0,s1)=>{ mk.beginPath(); mk.moveTo(cx,cy); if(f.rev) mk.arc(cx,cy,PX,a0-s1*Math.PI/180,a0-s0*Math.PI/180); else mk.arc(cx,cy,PX,a0+s0*Math.PI/180,a0+s1*Math.PI/180); mk.closePath(); mk.fill(); };
@@ -8346,7 +8347,7 @@ const hexCol=c=>{ if(/^#[0-9a-f]{6}$/i.test(c)) return c; if(/^#[0-9a-f]{3}$/i.t
 function eyeGlint(col){ if(reduce) return; DKFX.push({k:'eye',col:hexCol(col),t0:performance.now(),D:1300}); dkKick(); }
 // colour runs up the dragon from the tail to the eye, holds, then fades back
 function dragonGlow(col,o){ o=o||{}; dkImg('gd-table-dm'); const sw=reduce?1:(o.sweep||650), hold=o.hold==null?450:o.hold, fade=o.fade||800; DKFX=DKFX.filter(f=>f.k!=='sweep');
-  DKFX.push({k:'sweep',col:hexCol(col),t0:performance.now(),sw,hold,fade,op:o.op||1,rev:!!o.rev,lin:!!o.lin,rainbow:!!o.rainbow,D:sw+hold+fade}); dkKick();
+  const F={k:'sweep',col:hexCol(col),t0:performance.now(),sw,hold,fade,op:o.op||1,rev:!!o.rev,lin:!!o.lin,rainbow:!!o.rainbow,prog:o.prog||null,D:o.prog?1e9:sw+hold+fade}; DKFX.push(F); dkKick(); if(o.prog){ F.end=()=>{ F.endT=performance.now(); F.D=F.endT-F.t0+hold+fade+400; dkKick(); }; return F; }
   if(o.eye!==false) setTimeout(()=>eyeGlint(o.eyeCol||col),sw*.9); return sw+hold+fade; }
 // one of the four compass ornaments (seat 0 南, 1 東, 2 北, 3 西) lights up
 function ornLight(s,col,o){ o=o||{}; dkImg('gd-table-om'); const inn=o.inn||260, hold=o.hold||900, out=o.out||800; DKFX.push({k:'orn',s,col:hexCol(col),t0:performance.now(),delay:o.delay||0,inn,hold,out,D:inn+hold+out}); dkKick(); }
@@ -8401,40 +8402,52 @@ async function dealAnim(){ H.hands.forEach(h=>{ h._full=h.slice(); }); if(reduce
   const total=real.reduce((a,h)=>a+h.length,0), per=Math.max(...real.map(h=>h.length)), STEP=Math.max(10,Math.min(17,1900/total)), sizes=real.map(()=>0), FLY=270, seq=[];
   for(let r=0;r<per;r++) for(let s=0;s<4;s++) if(r<real[s].length) seq.push(s);
   // the disc dragon fills with rainbow light from tail to head over exactly the time the deal takes
-  const dealT=seq.length*STEP+(cutEl?FLY:0)+FLY; dragonGlow('#ffd36a',{rainbow:true,lin:true,sweep:dealT,hold:500,fade:800,op:.75,eye:false});
-  const sx=cx, sy=cy-NC*.6; let k=0; dealFlat=true;
+  let dealt=0; const RB=dragonGlow('#ffd36a',{rainbow:true,lin:true,prog:()=>dealt/seq.length,hold:500,fade:800,op:.75,eye:false});
+  const notCut=c=>!(cutEl&&H.cut&&c===H.cut.card); const sx=cx, sy=cy-NC*.6; let k=0; dealFlat=true;
   await new Promise(res=>{ const next=()=>{ if(H!==h0){ res(); return; } if(k>=seq.length){ setTimeout(res,FLY+40); return; } const s=seq[k], kk=k; k++;
       const isCut=kk===cutK&&cutEl;
       if(isCut){ // the turned card leaves the deck face up and waits in front of its new owner's hand
         const r0=cutEl.getBoundingClientRect(), x0=r0.left-R.left+r0.width/2, y0=r0.top-R.top+r0.height/2; fx.appendChild(cutEl); cutEl.style.zIndex=9; cutEl.style.left=x0+'px'; cutEl.style.top=y0+'px';
         const p=spot(s); cutAt=p; snd('trib');
         cutEl.animate([{transform:'translate(-50%,-50%)'},{transform:`translate(calc(-50% + ${p.x-x0}px),calc(-50% + ${p.y-y0}px)) scale(1.15)`}],{duration:FLY*2.2,easing:'cubic-bezier(.25,.7,.3,1)',fill:'forwards'});
-        setTimeout(()=>{ if(H!==h0) return; sizes[s]++; hidden[s]=real[s].slice(0,sizes[s]); if(s===0){ drawHand(); const e=$g(`#gtHand .gc[data-id="${H.cut.card.id}"]`); if(e) e.style.visibility='hidden'; } else drawSeat(s);
+        setTimeout(()=>{ if(H!==h0) return; dealt++; sizes[s]++; hidden[s]=real[s].slice(0,sizes[s]).filter(notCut); if(s===0){ drawHand(); const n=$g('.gs0 .gs-cnt b'); if(n) n.textContent=sizes[0]; } else drawSeat(s);
           cutEl.classList.add('lit'); banner(T(`${pname(s)} got the turned card and will lead`,`${pname(s)} 拿到翻牌，先出`),'info'); },FLY*2.2);
         if(kk%2===0) snd('deal'); setTimeout(next,STEP+FLY); return; }
       const b=document.createElement('i'); b.className='gb fly gdk-f'; b.style.left=sx+'px'; b.style.top=sy+'px'; fx.appendChild(b);
       let p, land;
-      if(s===0){ sizes[0]++; hidden[0]=real[0].slice(0,sizes[0]); drawHand(); const c=hidden[0][sizes[0]-1], e=$g(`#gtHand .gc[data-id="${c.id}"]`); if(cutEl&&cutSeat===0&&H.cut){ const ce=$g(`#gtHand .gc[data-id="${H.cut.card.id}"]`); if(ce) ce.style.visibility='hidden'; } if(e){ e.style.opacity=0; e.style.transition='none'; const hr=$g('#gtHand').getBoundingClientRect(); p={x:hr.left-R.left+(+e.dataset.x)+cw/2,y:hr.top-R.top+(+e.dataset.y)+cw*.7}; requestAnimationFrame(()=>e.style.transition=''); land=()=>{ e.style.opacity=''; e.animate([{transform:e.style.transform+' scale(1.08)',filter:'brightness(1.4)'},{transform:e.style.transform,filter:'none'}],{duration:220}); }; } else p=fan(1); const n=$g('.gs0 .gs-cnt b'); if(n) n.textContent=sizes[0]; }
-      else { p=fan(s); land=()=>{ if(H!==h0) return; sizes[s]++; hidden[s]=real[s].slice(0,sizes[s]); drawSeat(s); }; }
+      if(s===0){ sizes[0]++; hidden[0]=real[0].slice(0,sizes[0]).filter(notCut); drawHand(); const c=real[0][sizes[0]-1], e=$g(`#gtHand .gc[data-id="${c.id}"]`); if(e){ e.style.opacity=0; e.style.transition='none'; const hr=$g('#gtHand').getBoundingClientRect(); p={x:hr.left-R.left+(+e.dataset.x)+cw/2,y:hr.top-R.top+(+e.dataset.y)+cw*.7}; requestAnimationFrame(()=>e.style.transition=''); land=()=>{ e.style.opacity=''; e.animate([{transform:e.style.transform+' scale(1.08)',filter:'brightness(1.4)'},{transform:e.style.transform,filter:'none'}],{duration:220}); }; } else p=fan(1); const n=$g('.gs0 .gs-cnt b'); if(n) n.textContent=sizes[0]; }
+      else { p=fan(s); land=()=>{ if(H!==h0) return; sizes[s]++; hidden[s]=real[s].slice(0,sizes[s]).filter(notCut); drawSeat(s); }; }
       const spin=(s===1?90:s===3?-90:0)+(Math.random()-.5)*14;
       b.animate([{transform:'translate(-50%,-50%) rotate(0)'},{transform:`translate(calc(-50% + ${p.x-sx}px),calc(-50% + ${p.y-sy}px)) rotate(${spin}deg) scale(${s===0?1.6:.9})`}],{duration:FLY,easing:'cubic-bezier(.25,.7,.3,1)',fill:'forwards'});
-      setTimeout(()=>{ b.remove(); land&&land(); },FLY);
+      setTimeout(()=>{ b.remove(); dealt++; land&&land(); },FLY);
       if(kk%2===0) snd('deal'); const left=Math.max(0,Math.round(NC*(1-(kk+1)/seq.length))); cards.forEach(c=>{ c.style.visibility=+c.style.zIndex<left+(cutEl&&cutEl.parentNode===deck&&+c.style.zIndex>cutLay?1:0)?'':'hidden'; });
       setTimeout(next,STEP); }; next(); });
-  deck.remove(); if(H!==h0){ if(cutEl) cutEl.remove(); dealFlat=false; return; }
-  H.hands=real; for(let s=1;s<4;s++) drawSeat(s); await W2(250);
-  // the owner of the turned card now takes it into the hand: face down for the others, into your hand for you
-  if(cutEl&&cutAt&&cutSeat>0){ const tgt=fan(cutSeat); await cutEl.animate([{transform:`translate(calc(-50% + ${cutAt.x-parseFloat(cutEl.style.left)}px),calc(-50% + ${cutAt.y-parseFloat(cutEl.style.top)}px)) scale(1.15)`},{transform:`translate(calc(-50% + ${cutAt.x-parseFloat(cutEl.style.left)}px),calc(-50% + ${cutAt.y-parseFloat(cutEl.style.top)}px)) scale(0,1.15)`}],{duration:170,easing:'ease-in',fill:'forwards'}).finished.catch(()=>{});
-    cutEl.classList.remove('lit'); cutEl.innerHTML='<i class="gb"></i>'; const x0=parseFloat(cutEl.style.left), y0=parseFloat(cutEl.style.top);
-    await cutEl.animate([{transform:`translate(calc(-50% + ${cutAt.x-x0}px),calc(-50% + ${cutAt.y-y0}px)) scale(0,1.15)`},{transform:`translate(calc(-50% + ${cutAt.x-x0}px),calc(-50% + ${cutAt.y-y0}px)) scale(1.1)`,offset:.3},{transform:`translate(calc(-50% + ${tgt.x-x0}px),calc(-50% + ${tgt.y-y0}px)) rotate(${cutSeat===2?0:90}deg) scale(.8)`}],{duration:650,easing:'cubic-bezier(.4,.1,.3,1)',fill:'forwards'}).finished.catch(()=>{}); snd('deal'); }
+  deck.remove(); RB.end(); if(H!==h0){ if(cutEl) cutEl.remove(); dealFlat=false; return; }
+  H.hands=real.map(h=>h.filter(notCut)); for(let s=1;s<4;s++) drawSeat(s); await W2(250);
+  // the owner takes the turned card into the hand the way a player would: the hand opens a gap and the card slides in
+  const cx0=cutEl?parseFloat(cutEl.style.left):0, cy0=cutEl?parseFloat(cutEl.style.top):0, at=(x,y)=>`translate(calc(-50% + ${x-cx0}px),calc(-50% + ${y-cy0}px))`;
+  if(cutEl&&cutAt&&cutSeat>0){ const s=cutSeat, fz=$g('.gs'+s+' .gs-fan');
+    await cutEl.animate([{transform:at(cutAt.x,cutAt.y)+' scale(1.15)'},{transform:at(cutAt.x,cutAt.y)+' scale(0,1.15)'}],{duration:170,easing:'ease-in',fill:'forwards'}).finished.catch(()=>{});
+    cutEl.classList.remove('lit'); cutEl.innerHTML='<i class="gb"></i>';
+    await cutEl.animate([{transform:at(cutAt.x,cutAt.y)+' scale(0,1.15)'},{transform:at(cutAt.x,cutAt.y)+' scale(1)'}],{duration:170,easing:'ease-out',fill:'forwards'}).finished.catch(()=>{});
+    const st0=fz?parseFloat(fz.style.getPropertyValue('--st'))||0:0; H.hands[s]=real[s]; layoutFan(s); const bs=fz?[...fz.children]:[], mid=Math.floor(bs.length/2), side=s!==2;
+    if(fz){ fz.classList.add('ins'); bs.forEach((e,i)=>{ if(i===mid) e.style.visibility='hidden'; if(i>mid) e.style[side?'top':'left']=((i-1)*st0)+'px'; }); requestAnimationFrame(()=>requestAnimationFrame(()=>bs.forEach(e=>{ e.style.top=''; e.style.left=''; }))); }
+    await W2(60); const sl=bs[mid], fr=fz.getBoundingClientRect(), st1=parseFloat(fz.style.getPropertyValue('--st'))||0;
+    const tx=fr.left-R.left+(side?fr.width/2:mid*st1+cw*.28), ty=fr.top-R.top+(side?mid*st1+cw*.28:fr.height/2), ox=s===1?cw*.9:s===3?-cw*.9:0, oy=s===2?-cw*.9:0, rot=side?90:0;
+    await cutEl.animate([{transform:at(cutAt.x,cutAt.y)+' scale(1)'},{transform:at(tx+ox,ty+oy)+` rotate(${rot}deg)`}],{duration:520,easing:'cubic-bezier(.4,.1,.3,1)',fill:'forwards'}).finished.catch(()=>{});
+    snd('deal'); await cutEl.animate([{transform:at(tx+ox,ty+oy)+` rotate(${rot}deg)`},{transform:at(tx,ty)+` rotate(${rot}deg)`}],{duration:300,easing:'cubic-bezier(.3,.8,.3,1)',fill:'forwards'}).finished.catch(()=>{});
+    if(sl) sl.style.visibility=''; cutEl.remove(); if(fz) setTimeout(()=>fz.classList.remove('ins'),400); drawSeat(s); }
   const cutMine=cutEl&&cutSeat===0;
   // one smooth sort: every card slides from the dealt row into its column
   const hd=$g('#gtHand'); if(hd) hd.classList.add('sorting'); dealFlat=false; drawHand(); drawSeat(0); snd('sweep');
-  if(cutMine){ const ce=$g(`#gtHand .gc[data-id="${H.cut.card.id}"]`); if(ce) ce.style.visibility='hidden'; }
   await W2(750); if(hd) hd.classList.remove('sorting');
-  if(cutMine){ const ce=$g(`#gtHand .gc[data-id="${H.cut.card.id}"]`), x0=parseFloat(cutEl.style.left), y0=parseFloat(cutEl.style.top); if(ce){ const r=ce.getBoundingClientRect(), tx=r.left-R.left+r.width/2, ty=r.top-R.top+r.height/2;
-      await cutEl.animate([{transform:`translate(calc(-50% + ${cutAt.x-x0}px),calc(-50% + ${cutAt.y-y0}px)) scale(1.15)`},{transform:`translate(calc(-50% + ${tx-x0}px),calc(-50% + ${ty-y0}px)) scale(${r.width/(cw*.6)})`}],{duration:600,easing:'cubic-bezier(.4,.1,.3,1)',fill:'forwards'}).finished.catch(()=>{}); ce.style.visibility=''; snd('pick'); } }
-  if(cutEl) cutEl.remove(); }
+  if(cutMine&&cutAt){ H.hands[0]=real[0]; if(hd) hd.classList.add('sorting'); drawHand(); drawSeat(0); const ce=$g(`#gtHand .gc[data-id="${H.cut.card.id}"]`);
+    if(ce){ ce.style.visibility='hidden'; const hr=$g('#gtHand').getBoundingClientRect(), tx=hr.left-R.left+(+ce.dataset.x)+cw/2, ty=hr.top-R.top+(+ce.dataset.y)+cw*.7, k=1/.6;
+      await cutEl.animate([{transform:at(cutAt.x,cutAt.y)+' scale(1.15)'},{transform:at(tx,ty-cw*1.25)+` scale(${k}) rotate(-4deg)`}],{duration:480,easing:'cubic-bezier(.4,.1,.3,1)',fill:'forwards'}).finished.catch(()=>{});
+      snd('pick'); await cutEl.animate([{transform:at(tx,ty-cw*1.25)+` scale(${k}) rotate(-4deg)`},{transform:at(tx,ty+cw*.06)+` scale(${k})`,offset:.8},{transform:at(tx,ty)+` scale(${k})`}],{duration:340,easing:'cubic-bezier(.3,.8,.3,1)',fill:'forwards'}).finished.catch(()=>{});
+      ce.style.visibility=''; }
+    await W2(200); if(hd) hd.classList.remove('sorting'); }
+  H.hands=real; if(cutEl) cutEl.remove(); }
 
 /* ---------- Joker Bomb: two red and two black dragons rise, twine, and become one golden dragon ---------- */
 const DPAL={red:{d:'#4a0606',m:'#c42018',l:'#ff8a62',belly:'#ffe3c8',fin:'rgba(255,120,80,.85)',glow:'rgba(255,60,30,.85)',horn:'#f6e2b4',eye:'#ffe066',mist:'rgba(255,90,50,.12)',bl:'rgba(120,20,10,.5)',sc:'rgba(255,220,190,.5)'},
