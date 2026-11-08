@@ -2719,6 +2719,10 @@ html:not([lang=zh]) .gt-phase b,.gt-phase.en b{font-family:'Newsreader','Noto Se
 @keyframes avBob{50%{transform:translateY(-2px)}}
 .gl-hi{border-radius:.6rem!important}
 .gl.gld .gl-tile b{font-size:2rem!important;transform:translateY(.12rem)!important}
+/* level card: the real heart card face */
+.gl.gld .gl-tile{background:#fff!important;width:3.2rem!important;height:4.48rem!important}
+.gl-face{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
+.gl.gld .gl-tile .gl-c,.gl.gld .gl-tile b{display:none!important}
 /* ===== Pages & Frames: a reading room, green-leather rail and paper pages ===== */
 #reader.shelf{--sh-bg:#F3EEE3;--sh-ink:#23201A;--sh-ink2:#6B6252;--sh-acc:#8B2B22;--sh-green:#1F3329;--sh-line:#DCD2BF;--cx:#8B2B22}
 #reader.shelf .rd-main,#reader.shelf .rd-leaf{background:var(--sh-bg) linear-gradient(90deg,rgba(80,60,30,.05) 1px,transparent 1px) 0 0/22px 100%}
@@ -7867,8 +7871,8 @@ function testPanel(){ let p=$g('.gr-test'); if(p){ p.remove(); TEST.on=TEST.hold
 function drawLevel(anim){ const g=$g('.gl'); if(!g) return; const d=M.dealer, prevL=g._L; g._L=H.L;
   const chance=t=>M.lv[t]===14?heartsHTML(3-M.aFails[t]):'';
   const av=k=>`<i class="gl-av s${k}" title="${pname(k)}"><svg viewBox="0 0 40 40">${AV[P[k].k]}</svg></i>`; g.classList.add('gld');
-  g.innerHTML=`<canvas class="gl-cv"></canvas><i class="gl-eye"></i><div class="gl-cur"><small>${T('LEVEL','本局级牌')}</small><div class="gl-tile"><i class="gl-c tl">${LV(H.L)}<s>♥</s></i><b>${LV(H.L)}</b><i class="gl-c br">${LV(H.L)}<s>♥</s></i><i class="gl-shine"></i></div></div>
-   <div class="gl-teams"><i class="gl-hi"></i>${[0,1].map(t=>`<div class="glt t${t}${d===t?' cur':''}"><span class="gl-avs">${av(t)}${av(t+2)}</span><b class="glv" data-t="${t}"><span>${LV(M.lv[t])}</span></b><span class="gl-ac">${chance(t)}</span></div>`).join('')}</div>`; glFrame(); if(prevL!=null&&prevL!==H.L&&!reduce){ const tl=g.querySelector('.gl-tile'); tl.classList.add('flip'); const b=tl.querySelector('b'); b.textContent=LV(prevL); setTimeout(()=>{ b.textContent=LV(H.L); },260); setTimeout(()=>tl.classList.remove('flip'),900); } placeHi(d); }
+  g.innerHTML=`<canvas class="gl-cv"></canvas><i class="gl-eye"></i><div class="gl-cur"><small>${T('LEVEL','本局级牌')}</small><div class="gl-tile"><img class="gl-face" src="${GC_IMG(cimg({r:H.L,s:1}))}" alt="${SUIT[1]}${LV(H.L)}"><i class="gl-shine"></i></div></div>
+   <div class="gl-teams"><i class="gl-hi"></i>${[0,1].map(t=>`<div class="glt t${t}${d===t?' cur':''}"><span class="gl-avs">${av(t)}${av(t+2)}</span><b class="glv" data-t="${t}"><span>${LV(M.lv[t])}</span></b><span class="gl-ac">${chance(t)}</span></div>`).join('')}</div>`; glFrame(); if(prevL!=null&&prevL!==H.L&&!reduce){ const tl=g.querySelector('.gl-tile'); tl.classList.add('flip'); const im=tl.querySelector('.gl-face'); im.src=GC_IMG(cimg({r:prevL,s:1})); setTimeout(()=>{ im.src=GC_IMG(cimg({r:H.L,s:1})); },260); setTimeout(()=>tl.classList.remove('flip'),900); } placeHi(d); }
 function placeHi(d){ const g=$g('.gl'); if(!g) return; const tm=g.querySelector('.gl-teams'), hi=g.querySelector('.gl-hi'); if(!tm||!hi) return;
   const put=(t,anim)=>{ const r=tm.querySelector('.glt.t'+t); if(!r) return; hi.style.transition=anim?'':'none'; hi.style.top=r.offsetTop+'px'; hi.style.height=r.offsetHeight+'px'; hi.style.left=r.offsetLeft+'px'; hi.style.width=r.offsetWidth+'px'; };
   const prev=placeHi.last; put(prev!=null?prev:d,false); placeHi.last=d;
