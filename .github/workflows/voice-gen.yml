@@ -17,7 +17,7 @@ jobs:
       fail-fast: false
       max-parallel: 20
       matrix:
-        voice: ${{ fromJSON(github.event.inputs.voices || '["en_am_michael","en_am_adam","en_am_liam","en_bm_george","en_am_onyx","en_am_puck","en_am_fenrir","en_af_heart","en_bf_emma","en_af_sky","en_af_nicole","en_af_bella","en_af_sarah","zh_zv_m3","zh_zv_m4"]') }}
+        voice: ${{ fromJSON(github.event.inputs.voices || '["zh_zv_m1","zh_zv_m2","zh_zv_m3","zh_zv_m4","zh_zv_f1","zh_zv_f2","zh_zv_f3","zh_zv_f4"]') }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -35,7 +35,7 @@ jobs:
         run: rm -rf out
       - name: Generate
         env: {HF_HOME: /mnt/hf}
-        run: cd /mnt/itts && python $GITHUB_WORKSPACE/vg/gen.py ${{ matrix.voice }} "${{ github.event.inputs.keys || 'kb,st' }}"
+        run: cd /mnt/itts && python $GITHUB_WORKSPACE/vg/gen.py ${{ matrix.voice }} "${{ github.event.inputs.keys || '' }}"
       - name: Encode
         run: |
           cd out/${{ matrix.voice }} && for f in *.wav; do ffmpeg -loglevel error -y -i "$f" "${f%.wav}.flac" && rm "$f"; done; ls | wc -l
