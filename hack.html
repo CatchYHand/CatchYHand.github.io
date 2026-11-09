@@ -3254,6 +3254,37 @@ html:not([lang=zh]) .gt-choose .gc-lb b{font-family:'Newsreader','Noto Serif SC'
 @keyframes eyeLit{0%{opacity:0;filter:brightness(1)}6%{opacity:1;filter:brightness(1.8)}11%{opacity:.35}17%{opacity:1;filter:brightness(1.5)}30%{opacity:.95;filter:brightness(1.1)}70%{opacity:.9}100%{opacity:0}}
 @keyframes eyeBurn{0%,100%{opacity:.7}50%{opacity:1}}
 .gl.glx .gl-eye2.l,.gl.glx .gl-eye2.r{top:14.9%!important}
+/* ===== finishing ranks ===== */
+.fx-rank{position:absolute;z-index:9;width:11rem;height:13rem;pointer-events:none;display:flex;flex-direction:column;align-items:center;justify-content:center;--rk:#ffd36a;--rk2:#b8832a}
+.fx-rank.c1{--rk:#e8eef6;--rk2:#8792a2}.fx-rank.c2{--rk:#f0b27a;--rk2:#9a5a2a}.fx-rank.c3{--rk:#a9a9a9;--rk2:#555}
+.fx-rank .rk-rays{position:absolute;left:50%;top:45%;width:20rem;height:20rem;transform:translate(-50%,-50%);border-radius:50%;background:repeating-conic-gradient(from 0deg,color-mix(in srgb,var(--rk) 45%,transparent) 0 7deg,transparent 7deg 20deg);-webkit-mask:radial-gradient(circle,#000 16%,transparent 66%);mask:radial-gradient(circle,#000 16%,transparent 66%);animation:ggSpin 9s linear infinite;opacity:.8}
+.fx-rank.c3 .rk-rays{display:none}
+.fx-rank .rk-av{position:relative;width:6.4rem;height:6.4rem;border-radius:50%;overflow:hidden;background:#0d0c09;box-shadow:0 0 0 4px var(--rk),0 0 0 7px rgba(0,0,0,.55),0 0 30px color-mix(in srgb,var(--rk) 70%,transparent),0 12px 26px rgba(0,0,0,.6)}
+.fx-rank .rk-av svg{width:100%;height:100%;display:block}
+.fx-rank .rk-cr{position:absolute;left:50%;top:22%;width:5.4rem;transform:translate(-50%,-62%);filter:drop-shadow(0 0 10px color-mix(in srgb,var(--rk) 80%,transparent)) drop-shadow(0 4px 4px rgba(0,0,0,.6))}
+.fx-rank .rk-cr svg{width:100%;display:block}
+.fx-rank .rk-tag{position:relative;margin-top:-.7rem;padding:.3rem 1.3rem .32rem;border-radius:.35rem;font:700 1.35rem/1 'Noto Serif SC','Cormorant Garamond',serif;letter-spacing:.12em;color:#1c1204;background:linear-gradient(180deg,#fff 0%,var(--rk) 45%,var(--rk2) 100%);box-shadow:0 0 0 1.5px rgba(0,0,0,.6),0 6px 14px rgba(0,0,0,.55);text-shadow:0 1px 0 rgba(255,255,255,.5)}
+.fx-rank.c3 .rk-tag{color:#eee;text-shadow:0 1px 0 #000}
+/* seat crowns: bigger, metal-coloured ring, with a rank plate */
+.gs .gs-crown{width:78%!important;right:-34%!important;top:-40%!important}
+.gs .gs-crown.wait{transform:rotate(16deg) scale(0)!important}
+.gs-rkp{position:absolute;left:50%;bottom:-.2rem;z-index:3;transform:translateX(-50%) scale(0);padding:.12rem .55rem .14rem;border-radius:.3rem;font:700 calc(var(--cw)*.17)/1.1 'Noto Serif SC','Barlow',serif;letter-spacing:.06em;white-space:nowrap;color:#1c1204;background:linear-gradient(180deg,#fff,var(--rk,#ffd36a) 55%,var(--rk2,#b8832a));box-shadow:0 0 0 1px rgba(0,0,0,.6),0 3px 6px rgba(0,0,0,.55);transition:transform .45s cubic-bezier(.3,1.6,.5,1) .1s;pointer-events:none}
+.gs-rkp.on{transform:translateX(-50%) scale(1)}
+.gs-rkp.c0{--rk:#ffd36a;--rk2:#b8832a}.gs-rkp.c1{--rk:#e8eef6;--rk2:#8792a2}.gs-rkp.c2{--rk:#f0b27a;--rk2:#9a5a2a}.gs-rkp.c3{--rk:#bbb;--rk2:#666}
+.gs:has(.gs-crown.wait) .gs-rkp{transform:translateX(-50%) scale(0)}
+.gs2 .gs-crown{top:-22%!important}
+.gs-crown.c0{--rk:#ffd36a;--rk2:#b8832a}.gs-crown.c1{--rk:#e8eef6;--rk2:#8792a2}.gs-crown.c2{--rk:#f0b27a;--rk2:#9a5a2a}.gs-crown.c3{--rk:#bbb;--rk2:#666}
+.gs.rk0 .gs-av{box-shadow:0 0 0 3px #ffd36a,0 0 22px rgba(255,210,100,.75)!important}
+.gs.rk1 .gs-av{box-shadow:0 0 0 3px #dfe6f0,0 0 16px rgba(220,230,245,.55)!important}
+.gs.rk2 .gs-av{box-shadow:0 0 0 3px #e0a06a,0 0 14px rgba(230,150,90,.5)!important}
+/* lobby: play pill with a round play icon */
+.gl-go{display:inline-flex!important;align-items:center;gap:.55rem;margin-top:.8rem!important;padding:.38rem .42rem .38rem 1rem;border-radius:999px;border:1px solid rgba(226,188,98,.55);background:linear-gradient(180deg,rgba(60,44,14,.6),rgba(24,18,8,.6));font:700 .82rem/1 'Noto Sans SC','Barlow',sans-serif!important;letter-spacing:.1em!important;color:#f3d48a!important;transition:background .3s,border-color .3s,box-shadow .3s}
+.gl-go i{display:grid;place-items:center;width:1.6rem;height:1.6rem;border-radius:50%;background:linear-gradient(180deg,#ffe7a0,#d9a641);box-shadow:0 2px 6px rgba(0,0,0,.45);transition:transform .3s}
+.gl-go i svg{width:.8rem;height:.8rem;fill:#2a1a04;margin-left:.1rem}
+.gl-card:hover .gl-go{border-color:#e2bc62;background:linear-gradient(180deg,rgba(90,64,18,.75),rgba(36,26,10,.75));box-shadow:0 0 16px rgba(255,200,90,.25)}
+.gl-card:hover .gl-go i{transform:translateX(3px)}
+.wl-ban img{object-position:55% 4%!important}
+.gl-go{align-self:flex-start!important;width:max-content!important}
 /* ===== Pages & Frames: a reading room, green-leather rail and paper pages ===== */
 #reader.shelf{--sh-bg:#F3EEE3;--sh-ink:#23201A;--sh-ink2:#6B6252;--sh-acc:#8B2B22;--sh-green:#1F3329;--sh-line:#DCD2BF;--cx:#8B2B22}
 #reader.shelf .rd-main,#reader.shelf .rd-leaf{background:var(--sh-bg) linear-gradient(90deg,rgba(80,60,30,.05) 1px,transparent 1px) 0 0/22px 100%}
@@ -8384,7 +8415,7 @@ const SORT_ICO=['<svg viewBox="0 0 28 24" aria-hidden="true"><g class="cd"><rect
 const ICO={rules:'<path d="M5 4.5h5.5a2.5 2.5 0 0 1 2.5 2.5v13a2 2 0 0 0-2-2H5zM19 4.5h-3.5A2.5 2.5 0 0 0 13 7v13a2 2 0 0 1 2-2h4z"/>',tut:'<path d="M3 9l9-4.5L21 9l-9 4.5z"/><path d="M7 11v4.5c0 1.4 2.2 2.5 5 2.5s5-1.1 5-2.5V11M21 9v5"/>',restart:'<path d="M4.5 12a7.5 7.5 0 1 0 2.2-5.3"/><path d="M4 4v4h4"/>',leave:'<rect x="4" y="4" width="6.5" height="6.5" rx="1.2"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="1.2"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="1.2"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.2"/>',vol:'<path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path d="M15.5 9q1.6 3 0 6M18 6.5q3.6 5.5 0 11"/>',fs:'<path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/>',close:'<path d="M6 6l12 12M18 6L6 18"/>'};
 const icon=k=>`<svg class="gi" viewBox="0 0 24 24" aria-hidden="true">${ICO[k]}</svg>`;
 function ctrlHTML(){ const b=(k,lab,cls)=>`<button class="gr-btn2 ${cls||''}" data-a="${k}" title="${lab}">${icon(k)}${cls&&cls.includes('io')?'':`<span>${lab}</span>`}</button>`;
-  return (scr==='table'?`<div class="gr-grp help">${b('rules',T('Rules','规则'))}${b('tut',T('Tutorial','教程'))}</div><div class="gr-grp game">${b('restart',T('New game','新的一局'))}${b('leave',T('All games','游戏列表'))}</div>`:'')+
+  return (scr==='table'?`<div class="gr-grp help">${b('rules',T('Rules','规则'))}${b('tut',T('Tutorial','教程'))}</div><div class="gr-grp game">${b('restart',T('New game','新的一局'))}${b('leave',T('All Games','游戏列表'))}</div>`:'')+
    `<div class="gr-grp sys">${b('vol',T('Volume','音量'),'io')}${b('fs',T('Full screen','全屏'),'io')}</div><button class="gr-btn2 cls" data-a="close" title="${T('Close','关闭')}">${icon('close')}<span>${T('Close','关闭')}</span><kbd>ESC</kbd></button>`; }
 function paint(html){ const keep=$$g(':scope>.gr-pop'); root.innerHTML=html; keep.forEach(n=>root.appendChild(n)); fsSync(); }
 // the full-screen button shows "enter" or "exit" to match the current state
@@ -8392,13 +8423,13 @@ function fsSync(){ if(!root) return; const on=!!(document.fullscreenElement||doc
 document.addEventListener('fullscreenchange',()=>fsSync()); document.addEventListener('webkitfullscreenchange',()=>fsSync());
 function render(){ if(!root) return; if(scr==='lobby') lobby(); else buildTable(); }
 function lobby(){ root.className='on lobby'; const games=[
-   {k:'guandan',t:T('Dragon Gate','跃龙门'),s:T('Four seats round the dragon disc, two alliances, thirteen rapids from 2 to Ace. Clear the Ace and leap the Dragon Gate.','龙盘四方，两两结盟，从 2 到 A 共十三道激流。打过 A，便算跃过龙门。'),tag:T('Card game','牌戏'),live:1},
-   {k:'soon1',t:T('Coming soon','敬请期待'),s:T('Another dragon table is being laid.','又一张龙桌正在铺设。')},
-   {k:'soon2',t:T('Coming soon','敬请期待'),s:T('Another dragon table is being laid.','又一张龙桌正在铺设。')}];
+   {k:'guandan',t:T('Leap the Dragon Gate','跃龙门'),s:T('Every carp in the Yellow River dreams of the gate at the top of the falls. The one that leaps it is struck by heaven’s fire and rises as a dragon.','黄河里的每一尾鲤鱼，都梦想着瀑布顶上的那道龙门。跃过去的那一尾，天火烧尾，化身为龙。'),tag:T('Card game','牌戏'),live:1},
+   {k:'soon1',t:T('Coming Soon','敬请期待'),s:T('Another table is being laid.','又一张牌桌正在布置。')},
+   {k:'soon2',t:T('Coming Soon','敬请期待'),s:T('Another table is being laid.','又一张牌桌正在布置。')}];
   const art=[[14,0],[2,1],[17],[14,3]].map(([r,s],i)=>`<span class="f${i+1}">${cardHTML({id:-1,r,s:r>=16?4:s})}</span>`).join('');
-  paint(head(T('pick a table','选一张牌桌'))+`<main class="gr-lobby"><div class="gl-hd"><h2>${T('The Dragon Pavilion','龙阙牌馆')}</h2><p>${T('Tables laid out beneath the dragon’s eye. Every game here is built from scratch and plays right in the page.','龙目之下，几张牌桌已经摆好。每一局都是亲手搭的，点开就能玩。')}</p></div><div class="gl-grid">${games.map(g=>`<button class="gl-card${g.live?'':' off'}" ${g.live?`data-a="game" data-g="${g.k}"`:'disabled'}>
+  paint(head(T('pick a table','选一张牌桌'))+`<main class="gr-lobby"><div class="gl-hd"><h2>${T('The Game Room','游艺厅')}</h2><p>${T('A few tables, set up and waiting. Every game here is built from scratch and plays right in the page.','几张桌子已经摆好，等人入座。这里的每个游戏都是从零做起，点开就能玩。')}</p></div><div class="gl-grid">${games.map(g=>`<button class="gl-card${g.live?'':' off'}" ${g.live?`data-a="game" data-g="${g.k}"`:'disabled'}>
      <div class="gl-art${g.live?' cov':''}">${g.live?`<img class="gl-cov" src="${GIMG('gd-cover')}" alt="">`:`<div class="gl-soon">?</div>`}</div>
-     <div class="gl-tx">${g.tag?`<small>${g.tag}</small>`:''}<b>${g.t}</b><p>${g.s}</p>${g.live?`<span class="gl-go">${T('Play','开始')} →</span>`:''}</div></button>`).join('')}</div>
+     <div class="gl-tx">${g.tag?`<small>${g.tag}</small>`:''}<b>${g.t}</b><p>${g.s}</p>${g.live?`<span class="gl-go"><span>${T('Play','开始游戏')}</span><i><svg viewBox="0 0 24 24"><path d="M8 5.5v13l10.5-6.5z"/></svg></i></span>`:''}</div></button>`).join('')}</div>
 </main>`); }
 /* ---------- table ---------- */
 // the dragon disc lives in the space between your ally's seat and your own played cards, so nothing of yours ever sits on its centre
@@ -8412,11 +8443,11 @@ function fitRing(handH){ if(!felt) return; const Hf=felt.clientHeight, Wf=felt.c
 function sizeVars(){ felt=$g('.gt-felt'); if(!felt) return; const r=felt.getBoundingClientRect();
   cw=Math.round(Math.max(56,Math.min(140,Math.min(r.width*.072,r.height*.108)))); root.style.setProperty('--cw',cw+'px'); root.style.setProperty('--ts',Math.round(Math.min(r.width,r.height)*.49)+'px'); }
 function seatHTML(s){ const p=P[s], d=DIR()[s];
-  return `<div class="gs gs${s} t${s%2}" data-seat="${s}"><div class="gs-id"><div class="gs-av"><svg viewBox="0 0 40 40">${AV[p.k]}</svg><i class="gs-ring"></i><i class="gs-crown"></i></div>
+  return `<div class="gs gs${s} t${s%2}" data-seat="${s}"><div class="gs-id"><div class="gs-av"><svg viewBox="0 0 40 40">${AV[p.k]}</svg><i class="gs-ring"></i><i class="gs-crown"></i><i class="gs-rkp"></i></div>
     <div class="gs-tx"><b>${p.name}</b></div><div class="gs-cnt"><b></b><small>${T('cards','张')}</small><i class="beacon"><i class="bc-beam"><i class="bc-rot"><i class="bm r"></i><i class="bm b"></i></i></i>${sirenSVG()}</i></div><span class="gs-dir"><i>${d[0]}</i></span><div class="gs-say"></div></div>
     ${s===0?'':`<div class="gs-fan"></div>`}</div>`; }
 function buildTable(){ fdPreload(); dkImg('gd-table-dm'); dkImg('gd-table-om'); root.className='on table'+(tut?' tutm':'')+(H&&H._intro?' intro':'')+(H&&H._dealPending?' dealing':'')+(H&&H.settled&&!tut?' handend':''); root.style.setProperty('--gbk',`url(${GIMG('gd-back')})`); root.style.setProperty('--gbkh',`url(${GIMG('gd-back-h')})`);
-  paint(head(T('Dragon Gate','跃龙门'))+`<main class="gt"><div class="gt-felt"><div class="gt-cloth">
+  paint(head(T('Leap the Dragon Gate','跃龙门'))+`<main class="gt"><div class="gt-felt"><div class="gt-cloth">
       <div class="gt-ring"><div class="dk-all"><img src="${GIMG('gd-table')}" alt=""><canvas class="dk-fx"></canvas><canvas class="dk-cv"></canvas></div></div><canvas class="gt-rain"></canvas><i class="gt-vig"></i><i class="gt-flash"></i><i class="gt-frame"></i></div>
     <div class="gl"></div>
     ${[1,2,3].map(seatHTML).join('')}${[0,1,2,3].map(s=>`<div class="gp gp${s}"></div>`).join('')}
@@ -8537,7 +8568,7 @@ function markPlays(){ if(!H) return; const top=H.trick?H.trick.seat:-1, live=H.p
   const tp=$g('.gt-pearl'); if(tp){ const on=live&&H.turn>=0&&!H.order.includes(H.turn); tp.classList.toggle('on',on); if(on){ const want=[180,90,0,270][H.turn]; let cur=tp._a==null?want:tp._a; let d=((cur-want)%360+360)%360; if(d===0&&tp._a!=null) d=0; const nx=cur-d; tp._a=nx; tp.style.setProperty('--ta',nx+'deg'); } } }
 function drawSeat(s){ markPlays(); const el=$g('.gs'+s); if(!el) return; const n=H.hands[s].length, out=H.order.indexOf(s), fin=outN();
   el.classList.toggle('turn',H.turn===s&&H.phase==='play'&&!busy); el.classList.toggle('out',out>=0&&out<fin);
-  const cr=el.querySelector('.gs-crown'), rk=out>=0&&out<fin?out:-1; if(cr.dataset.r!=String(rk)){ cr.dataset.r=rk; cr.innerHTML=rk>=0?CROWN[rk]:''; cr.className='gs-crown'+(rk>=0?' on c'+rk:''); cr.title=rk>=0?RANKN()[rk]:''; }
+  const cr=el.querySelector('.gs-crown'), rk=out>=0&&out<fin?out:-1; if(cr.dataset.r!=String(rk)){ cr.dataset.r=rk; cr.innerHTML=rk>=0?CROWN[rk]:''; { const pl=el.querySelector('.gs-rkp'); if(pl){ pl.textContent=rk>=0?RANKN()[rk]:''; pl.className='gs-rkp'+(rk>=0?' on c'+rk:''); } } cr.className='gs-crown'+(rk>=0?' on c'+rk:''); cr.title=rk>=0?RANKN()[rk]:''; } el.classList.toggle('rk0',rk===0); el.classList.toggle('rk1',rk===1); el.classList.toggle('rk2',rk===2);
   const c=el.querySelector('.gs-cnt'); c.querySelector('b').textContent=n; c.classList.toggle('warn',warned.has(s)&&n>0);
   if(s) layoutFan(s); }
 function layoutFans(){ [1,2,3].forEach(layoutFan); }
@@ -8719,7 +8750,7 @@ async function act(s,cards,force){ if(!H||H.phase!=='play'||H.turn!==s||busy) re
     const c=ev.combo; voxPlay(s,c,cards,wasNew);
     if(!['single','pair','triple'].includes(c.type)) await comboFx(s,c);
     const n=H.hands[s].length; if(n<=10&&n>0&&!warned.has(s)){ if(!warned.size&&!tut) bgm(3); warned.add(s); if(!tut) storm(warned.size); drawSeat(s); snd('siren'); sirenAlert(s,n); vox(s,'w'+n,true); }
-    if(ev.finished){ snd('crown'); setTimeout(()=>snd(s%2===0?'win':'lose'),350); vox(s,'out',true); crownBanner(s,ev.finished-1); drawSeat(s); await wait(900); } }
+    if(ev.finished){ snd('crown'); setTimeout(()=>snd(s%2===0?'win':'lose'),350); vox(s,'out',true); crownBanner(s,ev.finished-1); drawSeat(s); { const c0=$g('.gs'+s+' .gs-crown'); if(c0&&!reduce){ c0.classList.add('wait'); setTimeout(()=>c0.classList.remove('wait'),2200); } } await wait(900); } }
   await wait(ev.pass?380:260);
   if(ev.newTrick!=null&&H.phase==='play'){ await wait(500); await sweepPlayed(); if(ev.wind!=null){ windBanner(ev.wind); await wait(1800); } }
   busy=false; for(let i=0;i<4;i++) drawSeat(i);
@@ -8744,7 +8775,15 @@ function phaseTip(title,text,kind){ const f=$g('.gt-felt'); if(!f) return; let e
   if(!e){ e=document.createElement('div'); e.className='gt-phase'; f.appendChild(e); } if(e.dataset.t===title) return; e.dataset.t=title; e.className='gt-phase '+(kind||'')+(zh()?'':' en'); e.innerHTML=`<b data-t="${title}">${title}</b>`; e.animate([{opacity:0,transform:'translate(-50%,-100%) scale(.85)',filter:'brightness(2.2)'},{opacity:1,transform:'translate(-50%,-100%)',filter:'none'}],{duration:420,easing:'cubic-bezier(.2,1.3,.4,1)'});
   // embers drift up off the burning letters
   clearInterval(e._iv); const col=kind==='ret'?['#c8ffe6','#7ef0c0','#2fbf84']:['#fff2b0','#ffb13a','#ff6a1a']; pcv(); e._iv=setInterval(()=>{ if(!e.isConnected||reduce){ clearInterval(e._iv); return; } const R=felt.getBoundingClientRect(), r=e.querySelector('b').getBoundingClientRect(); burst(r.left-R.left+r.width*(.08+Math.random()*.84),r.top-R.top+r.height*(.25+Math.random()*.5),1,{c:col,v:1.1,a0:-Math.PI*.62,spread:Math.PI*.24,g:-.02,dec:.022,k:'dot',r:1.8}); },70); }
-function crownBanner(s,k){ const m=$g('.gt-ban'); if(!m) return; const b=document.createElement('div'); b.className='gb-msg crown c'+k; b.innerHTML=`<i>${CROWN[k]}</i><span>${pname(s)}</span><b>${RANKN()[k]}</b>`; m.appendChild(b); setTimeout(()=>b.remove(),1900); }
+function crownBanner(s,k){ const fx=$g('.gt-fx'), av=$g('.gs'+s+' .gs-av'); if(!fx||!av||!P) return; const R=felt.getBoundingClientRect(), a=av.getBoundingClientRect();
+  const tx=R.width/2, ty=R.height*.4, ax=a.left-R.left+a.width/2, ay=a.top-R.top+a.height/2;
+  const m=document.createElement('div'); m.className='fx-rank c'+k; m.style.left=tx+'px'; m.style.top=ty+'px';
+  m.innerHTML=`<i class="rk-rays"></i><span class="rk-av t${s%2}"><svg viewBox="0 0 40 40">${AV[P[s].k]}</svg></span><i class="rk-cr">${CROWN[k]}</i><b class="rk-tag">${RANKN()[k]}</b>`; fx.appendChild(m);
+  if(reduce){ setTimeout(()=>m.remove(),1200); return; }
+  m.querySelector('.rk-cr').animate([{transform:'translate(-50%,-260%) scale(.6)',opacity:0},{transform:'translate(-50%,-40%) scale(1.15)',opacity:1,offset:.6},{transform:'translate(-50%,-62%) scale(1)'}],{duration:620,delay:260,easing:'cubic-bezier(.3,1.4,.5,1)',fill:'backwards'});
+  if(k===0) setTimeout(()=>burst(tx,ty-R.height*.06,70,{c:['#fff3c4','#ffd36a','#ff9a3a'],v:7,g:.08,k:'tr',r:2}),600);
+  const dx=ax-tx, dy=ay-ty;
+  m.animate([{transform:'translate(-50%,-50%) scale(.3)',opacity:0},{transform:'translate(-50%,-50%) scale(1.08)',opacity:1,offset:.14},{transform:'translate(-50%,-50%) scale(1)',opacity:1,offset:.2},{transform:'translate(-50%,-50%) scale(1)',opacity:1,offset:.72},{transform:`translate(calc(-50% + ${dx}px),calc(-50% + ${dy}px)) scale(.28)`,opacity:.2}],{duration:2300,easing:'cubic-bezier(.4,0,.3,1)',fill:'forwards'}).finished.then(()=>m.remove()); }
 function windBanner(s){ const m=$g('.gt-ban.hi'); if(!m) return; dragonGlow('#7fe0d0',{sweep:620,hold:1100,fade:1000}); ornLight(s,'#7fe0d0',{delay:560,inn:220,hold:880,out:1000}); snd('wind'); const b=document.createElement('div'); b.className='gb-msg wind';
   b.innerHTML=`<svg class="wd-ic" viewBox="0 0 64 40" aria-hidden="true"><path d="M3 13c9 0 15-1 22-1 6 0 10-3 10-7 0-3-2.5-5-5.2-5-2.7 0-4.6 2-4.6 4.2"/><path d="M3 22c13 0 24-.5 36-.5 8 0 12.5 3.6 12.5 8.3 0 3.8-3 6.7-6.6 6.7-3.3 0-5.6-2.4-5.6-5"/><path d="M10 31c7 0 11-.3 16-.3"/><path d="M40 12.5c5 0 10-1.6 13-5.4 1.6-2 2.4-4.5 2.2-6.6"/><path class="lf" d="M56.5 14.5c2.6-2.4 6-2.4 6.7-1.7.7.8.3 4.2-2.4 6.3-2.4 1.9-5.4 1.6-6.2.9-.7-.9-.5-3.4 1.9-5.5z"/><path class="lf" d="M47 29.5c1.9-1.4 4.4-1.2 4.9-.6.5.6.1 3-1.9 4.4-1.8 1.3-4 1.1-4.6.5-.5-.6-.2-2.8 1.6-4.3z"/></svg><span class="wd-t">${T('Borrow the wind','借风')}</span>`;
   m.appendChild(b); setTimeout(()=>b.remove(),3200); }
@@ -9453,10 +9492,10 @@ const STORM={lv:0,raf:0,drops:[],rips:[],dens:0,want:0,t:0,on:false,snd:null,buf
 async function thunder(k){ try{ if(!AC) initAudio(); if(!AC) return; const key='gd-thunder'+k; if(!STORM.buf[key]) STORM.buf[key]=await fetch(VOX_URL(key)).then(r=>r.arrayBuffer()).then(a=>AC.decodeAudioData(a));
     if(!gdBus){ gdBus=AC.createGain(); gdBus.gain.value=.75; gdBus.connect(musicBus||AC.destination); }
     if(STORM.snd){ thunderOff(.9); } const src=AC.createBufferSource(), g=AC.createGain(), t=AC.currentTime+.05; src.buffer=STORM.buf[key]; src.connect(g).connect(gdBus);
-    const pk=[0,.55,.8,1][k]||.8; g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(pk,t+(k===3?.04:.3)); g.gain.setValueAtTime(pk,t+2.4); g.gain.linearRampToValueAtTime(0,t+3.8); src.start(t); src.stop(t+3.9); STORM.snd={src,g}; src.onended=()=>{ if(STORM.snd&&STORM.snd.src===src) STORM.snd=null; }; }catch(e){} }
+    const pk=[0,.55,.7,.85,1][k]||.8; g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(pk,t+(k===4?.04:k===3?.12:.3)); g.gain.setValueAtTime(pk,t+2.4); g.gain.linearRampToValueAtTime(0,t+3.8); src.start(t); src.stop(t+3.9); STORM.snd={src,g}; src.onended=()=>{ if(STORM.snd&&STORM.snd.src===src) STORM.snd=null; }; }catch(e){} }
 function thunderOff(sec){ const x=STORM.snd; if(!x||!AC) return; STORM.snd=null; try{ const t=AC.currentTime; x.g.gain.cancelScheduledValues(t); x.g.gain.setValueAtTime(x.g.gain.value,t); x.g.gain.linearRampToValueAtTime(0,t+sec); x.src.stop(t+sec+.05); }catch(e){} }
-function storm(lv){ const f=$g('.gt-felt'); if(!f) return; STORM.lv=Math.min(4,lv); STORM.want=[0,.55,1.25,2.3,3.2][STORM.lv]; STORM.heavy=[0,0,.45,.8,1][STORM.lv]; STORM.endT=0; const cv0=$g('.gt-rain'); if(cv0) cv0.style.opacity=''; STORM.on=true; f.classList.add('storm'); f.style.setProperty('--vig',[0,.42,.56,.68,.76][STORM.lv]);
-  thunder(Math.min(3,STORM.lv));
+function storm(lv){ const f=$g('.gt-felt'); if(!f) return; STORM.lv=Math.min(4,lv); STORM.want=[0,.55,1.05,1.65,2.4][STORM.lv]; STORM.heavy=[0,0,.3,.58,.85][STORM.lv]; STORM.endT=0; const cv0=$g('.gt-rain'); if(cv0) cv0.style.opacity=''; STORM.on=true; f.classList.add('storm'); f.style.setProperty('--vig',[0,.42,.52,.62,.72][STORM.lv]);
+  thunder(Math.min(4,STORM.lv));
   if(reduce) return;
   // the lightning: two quick flashes over the whole table, the dragon caught silver-blue in them, then a slow after-glow
   const fl=$g('.gt-flash'); if(fl) fl.animate([{opacity:0},{opacity:.42,offset:.03},{opacity:.06,offset:.1},{opacity:.38,offset:.16},{opacity:.12,offset:.26},{opacity:0}],{duration:1500,easing:'linear'});
@@ -9479,10 +9518,10 @@ function rainTick(now){ STORM.raf=0; const cv=$g('.gt-rain'); if(!cv){ STORM.dro
   STORM.dens+=(STORM.want-STORM.dens)*Math.min(1,dt/(STORM.want>STORM.dens?1400:900)); STORM.hv=(STORM.hv||0)+((STORM.heavy||0)-(STORM.hv||0))*Math.min(1,dt/1400);
   if(STORM.endT&&now-STORM.endT>2800){ STORM.endT=0; STORM.drops=[]; STORM.rips=[]; STORM.dens=0; g.clearRect(0,0,W,Hh); cv.style.transition='none'; cv.style.opacity=''; return; }
   const hv=STORM.hv||0, area=W*Hh/1e6, target=Math.round(STORM.dens*170*area), ang=.26+hv*.1;
-  while(STORM.drops.length<target) STORM.drops.push({x:Math.random()*(W+Hh*ang),y:-Math.random()*Hh,v:.55+Math.random()*.45,l:10+Math.random()*16,a:.12+Math.random()*.16,z:Hh*(.25+Math.random()*.75)});
+  while(STORM.drops.length<target) STORM.drops.push({x:Math.random()*(W+Hh*ang),y:-Math.random()*Hh,v:.55+Math.random()*.45,l:10+Math.random()*16,a:.12+Math.random()*.16,z:Hh*(.03+Math.random()*.97)});
   g.lineCap='round';
   for(let i=STORM.drops.length-1;i>=0;i--){ const p=STORM.drops[i], sp=p.v*dt*(.95+hv*1.1); p.y+=sp; p.x-=sp*ang;
-    if(p.y>p.z){ if(STORM.rips.length<60+hv*120&&Math.random()<.55+hv*.35) STORM.rips.push({x:p.x,y:p.y,t:0,a:p.a*(1.6+hv),s:1+hv*1.9,sp:hv>.4&&Math.random()<hv*.7}); if(STORM.drops.length>target){ STORM.drops.splice(i,1); continue; } p.x=Math.random()*(W+Hh*ang); p.y=-p.l-Math.random()*40; p.z=Hh*(.25+Math.random()*.75); continue; }
+    if(p.y>p.z){ if(STORM.rips.length<60+hv*120&&Math.random()<.55+hv*.35) STORM.rips.push({x:p.x,y:p.y,t:0,a:p.a*(1.6+hv),s:1+hv*1.9,sp:hv>.4&&Math.random()<hv*.7}); if(STORM.drops.length>target){ STORM.drops.splice(i,1); continue; } p.x=Math.random()*(W+Hh*ang); p.y=-p.l-Math.random()*40; p.z=Hh*(.03+Math.random()*.97); continue; }
     const L=p.l*(1+hv*2.4), gr=g.createLinearGradient(p.x,p.y,p.x+L*ang,p.y-L); gr.addColorStop(0,`rgba(205,225,245,${Math.min(.55,p.a*(1+hv*.8))})`); gr.addColorStop(1,'rgba(205,225,245,0)'); g.strokeStyle=gr; g.lineWidth=.9+hv*.7; g.beginPath(); g.moveTo(p.x,p.y); g.lineTo(p.x+L*ang,p.y-L); g.stroke(); }
   for(let i=STORM.rips.length-1;i>=0;i--){ const r=STORM.rips[i]; r.t+=dt; const sc=r.s||1, u=r.t/(650+sc*150); if(u>=1){ STORM.rips.splice(i,1); continue; } const rr=(2+u*9)*sc; g.strokeStyle=`rgba(200,225,250,${r.a*(1-u)})`; g.lineWidth=.8+sc*.25; g.beginPath(); g.ellipse(r.x,r.y,rr,rr*.38,0,0,7); g.stroke();
     if(sc>1.6&&u>.15){ g.globalAlpha=(1-u)*.6; g.beginPath(); g.ellipse(r.x,r.y,rr*.55,rr*.21,0,0,7); g.stroke(); g.globalAlpha=1; }
@@ -9588,10 +9627,10 @@ async function startGame(fresh){ if(restarting) return; if(fresh&&scr==='table'&
   newHand(); }
 function welcome(){ $$g('.gr-pop').forEach(n=>n.remove()); bgm(1); const p=document.createElement('div'); p.className='gr-pop lock wel';
   const opt=(k,ic,t,d)=>`<button class="wl-o wl-${k}" data-w="${k}"><i class="wl-ic">${ic}</i><b>${t}</b><small>${d}</small></button>`;
-  p.innerHTML=`<div class="gr-dlg wl"><div class="wl-ban"><img src="${GIMG('gd-cover')}" alt=""><button class="wl-back" data-w="back" title="${T('Back to all games','返回游戏列表')}"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg><span>${T('All games','游戏列表')}</span></button></div><div class="wl-body">
-    <small class="wl-k">${T('THE LEGEND OF THE DRAGON GATE','龙门传说')}</small><h3>${T('Dragon Gate','跃龙门')}</h3>
-    <div class="wl-story${zh()?" zh":""}"><p>${T('Legend has it that the Dragon Gate stands on the Yellow River, with thirteen rapids below it, from the Two all the way up to the Ace.','相传黄河上有一道龙门，门下十三道激流，从“二”一直排到“尖”。')}</p><p>${T('At every year’s end, travellers from the four quarters sit down round the dragon disc and pair off into alliances, using two decks of cards as their oars against the current. Whichever alliance clears the thirteenth rapid first leaps the gate and becomes a dragon.','每到岁末，东南西北四方的来客围着龙盘落座，两两结为同盟，以两副牌作桨，逆流而上。哪一方先冲过第十三道激流、跃出龙门，便化身为龙。')}</p><p class="wl-you">${T('Tonight the disc is set. The southern seat is yours, and your ally waits across the table.','今夜龙盘已开。南方的座位留给了你，你的盟友就坐在对面。')}</p></div>
-    <div class="wl-opts">${opt('rules','<svg viewBox="0 0 24 24">'+ICO.rules+'</svg>',T('Read the rules','看规则'),T('Card types, bombs, tribute and levels','牌型、炸弹、进贡、升级'))}${opt('tut','<svg viewBox="0 0 24 24">'+ICO.tut+'</svg>',T('Play the tutorial','新手教程'),T('A guided two-minute practice hand','两分钟带你打一局练习'))}${opt('go','<svg viewBox="0 0 24 24"><path d="M8 5.5v13l10.5-6.5z"/></svg>',T('Deal me in','直接开玩'),T('Start a real game against three bots','和三个电脑对手正式开打'))}</div><small class="wl-foot">${T('Played by the rules of Guandan, a folk card game from northern Jiangsu.','玩法源自苏北民间的掼蛋。')}</small></div></div>`;
+  p.innerHTML=`<div class="gr-dlg wl"><div class="wl-ban"><img src="${GIMG('gd-cover')}" alt=""><button class="wl-back" data-w="back" title="${T('Back to all games','返回游戏列表')}"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg><span>${T('All Games','游戏列表')}</span></button></div><div class="wl-body">
+    <small class="wl-k">${T('THE LEGEND OF THE DRAGON GATE','龙门传说')}</small><h3>${T('Leap the Dragon Gate','跃龙门')}</h3>
+    <div class="wl-story${zh()?" zh":""}"><p>${T('Far up the Yellow River the water falls between two cliffs, and between them stands the Dragon Gate. Every spring the carp gather below it in their thousands, a churning field of gold scales, and throw themselves at the falls.','黄河上游，两崖夹水，飞瀑之间立着一道龙门。每年春汛，成千上万的鲤鱼聚在门下，金鳞翻涌，一次又一次朝瀑布上扑去。')}</p><p>${T('Most are thrown back by the current. The one that clears the top is met by a bolt of heaven’s fire that burns away its tail, and it rises from the spray as a dragon. Those that fall short carry a scar on the brow and wait for the next spring.','大多数被急流打了回去。能越过顶端的那一尾，迎面落下一道天火，烧去鱼尾，从水雾里腾空而起，化身为龙。跃不过去的，额上留一道伤痕，等来年再试。')}</p><p class="wl-you">${T('Tonight the river is rising. A place at the foot of the gate is waiting for you, and a friend is already in the water beside you.','今夜，河水又涨了。龙门脚下给你留了一个位置，你的同伴已经在你身旁的浪里。')}</p></div>
+    <div class="wl-opts">${opt('rules','<svg viewBox="0 0 24 24">'+ICO.rules+'</svg>',T('Read the Rules','看规则'),T('Explore on your own with the rulebook. Plain and simple.','自我摸索，查阅规则书，简单明了。'))}${opt('tut','<svg viewBox="0 0 24 24">'+ICO.tut+'</svg>',T('Play the Tutorial','新手教程'),T('Follow the Dragon Spirit through the lesson.','跟随龙灵完成教学。'))}${opt('go','<svg viewBox="0 0 24 24"><path d="M8 5.5v13l10.5-6.5z"/></svg>',T('Deal Me In','直接开玩'),T('Wind and cloud unite; crouch upon the heavens’ height!','风云际会，蹲踞苍天！'))}</div><small class="wl-foot">${T('Played by the rules of Guandan, a folk card game from northern Jiangsu, China.','玩法源自中国苏北民间的掼蛋。')}</small></div></div>`;
   root.appendChild(p); snd('pop');
   p.addEventListener('click',e=>{ const b=e.target.closest('[data-w]'); if(!b) return; snd('btn'); const k=b.dataset.w;
     if(k==='back'){ p.remove(); toLobby(); return; } if(k==='rules'){ p.remove(); rules(welcome); } else if(k==='tut'){ p.remove(); startTut(); } else { try{ localStorage.setItem('gd-tut','1'); }catch(er){} p.remove(); newHand(); } }); }
@@ -9718,9 +9757,9 @@ function rules(after){ const p=document.createElement('div'); p.className='gr-po
   // a small but real-looking table: felt, the dragon disc, four seats with their avatars
   const avk=P?[0,1,2,3].map(i=>P[i].k):Object.keys(AV).slice(0,4), nm=i=>P?pname(i):[T('You','你'),T('Next','下家'),T('Partner','对家'),T('Prev','上家')][i];
   const seat4=(cls)=>`<div class="mt ${cls||''}"><i class="mt-felt"></i><img class="mt-disc" src="${GIMG('gd-table')}" alt="">${[0,1,2,3].map(i=>`<span class="mt-seat s${i} t${i%2}"><span class="mt-av"><svg viewBox="0 0 40 40">${AV[avk[i]]}</svg><i class="mt-ring"></i><i class="mt-crown"></i></span><b>${nm(i)}</b><em>${[T('You','你'),T('Next','下家'),T('Partner','对家'),T('Prev','上家')][i]}</em></span>`).join('')}<div class="rd-plays"></div><div class="rd-stage"></div></div>`;
-  p.innerHTML=`<div class="gr-dlg wide rules r2 r3"><header class="gr-rban"><div><small>${T('RULES','规则')}</small><h3>${T('How Dragon Gate works','跃龙门怎么玩')}</h3></div><button class="gr-x" data-a="popx" aria-label="${T('Close','关闭')}">×</button></header>
+  p.innerHTML=`<div class="gr-dlg wide rules r2 r3"><header class="gr-rban"><div><small>${T('RULES','规则')}</small><h3>${T('How to Play Leap the Dragon Gate','跃龙门怎么玩')}</h3></div><button class="gr-x" data-a="popx" aria-label="${T('Close','关闭')}">×</button></header>
   <div class="gr-rwrap"><nav class="gr-rnav">${NAV.map(([k,t],i)=>`<button data-r="${k}"${i?'':' class="on"'}><i>${String(i+1).padStart(2,'0')}</i>${t}</button>`).join('')}</nav><div class="gr-rbody"><div class="gr-rules">
-  ${sec('table',1,T('The table','牌桌'),`<p class="gr-note">${T('Dragon Gate follows the rules of Guandan, a folk card game from northern Jiangsu.','跃龙门的玩法源自苏北民间的掼蛋。')}</p>
+  ${sec('table',1,T('The table','牌桌'),`<p class="gr-note">${T('Leap the Dragon Gate follows the rules of Guandan, a folk card game from northern Jiangsu, China.','跃龙门的玩法源自中国苏北民间的掼蛋。')}</p>
     <p>${T('Two decks with jokers, 108 cards. Four players get 27 cards each. You and the player opposite are allies. Play goes counter-clockwise: you, next, partner, previous.','两副牌加大小王共 108 张，四人每人 27 张。你和对面的人是盟友。出牌按逆时针：你 → 下家 → 对家 → 上家。')}</p>
     <div class="rd rd-order">${seat4()}<small class="rd-cap">${T('Counter-clockwise: you → next → partner → previous','逆时针：你 → 下家 → 对家 → 上家')}</small></div>
     ${fig('table',T('A hand in progress.','对局中的牌桌。'),TM)}
@@ -10009,7 +10048,7 @@ async function demoAce(d){ const me=tut, M0={lv:M.lv.slice(),dealer:M.dealer,aFa
       setTimeout(()=>{ if(gd.isConnected) burst(x,R.height*.2,90,{c:['#fff3c4','#ffd36a'],v:9,g:-.02,k:'tw',r:2}); },reduce?0:3300);
       await wait(4800); gd.remove(); }
   } finally { tutCap(null); if(tut===me){ M.lv=M0.lv; M.dealer=M0.dealer; M.aFails=M0.aFails; if(g&&G0){ g._lvNext=G0.n; g._lvH=G0.h; g._L=G0.L; } placeHi.last=M.dealer; drawLevel(); placeHi(M.dealer); for(let s=0;s<4;s++){ const cr=$g('.gs'+s+' .gs-crown'); if(cr) cr.dataset.r='x'; drawSeat(s); } } } }
-return {_nn:s=>nnMove(s), _bot:s=>botMove(s), _threat:s=>bombThreat(s), _cheap:(s,c)=>cheapBomb(s,c), open:openRoom, close:closeRoom, isOpen:()=>open, _wind:s=>windBanner(s), _res:(g,w)=>showResult({winner:w?0:1,up:2,order:w?[0,2,1,3]:[1,3,0,2],before:[5,3],after:w?[7,3]:[5,5],gameOver:g},!!w,3), _drg:()=>{ const R=felt.getBoundingClientRect(); return flyDragon($g('.gt-fx'),R.width,R.height,{dur:6000}); }, _s:()=>({M,H,tut}), _redraw:()=>refreshAll(), _step:()=>{ busy=false; step(); }, _newHand:()=>newHand(), _trib:()=>doTribute(), _bgm:()=>({k:BGM.k,playing:!!(BGM.cur&&BGM.cur.playing),buf:!!(BGM.cur&&BGM.cur.buf),site:!!(TR.bgm&&TR.bgm.playing)}), _siren:(s,n)=>{ warned.add(s); drawSeat(s); snd("siren"); sirenAlert(s,n); bgm(3); storm(warned.size); }, _storm:k=>storm(k), _calm:()=>stormEnd(), _eye:(k,h)=>eyeMood(k,h), _hints:()=>{ buildHints(); return hintList.map(m=>m.combo.type+":"+m.cards.map(c=>GD.isWild(c,H.L)?"W":c.r).join(",")); }, _nh:()=>newHand(), _anti:()=>antiFx([{id:-1,r:17,s:4},{id:-2,r:17,s:4}],[1,1]), _vox:()=>({loaded:Object.keys(voxBuf),loading:Object.keys(voxLoading)}), _fx:async(s,spec)=>{ const cards=spec.map(([r,su],i)=>({id:5000+i,r,s:r>=16?4:su})); H.played[s]=cards; H.trick={seat:s,combo:GD.judge(cards,H.L,null),cards}; drawPlayed(s); await comboFx(s,H.trick.combo); }, relang:()=>{ if(open){ loadVox(); render(); if(tut&&tut.i>=0){ const st=GD_TUT.steps[tut.i]; if(st&&(st.say)) tutCard(st); } } }};
+return {_nn:s=>nnMove(s), _bot:s=>botMove(s), _threat:s=>bombThreat(s), _cheap:(s,c)=>cheapBomb(s,c), open:openRoom, close:closeRoom, isOpen:()=>open, _wind:s=>windBanner(s), _res:(g,w)=>showResult({winner:w?0:1,up:2,order:w?[0,2,1,3]:[1,3,0,2],before:[5,3],after:w?[7,3]:[5,5],gameOver:g},!!w,3), _drg:()=>{ const R=felt.getBoundingClientRect(); return flyDragon($g('.gt-fx'),R.width,R.height,{dur:6000}); }, _s:()=>({M,H,tut}), _redraw:()=>refreshAll(), _step:()=>{ busy=false; step(); }, _newHand:()=>newHand(), _trib:()=>doTribute(), _bgm:()=>({k:BGM.k,playing:!!(BGM.cur&&BGM.cur.playing),buf:!!(BGM.cur&&BGM.cur.buf),site:!!(TR.bgm&&TR.bgm.playing)}), _siren:(s,n)=>{ warned.add(s); drawSeat(s); snd("siren"); sirenAlert(s,n); bgm(3); storm(warned.size); }, _rank:(s,k)=>{ H.order.push(s); H.log.push({seat:s,finished:k+1}); crownBanner(s,k); drawSeat(s); const c=$g('.gs'+s+' .gs-crown'); c.classList.add('wait'); setTimeout(()=>c.classList.remove('wait'),2200); }, _storm:k=>storm(k), _calm:()=>stormEnd(), _eye:(k,h)=>eyeMood(k,h), _hints:()=>{ buildHints(); return hintList.map(m=>m.combo.type+":"+m.cards.map(c=>GD.isWild(c,H.L)?"W":c.r).join(",")); }, _nh:()=>newHand(), _anti:()=>antiFx([{id:-1,r:17,s:4},{id:-2,r:17,s:4}],[1,1]), _vox:()=>({loaded:Object.keys(voxBuf),loading:Object.keys(voxLoading)}), _fx:async(s,spec)=>{ const cards=spec.map(([r,su],i)=>({id:5000+i,r,s:r>=16?4:su})); H.played[s]=cards; H.trick={seat:s,combo:GD.judge(cards,H.L,null),cards}; drawPlayed(s); await comboFx(s,H.trick.combo); }, relang:()=>{ if(open){ loadVox(); render(); if(tut&&tut.i>=0){ const st=GD_TUT.steps[tut.i]; if(st&&(st.say)) tutCard(st); } } }};
 })();
 
 const COL_SLOTS=12; // empty slots stay on the page for future columns
