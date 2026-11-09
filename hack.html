@@ -3227,6 +3227,14 @@ html:not([lang=zh]) .gt-choose .gc-lb b{font-family:'Newsreader','Noto Serif SC'
 .rd-tc .mt .rd-fly{--rcw:2.1rem}
 .rd-tc .mt .gc.rc.rd-jk{--rcw:1.55rem}
 .rd-sort .rd-sw.gt-sortb{visibility:visible!important;opacity:1!important}
+/* ===== night rain ===== */
+.gt-rain{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:1}
+.gt-vig{position:absolute;inset:0;pointer-events:none;z-index:1;opacity:0;transition:opacity 2.6s ease;background:radial-gradient(120% 95% at 50% 46%,transparent 42%,rgba(2,6,14,var(--vig,.45)) 100%)}
+.gt-felt.storm .gt-vig{opacity:1;transition:opacity 1.6s ease .2s}
+.gt-flash{position:absolute;inset:0;pointer-events:none;z-index:1;opacity:0;background:radial-gradient(90% 80% at 62% 20%,rgba(235,244,255,1),rgba(170,200,255,.55) 45%,rgba(120,150,220,.2) 80%);mix-blend-mode:screen}
+@media (prefers-reduced-motion:reduce){.gt-rain,.gt-flash{display:none}}
+/* your leftover cards are laid face up in front of you when the hand ends; the hand itself steps aside */
+#gtHand.shown{opacity:0;transform:translateY(1.2rem);transition:opacity .45s ease,transform .45s ease;pointer-events:none}
 /* ===== Pages & Frames: a reading room, green-leather rail and paper pages ===== */
 #reader.shelf{--sh-bg:#F3EEE3;--sh-ink:#23201A;--sh-ink2:#6B6252;--sh-acc:#8B2B22;--sh-green:#1F3329;--sh-line:#DCD2BF;--cx:#8B2B22}
 #reader.shelf .rd-main,#reader.shelf .rd-leaf{background:var(--sh-bg) linear-gradient(90deg,rgba(80,60,30,.05) 1px,transparent 1px) 0 0/22px 100%}
@@ -8389,7 +8397,7 @@ function seatHTML(s){ const p=P[s], d=DIR()[s];
     ${s===0?'':`<div class="gs-fan"></div>`}</div>`; }
 function buildTable(){ fdPreload(); dkImg('gd-table-dm'); dkImg('gd-table-om'); root.className='on table'+(tut?' tutm':'')+(H&&H._intro?' intro':'')+(H&&H._dealPending?' dealing':'')+(H&&H.settled&&!tut?' handend':''); root.style.setProperty('--gbk',`url(${GIMG('gd-back')})`); root.style.setProperty('--gbkh',`url(${GIMG('gd-back-h')})`);
   paint(head(T('Dragon Gate','跃龙门'))+`<main class="gt"><div class="gt-felt"><div class="gt-cloth">
-      <div class="gt-ring"><div class="dk-all"><img src="${GIMG('gd-table')}" alt=""><canvas class="dk-fx"></canvas><canvas class="dk-cv"></canvas></div></div><i class="gt-frame"></i></div>
+      <div class="gt-ring"><div class="dk-all"><img src="${GIMG('gd-table')}" alt=""><canvas class="dk-fx"></canvas><canvas class="dk-cv"></canvas></div></div><canvas class="gt-rain"></canvas><i class="gt-vig"></i><i class="gt-flash"></i><i class="gt-frame"></i></div>
     <div class="gl"></div>
     ${[1,2,3].map(seatHTML).join('')}${[0,1,2,3].map(s=>`<div class="gp gp${s}"></div>`).join('')}
     <div class="gt-me">${seatHTML(0)}<button class="gt-ccb${ccOn?' on':''}" id="gtCCb" data-a="cc" aria-pressed="${ccOn?'true':'false'}" title="${T('Card counter','记牌器')}"><i class="cb-ic"><svg viewBox="0 0 24 24"><rect x="3.5" y="4" width="17" height="16" rx="2.2"/><path d="M3.5 9h17M8 4v16M12.5 13.5h5M12.5 16.5h3"/></svg></i><span>${T('Counter','记牌器')}</span><i class="cb-dot"></i></button><button class="gt-sortb sw" id="gtSort" data-a="sort" title="${T('Sort (S)','理牌（S）')}" role="switch" aria-checked="false"><span class="sb-sw"><i class="sb-k"></i><i class="sb-o o0">${SORT_ICO[0]}<em>${T('Default','默认')}</em></i><i class="sb-o o1">${SORT_ICO[1]}<em>${T('Sorted','理牌')}</em></i></span><kbd>S</kbd></button><div class="gt-act" id="gtAct"></div><div class="gt-hand" id="gtHand"></div></div>
@@ -8537,8 +8545,8 @@ function drawPlayed0(s){ const z=$g('.gp'+s); if(!z) return; const p=H.played[s]
   const cards=orderPlayed(p,H.trick&&H.trick.seat===s?H.trick.combo:GD.judge(p,H.L,null));
   const cb=H.trick&&H.trick.seat===s?H.trick.combo:null;
   z.innerHTML=`<div class="gp-cards">${cards.map(c=>cardHTML(c,'pl')).join('')}</div>${cb&&cards.length>1?comboTag(cb):''}`; }
-function drawReveal(){ H.revealed=true; for(let s=1;s<4;s++){ const n=H.hands[s].length, z=$g('.gp'+s); layoutFan(s); if(!z||!n) continue;
-    const cs=GD.sortHand(H.hands[s],H.L), mx=s===2?14:9, nr=Math.ceil(n/mx), per=Math.ceil(n/nr), rows=[]; for(let i=0;i<cs.length;i+=per) rows.push(cs.slice(i,i+per));
+function drawReveal(){ H.revealed=true; for(let s=0;s<4;s++){ const n=H.hands[s].length, z=$g('.gp'+s); if(s) layoutFan(s); if(!z||!n) continue; if(s===0){ const hd=$g('#gtHand'); if(hd){ hd.classList.add('shown'); } }
+    const cs=GD.sortHand(H.hands[s],H.L), mx=s===2||s===0?14:9, nr=Math.ceil(n/mx), per=Math.ceil(n/nr), rows=[]; for(let i=0;i<cs.length;i+=per) rows.push(cs.slice(i,i+per));
     z.innerHTML=`<div class="gp-rev">${rows.map(r=>`<div class="gp-cards reveal">${r.map(c=>cardHTML(c,'pl')).join('')}</div>`).join('')}</div><span class="gp-lab th-ivory"><i>${T('Cards left','剩余手牌')}</i><b>${n}</b></span>`;
     [...z.querySelectorAll('.gc')].forEach((e,i)=>e.animate([{transform:'rotateY(90deg)',opacity:0},{transform:'none',opacity:1}],{duration:320,delay:i*25,fill:'backwards'})); }
   // keep the side hands clear of the partner's hand
@@ -8690,7 +8698,7 @@ async function act(s,cards,force){ if(!H||H.phase!=='play'||H.turn!==s||busy) re
   else { snd('play'); if(s===0) drawHand(); drawPlayed(s); drawSeat(s); await flyIn(s,fromR,fromEls);
     const c=ev.combo; voxPlay(s,c,cards,wasNew);
     if(!['single','pair','triple'].includes(c.type)) await comboFx(s,c);
-    const n=H.hands[s].length; if(n<=10&&n>0&&!warned.has(s)){ if(!warned.size&&!tut) bgm(3); warned.add(s); drawSeat(s); snd('siren'); sirenAlert(s,n); vox(s,'w'+n,true); }
+    const n=H.hands[s].length; if(n<=10&&n>0&&!warned.has(s)){ if(!warned.size&&!tut) bgm(3); warned.add(s); if(!tut) storm(warned.size); drawSeat(s); snd('siren'); sirenAlert(s,n); vox(s,'w'+n,true); }
     if(ev.finished){ snd('crown'); setTimeout(()=>snd(s%2===0?'win':'lose'),350); vox(s,'out',true); crownBanner(s,ev.finished-1); drawSeat(s); await wait(900); } }
   await wait(ev.pass?380:260);
   if(ev.newTrick!=null&&H.phase==='play'){ await wait(500); await sweepPlayed(); if(ev.wind!=null){ windBanner(ev.wind); await wait(1800); } }
@@ -8906,6 +8914,9 @@ function dkTick(now){ dkRaf=0; const r=dkAll(); if(!r){ DKFX=[]; return; } const
       for(let k=1;k<=4;k++){ const s0=Math.max(0,ext+(k-1)*10), s1=Math.max(0,ext+k*10); if(s1<=s0) continue; mk.globalAlpha=1-k/5; R2(s0,s1); } mk.globalAlpha=1;
       o.globalCompositeOperation='destination-in'; o.drawImage(dkMask,0,0);
       g.globalAlpha=al; g.globalCompositeOperation='lighter'; g.shadowColor=f.col; g.shadowBlur=12*d; g.drawImage(dkOff,0,0); g.shadowBlur=0; g.drawImage(dkOff,0,0); g.globalAlpha=1; g.globalCompositeOperation='source-over'; }
+    if(f.k==='bolt'&&dm){ const st=t<60?1:t<130?.12:t<230?.9:t<320?.25:.55*Math.exp(-(t-320)/420), al=Math.max(0,st);
+      o.globalCompositeOperation='source-over'; o.clearRect(0,0,PX,PX); o.drawImage(dm,0,0,PX,PX); o.globalCompositeOperation='source-in'; const bg=o.createLinearGradient(0,0,PX,PX); bg.addColorStop(0,'#ffffff'); bg.addColorStop(.5,'#d6e8ff'); bg.addColorStop(1,'#9cc4ff'); o.fillStyle=bg; o.fillRect(0,0,PX,PX);
+      g.globalCompositeOperation='lighter'; g.globalAlpha=al; g.shadowColor='#8fc0ff'; g.shadowBlur=(t<320?22:10)*d; g.drawImage(dkOff,0,0); g.shadowBlur=0; if(t<320) g.drawImage(dkOff,0,0); g.globalAlpha=1; g.globalCompositeOperation='source-over'; }
     if(f.k==='orn'&&om){ const k1=f.inn, k2=f.inn+f.hold, al=t<k1?t/k1:t<k2?1:Math.max(0,1-(t-k2)/f.out), ox=PX*ORN[f.s][0]/100, oy=PX*ORN[f.s][1]/100, rr=PX*.085;
       o.globalCompositeOperation='source-over'; o.clearRect(0,0,PX,PX); o.drawImage(om,0,0,PX,PX); o.globalCompositeOperation='source-in'; o.fillStyle=f.col; o.fillRect(0,0,PX,PX); o.globalCompositeOperation='destination-in'; o.beginPath(); o.arc(ox,oy,rr,0,7); o.fill();
       g.globalCompositeOperation='lighter'; const sc=t<k1?.3+.85*(t/k1):t<k2?1.15-.15*((t-k1)/f.hold):1+.25*((t-k2)/f.out), hr=PX*.13*sc, hg=g.createRadialGradient(ox,oy,0,ox,oy,hr); hg.addColorStop(0,f.col); hg.addColorStop(.25,f.col+'88'); hg.addColorStop(1,f.col+'00'); g.globalAlpha=al*.8; g.fillStyle=hg; g.beginPath(); g.arc(ox,oy,hr,0,7); g.fill();
@@ -9023,7 +9034,7 @@ async function matchOutro(){ if(!felt||!$g('.gt-ring')) return; $$g('.gt-res,.gt
   for(let s=3;s>=0;s--){ const el=$g('.gs'+s), b=seatPt(s); if(el){ el.style.setProperty('--ix',seatOut[s][0]*cw*.5+'px'); el.style.setProperty('--iy',seatOut[s][1]*cw*.5+'px'); el.classList.add('gs-leave'); }
     snd('seat'); await S.wisp(b,S.marks[s],420); S.fireT[s]=0; snd('ignite'); await wait(120); }
   await wait(500); S.end(); }
-async function dealAnim(){ root.classList.remove('handend'); H.hands.forEach(h=>{ h._full=h.slice(); }); if(reduce){ root.classList.remove('intro'); H._ccOk=true; H._dealPending=false; root.classList.remove('dealing'); refreshAll(); return; } root.classList.add('dealing'); try{ await dealAnim0(); } finally{ root.classList.remove('dealing'); if(H){ H._ccOk=true; H._dealPending=false; } ccDraw(); } }
+async function dealAnim(){ root.classList.remove('handend'); stormEnd(true); $g('#gtHand')&&$g('#gtHand').classList.remove('shown'); H.hands.forEach(h=>{ h._full=h.slice(); }); if(reduce){ root.classList.remove('intro'); H._ccOk=true; H._dealPending=false; root.classList.remove('dealing'); refreshAll(); return; } root.classList.add('dealing'); try{ await dealAnim0(); } finally{ root.classList.remove('dealing'); if(H){ H._ccOk=true; H._dealPending=false; } ccDraw(); } }
 async function dealAnim0(){
   const real=H.hands, hidden=real.map(()=>[]); H.hands=hidden; refreshAll(); const h0=H, intro=!!H._intro;
   if(intro){ await matchIntro(); if(H!==h0){ return; } }
@@ -9415,6 +9426,36 @@ let SIRN=0; const SIREN_SVG0='<svg class="bc-svg" viewBox="0 0 40 44" aria-hidde
   +'<path class="bl" d="M20 6C11.5 6 8 12.5 8 20v12h12z" fill="url(#sbl)"/><path class="rd" d="M20 6c8.5 0 12 6.5 12 14v12H20z" fill="url(#srd)"/><path d="M20 6C11.5 6 8 12.5 8 20v12h24V20C32 12.5 28.5 6 20 6z" fill="none" stroke="rgba(255,255,255,.35)" stroke-width="1"/>'
   +'<rect class="core" x="16.5" y="14" width="7" height="16" rx="2" fill="#fff" opacity=".85"/><ellipse cx="14" cy="13" rx="3" ry="5" fill="#fff" opacity=".45" transform="rotate(-20 14 13)"/><rect x="5" y="31" width="30" height="5" rx="1.5" fill="url(#sbs)"/><rect x="3" y="35.5" width="34" height="6" rx="2" fill="url(#sbs)"/></svg>';
 const sirenSVG=()=>{ const k='s'+(++SIRN); return SIREN_SVG0.replace(/id="s(bl|rd|bs)"/g,(m,x)=>`id="${k}${x}"`).replace(/url\(#s(bl|rd|bs)\)/g,(m,x)=>`url(#${k}${x})`); };
+/* ---------- night rain: someone is close to going out, the weather turns. Lightning lights the table, the disc dragon is caught
+   silver-blue in the flash, distant thunder rolls in, then a thin slanting rain falls under the cards until the hand ends.
+   More players on alert, denser rain and nearer thunder. Only the alert itself makes a sound. ---------- */
+const STORM={lv:0,raf:0,drops:[],rips:[],dens:0,want:0,t:0,on:false,snd:null,buf:{}};
+async function thunder(k){ try{ if(!AC) initAudio(); if(!AC) return; const key='gd-thunder'+k; if(!STORM.buf[key]) STORM.buf[key]=await fetch(VOX_URL(key)).then(r=>r.arrayBuffer()).then(a=>AC.decodeAudioData(a));
+    if(!gdBus){ gdBus=AC.createGain(); gdBus.gain.value=.75; gdBus.connect(musicBus||AC.destination); }
+    if(STORM.snd){ thunderOff(.9); } const src=AC.createBufferSource(), g=AC.createGain(), t=AC.currentTime+.05; src.buffer=STORM.buf[key]; src.connect(g).connect(gdBus);
+    g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(k===2?.85:.75,t+.35); src.start(t); STORM.snd={src,g}; src.onended=()=>{ if(STORM.snd&&STORM.snd.src===src) STORM.snd=null; }; }catch(e){} }
+function thunderOff(sec){ const x=STORM.snd; if(!x||!AC) return; STORM.snd=null; try{ const t=AC.currentTime; x.g.gain.cancelScheduledValues(t); x.g.gain.setValueAtTime(x.g.gain.value,t); x.g.gain.linearRampToValueAtTime(0,t+sec); x.src.stop(t+sec+.05); }catch(e){} }
+function storm(lv){ const f=$g('.gt-felt'); if(!f) return; STORM.lv=Math.min(4,lv); STORM.want=[0,.32,.55,.8,1][STORM.lv]; STORM.on=true; f.classList.add('storm'); f.style.setProperty('--vig',[0,.42,.52,.6,.66][STORM.lv]);
+  thunder(STORM.lv>=3?2:STORM.lv===2?3:1);
+  if(reduce) return;
+  // the lightning: two quick flashes over the whole table, the dragon caught silver-blue in them, then a slow after-glow
+  const fl=$g('.gt-flash'); if(fl) fl.animate([{opacity:0},{opacity:.42,offset:.03},{opacity:.06,offset:.1},{opacity:.38,offset:.16},{opacity:.12,offset:.26},{opacity:0}],{duration:1500,easing:'linear'});
+  DKFX.push({k:'bolt',t0:performance.now(),D:1700}); dkKick();
+  if(!STORM.raf) STORM.raf=requestAnimationFrame(rainTick); }
+function stormEnd(now){ const f=$g('.gt-felt'); STORM.want=0; STORM.lv=0; thunderOff(now?.6:1.6); if(f){ f.classList.remove('storm'); } if(now){ STORM.dens=0; STORM.drops=[]; STORM.rips=[]; const c=$g('.gt-rain'); if(c) c.getContext('2d').clearRect(0,0,c.width,c.height); } }
+function rainTick(now){ STORM.raf=0; const cv=$g('.gt-rain'); if(!cv){ STORM.drops=[]; return; } const W=cv.clientWidth, Hh=cv.clientHeight, d=Math.min(1.5,devicePixelRatio||1); if(!W) return;
+  if(cv.width!==Math.round(W*d)||cv.height!==Math.round(Hh*d)){ cv.width=Math.round(W*d); cv.height=Math.round(Hh*d); }
+  const g=cv.getContext('2d'); g.setTransform(d,0,0,d,0,0); g.clearRect(0,0,W,Hh); const dt=Math.min(50,now-(STORM.t||now)); STORM.t=now;
+  // density eases toward its target: rain builds over a few seconds and dies away slowly
+  STORM.dens+=(STORM.want-STORM.dens)*Math.min(1,dt/(STORM.want>STORM.dens?1800:2600));
+  const area=W*Hh/1e6, target=Math.round(STORM.dens*170*area), ang=.26;
+  while(STORM.drops.length<target) STORM.drops.push({x:Math.random()*(W+Hh*ang),y:-Math.random()*Hh,v:.55+Math.random()*.45,l:10+Math.random()*16,a:.1+Math.random()*.16,z:Hh*(.25+Math.random()*.75)});
+  g.lineCap='round';
+  for(let i=STORM.drops.length-1;i>=0;i--){ const p=STORM.drops[i], sp=p.v*dt*.95; p.y+=sp; p.x-=sp*ang;
+    if(p.y>p.z){ if(STORM.rips.length<60&&Math.random()<.55) STORM.rips.push({x:p.x,y:p.y,t:0,a:p.a*1.6}); if(STORM.drops.length>target){ STORM.drops.splice(i,1); continue; } p.x=Math.random()*(W+Hh*ang); p.y=-p.l-Math.random()*40; p.z=Hh*(.25+Math.random()*.75); continue; }
+    g.strokeStyle=`rgba(190,215,240,${p.a})`; g.lineWidth=.9; g.beginPath(); g.moveTo(p.x,p.y); g.lineTo(p.x+p.l*ang,p.y-p.l); g.stroke(); }
+  for(let i=STORM.rips.length-1;i>=0;i--){ const r=STORM.rips[i]; r.t+=dt; const u=r.t/650; if(u>=1){ STORM.rips.splice(i,1); continue; } g.strokeStyle=`rgba(200,225,250,${r.a*(1-u)})`; g.lineWidth=.8; g.beginPath(); g.ellipse(r.x,r.y,2+u*9,(2+u*9)*.38,0,0,7); g.stroke(); }
+  if(STORM.drops.length||STORM.rips.length||STORM.want>0) STORM.raf=requestAnimationFrame(rainTick); else STORM.t=0; }
 function sirenAlert(s,n){ const fx=$g('.gt-fx'); if(!fx||reduce) return; const R=felt.getBoundingClientRect(), a=$g('.gs'+s+' .gs-av'); if(!a) return; const r=a.getBoundingClientRect(), x=r.left-R.left+r.width/2, y=r.top-R.top+r.height/2;
   const e=document.createElement('div'); e.className='sir-pop'; e.innerHTML=`<i class="beacon big"><i class="bc-beam"><i class="bc-rot"><i class="bm r"></i><i class="bm b"></i></i></i>${sirenSVG()}</i><b>${T(`<em>${n}</em> card${n>1?"s":""} left!`,`报牌！剩 <em>${n}</em> 张`)}</b>`;
   const tx=Math.max(110,Math.min(R.width-110,x)), ty=Math.max(120,Math.min(R.height-120,s===0?y-cw*1.6:y)); e.style.left=tx+'px'; e.style.top=ty+'px'; fx.appendChild(e);
@@ -9565,7 +9606,7 @@ function pickReturn(id){ const c=H.hands[0].find(x=>x.id===id); if(!retOk(c)||(t
 async function confirmReturn(){ const c=H.hands[0].find(x=>sel.has(x.id)); if(!c||!retOk(c)) return; if(tut){ tutHide(); tut.waitYou=false; } const from=ret.from; ret=null; sel.clear(); $$g('#gtHand .gc').forEach(e=>e.classList.remove('dim','got')); drawAct();
   { const h=H.hands[0]; h.splice(h.indexOf(c),1); } drawHand(); await flyCard(c,0,from,true); H.hands[from].push(c); for(let s=0;s<4;s++) drawSeat(s); phaseTip(null); if(tut){ H.phase='play'; tutHide(); tut.waitYou=false; tutNext(); return; } const h1=H; await leadFlash(); if(H!==h1) return; H.phase='play'; step(); }
 /* ---------- end of hand ---------- */
-async function endHand(){ if(H.settled) return; H.settled=true; root.classList.add('handend'); clearTimeout(timer); for(let s=0;s<4;s++) drawSeat(s);
+async function endHand(){ if(H.settled) return; H.settled=true; root.classList.add('handend'); stormEnd(); clearTimeout(timer); for(let s=0;s<4;s++) drawSeat(s);
   if(tut){ drawAct(); tutEnd(); return; }
   const h0=H; await wait(1300); if(H!==h0) return; $$g('.fx-badge').forEach(e=>e.remove());
   const res=GDM.settle(M,H), aMiss=res.aFail!=null&&res.aFail===res.winner, won=aMiss?res.winner!==0:res.winner===0; snd(won?'win':'lose'); const fin=outN();
@@ -9682,7 +9723,7 @@ function rules(after){ const p=document.createElement('div'); p.className='gr-po
   ${sec('cc',10,T('Card counter','记牌器'),`<p>${T('Two decks hold eight of every rank and two of each joker. The counter starts from those totals, takes away the cards in your own hand and every card already played, and shows what is left: the cards still hidden in the other three hands. It cannot tell you who holds them; that is still up to you.','两副牌里，每个点数各有 8 张，大小王各 2 张。记牌器从这些总数出发，减去你自己手里的牌和已经打出去的牌，剩下的就是还藏在另外三家手里的牌。它不会告诉你牌在谁手里，那还得靠你自己判断。')}</p>
     <div class="rd rd-cc"><div class="rcc-play"></div><div class="gt-ctr rcc-w"><div class="cc-hd">${T('Cards Remaining','场上余牌')}</div><div class="cc-g rcc"></div></div><small class="rd-cap rcc-cap"></small></div>
     <p class="gr-note">${T('Tip: the counter makes the game easier while you learn. Remembering what has been played is one of the core skills of Guandan, so once you are comfortable, switch it off and train your own memory.','建议：刚上手时开着记牌器会轻松很多。记牌本身就是掼蛋的核心功夫之一，熟悉以后不妨把它关掉，练练自己的记性。')}</p>`)}
-  </div><p class="gr-cred">${T('Card faces: Adrian Kennard’s playing cards, CC0 (public domain). Joker dragons: original artwork. Raised fist: Microsoft Fluent Emoji (MIT). Computer players: the guandan-medium network from wlx7/guandan-rl (MIT).','牌面：Adrian Kennard 扑克牌设计，CC0（公有领域）。大小王龙纹为原创插画。抗贡拳头：Microsoft Fluent Emoji（MIT 许可）。电脑对手：wlx7/guandan-rl 的 guandan-medium 神经网络模型（MIT 许可）。')}</p></div></div></div>`;
+  </div><p class="gr-cred">${T('Card faces: Adrian Kennard’s playing cards, CC0 (public domain). Joker dragons: original artwork. Raised fist: Microsoft Fluent Emoji (MIT). Computer players: the guandan-medium network from wlx7/guandan-rl (MIT). Thunder: “Light Rain Distant Thunder July 5th 2016” (CC0) and two recordings by ezwa (public domain), all from Wikimedia Commons.','牌面：Adrian Kennard 扑克牌设计，CC0（公有领域）。大小王龙纹为原创插画。抗贡拳头：Microsoft Fluent Emoji（MIT 许可）。电脑对手：wlx7/guandan-rl 的 guandan-medium 神经网络模型（MIT 许可）。雷声：Wikimedia Commons 上的“Light Rain Distant Thunder July 5th 2016”（CC0）和 ezwa 的两段录音（公有领域）。')}</p></div></div></div>`;
   const body=p.querySelector('.gr-rbody'), nb=[...p.querySelectorAll('.gr-rnav button')];
   p.querySelector('.gr-rnav').addEventListener('click',e=>{ const b=e.target.closest('[data-r]'); if(!b) return; const t=p.querySelector('#gr-r-'+b.dataset.r); body.scrollTo({top:t.offsetTop-body.offsetTop-8,behavior:reduce?'auto':'smooth'}); });
   body.addEventListener('scroll',()=>{ let cur=NAV[0][0]; NAV.forEach(([k])=>{ const t=p.querySelector('#gr-r-'+k); if(t.offsetTop-body.offsetTop-40<=body.scrollTop) cur=k; }); if(body.scrollTop+body.clientHeight>=body.scrollHeight-4) cur=NAV[NAV.length-1][0]; nb.forEach(b=>b.classList.toggle('on',b.dataset.r===cur)); });
@@ -9936,7 +9977,7 @@ async function demoAce(d){ const me=tut, M0={lv:M.lv.slice(),dealer:M.dealer,aFa
       setTimeout(()=>{ if(gd.isConnected) burst(x,R.height*.2,90,{c:['#fff3c4','#ffd36a'],v:9,g:-.02,k:'tw',r:2}); },reduce?0:3300);
       await wait(4800); gd.remove(); }
   } finally { tutCap(null); if(tut===me){ M.lv=M0.lv; M.dealer=M0.dealer; M.aFails=M0.aFails; if(g&&G0){ g._lvNext=G0.n; g._lvH=G0.h; g._L=G0.L; } placeHi.last=M.dealer; drawLevel(); placeHi(M.dealer); for(let s=0;s<4;s++){ const cr=$g('.gs'+s+' .gs-crown'); if(cr) cr.dataset.r='x'; drawSeat(s); } } } }
-return {_nn:s=>nnMove(s), _bot:s=>botMove(s), _threat:s=>bombThreat(s), _cheap:(s,c)=>cheapBomb(s,c), open:openRoom, close:closeRoom, isOpen:()=>open, _wind:s=>windBanner(s), _res:(g,w)=>showResult({winner:w?0:1,up:2,order:w?[0,2,1,3]:[1,3,0,2],before:[5,3],after:w?[7,3]:[5,5],gameOver:g},!!w,3), _drg:()=>{ const R=felt.getBoundingClientRect(); return flyDragon($g('.gt-fx'),R.width,R.height,{dur:6000}); }, _s:()=>({M,H,tut}), _redraw:()=>refreshAll(), _step:()=>{ busy=false; step(); }, _newHand:()=>newHand(), _trib:()=>doTribute(), _bgm:()=>({k:BGM.k,playing:!!(BGM.cur&&BGM.cur.playing),buf:!!(BGM.cur&&BGM.cur.buf),site:!!(TR.bgm&&TR.bgm.playing)}), _siren:(s,n)=>{ warned.add(s); drawSeat(s); snd("siren"); sirenAlert(s,n); bgm(3); }, _hints:()=>{ buildHints(); return hintList.map(m=>m.combo.type+":"+m.cards.map(c=>GD.isWild(c,H.L)?"W":c.r).join(",")); }, _nh:()=>newHand(), _anti:()=>antiFx([{id:-1,r:17,s:4},{id:-2,r:17,s:4}],[1,1]), _vox:()=>({loaded:Object.keys(voxBuf),loading:Object.keys(voxLoading)}), _fx:async(s,spec)=>{ const cards=spec.map(([r,su],i)=>({id:5000+i,r,s:r>=16?4:su})); H.played[s]=cards; H.trick={seat:s,combo:GD.judge(cards,H.L,null),cards}; drawPlayed(s); await comboFx(s,H.trick.combo); }, relang:()=>{ if(open){ loadVox(); render(); if(tut&&tut.i>=0){ const st=GD_TUT.steps[tut.i]; if(st&&(st.say)) tutCard(st); } } }};
+return {_nn:s=>nnMove(s), _bot:s=>botMove(s), _threat:s=>bombThreat(s), _cheap:(s,c)=>cheapBomb(s,c), open:openRoom, close:closeRoom, isOpen:()=>open, _wind:s=>windBanner(s), _res:(g,w)=>showResult({winner:w?0:1,up:2,order:w?[0,2,1,3]:[1,3,0,2],before:[5,3],after:w?[7,3]:[5,5],gameOver:g},!!w,3), _drg:()=>{ const R=felt.getBoundingClientRect(); return flyDragon($g('.gt-fx'),R.width,R.height,{dur:6000}); }, _s:()=>({M,H,tut}), _redraw:()=>refreshAll(), _step:()=>{ busy=false; step(); }, _newHand:()=>newHand(), _trib:()=>doTribute(), _bgm:()=>({k:BGM.k,playing:!!(BGM.cur&&BGM.cur.playing),buf:!!(BGM.cur&&BGM.cur.buf),site:!!(TR.bgm&&TR.bgm.playing)}), _siren:(s,n)=>{ warned.add(s); drawSeat(s); snd("siren"); sirenAlert(s,n); bgm(3); storm(warned.size); }, _storm:k=>storm(k), _calm:()=>stormEnd(), _hints:()=>{ buildHints(); return hintList.map(m=>m.combo.type+":"+m.cards.map(c=>GD.isWild(c,H.L)?"W":c.r).join(",")); }, _nh:()=>newHand(), _anti:()=>antiFx([{id:-1,r:17,s:4},{id:-2,r:17,s:4}],[1,1]), _vox:()=>({loaded:Object.keys(voxBuf),loading:Object.keys(voxLoading)}), _fx:async(s,spec)=>{ const cards=spec.map(([r,su],i)=>({id:5000+i,r,s:r>=16?4:su})); H.played[s]=cards; H.trick={seat:s,combo:GD.judge(cards,H.L,null),cards}; drawPlayed(s); await comboFx(s,H.trick.combo); }, relang:()=>{ if(open){ loadVox(); render(); if(tut&&tut.i>=0){ const st=GD_TUT.steps[tut.i]; if(st&&(st.say)) tutCard(st); } } }};
 })();
 
 const COL_SLOTS=12; // empty slots stay on the page for future columns
