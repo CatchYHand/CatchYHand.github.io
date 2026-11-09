@@ -3004,6 +3004,19 @@ html:not([lang=zh]) .gt-choose .gc-lb b{font-family:'Newsreader','Noto Serif SC'
 /* the card counter and its switch leave with the Sort switch: match exit, entrance and every deal */
 .intro .gt-ccb,.outro .gt-ccb,.intro .gt-ctrw,.outro .gt-ctrw,.dealing .gt-ctrw{opacity:0!important;pointer-events:none!important;transition:none!important}
 .gt-ctrw{transition:opacity .5s ease .15s}
+/* first pick in the tutorial: press and slide across the glowing cards */
+.tut-tap.on.swipe{animation:tapSwipe 2.4s cubic-bezier(.45,.05,.3,1) infinite;transition:opacity .3s}
+.tut-tap.on.swipe::before{animation:none;opacity:0}
+.tut-tap.on.swipe::after{content:"";position:absolute;left:30%;top:4%;height:.45rem;width:0;margin-top:-.22rem;border-radius:.3rem;transform-origin:0 50%;transform:rotate(var(--sa,180deg));background:linear-gradient(90deg,rgba(191,242,255,.9),rgba(191,242,255,0));animation:tapTrail 2.4s cubic-bezier(.45,.05,.3,1) infinite}
+@keyframes tapSwipe{0%{transform:translate(0,-10px);opacity:0}10%{transform:translate(0,0);opacity:1}18%{transform:translate(0,4px) scale(.9)}62%{transform:translate(var(--sx),calc(var(--sy) + 4px)) scale(.9);opacity:1}72%{transform:translate(var(--sx),calc(var(--sy) - 8px));opacity:1}86%,100%{transform:translate(var(--sx),calc(var(--sy) - 8px));opacity:0}}
+@keyframes tapTrail{0%,18%{width:0;opacity:1}62%,72%{width:var(--sl);opacity:1}86%,100%{width:var(--sl);opacity:0}}
+/* tutorial: the golden dragon leaps through the gate */
+.fx-gdgate{position:absolute;transform:translate(-50%,-50%);aspect-ratio:760/997;pointer-events:none;z-index:7}
+.fx-gdgate img{position:relative;width:100%;height:100%;object-fit:contain;filter:drop-shadow(0 0 18px rgba(255,200,90,.65));z-index:2}
+.fx-gdgate .gg-rays,.fx-gdgate .gg-glow{position:absolute;left:50%;top:48%;border-radius:50%;opacity:0;z-index:1}
+.fx-gdgate .gg-rays{width:230%;aspect-ratio:1;background:repeating-conic-gradient(from 0deg,rgba(255,214,120,.32) 0 6deg,transparent 6deg 18deg);-webkit-mask:radial-gradient(circle,#000 18%,transparent 68%);mask:radial-gradient(circle,#000 18%,transparent 68%);animation:ggSpin 14s linear infinite}
+.fx-gdgate .gg-glow{width:130%;aspect-ratio:1;background:radial-gradient(circle,rgba(255,230,160,.85),rgba(255,170,60,.35) 40%,transparent 70%)}
+@keyframes ggSpin{to{rotate:360deg}}
 /* ===== Pages & Frames: a reading room, green-leather rail and paper pages ===== */
 #reader.shelf{--sh-bg:#F3EEE3;--sh-ink:#23201A;--sh-ink2:#6B6252;--sh-acc:#8B2B22;--sh-green:#1F3329;--sh-line:#DCD2BF;--cx:#8B2B22}
 #reader.shelf .rd-main,#reader.shelf .rd-leaf{background:var(--sh-bg) linear-gradient(90deg,rgba(80,60,30,.05) 1px,transparent 1px) 0 0/22px 100%}
@@ -7742,7 +7755,7 @@ const h1=[
   H([[3,1],[5,3],[8,2],[8,0],[10,2],[11,0],[13,3],[2,0],[6,1],[9,1]])];
 // hand 2 is played at level 5 (your team's new level), so the heart 5 is wild
 const h2=[
-  H([[2,0],[2,3],[3,0],[3,3],[4,0],[4,2],[7,0],[8,3],[5,1],[10,2],[11,1],[9,0],[10,0],[11,0],[12,0],[13,0],[6,3]]),
+  H([[2,0],[2,3],[3,0],[3,3],[4,0],[4,2],[7,0],[8,3],[5,1],[10,2],[11,1],[14,0],[10,0],[11,0],[12,0],[13,0],[6,3]]),
   H([[8,2],[9,0],[10,3],[11,3],[12,2],[13,2],[3,1],[4,3],[6,0],[7,3],[2,2],[10,1]]),
   H([[8,0],[8,1],[8,2],[9,2],[9,3],[9,1],[3,2]]),
   H([[14,3],[8,1],[4,1],[6,2],[7,2],[10,3],[11,2],[12,3],[2,1],[3,1]])];
@@ -7758,7 +7771,7 @@ const steps=[
  {say:['A bomb','炸弹'],b:['Four or more cards of one rank make a bomb, and the wild card can fill one in. A bomb beats any ordinary combination. A sorted bomb wears a round badge on its front card, showing how many cards it has; tap the badge to pick up the whole bomb.','四张或以上同点数的牌就是炸弹，逢人配可以帮你补上。炸弹能压住任何普通牌型。理好的炸弹，最前面那张牌左下角有一个圆形徽标，上面写着这是几张的炸弹；点一下徽标就能整组选中。'],spot:'#gtHand'},
  {say:['Card counter','记牌器'],b:['The switch above it opens the card counter. It slides down at the top right and shows, rank by rank, how many cards are still out there: not in your hand and not yet played. The stars are the jokers, and the gold column is this hand’s level card.','它上面那个开关是记牌器。打开后会从右上角滑下来，按点数列出场上还剩几张：不在你手里、也还没打出来的牌。两颗星是大小王，金色那一列是本局的级牌。'],spot:'#gtCCb'},
  {say:['Bombs against bombs','炸弹之间比大小'],b:['From strongest to weakest: the four jokers, then bombs of six or more cards (more cards win), then a straight flush, then five-card bombs, then four-card bombs. Bombs of the same size compare by rank.','从大到小：四大天王，然后是六张及以上的炸弹（张数多的大），再是同花顺，再是五张炸弹，最后是四张炸弹。张数相同的炸弹比点数。'],show:[[['Joker Bomb','四大天王'],[[16,4],[16,4],[17,4],[17,4]]],[['6+ cards','六张以上'],[[11,0],[11,1],[11,2],[11,3],[11,0],[11,3]]],[['Straight flush','同花顺'],[[9,2],[10,2],[11,2],[12,2],[13,2]]],[['5 cards','五张'],[[8,0],[8,1],[8,2],[8,3],[8,1]]],[['4 cards','四张'],[[6,0],[6,1],[6,2],[6,3]]]]},
- {you:[[3,0],[3,3]],say:['Lead a pair','领出一对'],b:['You lead first, so any combination is allowed. Tap your two 3s, then press Play.','你先出，任何牌型都可以。点你的两张 3，再按“出牌”。']},
+ {you:[[3,0],[3,3]],swipe:1,say:['Lead a pair','领出一对'],b:['You lead first, so any combination is allowed. Tap your two 3s, then press Play. Tip: to pick several cards quickly, hold down the left mouse button on one card and slide across the others.','你先出，任何牌型都可以。点你的两张 3，再按“出牌”。小技巧：想快速选好几张，可以在一张牌上按住左键，再滑过其他牌。']},
  {say:['Warning light','报牌'],b:['You now hold 10 cards. With 10 or fewer, a siren lights up beside your count so everyone knows you are getting close.','你现在只剩 10 张。手牌 10 张或以下时，牌数旁边会亮起警灯，大家都知道你快出完了。'],spot:'.gs0 .gs-cnt'},
  B(1,[[6,0],[6,1]]), B(2,[[11,1],[11,2]]), X(3),
  {you:'pass',say:['Let your ally ride','让盟友走'],b:['To beat a pair you need a higher pair. Your ally is winning with the Jacks, so press Pass and let them keep the trick.','压对子要更大的对子。现在是盟友的对 J 领先，按“不出”让他继续。']},
@@ -7769,7 +7782,7 @@ const steps=[
  B(1,[[7,0],[7,1],[7,2],[7,3]]), X(2), X(3),
  {you:'badge',cards:[[9,0],[9,2],[9,3],[2,1]],say:['Bomb back','炸回去'],b:['Your next player bombed your ally with four 7s. Your bomb of four 9s, made with the wild card, is bigger. Tap the round badge on its front card to pick up the whole bomb at once, then press Play.','下家用四个 7 炸了盟友。你那个由逢人配凑成的四个 9 更大。点它最前面那张牌上的圆形徽章，整个炸弹一次全选中，再按“出牌”。']},
  X(1), X(2), X(3),
- {you:[[10,0],[11,3],[12,2],[13,1],[14,0]],say:['A straight','顺子'],b:['Everyone passed, so you lead again. Play your straight 10 J Q K A: five ranks in a row, any suits. The Ace sits at the top here.','大家都不出，又轮到你领出。打出顺子 10 J Q K A：五张连续，花色随意，这里 A 在最上头。']},
+ {you:[[10,0],[11,3],[12,2],[13,1],[14,0]],swipe:1,say:['A straight','顺子'],b:['Everyone passed, so you lead again. Play your straight 10 J Q K A: five ranks in a row, any suits. The Ace sits at the top here.','大家都不出，又轮到你领出。打出顺子 10 J Q K A：五张连续，花色随意，这里 A 在最上头。']},
  X(1), X(2), X(3),
  {you:[[13,0]],say:['Go out','出完'],b:['One card left: play your King. Whoever goes out first is 1st and wears the gold crown.','只剩一张：打出你的 K。第一个出完的就是头游，戴上金冠。']},
  X(1), X(2), X(3),
@@ -7783,7 +7796,7 @@ const steps=[
  {say:['A new hand at level 5','第二局打 5'],b:['Your team is on 5 now, so every 5 is a level card and the heart 5 is wild.','我方现在是 5，所有的 5 都是级牌，红心 5 是逢人配。'],spot:'.gl'},
  {trib:1},
  {you:'ret',cards:[[6,3]],say:['Give one back','还贡'],b:['You received an Ace. Now return one card of 10 or lower that is not a level card. Tap the glowing 6, then press Give back.','你收到了一张 A。现在要还一张 10 或以下、并且不是级牌的牌。点发光的 6，再按“还贡”。']},
- {say:['Who leads','谁先出'],b:['Whoever paid tribute to 1st leads this hand: your previous player.','给头游进贡的人先出，这一局是你的上家。'],spot:'.gs3'},
+ {fx:'lead',say:['Who leads','谁先出'],b:['Whoever paid tribute to 1st leads this hand: your previous player.','给头游进贡的人先出，这一局是你的上家。'],spot:'.gs3'},
  B(3,[[8,1]]),
  {you:[[14,3]],say:['Use the tribute','用上贡牌'],b:['Your previous player led a single 8. Beat it with the Ace you just received.','上家出了单张 8。用你刚收到的 A 压住它。']},
  X(1), X(2), X(3),
@@ -7791,15 +7804,15 @@ const steps=[
  X(1), X(2), X(3),
  {you:[[7,0],[8,3],[5,1],[10,2],[11,1]],say:['The wild card in a straight','逢人配补顺子'],b:['You hold 7, 8, 10 and J. The heart 5 is wild, so it can play the missing 9. Select those five cards and play the straight 7 to J.','你有 7、8、10、J，红心 5 是逢人配，可以当缺的那张 9。选中这五张，打出顺子 7 到 J。']},
  B(1,[[8,2],[9,0],[10,3],[11,3],[12,2]]), X(2), X(3),
- {you:[[9,0],[10,0],[11,0],[12,0],[13,0]],say:['A straight flush','同花顺'],b:['Your next player beat you with 8 to Q. A straight in one suit is a straight flush, a bomb stronger than any five-card bomb. Play your spades 9 to K and go out first again.','下家用 8 到 Q 压了你。同一花色的顺子就是同花顺，是比五张炸弹还大的炸弹。打出黑桃 9 到 K，再次头游。']},
+ {you:[[10,0],[11,0],[12,0],[13,0],[14,0]],say:['A straight flush','同花顺'],b:['Your next player beat you with 8 to Q. A straight in one suit is a straight flush, a bomb stronger than any five-card bomb. Play your spades 10 to A and go out first again.','下家用 8 到 Q 压了你。同一花色的顺子就是同花顺，是比五张炸弹还大的炸弹。打出黑桃 10 到 A，再次头游。']},
  X(1), X(2), X(3),
  {say:['Your ally takes the wind','盟友借风'],b:['You are out again, so your ally leads. Watch them finish: a steel plate, 888999, then their last card.','你又出完了，由盟友借风领出。看他收尾：先出钢板 888999，再出最后一张。'],spot:'.gs2'},
  B(2,[[8,0],[8,1],[8,2],[9,2],[9,3],[9,1]]), X(3), X(1),
  B(2,[[13,2]]),
  {end:1},
  {demo:'anti',say:['Refusing tribute','抗贡'],b:['One more rule: if the players who owe tribute hold both Big Jokers between them, they show them and refuse to pay, and 1st leads instead. Watch: your opponents each hold one Big Joker. And when you pay tribute yourself and your highest card comes in several suits, you choose which one to give.','还有一条：如果该进贡的一方手里一共有两张大王，亮出来就可以抗贡，不用进贡，由头游先出。看：对手两人各有一张大王。轮到你进贡时，如果最大的牌有好几种花色，由你自己挑一张。']},
- {demo:'amiss',say:['Three tries at the Ace','打 A 三次机会'],b:['A team that reaches the Ace gets three tries to clear it. Each try that fails costs one of the three hearts beside the level card; when the last heart breaks, the team drops back to 2. Watch the top left.','升到 A 的一方有三次打 A 的机会。每没过一次，级牌旁边的三颗心就碎一颗；三颗都碎了，就退回 2 重新打。看左上角。'],spot:'.gl'},
- {demo:'awin',say:['Clearing the Ace','过 A'],b:['To clear the Ace and win the whole match, the team playing its Ace must come 1st, with the ally anywhere but last. Then the team leaps through the Dragon Gate.','打 A 的一方要头游，并且盟友不是下游，才算过 A，跃过龙门、赢下整场。'],spot:'.gl'},
+ {demo:'amiss',say:['Three tries at the Ace','打 A 三次机会'],b:['A team that reaches the Ace gets three tries to clear it. Each failed try breaks one of the three hearts beside the level card. If the opponents win that hand, the sides switch: the next hand is played at their level, and your team must win a hand back before it plays the Ace again. When the last heart breaks, the team drops back to 2. Watch the crowns and the top left.','升到 A 的一方有三次打 A 的机会。每没过一次，级牌旁边的三颗心就碎一颗。如果这一局是对手赢了，就要换边：下一局打对手的级牌，我方得再赢回一局，才能重新打 A。三颗心都碎了，就退回 2。看各家的名次和左上角。']},
+ {demo:'awin',say:['Clearing the Ace','过 A'],b:['To clear the Ace and win the whole match, the team playing its Ace must come 1st, with the ally anywhere but last. Then the team leaps through the Dragon Gate.','打 A 的一方要头游，并且盟友不是下游，才算过 A，跃过龙门、赢下整场。']},
  {say:['You are ready','准备好了'],b:['That is the whole flow. Hint always suggests a legal play, and Rules lists every combination. Good luck at the Gate.','流程就是这些。卡住时按“提示”就能找到能出的牌，所有牌型都在“规则”里。祝你跃过龙门！'],last:1}
 ];
 return {h1,h2,steps,L1:2,L2:5,trib:[{from:3,to:0,card:[14,3]},{from:1,to:2,card:[13,2]}]};
@@ -8152,7 +8165,7 @@ const HEART='<svg viewBox="0 0 24 22"><defs><radialGradient id="hgr" cx=".35" cy
 function heartsHTML(left){ return `<span class="gl-a" title="${T('Tries at Ace','过 A 机会')}">${[0,1,2].map(i=>`<i class="hz${i<left?' on':''}">${HEART}</i>`).join('')}</span>`; }
 async function shatterHearts(team){ const g=$g('.gl'); if(!g) return; const hz=[...g.querySelectorAll(`.glt.t${team} .gl-a .hz`)]; if(!hz.length) return; eyeMood(team===0?'bad':'good','keep');
   hz.forEach((h,i)=>setTimeout(()=>{ h.classList.add('fall'); },i*120)); await wait(900); }
-async function breakHeart(team){ const g=$g('.gl'); if(!g) return; const on=g.querySelectorAll(`.glt.t${team} .gl-a .hz.on`), h=on[on.length-1]; if(!h) return;
+async function breakHeart(team){ const g=$g('.gl'); if(!g) return; const on=g.querySelectorAll(`.glt.t${team} .gl-a .hz.on:not(.break)`), h=on[on.length-1]; if(!h) return;
   h.classList.add('shake'); snd('crack'); eyeMood(team===0?'bad':'good'); await wait(650); h.classList.remove('shake'); h.classList.add('break'); snd('heartbreak');
   const r=h.getBoundingClientRect(), R0=felt.getBoundingClientRect(); burst(r.left-R0.left+r.width/2,r.top-R0.top+r.height/2,26,{c:['#ff3b4e','#ffb3b3','#8a0618'],v:3.2,g:.12,dec:.02,k:'sq',r:2}); await wait(1200); }
 /* ---------- test mode: ↑↑↓↓←→←→BABA at the table ---------- */
@@ -8436,7 +8449,7 @@ async function sweepPlayed(){ const zs=$$g('.gp .gp-cards, .gp .gp-pass'); if(zs
   H.played=[[],[],[],[]]; for(let s=0;s<4;s++) drawPlayed(s); }
 // a small status strip above the disc while tribute is being paid, so players know what is happening
 // before the first play: the first player's compass mark on the disc flashes red three times, and their seat pulses
-async function leadFlash(){ if(!H||tut||H.phase==='idle') return; const s=H.turn; if(s==null||s<0) return; busy=true; const av=$g('.gs'+s+' .gs-av');
+async function leadFlash(force){ if(!H||(tut&&!force)||H.phase==='idle') return; const s=H.turn; if(s==null||s<0) return; busy=true; const av=$g('.gs'+s+' .gs-av');
   dragonGlow('#ff3a2a',{sweep:520,hold:700,fade:700,op:.55,eye:false}); snd('lead');
   for(let i=0;i<3;i++) setTimeout(()=>ornLight(s,'#ff3a2a',{inn:120,hold:220,out:260}),i*520);
   if(av) av.classList.add('lead'); await wait(reduce?300:1750); if(av) av.classList.remove('lead'); busy=false; }
@@ -9427,7 +9440,7 @@ function rulesDemos(p,L){ const alive=()=>p.isConnected, sleep=ms=>new Promise(r
     const tag=document.createElement('span'); tag.className='gc-bd t-b4 rd-stamp'; tag.innerHTML=bdHTML('bomb',4); grp.appendChild(tag); grp.classList.add('lit'); await sleep(2600); });
   // sort: the same hand unsorted, then sorted into bomb columns with stamps
   loop('.rd-sort',async box=>{ const st=box.querySelector('.rd-stage'), cap=box.querySelector('.rd-sortcap'); st.innerHTML='';
-    const pool=[12,9,7,5,3].filter(r=>r!==L), q=pool[0], n=pool[1], s7=pool[2], f=pool[3], t3=pool[4];
+    const pool=[12,9,7,5,3,4,6].filter(r=>r!==L), q=pool[0], n=pool[1], s7=pool[2], f=pool[3], t3=pool[4];
     const hand=[[q,0],[q,1],[q,2],[q,3],[q,0],[n,0],[n,2],[n,3],[L,1],[s7,1],[s7,2],[f,0],[f,3],[t3,1],[14,2],[13,0]];
     const els=hand.map(([r,s])=>{ const e=mk(r,s,!(r===L&&s===1)); e.dataset.r=r; e.dataset.s=s; return e; }); els.forEach(e=>st.appendChild(e));
     const val=r=>r===L?15:r, cw=parseFloat(getComputedStyle(els[0]).width)||52, step=cw*.74, vs=cw*.28;
@@ -9494,7 +9507,7 @@ function tutPlace(){ const o=$g('.gr-tut'); if(!o||!tut) return; const st=tut.cu
   const bw=bub.offsetWidth||380, bh=bub.offsetHeight||220, m=18, top0=70;
   const cx0=(W-bw)/2+46, cand=[[cx0,Hh*.36-bh/2],[cx0,top0+40],[m+110,(Hh-bh)/2-30],[W-bw-m-20,(Hh-bh)/2-30],[W-bw-m-10,top0+16],[m+110,top0+16]];
   const avoid=[hr].concat(st&&st.you?[tutRect('#gtAct .ga-btns'),tutRect('#gtHand'),tutRect('#gtSort')]:[]).filter(Boolean); const ov=(x,y)=>avoid.reduce((a,r,i)=>{ const ix=Math.max(0,Math.min(x+bw,r.r+20)-Math.max(x,r.l-20)), iy=Math.max(0,Math.min(y+bh,r.b+20)-Math.max(y,r.t-20)); return a+ix*iy*(i===0?3:1); },0);
-  let best=cand[0], bo=1e18; cand.forEach((c,i)=>{ const v=ov(c[0],c[1])+i*40; if(v<bo){ bo=v; best=c; } }); if(st&&st.show) best=[Math.max(110,(W-bw)/2+40),Math.max(top0,(Hh-bh)/2)]; if(st&&st.demo) best=[m+120,Math.max(top0,Hh-bh-28)];
+  let best=cand[0], bo=1e18; cand.forEach((c,i)=>{ const v=ov(c[0],c[1])+i*40; if(v<bo){ bo=v; best=c; } }); if(st&&st.show) best=[Math.max(110,(W-bw)/2+40),Math.max(top0,(Hh-bh)/2)]; if(st&&st.demo) best=[Math.max(m+120,(W-bw)/2+40),Math.max(top0,Hh-bh-28)];
   if(!tut.pos||Math.abs(tut.pos[0]-best[0])>2||Math.abs(tut.pos[1]-best[1])>2){ tut.pos=best; bub.style.left=best[0]+'px'; bub.style.top=best[1]+'px'; gd.style.left=(best[0]-92)+'px'; gd.style.top=(best[1]-6)+'px'; }
   if(!show){ gd.style.left=(m)+'px'; gd.style.top=(Hh-160)+'px'; tut.pos=null; }
   // beam of light from the spirit's eye to the spotlight
@@ -9502,8 +9515,11 @@ function tutPlace(){ const o=$g('.gr-tut'); if(!o||!tut) return; const st=tut.cu
   if(hr&&show){ const tx=Math.max(hr.l-6,Math.min(hr.r+6,ex)), ty=Math.max(hr.t-6,Math.min(hr.b+6,ey)); const inside=ex>hr.l&&ex<hr.r&&ey>hr.t&&ey<hr.b; const cx=(ex+tx)/2+(ty-ey)*.18, cy=(ey+ty)/2-(tx-ex)*.18;
     beam.querySelector('path').setAttribute('d',`M${ex},${ey} Q${cx},${cy} ${tx},${ty}`); const c=beam.querySelector('circle'); c.setAttribute('cx',tx); c.setAttribute('cy',ty); beam.classList.toggle('on',!inside); } else beam.classList.remove('on');
   // tapping hand on whatever must be pressed next
-  let tp=null; if(st&&st.you&&show){ if(q==='glow'){ const e=$$g('#gtHand .gc.glow').find(e=>!sel.has(+e.dataset.id)); if(e){ const r=e.getBoundingClientRect(); tp={x:r.left-R.left+r.width*.5,y:r.top-R.top+Math.min(r.height*.3,40)}; } } else if(hr) tp={x:hr.l+hr.w*.55,y:hr.t+hr.h*.6}; }
-  tap.classList.toggle('on',!!tp); if(tp){ tap.style.left=tp.x+'px'; tap.style.top=tp.y+'px'; } }
+  let tp=null, sw=0; if(st&&st.you&&show){ if(q==='glow'){ const gl=$$g('#gtHand .gc.glow'), e=gl.find(e=>!sel.has(+e.dataset.id));
+      // the first pick shows the slide gesture: press on the first glowing card and drag across the rest
+      if(st.swipe&&e&&gl.length>1&&!gl.some(x=>sel.has(+x.dataset.id))){ const pt=x=>{ const r=x.getBoundingClientRect(); return [r.left+r.width*.5,r.top+Math.min(r.height*.3,40)]; }, a=pt(gl[0]), b=pt(gl[gl.length-1]); sw=[b[0]-a[0],b[1]-a[1]]; if(Math.hypot(sw[0],sw[1])<8) sw=0; }
+      if(e){ const r=e.getBoundingClientRect(); tp={x:r.left-R.left+r.width*.5,y:r.top-R.top+Math.min(r.height*.3,40)}; } } else if(hr) tp={x:hr.l+hr.w*.55,y:hr.t+hr.h*.6}; }
+  tap.classList.toggle('on',!!tp); tap.classList.toggle('swipe',!!(tp&&sw)); if(sw){ tap.style.setProperty('--sx',sw[0]+'px'); tap.style.setProperty('--sy',sw[1]+'px'); tap.style.setProperty('--sl',Math.hypot(sw[0],sw[1])+'px'); tap.style.setProperty('--sa',(Math.atan2(sw[1],sw[0])*180/Math.PI+180)+'deg'); } if(tp){ tap.style.left=tp.x+'px'; tap.style.top=tp.y+'px'; } }
 function tutHide(){ const o=$g('.gr-tut'); if(!o) return; const b=o.querySelector('.tut-bub'); b.classList.remove('on'); clearInterval(tut&&tut.tw); if(tut) tut.card=null; tutPlace(); }
 function tutCard(st){ const o=tutUI(), bub=o.querySelector('.tut-bub'); tut.cur=st;
   const n=GD_TUT.steps.filter(x=>x.say).length, k=GD_TUT.steps.slice(0,tut.i+1).filter(x=>x.say).length, act=!!st.you, txt=zh()?st.b[1]:st.b[0];
@@ -9532,6 +9548,7 @@ async function tutNext(){ if(!tut) return; tut.demo=null; tut.i++; tut.waitYou=f
   if(st.demo){ tutCard(st); tutDemo(st.demo); return; }
   if(st.you){ tut.st=st; tut.waitYou=true; hintList=null; st.ids=Array.isArray(st.you)?tutPick(H.hands[0],st.you).map(c=>c.id):st.cards?tutPick(H.hands[0],st.cards).map(c=>c.id):null; tut.hinted=0; tut.badged=0; if(st.ids&&st.you!=='hint'&&st.you!=='badge') tut.hl=st.ids; tutCard(st); drawAct(); markTut(); if(st.you==='sort'){ sortMode=0; drawHand(); } return; }
   if(st.fx==='order'){ setTimeout(()=>orderArrows(),300); }
+  if(st.fx==='lead'){ tutHide(); await wait(300); if(!tut) return; const t0=H.turn; H.turn=H.lead; await leadFlash(true); busy=false; if(!tut) return; H.turn=t0; }
   if(st.last) tut.lastShown=1; tutCard(st); }
 function tutAllow(x){ const st=tut&&tut.st; if(!st){ return false; }
   const ok=x==='pass'?st.you==='pass':Array.isArray(x)&&(st.you==='hint'?tut.hinted:st.you==='badge'?tut.badged:true)&&st.ids&&x.length===st.ids.length&&x.every(c=>st.ids.includes(c.id));
@@ -9564,14 +9581,32 @@ function tutDemo(d){ if(!tut) return; const me=tut; me.demo=d; me.demoBusy=1;
   const run=async()=>{ if(tut!==me||me.demo!==d) return; if(d==='tribute') await demoTribute(); else if(d==='anti') await demoAnti(); else if(d==='amiss'||d==='awin') await demoAce(d); };
   me.demoP=(me.demoP||Promise.resolve()).then(run).catch(()=>{}).finally(()=>{ if(me.demo===d) me.demoBusy=0; }); }
 async function demoAce(d){ const me=tut, M0={lv:M.lv.slice(),dealer:M.dealer,aFails:M.aFails.slice()}, g=$g('.gl'), G0=g?{L:g._L,n:g._lvNext,h:g._lvH}:null, on=()=>tut===me&&me.demo===d;
-  try{ await wait(500); if(!on()) return; M.dealer=0; M.lv[0]=14; M.aFails[0]=0; drawLevel(); await wait(900);
-    if(d==='amiss'){ for(let i=0;i<3&&on();i++){ banner(T(`Try ${i+1} at the Ace: missed`,`第 ${i+1} 次打 A：没过`),'info'); await wait(700); if(!on()) break;
-        const res={before:M.lv.slice(),after:M.lv.slice()}; M.aFails[0]++; res.aFail=0; if(i===2){ res.aReset=0; res.after[0]=2; M.aFails[0]=0; } M.lv=res.after.slice(); await animLevel(res); await wait(i===2?1400:900); }
-    } else { banner(T('1st, and the ally is not last','头游，且盟友不是下游'),'info'); await wait(1400); if(!on()) return;
+  // a little match told through the finishing crowns and the level panel
+  const crowns=o=>{ for(let s=0;s<4;s++){ const cr=$g('.gs'+s+' .gs-crown'); if(!cr) continue; const rk=o?o.indexOf(s):-1; cr.dataset.r='demo'; cr.innerHTML=rk>=0?CROWN[rk]:''; cr.className='gs-crown'+(rk>=0?' on c'+rk:''); if(rk>=0) cr.animate([{transform:'scale(.2)',opacity:0},{transform:'scale(1.25)',opacity:1,offset:.6},{transform:'scale(1)'}],{duration:500,delay:rk*160,easing:'cubic-bezier(.3,1.4,.5,1)',fill:'backwards'}); } };
+  const say=async(en,zh,ms)=>{ if(!on()) return; banner(T(en,zh),'info'); await wait(ms||1500); };
+  const lvTo=async(after,dealer,o)=>{ if(!on()) return; const res={before:M.lv.slice(),after:after.slice()}; placeHi.last=M.dealer;
+    if(o.fail){ M.aFails[0]++; res.aFail=0; if(o.reset){ res.aReset=0; M.aFails[0]=0; } } M.dealer=dealer; M.lv=after.slice(); await animLevel(res); if(g){ g._lvNext=M.lv[M.dealer]; g._lvH=H; } drawLevel(); await wait(500); };
+  try{ await wait(500); if(!on()) return; M.dealer=0; M.lv=[14,2]; M.aFails[0]=0; placeHi.last=0; if(g){ g._lvNext=14; g._lvH=H; } drawLevel(); crowns(null); await wait(900);
+    if(d==='amiss'){
+      await say('Try 1 at the Ace','第 1 次打 A',1200); crowns([1,0,2,3]); await say('An opponent goes out 1st: missed','对手头游：没过',1600);
+      await lvTo([14,3],1,{fail:1}); await say('They won, so the next hand is played at their level: the sides switch','对手赢了这一局，下一局换边，打对手的级牌',2400);
+      crowns(null); await say('Your team wins a hand at their level…','我方在对手的级牌上赢回一局……',1400); crowns([0,2,1,3]); await wait(900); await lvTo([14,3],0,{}); await say('…and plays the Ace again','……又轮到我方打 A',1500);
+      crowns(null); await say('Try 2 at the Ace','第 2 次打 A',1200); crowns([0,1,3,2]); await say('1st, but the ally is last: missed','头游，但盟友是下游：没过',1700); await lvTo([14,3],0,{fail:1});
+      crowns(null); await say('Try 3 at the Ace','第 3 次打 A',1200); crowns([3,1,0,2]); await say('The opponents take 1st and 2nd: missed','对手头游二游：没过',1700);
+      await lvTo([2,6],1,{fail:1,reset:1}); await say('Three misses: back to 2, and the sides switch','三次没过：退回 2，换边打对手的级牌',2600);
+    } else {
+      crowns([0,2,1,3]); await say('1st, and the ally is not last','头游，且盟友不是下游',1600); if(!on()) return;
       const R=felt.getBoundingClientRect(), x=R.width/2, y=R.height*.42; snd('win'); flash('rgba(255,210,120,.35)',1600);
-      const dr=flyDragon($g('.gt-fx'),R.width,R.height,{dur:5200}); burst(x,y,120,{c:['#fff3c4','#ffd36a','#ff9a3a'],v:11,g:.1,k:'tr',r:2.4});
-      badge(T('Through the Dragon Gate!','跃过龙门！'),x,y,'gold',true,'seal','slam'); await wait(4200); if(dr&&dr.then) await dr; }
-  } finally { if(tut===me){ M.lv=M0.lv; M.dealer=M0.dealer; M.aFails=M0.aFails; if(g&&G0){ g._lvNext=G0.n; g._lvH=G0.h; g._L=G0.L; } placeHi.last=M.dealer; drawLevel(); } } }
+      // the golden dragon rises from below, faces the table in a blaze of light, then leaps up through the gate
+      const fx=$g('.gt-fx'), gd=document.createElement('div'); gd.className='fx-gdgate'; gd.style.left=x+'px'; gd.style.top=(R.height*.4)+'px'; gd.style.height=(R.height*.68)+'px';
+      gd.innerHTML=`<i class="gg-rays"></i><i class="gg-glow"></i><img src="${GIMG('gd-gold')}" alt="">`; fx.appendChild(gd);
+      const im=gd.querySelector('img');
+      im.animate([{transform:'translateY(55%) scale(.55)',opacity:0,filter:'brightness(2.4) blur(6px)'},{transform:'translateY(-4%) scale(1.04)',opacity:1,filter:'brightness(1.5) blur(0)',offset:.22},{transform:'translateY(0) scale(1)',filter:'brightness(1.08)',offset:.3},{transform:'translateY(-2%) scale(1.01)',filter:'brightness(1.12)',offset:.68},{transform:'translateY(-75%) scale(1.22)',opacity:0,filter:'brightness(2.6) blur(3px)'}],{duration:reduce?1:4600,easing:'cubic-bezier(.3,.7,.3,1)',fill:'forwards'});
+      gd.querySelectorAll('.gg-rays,.gg-glow').forEach(e=>e.animate([{opacity:0,transform:'translate(-50%,-50%) scale(.4)'},{opacity:1,transform:'translate(-50%,-50%) scale(1)',offset:.25},{opacity:.85,offset:.7},{opacity:0,transform:'translate(-50%,-50%) scale(1.4)'}],{duration:reduce?1:4600,fill:'forwards'}));
+      setTimeout(()=>{ if(!on()) return; shake(.8); burst(x,y,130,{c:['#fff3c4','#ffd36a','#ff9a3a'],v:11,g:.1,k:'tr',r:2.4}); badge(T('Through the Dragon Gate!','跃过龙门！'),x,R.height*.16,'gold',true,'seal','slam'); },reduce?0:1100);
+      setTimeout(()=>{ if(gd.isConnected) burst(x,R.height*.2,90,{c:['#fff3c4','#ffd36a'],v:9,g:-.02,k:'tw',r:2}); },reduce?0:3300);
+      await wait(4800); gd.remove(); }
+  } finally { if(tut===me){ M.lv=M0.lv; M.dealer=M0.dealer; M.aFails=M0.aFails; if(g&&G0){ g._lvNext=G0.n; g._lvH=G0.h; g._L=G0.L; } placeHi.last=M.dealer; drawLevel(); for(let s=0;s<4;s++){ const cr=$g('.gs'+s+' .gs-crown'); if(cr) cr.dataset.r='x'; drawSeat(s); } } } }
 return {_nn:s=>nnMove(s), _bot:s=>botMove(s), open:openRoom, close:closeRoom, isOpen:()=>open, _wind:s=>windBanner(s), _res:(g,w)=>showResult({winner:w?0:1,up:2,order:w?[0,2,1,3]:[1,3,0,2],before:[5,3],after:w?[7,3]:[5,5],gameOver:g},!!w,3), _drg:()=>{ const R=felt.getBoundingClientRect(); return flyDragon($g('.gt-fx'),R.width,R.height,{dur:6000}); }, _s:()=>({M,H,tut}), _redraw:()=>refreshAll(), _step:()=>{ busy=false; step(); }, _newHand:()=>newHand(), _trib:()=>doTribute(), _bgm:()=>({k:BGM.k,playing:!!(BGM.cur&&BGM.cur.playing),buf:!!(BGM.cur&&BGM.cur.buf),site:!!(TR.bgm&&TR.bgm.playing)}), _siren:(s,n)=>{ warned.add(s); drawSeat(s); snd("siren"); sirenAlert(s,n); bgm(3); }, _hints:()=>{ buildHints(); return hintList.map(m=>m.combo.type+":"+m.cards.map(c=>GD.isWild(c,H.L)?"W":c.r).join(",")); }, _nh:()=>newHand(), _anti:()=>antiFx([{id:-1,r:17,s:4},{id:-2,r:17,s:4}],[1,1]), _vox:()=>({loaded:Object.keys(voxBuf),loading:Object.keys(voxLoading)}), _fx:async(s,spec)=>{ const cards=spec.map(([r,su],i)=>({id:5000+i,r,s:r>=16?4:su})); H.played[s]=cards; H.trick={seat:s,combo:GD.judge(cards,H.L,null),cards}; drawPlayed(s); await comboFx(s,H.trick.combo); }, relang:()=>{ if(open){ loadVox(); render(); if(tut&&tut.i>=0){ const st=GD_TUT.steps[tut.i]; if(st&&(st.say)) tutCard(st); } } }};
 })();
 
