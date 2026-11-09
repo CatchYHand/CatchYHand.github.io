@@ -8528,7 +8528,7 @@ if(document.fonts&&document.fonts.ready) document.fonts.ready.then(()=>{ try{ gl
 function glSize(){ const g=$g('.gl'); if(!g||!felt) return; const R=felt.getBoundingClientRect(); if(!R.width) return; const rem=parseFloat(getComputedStyle(document.documentElement).fontSize)||16;
   const box=s=>{ const es=$$g(s); let l=1e9,t=1e9; es.forEach(e=>{ const r=e.getBoundingClientRect(); if(r.width){ l=Math.min(l,r.left); t=Math.min(t,r.top); } }); return {l,t}; };
   const gl=g.getBoundingClientRect(), x0=gl.left, y0=gl.top, top2=box('.gs2 .gs-id,.gs2 .gs-av,.gs2 .gs-dir,.gs2 .gs-fan,.gs2 .gs-cnt,.gs2 .gs-tx'), left3=box('.gs3 .gs-fan,.gs3 .gs-dir,.gs3 .gs-av,.gs3 .gs-id');
-  const wA=(top2.l<1e8?top2.l:R.right)-x0-rem*.8, hA=(left3.t<1e8?left3.t:R.bottom)-y0-rem*.6, w=Math.max(rem*15,Math.min(wA,hA*1448/676,rem*30));
+  const wA=(top2.l<1e8?top2.l:R.right)-x0-rem*1.1, hA=(left3.t<1e8?left3.t:R.bottom)-y0-rem*.6, w=Math.max(rem*15,Math.min(wA,hA*1448/676,rem*30));
   g.style.setProperty('--glw',Math.round(w)+'px'); }
 function placeHi(d){ const g=$g('.gl'); if(!g) return; const tm=g.querySelector('.gl-teams'), hi=g.querySelector('.gl-hi'); if(!tm||!hi) return;
   const put=(t,anim)=>{ const r0=tm.querySelector('.glt.t'+t); if(!r0) return; const r=r0.querySelector('.gl-row')||r0, px=Math.max(5,r.offsetHeight*.16), py=Math.max(3,r.offsetHeight*.1); hi.style.transition=anim?'':'none'; hi.style.top=(r.offsetTop-py)+'px'; hi.style.height=(r.offsetHeight+2*py)+'px'; hi.style.left=(r.offsetLeft-px)+'px'; hi.style.width=(r.offsetWidth+2*px)+'px'; }; // the box holds the two avatars and the level, never the Ace hearts
@@ -8572,7 +8572,7 @@ function drawSeat(s){ markPlays(); const el=$g('.gs'+s); if(!el) return; const n
   const c=el.querySelector('.gs-cnt'); c.querySelector('b').textContent=n; c.classList.toggle('warn',warned.has(s)&&n>0);
   if(s) layoutFan(s); }
 function layoutFans(){ [1,2,3].forEach(layoutFan); }
-function layoutFan(s){ const f=$g('.gs'+s+' .gs-fan'); if(!f) return;
+function layoutFan(s){ if(s===2||s===3) requestAnimationFrame(()=>{ try{ glSize(); }catch(e){} }); const f=$g('.gs'+s+' .gs-fan'); if(!f) return;
   if(TEST.peek&&!H.revealed){ const k=H.hands[s].map(c=>c.id).join(); f.classList.add('peek'); f.style.width=f.style.height=''; if(f.dataset.k!==k){ f.dataset.k=k; f.innerHTML=GD.sortHand(H.hands[s],H.L).map(c=>cardHTML(c,'pk')).join(''); } return; }
   if(f.classList.contains('peek')){ f.classList.remove('peek'); f.dataset.k=''; f.innerHTML=''; }
   const n=H.revealed?0:H.hands[s].length; if(f.children.length!==n) f.innerHTML=backHTML(n);
