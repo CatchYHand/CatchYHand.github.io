@@ -8799,7 +8799,8 @@ async function dealAnim0(){
       const isCut=kk===cutK&&cutEl;
       if(isCut){ // the turned card leaves the deck face up and waits in front of its new owner's hand
         const r0=cutEl.getBoundingClientRect(), x0=r0.left-R.left+r0.width/2, y0=r0.top-R.top+r0.height/2; fx.appendChild(cutEl); cutEl.style.zIndex=9; cutEl.style.left=x0+'px'; cutEl.style.top=y0+'px';
-        const p=spot(s); cutAt=p; snd('trib');
+        const p=(()=>{ const cw0=r0.width*1.15, ch0=r0.height*1.15, G=Math.max(10,r0.height*.14), fe=s===0?$g('#gtHand'):$g('.gs'+s+' .gs-fan'); if(!fe) return spot(s); const f0=fe.getBoundingClientRect(); let l=f0.left,t=f0.top,r=f0.right,bt=f0.bottom; if(s!==0) fe.querySelectorAll('*').forEach(e=>{ const q=e.getBoundingClientRect(); if(!q.width) return; l=Math.min(l,q.left); t=Math.min(t,q.top); r=Math.max(r,q.right); bt=Math.max(bt,q.bottom); }); const f={left:l,top:t,width:r-l,height:bt-t}, L=f.left-R.left, T_=f.top-R.top, Rr=L+f.width, B=T_+f.height;
+          if(s===0) return {x:cx,y:T_-G-ch0/2}; if(s===2) return {x:cx,y:B+G+ch0/2}; if(s===1) return {x:L-G-cw0/2,y:T_+f.height/2}; return {x:Rr+G+cw0/2,y:T_+f.height/2}; })(); cutAt=p; snd('trib');
         cutEl.animate([{transform:'translate(-50%,-50%)'},{transform:`translate(calc(-50% + ${p.x-x0}px),calc(-50% + ${p.y-y0}px)) scale(1.15)`}],{duration:FLY*2.2,easing:'cubic-bezier(.25,.7,.3,1)',fill:'forwards'});
         setTimeout(()=>{ if(H!==h0) return; dealt++; sizes[s]++; hidden[s]=real[s].slice(0,sizes[s]).filter(notCut); if(s===0){ drawHand(); const n=$g('.gs0 .gs-cnt b'); if(n) n.textContent=sizes[0]; } else drawSeat(s);
           cutEl.classList.add('lit'); const tg=cutEl.querySelector('.cut-tag'); if(tg){ tg.className='cut-tag seal'; tg.innerHTML=`<b>${T('Leads','先出')}</b>`; } snd('pick'); },FLY*2.2);
