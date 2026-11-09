@@ -8041,7 +8041,21 @@ function cheapBomb(s,cards){ try{ if(!cards||!cards.length) return cards; const 
     const whole=m=>{ if(m.combo.type==='bomb'){ const nat=m.cards.filter(c=>!GD.isWild(c,L)); return nat.length===cnt[m.combo.r]||(m.cards.length===nat.length&&nat.length===cnt[nat[0].r]); }
       if(m.combo.type==='sflush') return m.cards.every(c=>GD.isWild(c,L)||cnt[c.r]<4); return false; };
     const bs=GD.moves(hand,L,tg).filter(m=>GD.isBomb(m.combo)&&m.combo.type!=='kingbomb'&&whole(m)&&GD.beats(m.combo,tg)).sort((a,b)=>GD.tier(a.combo)-GD.tier(b.combo)||a.cards.filter(c=>GD.isWild(c,L)).length-b.cards.filter(c=>GD.isWild(c,L)).length||a.combo.key-b.combo.key);
+    // when the trick really matters (an opponent is about to go out, or this bomb nearly empties our hand) pick the smallest bomb nobody else can still top;
+    // otherwise spend the cheapest one that does the job and keep the big ones back
+    const oppMin=Math.min(...[1,3].map(d=>(s+d)%4).filter(o=>GDM.active(H,o)).map(o=>H.hands[o].length),99), urgent=oppMin<=4||hand.length-cards.length<=5;
+    if(urgent&&bs.length){ const th=bombThreat(s); const safe=th?bs.filter(m=>GD.beats(m.combo,th)):bs; if(safe.length) return safe[0].cards; }
     const best=bs[0]; return best&&GD.tier(best.combo)<=GD.tier(j)&&(GD.tier(best.combo)<GD.tier(j)||best.combo.key<j.key)?best.cards:cards; }catch(e){ return cards; } }
+// the biggest bomb the cards this seat cannot see could still make (both decks, minus its own hand and everything played): a rough upper bound
+function bombThreat(s){ const L=H.L, un={}, unS={}; let jk={16:2,17:2}, wild=2;
+  for(let r=2;r<=14;r++){ un[r]=8; for(let k=0;k<4;k++) unS[r+':'+k]=2; }
+  const seen=[...H.hands[s]]; (H.log||[]).forEach(e=>{ if(e.cards) seen.push(...e.cards); });
+  seen.forEach(c=>{ if(c.r>=16){ jk[c.r]--; return; } if(GD.isWild(c,L)) wild--; un[c.r]--; unS[c.r+':'+c.s]--; });
+  const nat=r=>r===L?un[r]-wild:un[r]; let best=null; const take=cs=>{ const j=GD.judge(cs,L,null); if(j&&GD.isBomb(j)&&(!best||GD.beats(j,best))) best=j; };
+  if(jk[16]===2&&jk[17]===2) take([{r:16,s:4},{r:16,s:4},{r:17,s:4},{r:17,s:4}]);
+  for(let r=2;r<=14;r++){ const n=Math.min(10,nat(r)+wild); if(n>=4) take(Array.from({length:n},(_,i)=>({r,s:i%4===1&&r===L?0:i%4}))); }
+  for(let k=0;k<4;k++) for(let lo=1;lo<=10;lo++){ let miss=0; const cs=[]; for(let i=0;i<5;i++){ const r=lo+i===1?14:lo+i; if((unS[r+':'+k]-(r===L&&k===1?wild:0))<=0) miss++; cs.push({r,s:k}); } if(miss<=wild&&!(k===1&&cs.some(c=>c.r===L))) take(cs); }
+  return best; }
 const botMove=s=>{ const f=finishMove(s); if(f) return f; const r=nnMove(s); return coop(s,cheapBomb(s,r!=null?r:GDM.botMove(H,s))); };
 const loadAI=()=>{ try{ GDAI.load(AI_URL()).catch(()=>{}); }catch(e){} };
 const voxBuf={}, voxLoading={}; let voxFree=0;
@@ -9668,7 +9682,7 @@ async function demoAce(d){ const me=tut, M0={lv:M.lv.slice(),dealer:M.dealer,aFa
       setTimeout(()=>{ if(gd.isConnected) burst(x,R.height*.2,90,{c:['#fff3c4','#ffd36a'],v:9,g:-.02,k:'tw',r:2}); },reduce?0:3300);
       await wait(4800); gd.remove(); }
   } finally { tutCap(null); if(tut===me){ M.lv=M0.lv; M.dealer=M0.dealer; M.aFails=M0.aFails; if(g&&G0){ g._lvNext=G0.n; g._lvH=G0.h; g._L=G0.L; } placeHi.last=M.dealer; drawLevel(); placeHi(M.dealer); for(let s=0;s<4;s++){ const cr=$g('.gs'+s+' .gs-crown'); if(cr) cr.dataset.r='x'; drawSeat(s); } } } }
-return {_nn:s=>nnMove(s), _bot:s=>botMove(s), open:openRoom, close:closeRoom, isOpen:()=>open, _wind:s=>windBanner(s), _res:(g,w)=>showResult({winner:w?0:1,up:2,order:w?[0,2,1,3]:[1,3,0,2],before:[5,3],after:w?[7,3]:[5,5],gameOver:g},!!w,3), _drg:()=>{ const R=felt.getBoundingClientRect(); return flyDragon($g('.gt-fx'),R.width,R.height,{dur:6000}); }, _s:()=>({M,H,tut}), _redraw:()=>refreshAll(), _step:()=>{ busy=false; step(); }, _newHand:()=>newHand(), _trib:()=>doTribute(), _bgm:()=>({k:BGM.k,playing:!!(BGM.cur&&BGM.cur.playing),buf:!!(BGM.cur&&BGM.cur.buf),site:!!(TR.bgm&&TR.bgm.playing)}), _siren:(s,n)=>{ warned.add(s); drawSeat(s); snd("siren"); sirenAlert(s,n); bgm(3); }, _hints:()=>{ buildHints(); return hintList.map(m=>m.combo.type+":"+m.cards.map(c=>GD.isWild(c,H.L)?"W":c.r).join(",")); }, _nh:()=>newHand(), _anti:()=>antiFx([{id:-1,r:17,s:4},{id:-2,r:17,s:4}],[1,1]), _vox:()=>({loaded:Object.keys(voxBuf),loading:Object.keys(voxLoading)}), _fx:async(s,spec)=>{ const cards=spec.map(([r,su],i)=>({id:5000+i,r,s:r>=16?4:su})); H.played[s]=cards; H.trick={seat:s,combo:GD.judge(cards,H.L,null),cards}; drawPlayed(s); await comboFx(s,H.trick.combo); }, relang:()=>{ if(open){ loadVox(); render(); if(tut&&tut.i>=0){ const st=GD_TUT.steps[tut.i]; if(st&&(st.say)) tutCard(st); } } }};
+return {_nn:s=>nnMove(s), _bot:s=>botMove(s), _threat:s=>bombThreat(s), _cheap:(s,c)=>cheapBomb(s,c), open:openRoom, close:closeRoom, isOpen:()=>open, _wind:s=>windBanner(s), _res:(g,w)=>showResult({winner:w?0:1,up:2,order:w?[0,2,1,3]:[1,3,0,2],before:[5,3],after:w?[7,3]:[5,5],gameOver:g},!!w,3), _drg:()=>{ const R=felt.getBoundingClientRect(); return flyDragon($g('.gt-fx'),R.width,R.height,{dur:6000}); }, _s:()=>({M,H,tut}), _redraw:()=>refreshAll(), _step:()=>{ busy=false; step(); }, _newHand:()=>newHand(), _trib:()=>doTribute(), _bgm:()=>({k:BGM.k,playing:!!(BGM.cur&&BGM.cur.playing),buf:!!(BGM.cur&&BGM.cur.buf),site:!!(TR.bgm&&TR.bgm.playing)}), _siren:(s,n)=>{ warned.add(s); drawSeat(s); snd("siren"); sirenAlert(s,n); bgm(3); }, _hints:()=>{ buildHints(); return hintList.map(m=>m.combo.type+":"+m.cards.map(c=>GD.isWild(c,H.L)?"W":c.r).join(",")); }, _nh:()=>newHand(), _anti:()=>antiFx([{id:-1,r:17,s:4},{id:-2,r:17,s:4}],[1,1]), _vox:()=>({loaded:Object.keys(voxBuf),loading:Object.keys(voxLoading)}), _fx:async(s,spec)=>{ const cards=spec.map(([r,su],i)=>({id:5000+i,r,s:r>=16?4:su})); H.played[s]=cards; H.trick={seat:s,combo:GD.judge(cards,H.L,null),cards}; drawPlayed(s); await comboFx(s,H.trick.combo); }, relang:()=>{ if(open){ loadVox(); render(); if(tut&&tut.i>=0){ const st=GD_TUT.steps[tut.i]; if(st&&(st.say)) tutCard(st); } } }};
 })();
 
 const COL_SLOTS=12; // empty slots stay on the page for future columns
