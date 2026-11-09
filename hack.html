@@ -8444,7 +8444,7 @@ async function comboFx(s,c){ const z=$g('.gp'+s+' .gp-cards'); if(!z) return; co
     burst(x,y,26,{c:['#fff6c8','#ff8a6a'],v:5,g:.05,k:'tr',r:2}); badge(lab,x,by,'crimson',0,'scroll','flip'); await W(950); }
   else if(c.type==='bomb'){ await bombFx(c.n,x,y,by,seatXY(),R); }
   else if(c.type==='sflush'){ snd('thunder'); flash('rgba(6,10,26,.6)',1800); setTimeout(()=>diskHit(1.6,'#7ec8ff'),380);
-    if(!reduce) flyDragon($g('.gt-fx'),R.width,R.height,{y:y-cw*.6,dur:2300});
+    if(!reduce) flyDragon($g('.gt-fx'),R.width,R.height,{y:y-cw*.6,dur:2300,pearl:false});
     [0,1,2,3].forEach(i=>lightning(x+(i-1.5)*cw*.7,y,120+i*170,520));
     setTimeout(()=>{ flash('rgba(200,225,255,.7)',500); shake(1.4); burst(x,y,120,{c:['#ffffff','#cfe6ff','#8fc4ff'],v:11,g:.08,k:'tr',r:2.2}); },380);
     badge(lab+'！',x,by,'ice',true,'bolt','flicker'); await W(1750); }
