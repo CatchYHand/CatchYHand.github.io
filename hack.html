@@ -3022,7 +3022,8 @@ html:not([lang=zh]) .gt-choose .gc-lb b{font-family:'Newsreader','Noto Serif SC'
 .gl-a .hz:not(.on) .l,.gl-a .hz:not(.on) .r,.gl-a .hz:not(.on) .hl{display:none}
 .gl-a .hz.on path.o{opacity:0}
 .gl-a .hz.on.break path.o{opacity:1}
-.tut-ring{position:absolute;border-radius:16px;pointer-events:none;box-shadow:0 0 0 2px rgba(126,226,255,.9),0 0 24px 5px rgba(126,226,255,.5),inset 0 0 18px rgba(126,226,255,.3);animation:holeBreath 2.2s ease-in-out infinite;transition:left .4s,top .4s,width .4s,height .4s}
+.tut-ring{position:absolute;border-radius:16px;pointer-events:none;box-shadow:0 0 0 2px rgba(126,226,255,.9),0 0 24px 5px rgba(126,226,255,.5),inset 0 0 18px rgba(126,226,255,.3);animation:ringBreath 2.2s ease-in-out infinite;transition:left .4s,top .4s,width .4s,height .4s}
+@keyframes ringBreath{50%{box-shadow:0 0 0 2px rgba(160,236,255,1),0 0 34px 9px rgba(126,226,255,.6),inset 0 0 22px rgba(126,226,255,.4)}}
 /* open-card plaque: a lacquered slip with a gold hairline, unfolding sideways */
 .gdk-cut .cut-tag:not(.seal){gap:.2rem;padding:.42rem 1.25rem .46rem;border-radius:.22rem;border:1px solid #c99a45;
   background:radial-gradient(130% 160% at 50% 0%,#4b1b12 0%,#2b0f0a 55%,#160705 100%);
@@ -3036,6 +3037,37 @@ html:not([lang=zh]) .gt-choose .gc-lb b{font-family:'Newsreader','Noto Serif SC'
 .gdk-cut .cut-tag.zh:not(.seal) small{font:500 .74rem/1.2 'Noto Sans SC',sans-serif;letter-spacing:.12em}
 @keyframes cutTag2{0%{opacity:0;transform:translate(-50%,.45rem) scaleX(.15) scaleY(.6)}55%{opacity:1;transform:translate(-50%,.45rem) scaleX(1.05) scaleY(1)}100%{opacity:1;transform:translate(-50%,.45rem)}}
 @keyframes cutTxt{from{opacity:0;transform:translateY(.25rem)}}
+/* Ace demos: one short line at a time, big and clear on the table; the speech bubble keeps a larger, calmer text */
+.tut-cap{position:absolute;transform:translate(-50%,-50%);z-index:8;pointer-events:none;white-space:nowrap;padding:.7rem 1.6rem .75rem;border-radius:.6rem;
+  font:700 1.55rem/1.2 'Noto Serif SC','Cormorant Garamond',serif;letter-spacing:.06em;color:#fff1c8;text-shadow:0 2px 0 #000,0 0 14px rgba(255,200,100,.45);
+  background:linear-gradient(180deg,rgba(40,20,10,.94),rgba(18,9,5,.94));border:1px solid #d4a64a;box-shadow:inset 0 0 0 3px rgba(18,9,5,.9),inset 0 0 0 4px rgba(233,196,120,.4),0 12px 28px rgba(0,0,0,.6);
+  animation:capIn .45s cubic-bezier(.2,1.3,.4,1) both}
+.tut-cap.out{animation:capOut .3s ease forwards}
+@keyframes capIn{from{opacity:0;transform:translate(-50%,-30%) scale(.9)}}
+@keyframes capOut{to{opacity:0;transform:translate(-50%,-70%)}}
+.tut-bub.demo{width:min(27rem,46vw)}
+.tut-bub.demo .tb-p{font-size:1.06rem!important;line-height:1.65!important;color:#fbf0d6!important}
+/* while a hand's result is on screen the Sort and counter switches stay away until the next deal brings them back */
+.gt-felt:has(> .gt-res) #gtSort,.gt-felt:has(> .gt-res) .gt-ccb{opacity:0!important;pointer-events:none!important;transition:none!important}
+/* bomb badges keep a soft idle life so you never forget a bomb is waiting in your hand */
+.gc-bd::before{content:"";position:absolute;inset:-3px;border-radius:50%;pointer-events:none;box-shadow:0 0 7px 2px var(--gl,rgba(255,150,60,.6));opacity:.25;animation:bdHalo 2.8s ease-in-out infinite}
+@keyframes bdHalo{50%{opacity:.85}}
+/* bomb: a glowing ember on the fuse with sparks spitting off it */
+.gc-bd .bd-ic svg .em{fill:#ffb347!important;stroke:none!important;filter:drop-shadow(0 0 1.5px #ff7a1a) drop-shadow(0 0 3px #ffd36a);transform-origin:20.1px 5.4px;animation:bdEmber .9s ease-in-out infinite}
+.gc-bd .bd-ic svg .sp{transform-origin:20.1px 5.4px;animation:bdSpark 1.35s steps(1,end) infinite}
+@keyframes bdEmber{0%,100%{transform:scale(.8);fill:#ff9a2a}35%{transform:scale(1.25);fill:#fff1a8}65%{transform:scale(.95);fill:#ffc04a}}
+@keyframes bdSpark{0%{opacity:1;transform:scale(1) rotate(0)}25%{opacity:.25;transform:scale(.7) rotate(18deg)}50%{opacity:1;transform:scale(1.15) rotate(-10deg)}75%{opacity:.5;transform:scale(.85) rotate(8deg)}}
+/* straight flush: the bolt flickers now and then, like a flash of lightning */
+.gc-bd.t-sf .bd-ic svg .bolt{animation:bdBolt 3.6s linear infinite}
+.gc-bd.t-sf::before{animation:bdHalo 2.8s ease-in-out infinite,bdStorm 3.6s linear infinite}
+@keyframes bdBolt{0%,80%,100%{fill:#fff;filter:none}82%{fill:#fffbe0;filter:drop-shadow(0 0 3px #bfe6ff) drop-shadow(0 0 6px #6ab8ff)}84%{fill:#fff;filter:none}87%{fill:#fffbe0;filter:drop-shadow(0 0 4px #e0f4ff) drop-shadow(0 0 9px #6ab8ff)}91%{filter:none}}
+@keyframes bdStorm{0%,80%,84%,91%,100%{box-shadow:0 0 7px 2px var(--gl)}82%,87%{box-shadow:0 0 12px 5px rgba(190,230,255,.95)}}
+/* joker bomb: the crown catches the light and a jewel twinkles */
+.gc-bd.t-kb .bd-ic svg{animation:bdCrown 3.2s ease-in-out infinite}
+.gc-bd .bd-ic svg .tw{fill:#fff!important;stroke:none!important;transform-origin:17.6px 13.2px;transform:scale(0);animation:bdTw 3.2s ease-in-out infinite;filter:drop-shadow(0 0 1.5px #fff6c8)}
+@keyframes bdCrown{0%,100%{filter:brightness(1)}45%{filter:brightness(1.35) drop-shadow(0 0 2px rgba(255,220,120,.9))}}
+@keyframes bdTw{0%,30%,70%,100%{transform:scale(0) rotate(0)}48%{transform:scale(1.3) rotate(45deg)}55%{transform:scale(1) rotate(60deg)}}
+@media (prefers-reduced-motion:reduce){.gc-bd::before,.gc-bd .bd-ic svg *,.gc-bd .bd-ic svg{animation:none!important}}
 /* ===== Pages & Frames: a reading room, green-leather rail and paper pages ===== */
 #reader.shelf{--sh-bg:#F3EEE3;--sh-ink:#23201A;--sh-ink2:#6B6252;--sh-acc:#8B2B22;--sh-green:#1F3329;--sh-line:#DCD2BF;--cx:#8B2B22}
 #reader.shelf .rd-main,#reader.shelf .rd-leaf{background:var(--sh-bg) linear-gradient(90deg,rgba(80,60,30,.05) 1px,transparent 1px) 0 0/22px 100%}
@@ -7788,7 +7820,7 @@ const steps=[
  {say:['Runs of cards','连着出的牌'],b:['Three more types are runs. Exactly five ranks in a row make a straight; three pairs in a row make a plank, like 334455; two triples in a row make a steel plate, like 888999.','另外三种是连牌：正好五张连续的叫顺子；三个相连的对子叫木板，比如 334455；两个相连的三同张叫钢板，比如 888999。'],show:[[['Straight','顺子'],[[3,0],[4,1],[5,2],[6,0],[7,3]]],[['Plank','木板'],[[3,0],[3,1],[4,2],[4,3],[5,0],[5,1]]],[['Steel plate','钢板'],[[8,0],[8,1],[8,2],[9,0],[9,3],[9,1]]]]},
  {you:'sort',say:['Sort out your bombs','理牌'],b:['Flip the switch at the bottom right from Default to Sorted. Bombs move to the far left. Watch the wild card: three 9s plus the heart 2 become a four-card bomb.','把右下角的开关从“默认”拨到“理牌”，炸弹会排到最左边。注意逢人配：三张 9 加上红心 2，凑成了一个四张炸弹。']},
  {say:['A bomb','炸弹'],b:['Four or more cards of one rank make a bomb, and the wild card can fill one in. A bomb beats any ordinary combination. A sorted bomb wears a round badge on its front card, showing how many cards it has; tap the badge to pick up the whole bomb.','四张或以上同点数的牌就是炸弹，逢人配可以帮你补上。炸弹能压住任何普通牌型。理好的炸弹，最前面那张牌左下角有一个圆形徽标，上面写着这是几张的炸弹；点一下徽标就能整组选中。'],spot:'#gtHand'},
- {say:['Card counter','记牌器'],b:['The switch above it opens the card counter. It slides down at the top right and shows, rank by rank, how many cards are still out there: not in your hand and not yet played. The stars are the jokers, and the gold column is this hand’s level card.','它上面那个开关是记牌器。打开后会从右上角滑下来，按点数列出场上还剩几张：不在你手里、也还没打出来的牌。两颗星是大小王，金色那一列是本局的级牌。'],spot:'#gtCCb',rings:['#gtCCb','.gt-ctrw.on .gt-ctr'],cc:1},
+ {say:['Card counter','记牌器'],b:['The switch above it opens the card counter. It slides down at the top right and shows, rank by rank, how many cards are still out there: not in your hand and not yet played. The stars are the jokers, and the gold column is this hand’s level card. It is there to make the game easier; if you want to train your own card memory, keep it switched off.','它上面那个开关是记牌器。打开后会从右上角滑下来，按点数列出场上还剩几张：不在你手里、也还没打出来的牌。两颗星是大小王，金色那一列是本局的级牌。记牌器是为了让你玩得更轻松；想锻炼自己的记牌和打牌技术，建议把它关掉。'],spot:'#gtCCb',rings:['#gtCCb','.gt-ctrw.on .gt-ctr'],cc:1},
  {say:['Bombs against bombs','炸弹之间比大小'],b:['From strongest to weakest: the four jokers, then bombs of six or more cards (more cards win), then a straight flush, then five-card bombs, then four-card bombs. Bombs of the same size compare by rank.','从大到小：四大天王，然后是六张及以上的炸弹（张数多的大），再是同花顺，再是五张炸弹，最后是四张炸弹。张数相同的炸弹比点数。'],show:[[['Joker Bomb','四大天王'],[[16,4],[16,4],[17,4],[17,4]]],[['6+ cards','六张以上'],[[11,0],[11,1],[11,2],[11,3],[11,0],[11,3]]],[['Straight flush','同花顺'],[[9,2],[10,2],[11,2],[12,2],[13,2]]],[['5 cards','五张'],[[8,0],[8,1],[8,2],[8,3],[8,1]]],[['4 cards','四张'],[[6,0],[6,1],[6,2],[6,3]]]]},
  {you:[[3,0],[3,3]],swipe:1,say:['Lead a pair','领出一对'],b:['You lead first, so any combination is allowed. Tap your two 3s, then press Play. Tip: to pick several cards quickly, hold down the left mouse button on one card and slide across the others.','你先出，任何牌型都可以。点你的两张 3，再按“出牌”。小技巧：想快速选好几张，可以在一张牌上按住左键，再滑过其他牌。']},
  {say:['Warning light','报牌'],b:['You now hold 10 cards. With 10 or fewer, a siren lights up beside your count so everyone knows you are getting close.','你现在只剩 10 张。手牌 10 张或以下时，牌数旁边会亮起警灯，大家都知道你快出完了。'],spot:'.gs0 .gs-cnt'},
@@ -7830,8 +7862,10 @@ const steps=[
  B(2,[[13,2]]),
  {end:1},
  {demo:'anti',say:['Refusing tribute','抗贡'],b:['One more rule: if the players who owe tribute hold both Big Jokers between them, they show them and refuse to pay, and 1st leads instead. Watch: your opponents each hold one Big Joker. And when you pay tribute yourself and your highest card comes in several suits, you choose which one to give.','还有一条：如果该进贡的一方手里一共有两张大王，亮出来就可以抗贡，不用进贡，由头游先出。看：对手两人各有一张大王。轮到你进贡时，如果最大的牌有好几种花色，由你自己挑一张。']},
- {demo:'amiss',say:['Three tries at the Ace','打 A 三次机会'],b:['A team that reaches the Ace gets three tries to clear it. Each failed try breaks one of the three hearts beside the level card. If the opponents win that hand, the sides switch: the next hand is played at their level, and your team must win a hand back before it plays the Ace again. When the last heart breaks, the team drops back to 2. Watch the crowns and the top left.','升到 A 的一方有三次打 A 的机会。每没过一次，级牌旁边的三颗心就碎一颗。如果这一局是对手赢了，就要换边：下一局打对手的级牌，我方得再赢回一局，才能重新打 A。三颗心都碎了，就退回 2。看各家的名次和左上角。']},
- {demo:'awin',say:['Clearing the Ace','过 A'],b:['To clear the Ace and win the whole match, the team playing its Ace must come 1st, with the ally anywhere but last. Then the team leaps through the Dragon Gate.','打 A 的一方要头游，并且盟友不是下游，才算过 A，跃过龙门、赢下整场。']},
+ {demo:'ahearts',say:['Three Tries at the Ace','打 A 的三次机会'],b:['When your team reaches the Ace, three hearts light up beside it: three tries to clear it.','升到 A 后，级牌旁亮起三颗心，代表三次过 A 的机会。']},
+ {demo:'amiss',say:['A Miss Costs a Heart','没过，碎一颗心'],b:['Not 1st, or your ally comes last: the try is missed and a heart breaks. Lose all three and you drop back to 2.','没拿到头游，或盟友是下游，就算没过，碎一颗心。三颗都碎了，退回 2。']},
+ {demo:'aswitch',say:['Switching Sides','换边打级牌'],b:['Every hand is played at the winning team’s level. If the opponents win, the next hand switches to their level.','每一局都打赢的那一队的级牌。对手赢了，下一局就换边，打对手的级。']},
+ {demo:'awin',say:['Clearing the Ace','过 A'],b:['Come 1st at your Ace with your ally not last, and your team leaps through the Dragon Gate and wins the match.','打 A 时拿到头游，且盟友不是下游，就跃过龙门，赢下整场。']},
  {say:['You are ready','准备好了'],b:['That is the whole flow. Hint always suggests a legal play, and Rules lists every combination. Good luck at the Gate.','流程就是这些。卡住时按“提示”就能找到能出的牌，所有牌型都在“规则”里。祝你跃过龙门！'],last:1}
 ];
 return {h1,h2,steps,L1:2,L2:5,trib:[{from:3,to:0,card:[14,3]},{from:1,to:2,card:[13,2]}]};
@@ -8362,9 +8396,9 @@ function layoutHand(){ const h=$g('#gtHand'); if(!h||!h._cols) return; const col
   h.querySelectorAll('.gc-full').forEach(e=>{ if(!keep.has(e.dataset.k)) e.remove(); });
   if(tut&&tut.hl) markTut(); }
 // sorted groups wear a round badge on the front card: a white outlined icon on the colour of the group's play effect
-const BD_ICO={bomb:'<svg viewBox="0 0 24 24"><circle cx="10" cy="14.4" r="7.6"/><path d="M11.4 5.6l3.3-1.9 2 3.4-3.3 1.9z"/><path class="hl" d="M5.6 13.6a4.6 4.6 0 0 1 2.8-3.7"/><path class="fu" d="M16 4.6c.9-1.3 2.3-1.6 3-.7.6.8-.2 1.9.8 2.1"/><path class="sp" d="M20.8 2.6l1.4-1.6M21.6 4.6l2-.3M19.6 1.9l-.1-1.7"/></svg>',
-  sf:'<svg viewBox="0 0 24 24"><path d="M13.8 1.8L4.6 13.6h6.2L9.2 22.2l10.2-12.6h-6.4l2.2-7.8z"/></svg>',
-  kb:'<svg viewBox="0 0 24 24"><path d="M2.6 8.6l4.9 3.7L12 5.2l4.5 7.1 4.9-3.7-1.8 9.7H4.4z"/><path d="M4.4 19.6h15.2v2.4H4.4z"/><circle cx="2.7" cy="7.4" r="1.6"/><circle cx="12" cy="3.6" r="1.6"/><circle cx="21.3" cy="7.4" r="1.6"/></svg>'};
+const BD_ICO={bomb:'<svg viewBox="0 0 24 24"><circle cx="10" cy="14.4" r="7.6"/><path d="M11.4 5.6l3.3-1.9 2 3.4-3.3 1.9z"/><path class="hl" d="M5.6 13.6a4.6 4.6 0 0 1 2.8-3.7"/><path class="fu" d="M16 4.6c.9-1.3 2.3-1.6 3-.7.6.8-.2 1.9.8 2.1"/><path class="sp" d="M20.8 2.6l1.4-1.6M21.6 4.6l2-.3M19.6 1.9l-.1-1.7"/><circle class="em" cx="20.1" cy="5.4" r="1.25"/></svg>',
+  sf:'<svg viewBox="0 0 24 24"><path class="bolt" d="M13.8 1.8L4.6 13.6h6.2L9.2 22.2l10.2-12.6h-6.4l2.2-7.8z"/></svg>',
+  kb:'<svg viewBox="0 0 24 24"><path d="M2.6 8.6l4.9 3.7L12 5.2l4.5 7.1 4.9-3.7-1.8 9.7H4.4z"/><path d="M4.4 19.6h15.2v2.4H4.4z"/><circle cx="2.7" cy="7.4" r="1.6"/><circle cx="12" cy="3.6" r="1.6"/><circle cx="21.3" cy="7.4" r="1.6"/><path class="tw" d="M17.6 11.2l.55 1.45 1.45.55-1.45.55-.55 1.45-.55-1.45-1.45-.55 1.45-.55z"/></svg>'};
 const bdTier=(kind,n)=>kind==='sf'?'sf':kind==='kb'?'kb':'b'+Math.max(4,Math.min(8,n));
 const bdHTML=(kind,n)=>`<i class="bd-ic">${BD_ICO[kind]||BD_ICO.bomb}</i>${kind==='bomb'||!kind?`<em>${n}</em>`:''}`;
 const bdLegend=()=>`<div class="bd-leg">${[4,5,6,7,8,9,10].map(n=>`<span class="bd-li"><i class="gc-bd t-${bdTier('bomb',n)} st">${bdHTML('bomb',n)}</i><small>${T(`${n} cards`,`${n} 张`)}</small></span>`).join('')}<span class="bd-li"><i class="gc-bd t-sf st">${bdHTML('sf',5)}</i><small>${T('Straight flush','同花顺')}</small></span><span class="bd-li"><i class="gc-bd t-kb st">${bdHTML('kb',4)}</i><small>${T('Joker Bomb','四大天王')}</small></span></div><p class="bd-cap">${T('Each badge takes the colour of its play effect; a bomb also shows how many cards it has, from 4 up to 10.','徽标的颜色和出牌特效一致；炸弹徽标上还标着张数，从 4 到 10。')}</p>`;
@@ -8477,7 +8511,7 @@ function phaseTip(title,text,kind){ const f=$g('.gt-felt'); if(!f) return; let e
   // embers drift up off the burning letters
   clearInterval(e._iv); const col=kind==='ret'?['#c8ffe6','#7ef0c0','#2fbf84']:['#fff2b0','#ffb13a','#ff6a1a']; pcv(); e._iv=setInterval(()=>{ if(!e.isConnected||reduce){ clearInterval(e._iv); return; } const R=felt.getBoundingClientRect(), r=e.querySelector('b').getBoundingClientRect(); burst(r.left-R.left+r.width*(.08+Math.random()*.84),r.top-R.top+r.height*(.25+Math.random()*.5),1,{c:col,v:1.1,a0:-Math.PI*.62,spread:Math.PI*.24,g:-.02,dec:.022,k:'dot',r:1.8}); },70); }
 function crownBanner(s,k){ const m=$g('.gt-ban'); if(!m) return; const b=document.createElement('div'); b.className='gb-msg crown c'+k; b.innerHTML=`<i>${CROWN[k]}</i><span>${pname(s)}</span><b>${RANKN()[k]}</b>`; m.appendChild(b); setTimeout(()=>b.remove(),1900); }
-function windBanner(s){ const m=$g('.gt-ban.hi'); if(!m) return; dragonGlow('#7fe0d0',{sweep:620,hold:1100,fade:1000}); ornLight(s,'#ffe28a',{delay:560,inn:220,hold:880,out:1000}); snd('wind'); const b=document.createElement('div'); b.className='gb-msg wind';
+function windBanner(s){ const m=$g('.gt-ban.hi'); if(!m) return; dragonGlow('#7fe0d0',{sweep:620,hold:1100,fade:1000}); ornLight(s,'#7fe0d0',{delay:560,inn:220,hold:880,out:1000}); snd('wind'); const b=document.createElement('div'); b.className='gb-msg wind';
   b.innerHTML=`<svg class="wd-ic" viewBox="0 0 64 40" aria-hidden="true"><path d="M3 13c9 0 15-1 22-1 6 0 10-3 10-7 0-3-2.5-5-5.2-5-2.7 0-4.6 2-4.6 4.2"/><path d="M3 22c13 0 24-.5 36-.5 8 0 12.5 3.6 12.5 8.3 0 3.8-3 6.7-6.6 6.7-3.3 0-5.6-2.4-5.6-5"/><path d="M10 31c7 0 11-.3 16-.3"/><path d="M40 12.5c5 0 10-1.6 13-5.4 1.6-2 2.4-4.5 2.2-6.6"/><path class="lf" d="M56.5 14.5c2.6-2.4 6-2.4 6.7-1.7.7.8.3 4.2-2.4 6.3-2.4 1.9-5.4 1.6-6.2.9-.7-.9-.5-3.4 1.9-5.5z"/><path class="lf" d="M47 29.5c1.9-1.4 4.4-1.2 4.9-.6.5.6.1 3-1.9 4.4-1.8 1.3-4 1.1-4.6.5-.5-.6-.2-2.8 1.6-4.3z"/></svg><span class="wd-t">${T('Borrow the wind','借风')}</span>`;
   m.appendChild(b); setTimeout(()=>b.remove(),3200); }
 function banner(text,kind){ const m=$g('.gt-ban'); if(!m) return; const b=document.createElement('div'); b.className='gb-msg '+(kind||''); b.textContent=text; m.appendChild(b); setTimeout(()=>b.remove(),1900); }
@@ -9547,7 +9581,7 @@ function tutCard(st){ const o=tutUI(), bub=o.querySelector('.tut-bub'); tut.cur=
   const n=GD_TUT.steps.filter(x=>x.say).length, k=GD_TUT.steps.slice(0,tut.i+1).filter(x=>x.say).length, act=!!st.you, txt=zh()?st.b[1]:st.b[0];
   const doTxt=st.you==='sort'?T('Switch to Sorted','拨到“理牌”'):st.you==='pass'?T('Press Pass','按“不出”'):st.you==='hint'?T('Press Hint, then Play','先按“提示”，再按“出牌”'):st.you==='ret'?T('Tap the glowing card, then press Give back','点发光的牌，再按“还贡”'):st.you==='badge'?T('Tap the round badge, then press Play','点圆形徽章，再按“出牌”'):T('Tap the glowing cards, then press Play','点选发光的牌，再按“出牌”');
   const show=st.show?`<div class="tb-show">${st.show.map(([lab,cs],i)=>`<div class="tb-row" style="--d:${.25+i*.12}s">${miniRow(cs)}<span>${zh()?lab[1]:lab[0]}</span></div>`).join('')}</div>`:'';
-  bub.className='tut-bub'+(act?' tbact':'')+(st.show?' wide':''); void bub.offsetWidth;
+  bub.className='tut-bub'+(act?' tbact':'')+(st.show?' wide':'')+(st.demo?' demo':''); void bub.offsetWidth;
   bub.innerHTML=`<div class="tb-top"><span class="tb-dots">${Array.from({length:n},(_,i)=>`<i class="${i<k-1?'done':i===k-1?'cur':''}"></i>`).join('')}</span><button class="tb-x" data-a="tx">${T('Leave','退出教程')}</button></div><h4>${zh()?st.say[1]:st.say[0]}</h4><p class="tb-p"></p>${show}
     ${act?`<div class="tb-do"><i></i>${doTxt}</div>`:`<div class="tb-go"><small>${k} / ${n}</small>${st.demo?`<button class="tb-rules" data-a="treplay">${T('Watch again','再看一遍')}</button>`:''}${st.show?`<button class="tb-rules" data-a="trules">${T('See every combination in Rules','打开规则看全部牌型')}</button>`:''}<button class="pri" data-a="tn">${st.last?T('Start a real game','开始正式对局'):T('Next','下一步')}<kbd>Enter</kbd></button></div>`}`;
   requestAnimationFrame(()=>bub.classList.add('on'));
@@ -9601,26 +9635,24 @@ async function demoAnti(){ await wait(400); if(!tut||tut.demo!=='anti') return; 
   await antiFx([{id:-1,r:17,s:4},{id:-2,r:17,s:4}],[1,3]); if(!tut||tut.demo!=='anti') return; banner(T('No tribute · 1st leads','不进贡 · 头游先出'),'info'); }
 function tutDemo(d){ if(!tut) return; const me=tut; me.demo=d; me.demoBusy=1;
   // demos run one after another, so a demo still finishing never fights the next one over the level panel
-  const run=async()=>{ if(tut!==me||me.demo!==d) return; if(d==='tribute') await demoTribute(); else if(d==='anti') await demoAnti(); else if(d==='amiss'||d==='awin') await demoAce(d); };
+  const run=async()=>{ if(tut!==me||me.demo!==d) return; if(d==='tribute') await demoTribute(); else if(d==='anti') await demoAnti(); else if(/^a(hearts|miss|switch|win)$/.test(d)) await demoAce(d); };
   me.demoP=(me.demoP||Promise.resolve()).then(run).catch(()=>{}).finally(()=>{ if(me.demo===d) me.demoBusy=0; }); }
+function tutCap(html){ const fx=$g('.gt-fx'); if(!fx) return; let c=fx.querySelector('.tut-cap'); if(!html){ if(c){ c.classList.add('out'); setTimeout(()=>c.remove(),300); } return; }
+  if(c) c.remove(); const R=felt.getBoundingClientRect(); c=document.createElement('div'); c.className='tut-cap'; c.style.left=(R.width/2)+'px'; c.style.top=(R.height*.3)+'px'; c.innerHTML=html; fx.appendChild(c); }
 async function demoAce(d){ const me=tut, M0={lv:M.lv.slice(),dealer:M.dealer,aFails:M.aFails.slice()}, g=$g('.gl'), G0=g?{L:g._L,n:g._lvNext,h:g._lvH}:null, on=()=>tut===me&&me.demo===d;
-  // a little match told through the finishing crowns and the level panel
   const crowns=o=>{ for(let s=0;s<4;s++){ const cr=$g('.gs'+s+' .gs-crown'); if(!cr) continue; const rk=o?o.indexOf(s):-1; cr.dataset.r='demo'; cr.innerHTML=rk>=0?CROWN[rk]:''; cr.className='gs-crown'+(rk>=0?' on c'+rk:''); if(rk>=0) cr.animate([{transform:'scale(.2)',opacity:0},{transform:'scale(1.25)',opacity:1,offset:.6},{transform:'scale(1)'}],{duration:500,delay:rk*160,easing:'cubic-bezier(.3,1.4,.5,1)',fill:'backwards'}); } };
-  const say=async(en,zh,ms)=>{ if(!on()) return; banner(T(en,zh),'info'); await wait(ms||1500); };
-  const lvTo=async(after,dealer,o)=>{ if(!on()) return; const res={before:M.lv.slice(),after:after.slice()}; placeHi.last=M.dealer;
-    if(o.fail){ M.aFails[0]++; res.aFail=0; if(o.reset){ res.aReset=0; M.aFails[0]=0; } } M.dealer=dealer; M.lv=after.slice(); await animLevel(res); if(g){ g._lvNext=M.lv[M.dealer]; g._lvH=H; } drawLevel(); await wait(500); };
-  try{ await wait(500); if(!on()) return; M.dealer=0; M.lv=[14,2]; M.aFails[0]=0; placeHi.last=0; if(g){ g._lvNext=14; g._lvH=H; } drawLevel(); crowns(null); await wait(900);
-    if(d==='amiss'){
-      await say('Try 1 at the Ace','第 1 次打 A',1200); crowns([1,0,2,3]); await say('An opponent goes out 1st: missed','对手头游：没过',1600);
-      await lvTo([14,3],1,{fail:1}); await say('They won, so the next hand is played at their level: the sides switch','对手赢了这一局，下一局换边，打对手的级牌',2400);
-      crowns(null); await say('Your team wins a hand at their level…','我方在对手的级牌上赢回一局……',1400); crowns([0,2,1,3]); await wait(900); await lvTo([14,3],0,{}); await say('…and plays the Ace again','……又轮到我方打 A',1500);
-      crowns(null); await say('Try 2 at the Ace','第 2 次打 A',1200); crowns([0,1,3,2]); await say('1st, but the ally is last: missed','头游，但盟友是下游：没过',1700); await lvTo([14,3],0,{fail:1});
-      crowns(null); await say('Try 3 at the Ace','第 3 次打 A',1200); crowns([3,1,0,2]); await say('The opponents take 1st and 2nd: missed','对手头游二游：没过',1700);
-      await lvTo([2,6],1,{fail:1,reset:1}); await say('Three misses: back to 2, and the sides switch','三次没过：退回 2，换边打对手的级牌',2600);
-    } else {
-      crowns([0,2,1,3]); await say('1st, and the ally is not last','头游，且盟友不是下游',1600); if(!on()) return;
+  const cap=async(en,zh,ms)=>{ if(!on()) return; tutCap(T(en,zh)); await wait(ms||1600); };
+  const set=(lv,dealer,fails)=>{ M.lv=lv.slice(); M.dealer=dealer; M.aFails[0]=fails||0; placeHi.last=dealer; if(g){ g._lvNext=M.lv[dealer]; g._lvH=H; g._L=null; } drawLevel(); placeHi(dealer); };
+  const lvTo=async(after,dealer,o)=>{ if(!on()) return; o=o||{}; const res={before:M.lv.slice(),after:after.slice()}; placeHi.last=M.dealer;
+    if(o.fail){ M.aFails[0]++; res.aFail=0; if(o.reset){ res.aReset=0; M.aFails[0]=0; } } M.dealer=dealer; M.lv=after.slice(); await animLevel(res); if(g){ g._lvNext=M.lv[M.dealer]; g._lvH=H; } drawLevel(); };
+  try{ await wait(400); if(!on()) return; crowns(null);
+    if(d==='ahearts'){ set([13,2],0,0); await wait(800); await cap('Your team reaches the Ace','我方升到 A',900); await lvTo([14,2],0); await cap('3 hearts = 3 tries','三颗心 = 三次机会',3000); }
+    else if(d==='amiss'){ set([14,2],0,0); await wait(900);
+      for(let i=0;i<3&&on();i++){ await cap(i<2?'Missed: one heart breaks':'Third miss: back to 2',i<2?'没过：碎一颗心':'第三次没过：退回 2',700); await lvTo([i<2?14:2,2],0,{fail:1,reset:i===2}); await wait(900); } await wait(1600); }
+    else if(d==='aswitch'){ set([9,2],0,0); await wait(900); await cap('The opponents win this hand','这一局对手赢了',600); crowns([1,3,0,2]); await wait(1800);
+      await cap('Next hand: their level','下一局：换边打对手的级',300); await lvTo([9,5],1); await wait(2400); }
+    else { set([14,2],0,1); await wait(700); crowns([0,2,1,3]); await cap('1st, and your ally is not last','头游，且盟友不是下游',1800); if(!on()) return; tutCap(null);
       const R=felt.getBoundingClientRect(), x=R.width/2, y=R.height*.42; snd('win'); flash('rgba(255,210,120,.35)',1600);
-      // the golden dragon rises from below, faces the table in a blaze of light, then leaps up through the gate
       const fx=$g('.gt-fx'), gd=document.createElement('div'); gd.className='fx-gdgate'; gd.style.left=x+'px'; gd.style.top=(R.height*.4)+'px'; gd.style.height=(R.height*.68)+'px';
       gd.innerHTML=`<i class="gg-rays"></i><i class="gg-glow"></i><img src="${GIMG('gd-gold')}" alt="">`; fx.appendChild(gd);
       const im=gd.querySelector('img');
@@ -9629,7 +9661,7 @@ async function demoAce(d){ const me=tut, M0={lv:M.lv.slice(),dealer:M.dealer,aFa
       setTimeout(()=>{ if(!on()) return; shake(.8); burst(x,y,130,{c:['#fff3c4','#ffd36a','#ff9a3a'],v:11,g:.1,k:'tr',r:2.4}); badge(T('Through the Dragon Gate!','跃过龙门！'),x,R.height*.16,'gold',true,'seal','slam'); },reduce?0:1100);
       setTimeout(()=>{ if(gd.isConnected) burst(x,R.height*.2,90,{c:['#fff3c4','#ffd36a'],v:9,g:-.02,k:'tw',r:2}); },reduce?0:3300);
       await wait(4800); gd.remove(); }
-  } finally { if(tut===me){ M.lv=M0.lv; M.dealer=M0.dealer; M.aFails=M0.aFails; if(g&&G0){ g._lvNext=G0.n; g._lvH=G0.h; g._L=G0.L; } placeHi.last=M.dealer; drawLevel(); for(let s=0;s<4;s++){ const cr=$g('.gs'+s+' .gs-crown'); if(cr) cr.dataset.r='x'; drawSeat(s); } } } }
+  } finally { tutCap(null); if(tut===me){ M.lv=M0.lv; M.dealer=M0.dealer; M.aFails=M0.aFails; if(g&&G0){ g._lvNext=G0.n; g._lvH=G0.h; g._L=G0.L; } placeHi.last=M.dealer; drawLevel(); placeHi(M.dealer); for(let s=0;s<4;s++){ const cr=$g('.gs'+s+' .gs-crown'); if(cr) cr.dataset.r='x'; drawSeat(s); } } } }
 return {_nn:s=>nnMove(s), _bot:s=>botMove(s), open:openRoom, close:closeRoom, isOpen:()=>open, _wind:s=>windBanner(s), _res:(g,w)=>showResult({winner:w?0:1,up:2,order:w?[0,2,1,3]:[1,3,0,2],before:[5,3],after:w?[7,3]:[5,5],gameOver:g},!!w,3), _drg:()=>{ const R=felt.getBoundingClientRect(); return flyDragon($g('.gt-fx'),R.width,R.height,{dur:6000}); }, _s:()=>({M,H,tut}), _redraw:()=>refreshAll(), _step:()=>{ busy=false; step(); }, _newHand:()=>newHand(), _trib:()=>doTribute(), _bgm:()=>({k:BGM.k,playing:!!(BGM.cur&&BGM.cur.playing),buf:!!(BGM.cur&&BGM.cur.buf),site:!!(TR.bgm&&TR.bgm.playing)}), _siren:(s,n)=>{ warned.add(s); drawSeat(s); snd("siren"); sirenAlert(s,n); bgm(3); }, _hints:()=>{ buildHints(); return hintList.map(m=>m.combo.type+":"+m.cards.map(c=>GD.isWild(c,H.L)?"W":c.r).join(",")); }, _nh:()=>newHand(), _anti:()=>antiFx([{id:-1,r:17,s:4},{id:-2,r:17,s:4}],[1,1]), _vox:()=>({loaded:Object.keys(voxBuf),loading:Object.keys(voxLoading)}), _fx:async(s,spec)=>{ const cards=spec.map(([r,su],i)=>({id:5000+i,r,s:r>=16?4:su})); H.played[s]=cards; H.trick={seat:s,combo:GD.judge(cards,H.L,null),cards}; drawPlayed(s); await comboFx(s,H.trick.combo); }, relang:()=>{ if(open){ loadVox(); render(); if(tut&&tut.i>=0){ const st=GD_TUT.steps[tut.i]; if(st&&(st.say)) tutCard(st); } } }};
 })();
 
