@@ -3017,6 +3017,25 @@ html:not([lang=zh]) .gt-choose .gc-lb b{font-family:'Newsreader','Noto Serif SC'
 .fx-gdgate .gg-rays{width:230%;aspect-ratio:1;background:repeating-conic-gradient(from 0deg,rgba(255,214,120,.32) 0 6deg,transparent 6deg 18deg);-webkit-mask:radial-gradient(circle,#000 18%,transparent 68%);mask:radial-gradient(circle,#000 18%,transparent 68%);animation:ggSpin 14s linear infinite}
 .fx-gdgate .gg-glow{width:130%;aspect-ratio:1;background:radial-gradient(circle,rgba(255,230,160,.85),rgba(255,170,60,.35) 40%,transparent 70%)}
 @keyframes ggSpin{to{rotate:360deg}}
+/* Ace hearts: a spent try is an empty outline, and it is there the instant a heart breaks */
+.gl-a .hz path.o,.gl-a .hz.on path.o{fill:rgba(30,22,28,.55);stroke:rgba(243,210,122,.6);stroke-width:1.1;stroke-linejoin:round;opacity:1;transition:opacity .18s}
+.gl-a .hz:not(.on) .l,.gl-a .hz:not(.on) .r,.gl-a .hz:not(.on) .hl{display:none}
+.gl-a .hz.on path.o{opacity:0}
+.gl-a .hz.on.break path.o{opacity:1}
+.tut-ring{position:absolute;border-radius:16px;pointer-events:none;box-shadow:0 0 0 2px rgba(126,226,255,.9),0 0 24px 5px rgba(126,226,255,.5),inset 0 0 18px rgba(126,226,255,.3);animation:holeBreath 2.2s ease-in-out infinite;transition:left .4s,top .4s,width .4s,height .4s}
+/* open-card plaque: a lacquered slip with a gold hairline, unfolding sideways */
+.gdk-cut .cut-tag:not(.seal){gap:.2rem;padding:.42rem 1.25rem .46rem;border-radius:.22rem;border:1px solid #c99a45;
+  background:radial-gradient(130% 160% at 50% 0%,#4b1b12 0%,#2b0f0a 55%,#160705 100%);
+  box-shadow:inset 0 0 0 3px rgba(22,7,5,.92),inset 0 0 0 4px rgba(233,196,120,.42),0 10px 22px rgba(0,0,0,.55),0 0 18px rgba(255,190,90,.18);
+  animation:cutTag2 .6s cubic-bezier(.2,.9,.3,1) both;transform-origin:50% 0}
+.gdk-cut .cut-tag:not(.seal)::before,.gdk-cut .cut-tag:not(.seal)::after{content:"";position:absolute;top:50%;width:.42rem;height:.42rem;margin-top:-.21rem;background:linear-gradient(135deg,#ffe6a8,#b8862e);transform:rotate(45deg);box-shadow:0 0 0 1.5px #2b0f0a}
+.gdk-cut .cut-tag:not(.seal)::before{left:-.24rem}.gdk-cut .cut-tag:not(.seal)::after{right:-.24rem}
+.gdk-cut .cut-tag:not(.seal) b{font:700 1.12rem/1.1 'Cormorant Garamond','Noto Serif SC',serif;letter-spacing:.05em;color:#ffe6a8;text-shadow:0 1px 0 #000,0 0 10px rgba(255,200,100,.35);animation:cutTxt .45s ease .22s both}
+.gdk-cut .cut-tag:not(.seal) small{font:500 .74rem/1.2 'Barlow','Noto Sans SC',sans-serif;letter-spacing:.03em;color:#ecd39c;padding-top:.18rem;border-top:1px solid rgba(233,196,120,.35);animation:cutTxt .45s ease .34s both}
+.gdk-cut .cut-tag.zh:not(.seal) b{font:700 1.02rem/1.1 'Noto Serif SC',serif;letter-spacing:.32em;margin-right:-.32em}
+.gdk-cut .cut-tag.zh:not(.seal) small{font:500 .74rem/1.2 'Noto Sans SC',sans-serif;letter-spacing:.12em}
+@keyframes cutTag2{0%{opacity:0;transform:translate(-50%,.45rem) scaleX(.15) scaleY(.6)}55%{opacity:1;transform:translate(-50%,.45rem) scaleX(1.05) scaleY(1)}100%{opacity:1;transform:translate(-50%,.45rem)}}
+@keyframes cutTxt{from{opacity:0;transform:translateY(.25rem)}}
 /* ===== Pages & Frames: a reading room, green-leather rail and paper pages ===== */
 #reader.shelf{--sh-bg:#F3EEE3;--sh-ink:#23201A;--sh-ink2:#6B6252;--sh-acc:#8B2B22;--sh-green:#1F3329;--sh-line:#DCD2BF;--cx:#8B2B22}
 #reader.shelf .rd-main,#reader.shelf .rd-leaf{background:var(--sh-bg) linear-gradient(90deg,rgba(80,60,30,.05) 1px,transparent 1px) 0 0/22px 100%}
@@ -7769,7 +7788,7 @@ const steps=[
  {say:['Runs of cards','连着出的牌'],b:['Three more types are runs. Exactly five ranks in a row make a straight; three pairs in a row make a plank, like 334455; two triples in a row make a steel plate, like 888999.','另外三种是连牌：正好五张连续的叫顺子；三个相连的对子叫木板，比如 334455；两个相连的三同张叫钢板，比如 888999。'],show:[[['Straight','顺子'],[[3,0],[4,1],[5,2],[6,0],[7,3]]],[['Plank','木板'],[[3,0],[3,1],[4,2],[4,3],[5,0],[5,1]]],[['Steel plate','钢板'],[[8,0],[8,1],[8,2],[9,0],[9,3],[9,1]]]]},
  {you:'sort',say:['Sort out your bombs','理牌'],b:['Flip the switch at the bottom right from Default to Sorted. Bombs move to the far left. Watch the wild card: three 9s plus the heart 2 become a four-card bomb.','把右下角的开关从“默认”拨到“理牌”，炸弹会排到最左边。注意逢人配：三张 9 加上红心 2，凑成了一个四张炸弹。']},
  {say:['A bomb','炸弹'],b:['Four or more cards of one rank make a bomb, and the wild card can fill one in. A bomb beats any ordinary combination. A sorted bomb wears a round badge on its front card, showing how many cards it has; tap the badge to pick up the whole bomb.','四张或以上同点数的牌就是炸弹，逢人配可以帮你补上。炸弹能压住任何普通牌型。理好的炸弹，最前面那张牌左下角有一个圆形徽标，上面写着这是几张的炸弹；点一下徽标就能整组选中。'],spot:'#gtHand'},
- {say:['Card counter','记牌器'],b:['The switch above it opens the card counter. It slides down at the top right and shows, rank by rank, how many cards are still out there: not in your hand and not yet played. The stars are the jokers, and the gold column is this hand’s level card.','它上面那个开关是记牌器。打开后会从右上角滑下来，按点数列出场上还剩几张：不在你手里、也还没打出来的牌。两颗星是大小王，金色那一列是本局的级牌。'],spot:'#gtCCb'},
+ {say:['Card counter','记牌器'],b:['The switch above it opens the card counter. It slides down at the top right and shows, rank by rank, how many cards are still out there: not in your hand and not yet played. The stars are the jokers, and the gold column is this hand’s level card.','它上面那个开关是记牌器。打开后会从右上角滑下来，按点数列出场上还剩几张：不在你手里、也还没打出来的牌。两颗星是大小王，金色那一列是本局的级牌。'],spot:'#gtCCb',rings:['#gtCCb','.gt-ctrw.on .gt-ctr'],cc:1},
  {say:['Bombs against bombs','炸弹之间比大小'],b:['From strongest to weakest: the four jokers, then bombs of six or more cards (more cards win), then a straight flush, then five-card bombs, then four-card bombs. Bombs of the same size compare by rank.','从大到小：四大天王，然后是六张及以上的炸弹（张数多的大），再是同花顺，再是五张炸弹，最后是四张炸弹。张数相同的炸弹比点数。'],show:[[['Joker Bomb','四大天王'],[[16,4],[16,4],[17,4],[17,4]]],[['6+ cards','六张以上'],[[11,0],[11,1],[11,2],[11,3],[11,0],[11,3]]],[['Straight flush','同花顺'],[[9,2],[10,2],[11,2],[12,2],[13,2]]],[['5 cards','五张'],[[8,0],[8,1],[8,2],[8,3],[8,1]]],[['4 cards','四张'],[[6,0],[6,1],[6,2],[6,3]]]]},
  {you:[[3,0],[3,3]],swipe:1,say:['Lead a pair','领出一对'],b:['You lead first, so any combination is allowed. Tap your two 3s, then press Play. Tip: to pick several cards quickly, hold down the left mouse button on one card and slide across the others.','你先出，任何牌型都可以。点你的两张 3，再按“出牌”。小技巧：想快速选好几张，可以在一张牌上按住左键，再滑过其他牌。']},
  {say:['Warning light','报牌'],b:['You now hold 10 cards. With 10 or fewer, a siren lights up beside your count so everyone knows you are getting close.','你现在只剩 10 张。手牌 10 张或以下时，牌数旁边会亮起警灯，大家都知道你快出完了。'],spot:'.gs0 .gs-cnt'},
@@ -8161,7 +8180,7 @@ function buildTable(){ fdPreload(); dkImg('gd-table-dm'); dkImg('gd-table-om'); 
   sizeVars(); refreshAll(); fitRing(); }
 function refreshAll(){ if(!H) return; drawLevel(); for(let s=0;s<4;s++){ drawSeat(s); drawPlayed(s); } drawHand(); drawAct(); ccDraw(); }
 /* level panel */
-const HEART='<svg viewBox="0 0 24 22"><defs><radialGradient id="hgr" cx=".35" cy=".3" r=".8"><stop offset="0" stop-color="#ffb3b3"/><stop offset=".35" stop-color="#ff3b4e"/><stop offset="1" stop-color="#8a0618"/></radialGradient></defs><path class="l" d="M12 4.2C10.5 1.6 7.6.4 5 1.2 1.7 2.2.3 5.6 1.3 8.8 2.6 13 7 16.8 12 21l-1.4-4 2-3.5-1.8-3.5 2-3z"/><path class="r" d="M12 4.2c1.5-2.6 4.4-3.8 7-3 3.3 1 4.7 4.4 3.7 7.6C21.4 13 17 16.8 12 21l-1.4-4 2-3.5-1.8-3.5 2-3z"/><ellipse class="hl" cx="6.6" cy="5.4" rx="2.2" ry="1.3" transform="rotate(-30 6.6 5.4)"/></svg>';
+const HEART='<svg viewBox="0 0 24 22"><defs><radialGradient id="hgr" cx=".35" cy=".3" r=".8"><stop offset="0" stop-color="#ffb3b3"/><stop offset=".35" stop-color="#ff3b4e"/><stop offset="1" stop-color="#8a0618"/></radialGradient></defs><path class="o" d="M12 4.2C10.5 1.6 7.6.4 5 1.2 1.7 2.2.3 5.6 1.3 8.8 2.6 13 7 16.8 12 21c5-4.2 9.4-8 10.7-12.2 1-3.2-.4-6.6-3.7-7.6-2.6-.8-5.5.4-7 3z"/><path class="l" d="M12 4.2C10.5 1.6 7.6.4 5 1.2 1.7 2.2.3 5.6 1.3 8.8 2.6 13 7 16.8 12 21l-1.4-4 2-3.5-1.8-3.5 2-3z"/><path class="r" d="M12 4.2c1.5-2.6 4.4-3.8 7-3 3.3 1 4.7 4.4 3.7 7.6C21.4 13 17 16.8 12 21l-1.4-4 2-3.5-1.8-3.5 2-3z"/><ellipse class="hl" cx="6.6" cy="5.4" rx="2.2" ry="1.3" transform="rotate(-30 6.6 5.4)"/></svg>';
 function heartsHTML(left){ return `<span class="gl-a" title="${T('Tries at Ace','过 A 机会')}">${[0,1,2].map(i=>`<i class="hz${i<left?' on':''}">${HEART}</i>`).join('')}</span>`; }
 async function shatterHearts(team){ const g=$g('.gl'); if(!g) return; const hz=[...g.querySelectorAll(`.glt.t${team} .gl-a .hz`)]; if(!hz.length) return; eyeMood(team===0?'bad':'good','keep');
   hz.forEach((h,i)=>setTimeout(()=>{ h.classList.add('fall'); },i*120)); await wait(900); }
@@ -8798,7 +8817,7 @@ async function dealAnim0(){
     await cutEl.animate([{transform:lifted+' scale(1.35)'},{transform:lifted+' scale(0,1.35)'}],{duration:160,easing:'ease-in',fill:'forwards'}).finished.catch(()=>{});
     cutEl.innerHTML=''; cutEl.appendChild(cardEl(c,'cutf')); snd('pick');
     await cutEl.animate([{transform:lifted+' scale(0,1.35)'},{transform:lifted+' scale(1.5)'}],{duration:220,easing:'cubic-bezier(.3,1.6,.5,1)',fill:'forwards'}).finished.catch(()=>{});
-    cutEl.classList.add('lit'); cutEl.insertAdjacentHTML('beforeend',`<i class="cut-tag"><b>${T('Open card','明牌')}</b><small>${T('whoever gets it leads','谁拿到谁先出')}</small></i>`); snd('tick'); await W2(1700); if(H!==h0){ deck.remove(); return; }
+    cutEl.classList.add('lit'); cutEl.insertAdjacentHTML('beforeend',`<i class="cut-tag${zh()?' zh':''}"><b>${T('Open Card','明牌')}</b><small>${T('Whoever Gets It Leads','谁拿到谁先出')}</small></i>`); snd('tick'); await W2(1700); if(H!==h0){ deck.remove(); return; }
     // back into the deck at the depth where it will be dealt, its right side sticking out
     { const tg=cutEl.querySelector('.cut-tag'); if(tg){ tg.animate([{opacity:1},{opacity:0}],{duration:200,fill:'forwards'}); setTimeout(()=>tg.remove(),200); } }
     cutLay=Math.max(0,Math.min(NC-1,Math.round(NC*(1-cutK/108)))); const slot=`translate(calc(-50% + ${cutOff}px),calc(-50% - ${cutLay*.6}px))`;
@@ -9484,7 +9503,7 @@ function rulesDemos(p,L){ const alive=()=>p.isConnected, sleep=ms=>new Promise(r
 /* ---------- tutorial: a scripted practice hand ---------- */
 function startTut(){ $$g('.gr-pop').forEach(n=>n.remove()); clearTimeout(timer); loadVox(); bgm(1);
   const D=GD_TUT; if(!P) pickPlayers(); M=GDM.newMatch(); M.lv=[D.L1,D.L1]; M.dealer=0; scr='table'; sortMode=0; warned=new Set(); sel.clear(); ret=null; tribPick=null;
-  H={L:D.L1,hands:D.h1.map(h=>h.map(c=>Object.assign({},c))),order:[],turn:0,lead:0,trick:null,passes:0,played:[[],[],[],[]],log:[],tribute:null,phase:'play'};
+  H={L:D.L1,hands:D.h1.map(h=>h.map(c=>Object.assign({},c))),order:[],turn:0,lead:0,trick:null,passes:0,played:[[],[],[],[]],log:[],tribute:null,phase:'play',_ccOk:true};
   tut={i:-1}; buildTable(); root.classList.add('tutm'); busy=false; tutNext(); }
 function endTut(silent){ if(!tut) return; clearInterval(tut.iv); clearInterval(tut.tw); tut=null; root&&root.classList.remove('tutm'); $$g('.gr-tut').forEach(n=>n.remove()); if(!silent) try{ localStorage.setItem('gd-tut','1'); }catch(e){} }
 /* the tutorial guide: a dragon spirit that floats beside a spotlight, points with a beam of light and a tapping hand, and talks you through each step */
@@ -9501,7 +9520,10 @@ function tutRect(q){ const R=root.getBoundingClientRect(); let els=[]; if(q==='g
   const l=Math.min(...rs.map(r=>r.left)), t=Math.min(...rs.map(r=>r.top)), r=Math.max(...rs.map(r=>r.right)), b=Math.max(...rs.map(r=>r.bottom)); return {l:l-R.left,t:t-R.top,r:r-R.left,b:b-R.top,w:r-l,h:b-t}; }
 function tutPlace(){ const o=$g('.gr-tut'); if(!o||!tut) return; const st=tut.cur, R=root.getBoundingClientRect(), W=R.width, Hh=R.height;
   const q=tutTarget(st), hr=q?tutRect(q):null, hole=o.querySelector('.tut-hole'), bub=o.querySelector('.tut-bub'), gd=o.querySelector('.tut-guide'), tap=o.querySelector('.tut-tap'), beam=o.querySelector('.tut-beam');
-  const show=!!(st&&bub.classList.contains('on')); o.classList.toggle('nodim',!hr||!show); o.classList.toggle('pick',!!(tut&&tut.hl&&tut.hl.length));
+  const show=!!(st&&bub.classList.contains('on')); o.classList.toggle('nodim',!hr||!show||!!(st&&st.rings));
+  // some steps light up two places at once (a switch and the panel it opens) with glowing rings and no dimming
+  const rg=show&&st&&st.rings?st.rings.map(tutRect).filter(Boolean):[]; let rs=[...o.querySelectorAll('.tut-ring')]; while(rs.length>rg.length) rs.pop().remove(); while(rs.length<rg.length){ const e=document.createElement('i'); e.className='tut-ring'; o.insertBefore(e,o.firstChild); rs.push(e); }
+  rg.forEach((r,i)=>{ rs[i].style.cssText=`left:${r.l-10}px;top:${r.t-10}px;width:${r.w+20}px;height:${r.h+20}px`; }); o.classList.toggle('pick',!!(tut&&tut.hl&&tut.hl.length));
   if(hr){ const p=q==='glow'?8:12; hole.style.cssText=`left:${hr.l-p}px;top:${hr.t-p}px;width:${hr.w+2*p}px;height:${hr.h+2*p}px`; }
   // the speech bubble goes where it hides least of the target
   const bw=bub.offsetWidth||380, bh=bub.offsetHeight||220, m=18, top0=70;
@@ -9536,7 +9558,7 @@ function tutCard(st){ const o=tutUI(), bub=o.querySelector('.tut-bub'); tut.cur=
   tut.card=bub; snd('tutpop'); clearInterval(tut.iv); tut.iv=setInterval(tutPlace,200); requestAnimationFrame(tutPlace); }
 function markTut(){ $$g('#gtHand .gc').forEach(e=>e.classList.toggle('glow',!!(tut&&tut.hl&&tut.hl.includes(+e.dataset.id)))); }
 const tutPick=(h,list)=>{ const used=new Set(); return list.map(([r,s])=>{ const c=h.find(c=>c.r===r&&(r>=16||c.s===s)&&!used.has(c.id)); if(c) used.add(c.id); return c; }).filter(Boolean); };
-async function tutNext(){ if(!tut) return; tut.demo=null; tut.i++; tut.waitYou=false; tut.hl=null; tut.st=null; markTut(); const st=GD_TUT.steps[tut.i]; if(!st){ endTut(); startGame(true); return; }
+async function tutNext(){ if(!tut) return; tut.demo=null; if(tut.ccWas!=null){ ccToggle(tut.ccWas); tut.ccWas=null; } tut.i++; tut.waitYou=false; tut.hl=null; tut.st=null; markTut(); const st=GD_TUT.steps[tut.i]; if(!st){ endTut(); startGame(true); return; }
   if(st.last&&tut.i>0&&tut.lastShown){ endTut(); startGame(true); return; }
   if(st.end){ tut.i--; return; }
   if(st.hand2){ tutHide(); const D=GD_TUT; ret=null; tribPick=null; sortMode=0; warned=new Set(); sel.clear(); bgm(1);
@@ -9549,6 +9571,7 @@ async function tutNext(){ if(!tut) return; tut.demo=null; tut.i++; tut.waitYou=f
   if(st.you){ tut.st=st; tut.waitYou=true; hintList=null; st.ids=Array.isArray(st.you)?tutPick(H.hands[0],st.you).map(c=>c.id):st.cards?tutPick(H.hands[0],st.cards).map(c=>c.id):null; tut.hinted=0; tut.badged=0; if(st.ids&&st.you!=='hint'&&st.you!=='badge') tut.hl=st.ids; tutCard(st); drawAct(); markTut(); if(st.you==='sort'){ sortMode=0; drawHand(); } return; }
   if(st.fx==='order'){ setTimeout(()=>orderArrows(),300); }
   if(st.fx==='lead'){ tutHide(); await wait(300); if(!tut) return; const t0=H.turn; H.turn=H.lead; await leadFlash(true); busy=false; if(!tut) return; H.turn=t0; }
+  if(st.cc){ tut.ccWas=ccOn; ccToggle(true); }
   if(st.last) tut.lastShown=1; tutCard(st); }
 function tutAllow(x){ const st=tut&&tut.st; if(!st){ return false; }
   const ok=x==='pass'?st.you==='pass':Array.isArray(x)&&(st.you==='hint'?tut.hinted:st.you==='badge'?tut.badged:true)&&st.ids&&x.length===st.ids.length&&x.every(c=>st.ids.includes(c.id));
