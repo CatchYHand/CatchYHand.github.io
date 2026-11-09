@@ -3072,6 +3072,8 @@ html:not([lang=zh]) .gt-choose .gc-lb b{font-family:'Newsreader','Noto Serif SC'
 .gl.gld .gl-cur{margin-left:1rem}
 .gl.gld .gl-cur small{font:700 .78rem/1 'Cormorant Garamond','Noto Serif SC',serif!important;letter-spacing:.16em!important;color:#f3d48a!important;text-shadow:0 1px 0 #000,0 0 8px rgba(240,200,112,.45)!important}
 .gl.gld .gl-ac{margin-left:.95rem}
+/* from the moment a hand ends until the next deal begins, the Sort and counter switches are gone at once */
+.handend #gtSort,.handend .gt-ccb{opacity:0!important;visibility:hidden!important;pointer-events:none!important;transition:none!important}
 /* ===== Pages & Frames: a reading room, green-leather rail and paper pages ===== */
 #reader.shelf{--sh-bg:#F3EEE3;--sh-ink:#23201A;--sh-ink2:#6B6252;--sh-acc:#8B2B22;--sh-green:#1F3329;--sh-line:#DCD2BF;--cx:#8B2B22}
 #reader.shelf .rd-main,#reader.shelf .rd-leaf{background:var(--sh-bg) linear-gradient(90deg,rgba(80,60,30,.05) 1px,transparent 1px) 0 0/22px 100%}
@@ -8207,7 +8209,7 @@ function seatHTML(s){ const p=P[s], d=DIR()[s];
   return `<div class="gs gs${s} t${s%2}" data-seat="${s}"><div class="gs-id"><div class="gs-av"><svg viewBox="0 0 40 40">${AV[p.k]}</svg><i class="gs-ring"></i><i class="gs-crown"></i></div>
     <div class="gs-tx"><b>${p.name}</b></div><div class="gs-cnt"><b></b><small>${T('cards','张')}</small><i class="beacon"><i class="bc-beam"><i class="bc-rot"><i class="bm r"></i><i class="bm b"></i></i></i>${sirenSVG()}</i></div><span class="gs-dir"><i>${d[0]}</i></span><div class="gs-say"></div></div>
     ${s===0?'':`<div class="gs-fan"></div>`}</div>`; }
-function buildTable(){ fdPreload(); dkImg('gd-table-dm'); dkImg('gd-table-om'); root.className='on table'+(tut?' tutm':'')+(H&&H._intro?' intro':'')+(H&&H._dealPending?' dealing':''); root.style.setProperty('--gbk',`url(${GIMG('gd-back')})`); root.style.setProperty('--gbkh',`url(${GIMG('gd-back-h')})`);
+function buildTable(){ fdPreload(); dkImg('gd-table-dm'); dkImg('gd-table-om'); root.className='on table'+(tut?' tutm':'')+(H&&H._intro?' intro':'')+(H&&H._dealPending?' dealing':'')+(H&&H.settled&&!tut?' handend':''); root.style.setProperty('--gbk',`url(${GIMG('gd-back')})`); root.style.setProperty('--gbkh',`url(${GIMG('gd-back-h')})`);
   paint(head(T('Dragon Gate','跃龙门'))+`<main class="gt"><div class="gt-felt"><div class="gt-cloth">
       <div class="gt-ring"><div class="dk-all"><img src="${GIMG('gd-table')}" alt=""><canvas class="dk-fx"></canvas><canvas class="dk-cv"></canvas></div></div><i class="gt-frame"></i></div>
     <div class="gl"></div>
@@ -8821,7 +8823,7 @@ async function matchOutro(){ if(!felt||!$g('.gt-ring')) return; $$g('.gt-res,.gt
   for(let s=3;s>=0;s--){ const el=$g('.gs'+s), b=seatPt(s); if(el){ el.style.setProperty('--ix',seatOut[s][0]*cw*.5+'px'); el.style.setProperty('--iy',seatOut[s][1]*cw*.5+'px'); el.classList.add('gs-leave'); }
     snd('seat'); await S.wisp(b,S.marks[s],420); S.fireT[s]=0; snd('ignite'); await wait(120); }
   await wait(500); S.end(); }
-async function dealAnim(){ H.hands.forEach(h=>{ h._full=h.slice(); }); if(reduce){ root.classList.remove('intro'); H._ccOk=true; H._dealPending=false; root.classList.remove('dealing'); refreshAll(); return; } root.classList.add('dealing'); try{ await dealAnim0(); } finally{ root.classList.remove('dealing'); if(H){ H._ccOk=true; H._dealPending=false; } ccDraw(); } }
+async function dealAnim(){ root.classList.remove('handend'); H.hands.forEach(h=>{ h._full=h.slice(); }); if(reduce){ root.classList.remove('intro'); H._ccOk=true; H._dealPending=false; root.classList.remove('dealing'); refreshAll(); return; } root.classList.add('dealing'); try{ await dealAnim0(); } finally{ root.classList.remove('dealing'); if(H){ H._ccOk=true; H._dealPending=false; } ccDraw(); } }
 async function dealAnim0(){
   const real=H.hands, hidden=real.map(()=>[]); H.hands=hidden; refreshAll(); const h0=H, intro=!!H._intro;
   if(intro){ await matchIntro(); if(H!==h0){ return; } }
@@ -9363,7 +9365,7 @@ function pickReturn(id){ const c=H.hands[0].find(x=>x.id===id); if(!retOk(c)||(t
 async function confirmReturn(){ const c=H.hands[0].find(x=>sel.has(x.id)); if(!c||!retOk(c)) return; if(tut){ tutHide(); tut.waitYou=false; } const from=ret.from; ret=null; sel.clear(); $$g('#gtHand .gc').forEach(e=>e.classList.remove('dim','got')); drawAct();
   { const h=H.hands[0]; h.splice(h.indexOf(c),1); } drawHand(); await flyCard(c,0,from,true); H.hands[from].push(c); for(let s=0;s<4;s++) drawSeat(s); phaseTip(null); if(tut){ H.phase='play'; tutHide(); tut.waitYou=false; tutNext(); return; } const h1=H; await leadFlash(); if(H!==h1) return; H.phase='play'; step(); }
 /* ---------- end of hand ---------- */
-async function endHand(){ if(H.settled) return; H.settled=true; clearTimeout(timer); for(let s=0;s<4;s++) drawSeat(s);
+async function endHand(){ if(H.settled) return; H.settled=true; root.classList.add('handend'); clearTimeout(timer); for(let s=0;s<4;s++) drawSeat(s);
   if(tut){ drawAct(); tutEnd(); return; }
   const h0=H; await wait(1300); if(H!==h0) return; $$g('.fx-badge').forEach(e=>e.remove());
   const res=GDM.settle(M,H), aMiss=res.aFail!=null&&res.aFail===res.winner, won=aMiss?res.winner!==0:res.winner===0; snd(won?'win':'lose'); const fin=outN();
@@ -9539,7 +9541,7 @@ function rulesDemos(p,L){ const alive=()=>p.isConnected, sleep=ms=>new Promise(r
   loop('.rd-order',async box=>{ for(let i=0;i<4;i++){ if(!alive()) return; turnTo(box,i); await sleep(900); } });
 }
 /* ---------- tutorial: a scripted practice hand ---------- */
-function startTut(){ $$g('.gr-pop').forEach(n=>n.remove()); clearTimeout(timer); loadVox(); bgm(1);
+function startTut(){ root.classList.remove('handend'); $$g('.gr-pop').forEach(n=>n.remove()); clearTimeout(timer); loadVox(); bgm(1);
   const D=GD_TUT; if(!P) pickPlayers(); M=GDM.newMatch(); M.lv=[D.L1,D.L1]; M.dealer=0; scr='table'; sortMode=0; warned=new Set(); sel.clear(); ret=null; tribPick=null;
   H={L:D.L1,hands:D.h1.map(h=>h.map(c=>Object.assign({},c))),order:[],turn:0,lead:0,trick:null,passes:0,played:[[],[],[],[]],log:[],tribute:null,phase:'play',_ccOk:true};
   tut={i:-1}; buildTable(); root.classList.add('tutm'); busy=false; tutNext(); }
