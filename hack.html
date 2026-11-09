@@ -2319,12 +2319,12 @@ html[lang=en] .wl-story p,.wl-story:lang(en) p{text-indent:0}
 .sir-pop b{font:400 1.6rem 'GD Display ZH','GD Display','Noto Sans SC',sans-serif;color:#fff;padding:.35rem 1.2rem;border-radius:.5rem;background:linear-gradient(90deg,rgba(30,60,200,.9),rgba(10,10,20,.92) 50%,rgba(200,30,20,.9));border:1.5px solid rgba(255,255,255,.6);text-shadow:0 2px 0 #000;white-space:nowrap;animation:sirTxt .5s steps(1) infinite}
 @keyframes sirTxt{0%{box-shadow:-10px 0 24px rgba(40,110,255,.8)}50%{box-shadow:10px 0 24px rgba(255,40,30,.8)}}
 .sir-edge{position:absolute;inset:0;z-index:29;pointer-events:none;animation:sirEdge .5s steps(1) 4}
-.sir-edge.left{background:linear-gradient(90deg,var(--sc,rgba(255,40,30,.45)),transparent 22%)}
-.sir-edge.right{background:linear-gradient(270deg,var(--sc,rgba(255,40,30,.45)),transparent 22%)}
-.sir-edge.top{background:linear-gradient(180deg,var(--sc,rgba(255,40,30,.45)),transparent 25%)}
-.sir-edge.bottom{background:linear-gradient(0deg,var(--sc,rgba(255,40,30,.45)),transparent 25%)}
-@keyframes sirEdge{0%{--sc:rgba(255,40,30,.5)}50%{--sc:rgba(40,110,255,.5)}}
-@property --sc{syntax:'<color>';inherits:true;initial-value:rgba(255,40,30,.45)}
+.sir-edge.left{background:linear-gradient(90deg,var(--sir-c,rgba(255,40,30,.45)),transparent 22%)}
+.sir-edge.right{background:linear-gradient(270deg,var(--sir-c,rgba(255,40,30,.45)),transparent 22%)}
+.sir-edge.top{background:linear-gradient(180deg,var(--sir-c,rgba(255,40,30,.45)),transparent 25%)}
+.sir-edge.bottom{background:linear-gradient(0deg,var(--sir-c,rgba(255,40,30,.45)),transparent 25%)}
+@keyframes sirEdge{0%{--sir-c:rgba(255,40,30,.5)}50%{--sir-c:rgba(40,110,255,.5)}}
+@property --sir-c{syntax:'<color>';inherits:true;initial-value:rgba(255,40,30,.45)}
 /* level panel: room for the head */
 .gl.gld{top:3.9rem!important;padding:.9rem 1.15rem .9rem 1.1rem!important}
 .wl-story p{text-indent:0}.wl-story.zh p:not(.wl-you){text-indent:2em}
