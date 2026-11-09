@@ -8171,6 +8171,8 @@ function drawAct(){ const a=$g('#gtAct'); if(!a||!H) return;
   if(turn&&!can){ const c=$g('#gtPre'); c.className='ga-chip on cap stat th-bad'; c.innerHTML=`<span class="t">${T('Nothing in your hand beats it','没有能压过的牌')}</span><b>${T('Passing for you…','自动不出…')}</b>`; } else updatePre(); }
 function suggestion(){ if(!hintList) buildHints(); return hintList[0]||null; }
 // hints: rank every legal play by what it costs the rest of your hand; never break up a bomb, a straight flush or the four jokers unless nothing else works
+// the groups Sort would make (four jokers, straight flushes, bombs, including ones a wild card completes)
+function sortGroups(){ const sm0=sortMode; sortMode=1; let groups=[]; try{ groups=columns().filter(c=>c.bomb).map(c=>new Set(c.cards.map(x=>x.id))); } finally{ sortMode=sm0; } return {groups,reserved:new Set(groups.flatMap(g=>[...g]))}; }
 function buildHints(){ const tg=target(), hand=H.hands[0], L=H.L, ms=GD.moves(hand,L,tg), seen=new Set(), out=[];
   const key=m=>m.cards.map(c=>c.id).sort((a,b)=>a-b).join(',');
   const best=tg?GD.followChoice(hand,L,tg,GDM.ctxFor(H,0)):GD.leadChoice(hand,L,GDM.ctxFor(H,0)), bk=best&&key(best);
@@ -8188,7 +8190,7 @@ function buildHints(){ const tg=target(), hand=H.hands[0], L=H.L, ms=GD.moves(ha
     if(key(m)===bk) sc-=1.5; return sc; };
   // never offer a play that splits a bomb (part of a 4+ group): a 6-bomb is not cut down to 5, nor broken for a single
   // the groups Sort would make (four jokers, straight flushes, bombs) are kept whole: a play either is one of them or touches none of their cards
-  const sm0=sortMode; sortMode=1; const groups=columns().filter(c=>c.bomb).map(c=>new Set(c.cards.map(x=>x.id))); sortMode=sm0; const reserved=new Set(groups.flatMap(g=>[...g]));
+  const {groups,reserved}=sortGroups();
   const whole=m=>{ if(m.cards.length===hand.length) return true; const ids=m.cards.map(c=>c.id); if(groups.some(g=>g.size===ids.length&&ids.every(i=>g.has(i)))) return true;
     if(ids.some(i=>reserved.has(i))) return false; const used={}; m.cards.forEach(c=>{ if(!GD.isWild(c,L)&&c.r<16) used[c.r]=(used[c.r]||0)+1; }); return Object.keys(used).every(r=>cnt[r]<4||used[r]===cnt[r]); };
   const swap=m=>{ if(!m.cards.some(c=>reserved.has(c.id))) return m; const ids=new Set(m.cards.map(c=>c.id)); const out=m.cards.map(c=>{ if(!reserved.has(c.id)) return c; const alt=hand.find(x=>!reserved.has(x.id)&&!ids.has(x.id)&&(GD.isWild(c,L)?GD.isWild(x,L):x.r===c.r&&!GD.isWild(x,L)&&(m.combo.type!=='sflush'||x.s===c.s))); if(alt){ ids.add(alt.id); return alt; } return null; });
@@ -8970,7 +8972,7 @@ function bgm(k){ try{ if(!AC) initAudio(); if(!AC) return; if(k){ [TR.bgm,TR.dec
     BGM.cur=t; if(t){ t.pos=null; if(t.buf) t.pos=t.ls; t.play(old?(typeof SWITCH_XF!=='undefined'?SWITCH_XF:1.4):.6); } }catch(e){} }
 /* ---------- your controls ---------- */
 // if the selection only works with a wild card or two added, add them (e.g. three 9s + a heart level card = a bomb)
-function wildFill(cs){ const L=H.L, tg=target(), W=H.hands[0].filter(c=>GD.isWild(c,L)&&!cs.includes(c)); if(!cs.length||!W.length) return null; let best=null;
+function wildFill(cs){ const L=H.L, tg=target(), {reserved}=sortGroups(), W=H.hands[0].filter(c=>GD.isWild(c,L)&&!cs.includes(c)&&!reserved.has(c.id)); if(!cs.length||!W.length) return null; let best=null;
   for(let k=1;k<=Math.min(2,W.length);k++){ const t=cs.concat(W.slice(0,k)), j=GD.judge(t,L,tg); if(j&&(!best||(!GD.isBomb(j)&&GD.isBomb(best.j)))){ best={cards:t,j}; if(!GD.isBomb(j)) break; } } return best; }
 function doPlay(){ if(!myTurn()) return; let cs=selected(); let j=cs.length?GD.judge(cs,H.L,target()):null;
   if(!j&&cs.length){ const w=wildFill(cs); if(w){ cs=w.cards; j=w.j; sel=new Set(cs.map(c=>c.id)); layoutHand(); } }
@@ -8982,11 +8984,12 @@ function doHint(){ if(!myTurn()) return; if(!hintList) buildHints(); if(!hintLis
 function doSort(){ if(!H) return; sortMode=1-sortMode; snd('btn'); drawHand(); drawAct(); if(tut&&tut.st&&tut.st.you==='sort'&&sortMode===1) setTimeout(tutNext,700); }
 let drag=null;
 function smartPick(card){ const tg=target(); if(!tg||tg.type==='single'||GD.isBomb(tg)||!card||GD.isWild(card,H.L)||card.r>=16) return null;
-  const L=H.L, hand=H.hands[0], cnt={}; hand.forEach(c=>{ if(!GD.isWild(c,L)&&c.r<16) cnt[c.r]=(cnt[c.r]||0)+1; });
-  if((cnt[card.r]||0)>=4) return null; // that card sits in a bomb
-  const ms=GD.moves(hand,L,tg).filter(m=>!GD.isBomb(m.combo)&&m.combo.type===tg.type&&m.cards.includes(card)&&m.cards.every(c=>GD.isWild(c,L)||c.r>=16||(cnt[c.r]||0)<4));
-  let best=null, bs=1e9; ms.forEach(m=>{ const sc=GD.plan(GD.without(hand,m.cards),L).s+(m.combo.wild||0)*2.5+m.combo.key*.03+m.cards.filter(c=>c.r>=16).length*3; if(sc<bs){ bs=sc; best=m; } });
-  return best; }
+  const L=H.L, hand=H.hands[0], {reserved}=sortGroups(); if(reserved.has(card.id)) return null; // that card sits in a bomb or straight flush
+  buildHints(); const cands=(hintList||[]).filter(m=>m.combo&&!GD.isBomb(m.combo)&&m.combo.type===tg.type);
+  for(const m of cands){ if(m.cards.includes(card)) return m;
+    const k=m.cards.findIndex(c=>c.r===card.r&&!GD.isWild(c,L)); if(k<0) continue;
+    const cs=m.cards.slice(); cs[k]=card; const j=GD.judge(cs,L,tg); if(j&&j.type===m.combo.type) return {cards:cs,combo:j}; }
+  return null; }
 function onDown(e){ const tag=e.target.closest('#gtHand .gt-tag,#gtHand .gc-bd'); if(tag&&H&&H.phase==='play'){ const col=($g('#gtHand')._cols||[])[+tag.dataset.col]; if(col){ const all=col.cards.every(c=>sel.has(c.id)); if(all) col.cards.forEach(c=>sel.delete(c.id)); else sel=new Set(col.cards.map(c=>c.id)); snd('pick'); markSel(); } return; }
   const c=e.target.closest('#gtHand .gc'); if(!c){ if(e.target.closest('.gt-cloth')&&sel.size&&H&&H.phase==='play'){ sel.clear(); markSel(); } return; } e.preventDefault();
   if(tribPick){ pickTrib(+c.dataset.id); return; } if(ret){ pickReturn(+c.dataset.id); return; } if(!H||H.phase!=='play') return;
