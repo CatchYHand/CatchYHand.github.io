@@ -3163,8 +3163,8 @@ html:not([lang=zh]) .gt-choose .gc-lb b{font-family:'Newsreader','Noto Serif SC'
 #gtHand .gc.up.auto{outline:2px dashed #ffd36a;outline-offset:2px}
 #gtHand .gc.up.auto::after{content:attr(data-at);position:absolute;left:50%;top:-1.15rem;transform:translateX(-50%);padding:.08rem .4rem;border-radius:.3rem;background:#ffd36a;color:#2a1a04;font:800 .6rem/1.2 'Barlow',sans-serif;letter-spacing:.08em;white-space:nowrap;pointer-events:none}
 /* level digits sit optically on the avatars' centre line */
-.gl.glx .glv{display:block;height:1.15em;line-height:1.15!important;overflow:hidden;margin-top:-.04em}
-.gl.glx .glv>span,.gl.glx .glv .roll i{display:block;height:1.15em;line-height:1.15;transform:none}
+.gl.glx .glv{display:block;height:1.15em;line-height:1.15!important;overflow:hidden;margin:0}
+.gl.glx .glv>span,.gl.glx .glv .roll i{display:block;height:1.15em;line-height:1.15;transform:translateY(var(--gy,0px))}
 /* normal combinations: cards on the left with their play tag centred right under them, name and rule on the right */
 .rc-grid{grid-auto-rows:1fr}
 .rc-combo{grid-template-columns:11rem 1fr!important;grid-template-rows:1fr 2.3rem!important;align-items:center!important;gap:.3rem 1rem!important;min-height:8.4rem}
@@ -8335,7 +8335,7 @@ const kcap=(lab,w)=>{ w=w||40; return `<svg class="gk" viewBox="0 0 ${w} 30" sty
 function ensure(){ if(root) return; root=document.createElement('div'); root.id='gr'; root.setAttribute('data-noi18n',''); document.body.appendChild(root);
   root.addEventListener('click',onClick); root.addEventListener('pointerdown',onDown);
   addEventListener('keydown',onKey,true); addEventListener('keyup',e=>{ if(open) keyFlash(e.key,false); },true);
-  addEventListener('resize',()=>{ if(open&&scr==='table'){ sizeVars(); fitRing(); layoutHand(); layoutFans(); glFrame(); glSize(); fitRes(); if(M&&placeHi.last!=null) placeHi(placeHi.last); if(tut) try{ tutUI(); }catch(e){} requestAnimationFrame(()=>{ glFrame(); if(M&&placeHi.last!=null) placeHi(placeHi.last); }); } }); }
+  addEventListener('resize',()=>{ if(open&&scr==='table'){ sizeVars(); fitRing(); layoutHand(); layoutFans(); glFrame(); glSize(); glDigits(); fitRes(); if(M&&placeHi.last!=null) placeHi(placeHi.last); if(tut) try{ tutUI(); }catch(e){} requestAnimationFrame(()=>{ glFrame(); if(M&&placeHi.last!=null) placeHi(placeHi.last); }); } }); }
 function holdBgm(on){ try{ if(on){ bgmHeld=[TR.bgm,TR.decode].filter(t=>t&&t.playing); bgmHeld.forEach(t=>t.pause(1)); }
   else { bgmHeld.forEach(t=>t.play(1.4)); bgmHeld=[]; } }catch(e){} }
 function openRoom(){ ensure(); open=true; scr='lobby'; preload(); render(); requestAnimationFrame(()=>root.classList.add('on')); snd('pop'); holdBgm(true); bgm(1); }
@@ -8458,8 +8458,14 @@ function drawLevel(anim){ const g=$g('.gl'); if(!g) return; const d=M.dealer, pr
   g.innerHTML=`<i class="gl-bg"></i><img class="gl-fr" src="${GIMG('gd-lvframe')}" alt="" draggable="false"><i class="gl-eye2 l"></i><i class="gl-eye2 r"></i>
    <div class="gl-teams"><i class="gl-hi"></i>${[0,1].map(t=>`<div class="glt t${t}${d===t?' cur':''}"><span class="gl-row"><span class="gl-avs">${av(t)}${av(t+2)}</span><b class="glv" data-t="${t}"><span>${LV(M.lv[t])}</span></b></span><span class="gl-ac">${chance(t)}</span></div>`).join('')}
    <div class="gl-cur"><small>${T('LEVEL','本局级牌')}</small><div class="gl-tile"><img class="gl-face" src="${GC_IMG(cimg({r:FL,s:1}))}" alt="${SUIT[1]}${LV(FL)}"><i class="gl-shine"></i></div></div></div>`;
-  if(prevL!=null&&prevL!==FL&&!reduce){ const tl=g.querySelector('.gl-tile'); tl.classList.add('flip'); const im=tl.querySelector('.gl-face'); im.src=GC_IMG(cimg({r:prevL,s:1})); setTimeout(()=>{ im.src=GC_IMG(cimg({r:FL,s:1})); },260); setTimeout(()=>tl.classList.remove('flip'),900); } glSize(); placeHi(d); }
+  if(prevL!=null&&prevL!==FL&&!reduce){ const tl=g.querySelector('.gl-tile'); tl.classList.add('flip'); const im=tl.querySelector('.gl-face'); im.src=GC_IMG(cimg({r:prevL,s:1})); setTimeout(()=>{ im.src=GC_IMG(cimg({r:FL,s:1})); },260); setTimeout(()=>tl.classList.remove('flip'),900); } glSize(); glDigits(); placeHi(d); }
 // the dragon frame takes all the room left of your ally's seat and above your previous player's cards, never covering either
+// line the level digits' ink up with the avatars' centre: measure the glyphs and shift by the gap between the ink centre and the line-box centre
+function glDigits(){ const g=$g('.gl'); if(!g) return; const v=g.querySelector('.glv'); if(!v) return; const cs=getComputedStyle(v), fs=parseFloat(cs.fontSize), lh=parseFloat(cs.lineHeight)||fs*1.15; if(!fs) return;
+  const c=glDigits.c||(glDigits.c=document.createElement('canvas').getContext('2d')); c.font=`${cs.fontWeight} ${fs}px ${cs.fontFamily}`;
+  const m=c.measureText('2A8'), fa=m.fontBoundingBoxAscent, fd=m.fontBoundingBoxDescent, ia=m.actualBoundingBoxAscent, id=m.actualBoundingBoxDescent; if(!(fa>0)) return;
+  const base=lh/2+(fa-fd)/2, ink=base-(ia-id)/2; g.style.setProperty('--gy',(lh/2-ink).toFixed(2)+'px'); }
+if(document.fonts&&document.fonts.ready) document.fonts.ready.then(()=>{ try{ glDigits(); }catch(e){} });
 function glSize(){ const g=$g('.gl'); if(!g||!felt) return; const R=felt.getBoundingClientRect(); if(!R.width) return; const rem=parseFloat(getComputedStyle(document.documentElement).fontSize)||16;
   const box=s=>{ const es=$$g(s); let l=1e9,t=1e9; es.forEach(e=>{ const r=e.getBoundingClientRect(); if(r.width){ l=Math.min(l,r.left); t=Math.min(t,r.top); } }); return {l,t}; };
   const gl=g.getBoundingClientRect(), x0=gl.left, y0=gl.top, top2=box('.gs2 .gs-id,.gs2 .gs-av,.gs2 .gs-dir,.gs2 .gs-fan,.gs2 .gs-cnt,.gs2 .gs-tx'), left3=box('.gs3 .gs-fan,.gs3 .gs-dir,.gs3 .gs-av,.gs3 .gs-id');
