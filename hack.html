@@ -3405,6 +3405,80 @@ html:not([lang=zh]) .gt-choose .gc-lb b{font-family:'Newsreader','Noto Serif SC'
 .tq-tbl~.tq-opts .tq-o{padding:.5rem .6rem .45rem;flex-direction:row;justify-content:center;gap:.9rem}
 .tq-tbl~.tq-opts .gc.xs{width:2.9rem!important;height:4.06rem!important}
 .tq-tbl~.tq-opts .gr-mini .gc+.gc{margin-left:-1.6rem!important}
+/* level / wild tags on small cards inside the tutorial panels, as in the real game */
+.gc.xs.tagd{--cw:3rem}
+.gc.xs.tagd .gc-tag{display:block!important;font-size:calc(var(--cw)*.19)!important;left:22%!important;top:3%!important;padding:.18em .28em .14em!important}
+.gc.xs.tagd .gc-tag .wst{display:none}
+.tq-tbl .gc.xs.tagd{--cw:4.3rem}
+.tq-o .gc.xs.tagd,.tq-show .gc.xs.tagd{--cw:3.6rem;width:3.6rem!important;height:5.04rem!important}
+.tq-o .gr-mini.tagd .gc+.gc{margin-left:-1.9rem!important}
+.tq-tbl~.tq-opts .gc.xs.tagd{--cw:2.9rem}
+.tq-top{display:flex;align-items:center;gap:1rem}
+.tq-top .tq-q{flex:1}
+.tq-lv{flex:none;display:flex;align-items:center;gap:.5rem;padding:.35rem .7rem .35rem .55rem;border-radius:.6rem;background:linear-gradient(180deg,rgba(60,44,14,.9),rgba(26,18,6,.9));border:1px solid #d4a64a;box-shadow:0 0 14px rgba(212,166,74,.25)}
+.tq-lv small{font:600 .75rem/1.2 'Noto Sans SC','Barlow',sans-serif;color:#e8d4a2;max-width:4.5em}
+.tq-lv b{font:400 1.7rem/1 'GD Display','Lilita One',serif;color:#ffe08a}
+.tq-lv .gc.xs.tagd{--cw:2.4rem;width:2.4rem!important;height:3.36rem!important}
+.tq-lv .gc.xs.tagd .gc-tag{font-size:calc(var(--cw)*.17)!important}
+.tq-show{display:flex;justify-content:center;padding:.5rem 0}
+.tq-show .gr-mini.tagd .gc+.gc{margin-left:-1.5rem!important}
+.tq-show .gc.xs.tagd{--cw:4.4rem;width:4.4rem!important;height:6.16rem!important}
+.tq-o.txt{min-height:3.4rem}
+/* bomb ordering */
+.ts-wrap{display:flex;flex-direction:column;gap:.55rem}
+.ts-pool{display:flex;flex-wrap:wrap;gap:.5rem;justify-content:center;min-height:5.6rem;padding:.5rem;border-radius:.7rem;background:rgba(0,0,0,.25);border:1px dashed rgba(226,188,98,.3)}
+.ts-chip{display:flex;flex-direction:column;align-items:center;gap:.25rem;padding:.4rem .55rem .35rem;border-radius:.55rem;background:linear-gradient(180deg,rgba(48,36,18,.95),rgba(20,15,9,.95));border:1.5px solid rgba(226,188,98,.45);cursor:grab;touch-action:none;user-select:none}
+.ts-chip span{font:600 .74rem/1.15 'Noto Sans SC','Barlow',sans-serif;color:#f3e2b8;white-space:nowrap}
+.ts-chip .gc.xs.tagd{--cw:2.2rem;width:2.2rem!important;height:3.08rem!important}
+.ts-chip .gr-mini .gc+.gc{margin-left:-1.45rem!important}
+.ts-chip.lift{opacity:.35}
+.ts-ghost{position:fixed;z-index:9999;pointer-events:none;transform:rotate(-3deg) scale(1.05);box-shadow:0 14px 30px rgba(0,0,0,.6);opacity:.95}
+.ts-arrow{text-align:center;font:600 .78rem/1 'Noto Sans SC','Barlow',sans-serif;color:#c9b88f}
+.ts-slots{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:.45rem}
+.ts-slot{position:relative;min-height:6.4rem;display:flex;align-items:flex-end;justify-content:center;padding:1.3rem .2rem .3rem;border-radius:.6rem;background:rgba(0,0,0,.3);border:1.5px solid rgba(226,188,98,.25);transition:border-color .2s,background .2s}
+.ts-slot>i{position:absolute;left:.4rem;top:.3rem;font:700 .8rem/1 'Barlow',sans-serif;font-style:normal;color:#fff;width:1.2rem;height:1.2rem;border-radius:50%;display:grid;place-items:center;background:#b8261c}
+.ts-slot>em{position:absolute;right:.45rem;top:.4rem;font:600 .68rem/1 'Noto Sans SC','Barlow',sans-serif;font-style:normal;color:#c9b88f}
+.ts-slot.hov{border-color:#ffd36a;background:rgba(255,211,106,.12)}
+.ts-slot.ok{border-color:#5fe0a0;background:rgba(95,224,160,.12)}
+.ts-slot.no{border-color:#ff6a5a;background:rgba(255,106,90,.1)}
+.ts-slot .ts-chip{width:100%;padding:.35rem .2rem .3rem}
+.ts-bar{display:flex;justify-content:center}
+.ts-chk,.mg-b{font:700 .9rem/1 'Noto Sans SC','Barlow',sans-serif;padding:.55rem 1.4rem;border-radius:2rem;border:1.5px solid #d4a64a;background:linear-gradient(180deg,#f6d77e,#c9952e);color:#2a1a00;cursor:pointer}
+.mg-b.ghost{background:transparent;color:#f3e2b8}
+.mg-b:disabled{opacity:.35;cursor:default}
+.tb-panel.done .ts-chip{cursor:default}
+/* the playable mini hand */
+.mg-tbl{height:27rem!important}
+.mg-tbl .tq-s.turn .tq-av{box-shadow:0 0 0 3px #7ee2ff,0 0 16px #7ee2ff!important}
+.mg-h{display:flex}
+.tq-s.s0 .gc{cursor:pointer;transition:transform .15s}
+.tq-s.s0 .gc.sel{transform:translateY(-.8rem);box-shadow:0 0 0 2px #7ee2ff,0 6px 14px rgba(0,0,0,.5)}
+.mg-p{position:absolute;display:flex;align-items:center;justify-content:center;pointer-events:none}
+.mg-p .gc.xs.tagd{--cw:3rem;width:3rem!important;height:4.2rem!important}
+.mg-p .gr-mini .gc+.gc{margin-left:-1.6rem!important}
+.mg-p.p0{left:50%;bottom:8.3rem;transform:translateX(-50%)}
+.mg-p.p2{left:50%;top:7.6rem;transform:translateX(-50%)}
+.mg-p.p1{right:15.5rem;top:50%;transform:translateY(-50%)}
+.mg-p.p3{left:15.5rem;top:50%;transform:translateY(-50%)}
+.mg-pass{font:700 .95rem/1 'Noto Sans SC','Barlow',sans-serif;color:#c9b88f;padding:.35rem .8rem;border-radius:1rem;background:rgba(0,0,0,.45);border:1px solid rgba(255,255,255,.15)}
+.mg-bar{display:flex;align-items:center;gap:.5rem}
+.mg-msg{flex:1;font:600 .9rem/1.4 'Noto Sans SC','Barlow',sans-serif;color:#ffe7a8}
+/* the title bar stays above the tutorial dimming and keeps working */
+.gr-top{position:relative;z-index:46}
+.tut-glow{box-shadow:0 0 0 2px #7ee2ff,0 0 18px 4px rgba(126,226,255,.75)!important;animation:tutGlow 1.2s ease-in-out infinite alternate;border-radius:.5rem}
+@keyframes tutGlow{to{box-shadow:0 0 0 2px #bff3ff,0 0 26px 8px rgba(126,226,255,.95)!important}}
+.tb-panel .gr-mini{width:auto!important;min-width:0!important}
+.ts-chip .gr-mini{justify-content:center}
+.tq-lv .gc.xs{--cw:2.4rem;width:2.4rem!important;height:3.36rem!important;border-radius:.2rem!important}
+.mg-tbl{height:23.5rem!important}
+.mg-tbl .gc.xs.tagd{--cw:3.6rem;width:3.6rem!important;height:5.04rem!important}
+.mg-tbl .gr-mini .gc+.gc{margin-left:-1.75rem!important}
+.mg-p.p0{bottom:6.9rem!important}
+.mg-p.p2{top:6.4rem!important}
+.mg-p.p1{right:auto!important;left:63%;transform:translate(-50%,-50%)!important}
+.mg-p.p3{left:37%!important;transform:translate(-50%,-50%)!important}
+.mg-p .gc.xs.tagd{--cw:2.8rem!important;width:2.8rem!important;height:3.92rem!important}
+.gameq .tq-q{font-size:.95rem}
 /* ===== Pages & Frames: a reading room, green-leather rail and paper pages ===== */
 #reader.shelf{--sh-bg:#F3EEE3;--sh-ink:#23201A;--sh-ink2:#6B6252;--sh-acc:#8B2B22;--sh-green:#1F3329;--sh-line:#DCD2BF;--cx:#8B2B22}
 #reader.shelf .rd-main,#reader.shelf .rd-leaf{background:var(--sh-bg) linear-gradient(90deg,rgba(80,60,30,.05) 1px,transparent 1px) 0 0/22px 100%}
@@ -8165,15 +8239,14 @@ const steps=[
  {say:['A Bomb','炸弹'],b:['Four or more cards of one rank make a bomb, and the wild card can fill one in. A bomb beats any ordinary combination. A sorted bomb wears a round badge on its front card, showing how many cards it has; tap the badge to pick up the whole bomb.','四张或以上同点数的牌就是炸弹，逢人配可以帮你补上。炸弹能压住任何普通牌型。理好的炸弹，最前面那张牌左下角有一个圆形徽标，上面写着这是几张的炸弹；点一下徽标就能整组选中。'],spot:'#gtHand'},
  {say:['Bombs Against Bombs','炸弹之间比大小'],b:['From strongest to weakest: the four jokers, then bombs of six or more cards (more cards win), then a straight flush, then five-card bombs, then four-card bombs. Bombs of the same size compare by rank.','从大到小：四大天王，然后是六张及以上的炸弹（张数多的大），再是同花顺，再是五张炸弹，最后是四张炸弹。张数相同的炸弹比点数。'],show:[[['Joker Bomb','四大天王'],[[16,4],[16,4],[17,4],[17,4]]],[['6+ cards','六张以上'],[[11,0],[11,1],[11,2],[11,3],[11,0],[11,3]]],[['Straight flush','同花顺'],[[9,2],[10,2],[11,2],[12,2],[13,2]]],[['5 cards','五张'],[[8,0],[8,1],[8,2],[8,3],[8,1]]],[['4 cards','四张'],[[6,0],[6,1],[6,2],[6,3]]]]},
  {panel:'combos',say:['Every Combination at a Glance','全部牌型一览'],b:['Here is every combination in one place, with its play tag. Normal combinations only beat the same type with the same number of cards; bombs beat all of them, and among bombs the list runs from strongest to weakest.','所有牌型都在这一页，带着各自的出牌标签。普通牌型只能被同类型、同张数、更大的牌压住；炸弹能压住所有普通牌型，炸弹之间按下面从大到小的顺序比。']},
- {quiz:{q:['Someone played a pair of Kings. Which of these can beat it?','有人出了一对 K。下面哪一手能压住它？'],o:[{c:[[14,0],[14,2]],t:['A pair of Aces','一对 A']},{c:[[12,0],[12,1],[12,3]],t:['Three Queens','三个 Q']},{c:[[5,0],[6,1],[7,2],[8,0],[9,3]],t:['Straight 5 to 9','顺子 5 到 9']}],a:0,why:['Only the same type and size can beat a normal combination: a higher pair.','普通牌型只能用同类型、同张数、更大的牌来压：要一对更大的。'],hint:['Look for the same type, a pair, only higher.','找同样是“对子”、但更大的。']},say:['Practice 1: Same Type','练习 1：同类型才能压'],b:['Your turn to judge. Pick the answer, then press Next.','轮到你来判断。选出答案，再按“下一步”。']},
- {quiz:{q:['This hand is played at 2. Which single card is the biggest?','这一局打 2。下面哪一张单牌最大？'],o:[{c:[[14,0]],t:['Ace of spades','黑桃 A']},{c:[[2,2]],t:['2 of clubs','梅花 2']},{c:[[13,1]],t:['King of hearts','红桃 K']}],a:1,why:['At level 2 every 2 is a level card and outranks the Ace; only the jokers are higher.','打 2 时，所有的 2 都是级牌，比 A 还大，只比大小王小。'],hint:['Remember which rank is the level card this hand.','想想这一局的级牌是哪个点数。']},say:['Practice 2: The Level Card','练习 2：级牌'],b:['Level cards jump the queue.','级牌会插队。']},
- {quiz:{q:['This hand is played at 2. Which card is the wild card?','这一局打 2。哪一张是逢人配？'],o:[{c:[[2,0]],t:['2 of spades','黑桃 2']},{c:[[2,1]],t:['2 of hearts','红桃 2']},{c:[[16]],t:['Small Joker','小王']}],a:1,why:['Only the heart level card is wild. It can stand for any card except a joker.','只有红桃级牌是逢人配，能当除大小王以外的任何牌。'],hint:['The wild card is one particular suit of the level card.','逢人配是级牌里特定花色的那一张。']},say:['Practice 3: The Wild Card','练习 3：逢人配'],b:['One card in the deck can be anything.','整副牌里有一张牌可以当任何牌。']},
- {quiz:{q:['Which full house is bigger?','哪一个三带二更大？'],o:[{c:[[7,0],[7,1],[7,2],[4,3],[4,0]],t:['777 with 44','777 带 44']},{c:[[6,0],[6,1],[6,3],[14,0],[14,2]],t:['666 with AA','666 带 AA']}],a:0,why:['A full house compares only its triple: 777 beats 666, whatever pair comes along.','三带二只比三张：777 比 666 大，带的对子不算。'],hint:['Only one part of a full house counts.','三带二只看其中一部分。']},say:['Practice 4: Full Houses','练习 4：三带二'],b:['A classic trap.','一个常见的坑。']},
-{quiz:{q:['Someone played a straight from 10 to A. Which of these beats it?','有人出了顺子 10 到 A。下面哪一手能压住它？'],o:[{c:[[17],[17]],t:['A pair of Big Jokers','一对大王']},{c:[[3,0],[4,0],[5,0],[6,0],[7,0]],t:['Straight flush 3 to 7','同花顺 3 到 7']},{c:[],t:['Nothing: 10 to A is the top straight','压不住：10 到 A 已经是最大的顺子']}],a:1,why:['A straight flush is a bomb, not a straight. Even the lowest one beats the highest plain straight.','同花顺是炸弹，不是顺子。哪怕是最小的同花顺，也比最大的普通顺子大。'],hint:['A same-suit straight is not a normal combination.','同一花色的顺子，已经不是普通牌型了。']},say:['Practice 5: Straight or Bomb?','练习 5：顺子还是炸弹？'],b:['Small cards, big power.','小牌也能有大威力。']},
-{quiz:{q:['Which straight is the biggest?','哪一个顺子最大？'],o:[{c:[[14,3],[2,0],[3,2],[4,3],[5,0]],t:['A 2 3 4 5','A 2 3 4 5']},{c:[[9,2],[10,0],[11,3],[12,2],[13,0]],t:['9 to K','9 到 K']},{c:[[10,0],[11,3],[12,2],[13,0],[14,3]],t:['10 to A','10 到 A']}],a:2,why:['The Ace can sit on top (10 J Q K A, the biggest straight) or count as 1 (A 2 3 4 5, the smallest). Inside a straight the cards keep their natural order, even the level card.','A 可以放在最上头（10 J Q K A，最大的顺子），也可以当 1 用（A 2 3 4 5，最小的顺子）。在顺子里，牌都按自然顺序排，级牌也一样。'],hint:['Where does the Ace sit in each one?','看看 A 在每个顺子里排在哪一头。']},say:['Practice 6: Where the Ace Sits','练习 6：A 放在哪头'],b:['The Ace plays two roles.','A 有两种身份。']},
- {quiz:{q:['Which bomb is the strongest?','哪一个炸弹最大？'],o:[{c:[[11,0],[11,1],[11,2],[11,3],[11,0]],t:['Five Jacks','五张 J']},{c:[[9,0],[10,0],[11,0],[12,0],[13,0]],t:['Straight flush 9 to K','同花顺 9 到 K']},{c:[[3,0],[3,1],[3,2],[3,3],[3,0],[3,1]],t:['Six 3s','六张 3']}],a:2,why:['Six or more cards beat a straight flush, and a straight flush beats any five-card bomb.','六张及以上的炸弹比同花顺大，同花顺又比任何五张炸弹大。'],hint:['Count the cards: six is the dividing line.','数张数：六张是分水岭。']},say:['Practice 7: Bombs','练习 7：炸弹'],b:['Count first, then compare.','先数张数，再比大小。']},
-{quiz:{q:['This hand is played at 2. Which bomb is the strongest?','这一局打 2。哪一个炸弹最大？'],o:[{c:[[2,0],[2,2],[2,3],[2,0]],t:['Four 2s (level card)','四个 2（级牌）']},{c:[[14,0],[14,1],[14,2],[14,3]],t:['Four Aces','四个 A']},{c:[[3,0],[3,1],[3,2],[3,3],[3,0]],t:['Five 3s','五个 3']}],a:2,why:['Bombs compare the number of cards first. Five 3s beat any four-card bomb. Only between equal counts does rank matter, and then the level 2s beat the Aces.','炸弹先比张数，五个 3 比任何四张炸弹都大。张数一样时才比点数，那时级牌 2 才比 A 大。'],hint:['Count before you compare ranks.','先数张数，再比点数。']},say:['Practice 8: Count Before Rank','练习 8：先比张数'],b:['Level cards are big, but not that big.','级牌很大，但也有压不住的时候。']},
- {quiz:{q:['Your ally has one card left and it is your lead. Here is the table with every hand face up. Which lead helps your team most?','盟友只剩一张牌，轮到你领出。下面是牌桌，每家的牌都亮出来了。哪一手最能帮到己方？'],hands:[{s:1,c:[[3,2],[3,3]]},{s:2,c:[[9,0]]},{s:3,c:[[12,2],[12,0]]},{s:0,c:[[4,3],[11,0],[11,1],[13,0],[13,2],[13,3],[5,1],[5,2]]}],o:[{c:[[4,3]],t:['A single 4','单张 4']},{c:[[11,0],[11,1]],t:['A pair of Jacks','一对 J']},{c:[[13,0],[13,2],[13,3],[5,1],[5,2]],t:['KKK with 55','KKK 带 55']}],a:0,why:['Play goes you, next, ally. Your next player only has two 3s and cannot beat a 4, so your ally plays the 9 and goes out. A pair or a full house leaves your ally unable to follow.','出牌顺序是你 → 下家 → 盟友。下家只有一对 3，压不过单张 4，盟友就能出 9 走掉。出对子或三带二，盟友手里一张牌根本跟不上。'],hint:['Your ally holds a single card. What can they follow?','盟友手里只有一张单牌，他能跟什么？']},say:['Practice 9: Feeding Your Ally','练习 9：给盟友递牌'],b:['Read every hand before you lead.','领出之前，先把每家的牌看一遍。']},
+ {quiz:{L:2,q:['Someone played a pair of Kings. Which of these can beat it?','有人出了一对 K。下面哪一手能压住它？'],o:[{c:[[14,0],[14,2]],t:['A pair of Aces','一对 A']},{c:[[12,0],[12,1],[12,3]],t:['Three Queens','三个 Q']},{c:[[5,0],[6,1],[7,2],[8,0],[9,3]],t:['Straight 5 to 9','顺子 5 到 9']}],a:0,why:['Only the same type and size can beat a normal combination: a higher pair.','普通牌型只能用同类型、同张数、更大的牌来压：要一对更大的。'],hint:['Look for the same type, a pair, only higher.','找同样是“对子”、但更大的。']},say:['Practice 1: Same Type','练习 1：同类型才能压'],b:['Your turn to judge. Pick the answer, then press Next.','轮到你来判断。选出答案，再按“下一步”。']},
+ {quiz:{L:5,q:['The level card is 5. Which single card is the biggest?','本题级牌是 5。下面哪一张单牌最大？'],o:[{c:[[14,0]],t:['Ace of spades','黑桃 A']},{c:[[5,2]],t:['5 of clubs','梅花 5']},{c:[[13,1]],t:['King of hearts','红桃 K']}],a:1,why:['Every 5 is a level card this hand, so it outranks the Ace; only the jokers are higher.','这一局所有的 5 都是级牌，比 A 还大，只比大小王小。'],hint:['Look at the level card at the top right of this question.','看看题目右上角标出的级牌。']},say:['Practice 2: The Level Card','练习 2：级牌'],b:['Every question names its own level card, just like the panel in a real game.','每道题都会标出本题的级牌，就像正式对局里的级牌面板一样。']},
+ {quiz:{L:7,q:['The level card is 7. You play these five cards together. What do they count as?','本题级牌是 7。你把这五张一起打出去，算什么牌？'],show:[[8,0],[9,2],[10,3],[11,0],[7,1]],o:[{c:[],t:['A straight from 7 to J','顺子 7 到 J']},{c:[],t:['A straight from 8 to Q','顺子 8 到 Q']},{c:[],t:['Not a valid combination','不成牌型']}],a:1,why:['The heart 7 is the wild card. It may stand for any card, and it always takes the higher reading: here it becomes the Q, making 8 to Q.','红桃 7 是逢人配，能当任何一张牌，而且总是按更大的读法：这里它当 Q，组成 8 到 Q。'],hint:['The wild card can stand in for any card, and the game takes the bigger reading.','逢人配可以当任何一张牌，而且按更大的那种算。']},say:['Practice 3: The Wild Card','练习 3：逢人配'],b:['One card can be anything.','有一张牌可以当任何牌。']},
+ {quiz:{L:5,q:['The level card is 5. Which full house is the biggest?','本题级牌是 5。哪一个三带二最大？'],o:[{c:[[12,0],[12,2],[12,3],[11,0],[11,2]],t:['QQQ with JJ','QQQ 带 JJ']},{c:[[14,0],[14,2],[14,3],[3,0],[3,2]],t:['AAA with 33','AAA 带 33']},{c:[[5,0],[5,2],[5,3],[2,0],[2,2]],t:['555 with 22','555 带 22']}],a:2,why:['A full house compares only its triple. At level 5 the triple 5s are level cards and beat even AAA; the pair never counts.','三带二只比三张。级牌是 5，三张 5 是级牌，比 AAA 还大；带的对子不算。'],hint:['Which part of a full house counts, and which rank is the level card?','三带二比的是哪一部分？本题级牌又是谁？']},say:['Practice 4: Full Houses','练习 4：三带二'],b:['Two traps in one.','一题两个坑。']},
+{quiz:{L:2,q:['Someone played a straight from 10 to A. Which of these beats it?','有人出了顺子 10 到 A。下面哪一手能压住它？'],o:[{c:[[17],[17]],t:['A pair of Big Jokers','一对大王']},{c:[[3,0],[4,0],[5,0],[6,0],[7,0]],t:['Straight flush 3 to 7','同花顺 3 到 7']},{c:[],t:['Nothing: 10 to A is the top straight','压不住：10 到 A 已经是最大的顺子']}],a:1,why:['A straight flush is a bomb, not a straight. Even the lowest one beats the highest plain straight.','同花顺是炸弹，不是顺子。哪怕是最小的同花顺，也比最大的普通顺子大。'],hint:['A same-suit straight is not a normal combination.','同一花色的顺子，已经不是普通牌型了。']},say:['Practice 5: Straight or Bomb?','练习 5：顺子还是炸弹？'],b:['Small cards, big power.','小牌也能有大威力。']},
+ {quiz:{L:2,sort:[{c:[[16],[16],[17],[17]],t:['Joker Bomb','四大天王']},{c:[[3,0],[3,1],[3,2],[3,3],[3,0],[3,2]],t:['Six 3s','六个 3']},{c:[[9,2],[10,2],[11,2],[12,2],[13,2]],t:['Straight flush 9 to K','同花顺 9 到 K']},{c:[[11,0],[11,1],[11,2],[11,3],[11,0]],t:['Five Jacks','五个 J']},{c:[[2,0],[2,2],[2,3],[2,0]],t:['Four 2s','四个 2']},{c:[[14,0],[14,1],[14,2],[14,3]],t:['Four Aces','四个 A']}],q:['The level card is 2. Drag the six bombs into order, strongest first.','本题级牌是 2。把六个炸弹按从大到小拖进格子里。'],why:['Joker Bomb first. Then count the cards: six or more beat a straight flush, which beats any five-card bomb. With the same count, rank decides, and the level 2s beat the Aces.','四大天王最大。然后先数张数：6 张及以上比同花顺大，同花顺又比五张炸弹大。张数一样才比点数，级牌 2 比 A 大。'],hint:['Count the cards first; six is the dividing line around the straight flush. Same count? Then the level card wins.','先数张数，6 张是同花顺上下的分水岭；张数一样，再看谁是级牌。']},say:['Practice 6: Order the Bombs','练习 6：炸弹排排队'],b:['One question covers every bomb rule.','一道题把炸弹的规矩全考到。']},
+ {quiz:{L:2,game:[[[3,2],[3,1],[5,2],[8,2],[8,0]],[[12,1],[4,2],[7,2],[9,0]],[[4,0],[4,1]],[[7,0],[7,1],[12,3]]],sol:[[[3,2],[3,1]],[[8,2],[8,0]],[[5,2]]],goal:['Goal: you and your ally finish 1st and 2nd. Every hand is face up. Your lead.','目标：你和盟友拿下头游和二游。所有人的牌都亮着，你先出。'],q:['Play it out yourself. Opponents always beat with their smallest cards; your ally never covers you unless it lets them go out.','自己动手打完这一手。对手总用最小的牌来压；盟友不会压你，除非这样能直接出完。'],why:['Lead the small pair: your next player has no pair, so your ally plays 44 and goes out. Then take back the lead with 88 and finish with the 5.','先出小对 3：下家没有对子，盟友就能出 44 走掉。然后用 88 把出牌权拿回来，最后出 5 收尾。'],hint:['Your ally holds a pair. What can the next player not beat?','盟友手里是一对。下家压不住的是什么？']},say:['Practice 7: Feed Your Ally','练习 7：给盟友递牌'],b:['A small game with only one way through. Stuck? Press Show me, or Next to skip.','这是一个只有一种解法的小游戏。想不出来可以按“看答案”，也可以直接按“下一步”跳过。']},
+ {say:['Time for a Real Hand','实战演练'],b:['That is the theory. Now let us play a real hand together: I will point at what to do, and you make the moves. The cards in your hand are the ones dealt to you.','理论就讲到这里。下面进入实战演练，我们一起打一手真正的牌：我来指点，你来动手，用的就是刚才发给你的这手牌。']},
  {you:[[3,0],[3,3]],swipe:1,say:['Lead a Pair','领出一对'],b:['You lead first, so any combination is allowed. Tap your two 3s, then press Play. Tip: to pick several cards quickly, hold down the left mouse button on one card and slide across the others.','你先出，任何牌型都可以。点你的两张 3，再按“出牌”。小技巧：想快速选好几张，可以在一张牌上按住左键，再滑过其他牌。']},
  {say:['Warning Light','报牌'],b:['You now hold 10 cards. With 10 or fewer, a siren lights up beside your count so everyone knows you are getting close.','你现在只剩 10 张。手牌 10 张或以下时，牌数旁边会亮起警灯，大家都知道你快出完了。'],spot:'.gs0 .gs-cnt'},
  B(1,[[6,0],[6,1]]), B(2,[[11,1],[11,2]]), X(3),
@@ -8512,10 +8585,10 @@ function snd(k){ try{ if(!AC) initAudio(); if(!AC||SND.muted) return; const t=AC
 } catch(e){} }
 /* ---------- cards ---------- */
 const cimg=c=>c.r>=16?(c.r===17?'J1':'J2'):SL[c.s]+(RK[c.r]||c.r);
-function cardEl(c,cls,plain){ const L=H?H.L:2, wild=!plain&&GD.isWild(c,L), lvl=!plain&&c.r===L&&c.r<16, d=document.createElement('div');
+function cardEl(c,cls,plain,Lo){ const L=Lo!=null?Lo:H?H.L:2, wild=!plain&&GD.isWild(c,L), lvl=!plain&&c.r===L&&c.r<16, d=document.createElement('div');
   d.className='gc'+(cls?' '+cls:'')+(wild?' wild':lvl?' lvl':'')+(c.r>=16?' jk'+(c.r===17?' big':''):''); d.dataset.id=c.id;
   d.innerHTML=`<img src="${GC_IMG(cimg(c))}" alt="" draggable="false">${wild?`<em class="gc-tag wd${zh()?' v':''}"><i class="wst"><svg viewBox="0 0 20 20"><path d="M10 0l2.3 7.7L20 10l-7.7 2.3L10 20l-2.3-7.7L0 10l7.7-2.3z"/></svg></i>${T('WILD','逢人配')}</em>`:lvl?`<em class="gc-tag lv${zh()?' v':''}">${T('LV','级牌')}</em>`:''}`; return d; }
-const cardHTML=(c,cls,plain)=>cardEl(c,cls,plain).outerHTML;
+const cardHTML=(c,cls,plain,Lo)=>cardEl(c,cls,plain,Lo).outerHTML;
 const backHTML=n=>Array.from({length:n},(_,i)=>`<i class="gb" style="--i:${i}"></i>`).join('');
 function preload(){ for(let s=0;s<4;s++) for(let r=2;r<=14;r++){ const i=new Image(); i.src=GC_IMG(SL[s]+(RK[r]||r)); } ['J1','J2'].forEach(k=>{ const i=new Image(); i.src=GC_IMG(k); }); }
 /* ---------- keycaps (like the piano keys elsewhere on the site) ---------- */
@@ -9850,7 +9923,7 @@ function showWin(res,won,rows,test){ const felt0=$g('.gt-felt'); const o=documen
   o.querySelector('#grNext').onclick=()=>{ snd('btn'); o.remove(); startGame(true); };
   o.querySelector('#grLobby').onclick=()=>{ snd('btn'); o.remove(); toLobby(); }; }
 /* ---------- rules ---------- */
-function miniRow(list){ return `<span class="gr-mini" style="--n:${list.length}">${list.map(([r,s])=>cardHTML({id:-1,r,s:r>=16?4:s},'xs',1)).join('')}</span>`; }
+function miniRow(list,Lo){ if(Lo!=null) return `<span class="gr-mini tagd" style="--n:${list.length}">${list.map(([r,s])=>cardHTML({id:-1,r,s:r>=16?4:s},'xs tagd',0,Lo)).join('')}</span>`; return `<span class="gr-mini" style="--n:${list.length}">${list.map(([r,s])=>cardHTML({id:-1,r,s:r>=16?4:s},'xs',1)).join('')}</span>`; }
 function rules(after,dry){ const p=document.createElement('div'); p.className='gr-pop'; if(after) p._after=after; const L=H?H.L:2, W=[L,1];
   // ranks for examples, never the level rank (so a 7 never doubles as the wild card)
   const pool=[12,9,13,8,6,7,11,10,4,3,14,5,2].filter(r=>r!==L), rk=i=>pool[i%pool.length];
@@ -10051,7 +10124,7 @@ function startTut(){ root.classList.remove('handend'); $$g('.gr-pop').forEach(n=
   const D=GD_TUT; if(!P) pickPlayers(); M=GDM.newMatch(); M.lv=[D.L1,D.L1]; M.dealer=0; scr='table'; sortMode=0; warned=new Set(); sel.clear(); ret=null; tribPick=null;
   H={L:D.L1,hands:D.h1.map(h=>h.map(c=>Object.assign({},c))),order:[],turn:0,lead:0,trick:null,passes:0,played:[[],[],[],[]],log:[],tribute:null,phase:'play',_ccOk:true};
   tut={i:-1}; buildTable(); root.classList.add('tutm'); busy=false; tutNext(); }
-function endTut(silent){ if(!tut) return; if(tut.ccWas!=null){ ccToggle(tut.ccWas,true); tut.ccWas=null; } clearInterval(tut.iv); clearInterval(tut.tw); tut=null; root&&root.classList.remove('tutm'); $$g('.gr-tut').forEach(n=>n.remove()); if(!silent) try{ localStorage.setItem('gd-tut','1'); }catch(e){} }
+function endTut(silent){ if(!tut) return; $$g('.tut-glow').forEach(e=>e.classList.remove('tut-glow')); if(tut.ccWas!=null){ ccToggle(tut.ccWas,true); tut.ccWas=null; } clearInterval(tut.iv); clearInterval(tut.tw); tut=null; root&&root.classList.remove('tutm'); $$g('.gr-tut').forEach(n=>n.remove()); if(!silent) try{ localStorage.setItem('gd-tut','1'); }catch(e){} }
 /* the tutorial guide: a dragon spirit that floats beside a spotlight, points with a beam of light and a tapping hand, and talks you through each step */
 const TAP_SVG='<svg viewBox="0 0 48 56" aria-hidden="true"><path d="M18 6a4 4 0 0 1 8 0v18l2-1a4 4 0 0 1 5 2l1-.4a4 4 0 0 1 5 2.6l1-.2a4 4 0 0 1 4.6 3.4L45 40c1 7-4 13-11 13h-6c-4 0-7.6-2-9.7-5.4L8.6 31a4 4 0 0 1 6.6-4.6L18 30z" fill="#fff8e6" stroke="#4a3208" stroke-width="2.4" stroke-linejoin="round"/><path d="M26 24v8M32 26v7M38 28v6" stroke="#4a3208" stroke-width="2" stroke-linecap="round"/></svg>';
 function tutUI(){ let o=$g('.gr-tut'); if(!o){ o=document.createElement('div'); o.className='gr-tut tut2 nodim';
@@ -10069,6 +10142,7 @@ function tutPlace(){ const o=$g('.gr-tut'); if(!o||!tut) return; const st=tut.cu
   const show=!!(st&&bub.classList.contains('on')); o.classList.toggle('nodim',!hr||!show||!!(st&&st.rings));
   // some steps light up two places at once (a switch and the panel it opens) with glowing rings and no dimming
   const rg=show&&st&&st.rings?st.rings.map(tutRect).filter(Boolean):[]; let rs=[...o.querySelectorAll('.tut-ring')]; while(rs.length>rg.length) rs.pop().remove(); while(rs.length<rg.length){ const e=document.createElement('i'); e.className='tut-ring'; o.insertBefore(e,o.firstChild); rs.push(e); }
+  $$g('.tut-glow').forEach(e=>e.classList.remove('tut-glow')); if(show&&st&&st.rings) st.rings.forEach(q=>{ const e=$g(q); if(e&&e.closest('.gr-top')) e.classList.add('tut-glow'); });
   rg.forEach((r,i)=>{ rs[i].style.cssText=`left:${r.l-10}px;top:${r.t-10}px;width:${r.w+20}px;height:${r.h+20}px`; }); o.classList.toggle('pick',!!(tut&&tut.hl&&tut.hl.length));
   if(hr){ const p=q==='glow'?8:12; hole.style.cssText=`left:${hr.l-p}px;top:${hr.t-p}px;width:${hr.w+2*p}px;height:${hr.h+2*p}px`; }
   // the speech bubble goes where it hides least of the target
@@ -10093,9 +10167,9 @@ function tutCard(st){ const o=tutUI(), bub=o.querySelector('.tut-bub'); tut.cur=
   const n=GD_TUT.steps.filter(x=>x.say).length, k=GD_TUT.steps.slice(0,tut.i+1).filter(x=>x.say).length, act=!!st.you, txt=zh()?st.b[1]:st.b[0];
   const doTxt=st.you==='sort'?T('Switch to Sorted','拨到“理牌”'):st.you==='pass'?T('Press Pass','按“不出”'):st.you==='hint'?T('Press Hint, then Play','先按“提示”，再按“出牌”'):st.you==='ret'?T('Tap the glowing card, then press Give back','点发光的牌，再按“还贡”'):st.you==='badge'?T('Tap the round badge, then press Play','点圆形徽章，再按“出牌”'):T('Tap the glowing cards, then press Play','点选发光的牌，再按“出牌”');
   const show=st.show?`<div class="tb-show">${st.show.map(([lab,cs],i)=>`<div class="tb-row" style="--d:${.25+i*.12}s">${miniRow(cs)}<span>${zh()?lab[1]:lab[0]}</span></div>`).join('')}</div>`:'';
-  const big=!!(st.panel||st.quiz); tut.quizLock=!!st.quiz; o.classList.toggle('tpanel',big); bub.className='tut-bub'+(act?' tbact':'')+(st.show?' wide':'')+(st.demo?' demo':'')+(big?' huge':''); void bub.offsetWidth;
+  const big=!!(st.panel||st.quiz); tut.quizLock=!!(st.quiz&&!st.quiz.game); o.classList.toggle('tpanel',big); bub.className='tut-bub'+(act?' tbact':'')+(st.show?' wide':'')+(st.demo?' demo':'')+(big?' huge':''); void bub.offsetWidth;
   bub.innerHTML=`<div class="tb-top"><span class="tb-dots">${Array.from({length:n},(_,i)=>`<i class="${i<k-1?'done':i===k-1?'cur':''}"></i>`).join('')}</span><button class="tb-x" data-a="tx">${T('Leave','退出教程')}</button></div><h4>${zh()?st.say[1]:st.say[0]}</h4><p class="tb-p"></p>${show}${big?'<div class="tb-panel"></div>':''}
-    ${act?`<div class="tb-do"><i></i>${doTxt}</div>`:`<div class="tb-go"><small>${k} / ${n}</small>${st.demo?`<button class="tb-rules" data-a="treplay">${T('Watch again','再看一遍')}</button>`:''}${st.panel?`<button class="tb-rules" data-a="trules">${T('Open the full Rules','打开完整规则')}</button>`:''}${st.show?`<button class="tb-rules" data-a="trules">${T('See every combination in Rules','打开规则看全部牌型')}</button>`:''}<button class="pri${st.quiz?' locked':''}" data-a="tn">${st.last?T('Start a real game','开始正式对局'):T('Next','下一步')}<kbd>Enter</kbd></button></div>`}`;
+    ${act?`<div class="tb-do"><i></i>${doTxt}</div>`:`<div class="tb-go"><small>${k} / ${n}</small>${st.demo?`<button class="tb-rules" data-a="treplay">${T('Watch again','再看一遍')}</button>`:''}${st.panel?`<button class="tb-rules" data-a="trules">${T('Open the full Rules','打开完整规则')}</button>`:''}${st.show?`<button class="tb-rules" data-a="trules">${T('See every combination in Rules','打开规则看全部牌型')}</button>`:''}<button class="pri${st.quiz&&!st.quiz.game?' locked':''}" data-a="tn">${st.last?T('Start a real game','开始正式对局'):T('Next','下一步')}<kbd>Enter</kbd></button></div>`}`;
   if(big) tutPanel(bub.querySelector('.tb-panel'),st);
   requestAnimationFrame(()=>bub.classList.add('on'));
   // typewriter, with the spirit's eye flickering while it "speaks"
@@ -10138,10 +10212,68 @@ function comboSheet(el){ el.className='tb-panel cmbs'; const L=H.L, W=[L,1], nz=
   let no=0; const row=x=>x===0?`<li class="cs-div"><span>${T('6+ cards beat a straight flush · 5 or fewer lose to it','6 张以上 &gt; 同花顺 &gt; 5 张及以下')}</span></li>`:`<li class="cs-r${x[0]!=='bomb'?' '+x[0]:''}"><i>${++no}</i><div class="cs-c">${miniRow(x[3])}</div><span><b>${x[1]}</b><small>${x[2]}</small></span></li>`;
   el.innerHTML=`<div class="cs"><section class="cs-n"><h5 class="tp-h">${T('Normal combinations','普通牌型')}<small>${T('beat only the same type and size, higher rank','只能被同牌型、同张数、更大的牌压')}</small></h5><div class="cs-g">${N.map(tile).join('')}</div><ul class="cs-tip"><li>${T('Suits never matter, except in a straight flush.','花色不分大小，只有同花顺看花色。')}</li><li>${T(`Order: Big Joker, Small Joker, level card (${LV(L)}), then A K Q … 3 2.`,`大小顺序：大王、小王、级牌（${LV(L)}），再 A K Q … 3 2。`)}</li><li>${T(`The wild card ${SUIT[1]}${LV(L)} can stand in for any card except a joker.`,`逢人配 ${SUIT[1]}${LV(L)} 能当除大小王外的任何一张牌。`)}</li></ul></section>
     <section class="cs-b"><h5 class="tp-h">${T('Bombs, strongest first','炸弹（从大到小）')}<small>${T('beat every normal combination','压得住任何普通牌型')}</small></h5><ol class="cs-l">${B.map(row).join('')}</ol></section></div>`; }
-function quizBuild(el,q){ el.classList.add('quiz'); const tx=a=>zh()?a[1]:a[0];
+function quizBuild(el,q){ el.classList.add('quiz'); const tx=a=>zh()?a[1]:a[0], L=q.L!=null?q.L:H.L;
+  const lv=`<div class="tq-lv"><small>${T('Level card','本题级牌')}</small>${cardHTML({id:-1,r:L,s:1},'xs',1)}<b>${LV(L)}</b></div>`;
+  const top=`<div class="tq-top"><div class="tq-q">${tx(q.q)}</div>${lv}</div>`;
+  if(q.game) return gameBuild(el,q,top,L);
+  if(q.sort) return sortBuild(el,q,top,L);
+  const show=q.show?`<div class="tq-show">${miniRow(q.show,L)}</div>`:'';
+  el.innerHTML=`${top}${show}<div class="tq-opts">${q.o.map((o,i)=>`<button class="tq-o${o.c&&o.c.length?'':' txt'}" data-a="tq" data-i="${i}">${o.c&&o.c.length?miniRow(o.c,L):''}<span>${tx(o.t)}</span></button>`).join('')}</div><div class="tq-why"></div>`; el._q=q; }
+function quizDone(el,msg){ el.classList.add('done'); snd('crown'); const w=el.querySelector('.tq-why'); if(w){ w.className='tq-why ok'; w.textContent=msg; } if(tut){ tut.quizLock=false; const nx=tut.card&&tut.card.querySelector('[data-a=tn]'); if(nx) nx.classList.remove('locked'); } requestAnimationFrame(()=>{ tutPlace(); const bb=el.closest('.tut-bub'); if(bb) bb.scrollTo({top:bb.scrollHeight,behavior:'smooth'}); }); }
+/* drag the bombs into order, strongest first */
+function sortBuild(el,q,top,L){ el.classList.add('sortq'); const tx=a=>zh()?a[1]:a[0]; const n=q.sort.length;
+  const ord=[...Array(n).keys()]; for(let i=n-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [ord[i],ord[j]]=[ord[j],ord[i]]; } if(ord.every((v,i)=>v===i)) ord.reverse();
+  const chip=k=>`<div class="ts-chip" data-k="${k}">${miniRow(q.sort[k].c,L)}<span>${tx(q.sort[k].t)}</span></div>`;
+  el.innerHTML=`${top}<div class="ts-wrap"><div class="ts-pool">${ord.map(chip).join('')}</div><div class="ts-arrow">${T('Drag each one into a slot ↓','把选项拖进下面的格子 ↓')}</div><ol class="ts-slots">${[...Array(n).keys()].map(i=>`<li class="ts-slot" data-n="${i}"><i>${i+1}</i><em>${i===0?T('strongest','最大'):i===n-1?T('weakest','最小'):''}</em></li>`).join('')}</ol><div class="ts-bar"><button class="ts-chk" type="button">${T('Check','检查')}</button></div></div><div class="tq-why"></div>`;
+  const pool=el.querySelector('.ts-pool'), why=el.querySelector('.tq-why');
+  const home=c=>{ pool.appendChild(c); };
+  const drop=(c,slot)=>{ if(!slot){ home(c); return; } const old=slot.querySelector('.ts-chip'); if(old&&old!==c){ const from=c.parentElement; if(from&&from.classList.contains('ts-slot')) from.appendChild(old); else home(old); } slot.appendChild(c); slot.classList.remove('ok','no'); snd('tick'); };
+  el.querySelectorAll('.ts-chip').forEach(c=>{ c.addEventListener('pointerdown',e=>{ if(el.classList.contains('done')) return; e.preventDefault(); e.stopPropagation(); const r=c.getBoundingClientRect(), ox=e.clientX-r.left, oy=e.clientY-r.top; let moved=false;
+      const ghost=c.cloneNode(true); ghost.classList.add('ts-ghost'); Object.assign(ghost.style,{width:r.width+'px',left:r.left+'px',top:r.top+'px'}); document.body.appendChild(ghost); c.classList.add('lift');
+      const mv=ev=>{ moved=moved||Math.abs(ev.clientX-e.clientX)+Math.abs(ev.clientY-e.clientY)>4; ghost.style.left=(ev.clientX-ox)+'px'; ghost.style.top=(ev.clientY-oy)+'px'; el.querySelectorAll('.ts-slot').forEach(s=>{ const b=s.getBoundingClientRect(); s.classList.toggle('hov',ev.clientX>b.left&&ev.clientX<b.right&&ev.clientY>b.top&&ev.clientY<b.bottom); }); };
+      const up=ev=>{ removeEventListener('pointermove',mv); removeEventListener('pointerup',up); ghost.remove(); c.classList.remove('lift'); const hov=el.querySelector('.ts-slot.hov'); el.querySelectorAll('.ts-slot').forEach(s=>s.classList.remove('hov'));
+        if(moved) drop(c,hov); else { if(c.parentElement.classList.contains('ts-slot')) home(c); else drop(c,[...el.querySelectorAll('.ts-slot')].find(s=>!s.querySelector('.ts-chip'))); } };
+      addEventListener('pointermove',mv); addEventListener('pointerup',up); }); });
+  el.querySelector('.ts-chk').addEventListener('click',e=>{ e.stopPropagation(); if(el.classList.contains('done')) return; const sl=[...el.querySelectorAll('.ts-slot')]; if(sl.some(s=>!s.querySelector('.ts-chip'))){ why.className='tq-why no'; why.textContent=T('Fill every slot first.','先把每个格子都填上。'); return; }
+    let ok=0; sl.forEach((s,i)=>{ const good=+s.querySelector('.ts-chip').dataset.k===i; s.classList.toggle('ok',good); s.classList.toggle('no',!good); ok+=good; });
+    if(ok===n) quizDone(el,T('Right! ','答对了！')+tx(q.why)); else { snd('err'); why.className='tq-why no'; why.textContent=T(`${ok} of ${n} in the right place. `,`${n} 个里放对了 ${ok} 个。`)+tx(q.hint); } }); }
+/* a real little hand: you and your ally must finish 1st and 2nd */
+function gameBuild(el,q,top,L){ el.classList.add('gameq'); if(tut){ tut.quizLock=false; } const tx=a=>zh()?a[1]:a[0], me=tut;
   const role=k=>[T('You','你'),T('Next · opponent','下家 · 对手'),T('Ally','对家 · 盟友'),T('Previous · opponent','上家 · 对手')][k];
-  const hands=q.hands?`<div class="tq-tbl"><img class="tq-disc" src="${GIMG('gd-table')}" alt="">${q.hands.map(h=>`<div class="tq-s s${h.s}"><span class="tq-who"><span class="tq-av"><svg viewBox="0 0 40 40">${AV[P[h.s].k]}</svg></span><b>${role(h.s)}</b><em>${T(h.c.length+(h.c.length>1?' cards':' card'),h.c.length+' 张')}</em></span>${miniRow(h.c)}</div>`).join('')}</div>`:'';
-  el.innerHTML=`<div class="tq-q">${tx(q.q)}</div>${hands}<div class="tq-opts">${q.o.map((o,i)=>`<button class="tq-o${o.c&&o.c.length?'':' txt'}" data-a="tq" data-i="${i}">${o.c&&o.c.length?miniRow(o.c):''}<span>${tx(o.t)}</span></button>`).join('')}</div><div class="tq-why"></div>`; el._q=q; }
+  el.innerHTML=`${top}<div class="tq-tbl mg-tbl"><img class="tq-disc" src="${GIMG('gd-table')}" alt="">${[0,1,2,3].map(s=>`<div class="tq-s s${s}"><span class="tq-who"><span class="tq-av"><svg viewBox="0 0 40 40">${AV[P[s].k]}</svg></span><b>${role(s)}</b><em></em></span><span class="mg-h"></span></div><div class="mg-p p${s}"></div>`).join('')}</div>
+    <div class="mg-bar"><span class="mg-msg"></span><button type="button" data-mg="reset" class="mg-b ghost">${T('Restart','重来')}</button><button type="button" data-mg="show" class="mg-b ghost">${T('Show me','看答案')}</button><button type="button" data-mg="pass" class="mg-b">${T('Pass','不出')}</button><button type="button" data-mg="play" class="mg-b go">${T('Play','出牌')}</button></div><div class="tq-why"></div>`;
+  const msg=el.querySelector('.mg-msg'), why=el.querySelector('.tq-why'); let S=null, run=0;
+  const alive=()=>tut===me&&el.isConnected;
+  const reset=()=>{ run++; let id=0; S={h:q.game.map(h=>h.map(([r,s])=>({id:id++,r,s}))),trick:null,turn:0,order:[],pc:0,shown:[null,null,null,null],sel:new Set(),over:0}; why.className='tq-why'; why.textContent=''; say(tx(q.goal)); draw(); };
+  const say=t=>{ msg.textContent=t; };
+  const nextS=s=>{ for(let k=1;k<=4;k++){ const t=(s+k)%4; if(S.h[t].length) return t; } return -1; };
+  const draw=()=>{ for(let s=0;s<4;s++){ const z=el.querySelector('.tq-s.s'+s), hc=z.querySelector('.mg-h'); z.classList.toggle('turn',!S.over&&S.turn===s); z.querySelector('em').textContent=S.h[s].length?T(S.h[s].length+(S.h[s].length>1?' cards':' card'),S.h[s].length+' 张'):(['1st','2nd','3rd'][S.order.indexOf(s)]?T(['1st!','2nd!','3rd'][S.order.indexOf(s)],['头游！','二游！','三游'][S.order.indexOf(s)]):'');
+      const cs=GD.sortHand(S.h[s],L); hc.innerHTML=cs.length?`<span class="gr-mini tagd">${cs.map(c=>cardHTML(c,'xs tagd'+(s===0&&S.sel.has(c.id)?' sel':''),0,L)).join('')}</span>`:'';
+      if(s===0) hc.querySelectorAll('.gc').forEach(e=>e.dataset.mg='c');
+      const pz=el.querySelector('.mg-p.p'+s), sh=S.shown[s]; pz.innerHTML=sh==='pass'?`<b class="mg-pass">${T('Pass','不出')}</b>`:sh?`<span class="gr-mini tagd">${sh.map(c=>cardHTML(c,'xs tagd',0,L)).join('')}</span>`:''; }
+    const mine=!S.over&&S.turn===0&&S.h[0].length; el.querySelector('[data-mg=play]').disabled=!mine; el.querySelector('[data-mg=pass]').disabled=!mine||!S.trick; };
+  const pol=s=>{ const hand=S.h[s], tg=S.trick?S.trick.combo:null; let ms=GD.moves(hand,L,tg).filter(m=>!GD.isBomb(m.combo));
+    if(!tg){ ms.sort((a,b)=>b.cards.length-a.cards.length||a.combo.key-b.combo.key); return ms[0]; }
+    if(s===2&&S.trick.seat===0) return ms.find(m=>m.cards.length===hand.length)||null;
+    ms.sort((a,b)=>a.combo.key-b.combo.key); return ms[0]||null; };
+  const apply=(s,m)=>{ if(m){ S.h[s]=GD.without(S.h[s],m.cards); S.trick={seat:s,combo:m.combo}; S.pc=0; S.shown[s]=m.cards; snd('play'); if(!S.h[s].length){ S.order.push(s); snd('crown'); } } else { S.pc++; S.shown[s]='pass'; snd('pass'); }
+    const o=S.order; if(o.some(x=>x%2===1)){ S.over=2; } else if(o.filter(x=>x%2===0).length===2){ S.over=1; }
+    if(!S.over){ S.turn=nextS(s); settle(); } draw(); if(S.over) finish(); };
+  const settle=()=>{ if(!S.trick) return; const ow=S.trick.seat;
+    if(S.turn===ow){ S.trick=null; S.shown=[null,null,null,null]; return; }
+    if(!S.h[ow].length&&S.pc>=S.h.filter(h=>h.length).length){ S.trick=null; S.shown=[null,null,null,null]; const pa=(ow+2)%4; S.turn=S.h[pa].length?pa:nextS(ow); } };
+  const finish=()=>{ if(S.over===1){ say(T('You and your ally finished 1st and 2nd!','你和盟友拿下了头游和二游！')); quizDone(el,T('Solved! ','成功！')+tx(q.why)); }
+    else { snd('err'); say(T('An opponent got out first. Press Restart and try again.','对手先走了。按“重来”再试一次。')); why.className='tq-why no'; why.textContent=tx(q.hint); } };
+  const loop=async(k)=>{ while(alive()&&k===run&&!S.over&&S.turn!==0){ await wait(750); if(!(alive()&&k===run)) return; apply(S.turn,pol(S.turn)); } if(alive()&&k===run&&!S.over&&S.turn===0) say(S.trick?T('Your turn: beat it, or pass.','轮到你：压过它，或者不出。'):T('Your lead: play anything.','你先出：随便出什么牌型都行。')); };
+  const youPlay=cards=>{ const tg=S.trick?S.trick.combo:null; const j=GD.judge(cards,L,tg); if(!j){ snd('err'); say(tg?T('That does not beat the cards on the table.','这手牌压不过桌上的牌。'):T('That is not a valid combination.','这不是一个合法的牌型。')); return false; } S.sel.clear(); apply(0,{cards,combo:j}); if(!S.over) loop(run); return true; };
+  el.addEventListener('click',e=>{ const b=e.target.closest('[data-mg]'); if(!b||!el.contains(b)) return; e.stopPropagation(); const k=b.dataset.mg;
+    if(k==='reset'){ reset(); loop(run); return; }
+    if(k==='show'){ reset(); const r=run; (async()=>{ for(const mv of q.sol){ while(alive()&&r===run&&!S.over&&S.turn!==0) await wait(120); if(!(alive()&&r===run)||S.over) return; say(T('Watch…','看好了……')); await wait(700); const cs=mv.map(([rr,ss])=>S.h[0].find(c=>c.r===rr&&c.s===ss)); cs.forEach(c=>S.sel.add(c.id)); draw(); await wait(650); if(!(alive()&&r===run)) return; youPlay(cs); } })(); return; }
+    if(S.over||S.turn!==0) return;
+    if(k==='c'){ const id=+b.dataset.id; S.sel.has(id)?S.sel.delete(id):S.sel.add(id); snd('tick'); draw(); return; }
+    if(k==='pass'){ if(!S.trick) return; S.sel.clear(); apply(0,null); if(!S.over) loop(run); return; }
+    if(k==='play'){ const cs=S.h[0].filter(c=>S.sel.has(c.id)); if(!cs.length){ say(T('Tap cards in your hand first.','先点选手里的牌。')); return; } youPlay(cs); } });
+  reset(); }
 function tutAnswer(b){ const el=b.closest('.tb-panel'); if(!el||!el._q||el.classList.contains('done')) return; const q=el._q, i=+b.dataset.i, ok=i===q.a, w=el.querySelector('.tq-why'), tx=a=>zh()?a[1]:a[0];
   if(ok){ el.classList.add('done'); b.classList.add('right'); snd('crown'); w.className='tq-why ok'; w.textContent=T('Right! ','答对了！')+tx(q.why); tut.quizLock=false; const nx=tut.card&&tut.card.querySelector('[data-a=tn]'); if(nx) nx.classList.remove('locked'); requestAnimationFrame(()=>{ tutPlace(); const bb=el.closest('.tut-bub'); if(bb) bb.scrollTo({top:bb.scrollHeight,behavior:'smooth'}); }); }
   else { b.classList.add('wrong'); snd('err'); b.animate([{transform:'translateX(-5px)'},{transform:'translateX(5px)'},{transform:'none'}],{duration:260}); w.className='tq-why no'; w.textContent=T('Not quite. ','不太对。')+tx(q.hint||q.why); w.scrollIntoView({block:'nearest',behavior:'smooth'}); } }
