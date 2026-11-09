@@ -2888,6 +2888,10 @@ html:not([lang=zh]) .gt-phase b,.gt-phase.en b{font-family:'Newsreader','Noto Se
 @keyframes grpGlow{50%{box-shadow:0 0 0 2px rgba(0,0,0,.5),0 0 20px 5px rgba(61,255,192,.9),0 0 40px 12px rgba(61,255,192,.45),inset 0 0 16px rgba(61,255,192,.45)}}
 .gc-full::before{display:none!important}
 .gc-full.k-sf,.gc-full.k-kb{border-color:#3dffc0!important}
+/* v32 the Ace hearts get a fixed slot so the panel never resizes when they arrive */
+.gl.gld .glt{grid-template-columns:3.1rem 1.7rem 3.75rem!important}
+.gl-ac{min-width:3.75rem;min-height:1.1rem}
+.gl-a .hz.enter{will-change:transform,opacity}
 /* ===== Pages & Frames: a reading room, green-leather rail and paper pages ===== */
 #reader.shelf{--sh-bg:#F3EEE3;--sh-ink:#23201A;--sh-ink2:#6B6252;--sh-acc:#8B2B22;--sh-green:#1F3329;--sh-line:#DCD2BF;--cx:#8B2B22}
 #reader.shelf .rd-main,#reader.shelf .rd-leaf{background:var(--sh-bg) linear-gradient(90deg,rgba(80,60,30,.05) 1px,transparent 1px) 0 0/22px 100%}
@@ -7838,7 +7842,15 @@ function coop(s,cards){ try{ const L=H.L, hand=H.hands[s], pt=(s+2)%4, pn=H.hand
 function finishMove(s){ try{ const hand=H.hands[s], tg=H.trick&&H.trick.seat!==s?H.trick.combo:null; if(!hand.length) return null;
     const j=GD.judge(hand,H.L,tg); if(j) return hand.slice();
     const m=GD.moves(hand,H.L,tg).find(m=>m.cards.length===hand.length); return m?m.cards:null; }catch(e){ return null; } }
-const botMove=s=>{ const f=finishMove(s); if(f) return f; const r=nnMove(s); return coop(s,r!=null?r:GDM.botMove(H,s)); };
+// when a bot decides to bomb, it spends the cheapest bomb that does the job: a four-card bomb before a five, a five before a straight flush, never a piece cut from a bigger bomb
+function cheapBomb(s,cards){ try{ if(!cards||!cards.length) return cards; const L=H.L, hand=H.hands[s], tg=H.trick&&H.trick.seat!==s?H.trick.combo:null, j=GD.judge(cards,L,tg);
+    if(!j||!GD.isBomb(j)||j.type==='kingbomb'||cards.length===hand.length) return cards;
+    const cnt={}; hand.forEach(c=>{ if(!GD.isWild(c,L)&&c.r<16) cnt[c.r]=(cnt[c.r]||0)+1; });
+    const whole=m=>{ if(m.combo.type==='bomb'){ const nat=m.cards.filter(c=>!GD.isWild(c,L)); return nat.length===cnt[m.combo.r]||(m.cards.length===nat.length&&nat.length===cnt[nat[0].r]); }
+      if(m.combo.type==='sflush') return m.cards.every(c=>GD.isWild(c,L)||cnt[c.r]<4); return false; };
+    const bs=GD.moves(hand,L,tg).filter(m=>GD.isBomb(m.combo)&&m.combo.type!=='kingbomb'&&whole(m)&&GD.beats(m.combo,tg)).sort((a,b)=>GD.tier(a.combo)-GD.tier(b.combo)||a.cards.filter(c=>GD.isWild(c,L)).length-b.cards.filter(c=>GD.isWild(c,L)).length||a.combo.key-b.combo.key);
+    const best=bs[0]; return best&&GD.tier(best.combo)<=GD.tier(j)&&(GD.tier(best.combo)<GD.tier(j)||best.combo.key<j.key)?best.cards:cards; }catch(e){ return cards; } }
+const botMove=s=>{ const f=finishMove(s); if(f) return f; const r=nnMove(s); return coop(s,cheapBomb(s,r!=null?r:GDM.botMove(H,s))); };
 const loadAI=()=>{ try{ GDAI.load(AI_URL()).catch(()=>{}); }catch(e){} };
 const voxBuf={}, voxLoading={}; let voxFree=0;
 const VOL={voice:1}; try{ Object.assign(VOL,JSON.parse(localStorage.getItem('gd-vol')||'{}')); }catch(e){}
@@ -8070,7 +8082,7 @@ function drawLevel(anim){ const g=$g('.gl'); if(!g) return; const d=M.dealer, pr
   g.innerHTML=`<canvas class="gl-cv"></canvas><i class="gl-eye"></i><div class="gl-cur"><small>${T('LEVEL','本局级牌')}</small><div class="gl-tile"><img class="gl-face" src="${GC_IMG(cimg({r:FL,s:1}))}" alt="${SUIT[1]}${LV(FL)}"><i class="gl-shine"></i></div></div>
    <div class="gl-teams"><i class="gl-hi"></i>${[0,1].map(t=>`<div class="glt t${t}${d===t?' cur':''}"><span class="gl-avs">${av(t)}${av(t+2)}</span><b class="glv" data-t="${t}"><span>${LV(M.lv[t])}</span></b><span class="gl-ac">${chance(t)}</span></div>`).join('')}</div>`; glFrame(); if(prevL!=null&&prevL!==FL&&!reduce){ const tl=g.querySelector('.gl-tile'); tl.classList.add('flip'); const im=tl.querySelector('.gl-face'); im.src=GC_IMG(cimg({r:prevL,s:1})); setTimeout(()=>{ im.src=GC_IMG(cimg({r:FL,s:1})); },260); setTimeout(()=>tl.classList.remove('flip'),900); } placeHi(d); }
 function placeHi(d){ const g=$g('.gl'); if(!g) return; const tm=g.querySelector('.gl-teams'), hi=g.querySelector('.gl-hi'); if(!tm||!hi) return;
-  const put=(t,anim)=>{ const r=tm.querySelector('.glt.t'+t); if(!r) return; hi.style.transition=anim?'':'none'; hi.style.top=r.offsetTop+'px'; hi.style.height=r.offsetHeight+'px'; hi.style.left=r.offsetLeft+'px'; hi.style.width=r.offsetWidth+'px'; };
+  const put=(t,anim)=>{ const r=tm.querySelector('.glt.t'+t); if(!r) return; const v=r.querySelector('.glv'); hi.style.transition=anim?'':'none'; hi.style.top=r.offsetTop+'px'; hi.style.height=r.offsetHeight+'px'; hi.style.left=r.offsetLeft+'px'; hi.style.width=(v?v.offsetLeft+v.offsetWidth+9:r.offsetWidth)+'px'; }; // the box holds the two avatars and the level, never the Ace hearts
   const prev=placeHi.last; put(prev!=null?prev:d,false); placeHi.last=d;
   if(prev!=null&&prev!==d){ requestAnimationFrame(()=>requestAnimationFrame(()=>{ put(d,true); hi.classList.remove('mv'); void hi.offsetWidth; hi.classList.add('mv'); snd(d===0?'swUs':'swThem'); })); } }
 // order: panel grows and the eye lights → levels roll (bright chime for us, uneasy pulse for them) → the highlight crosses to the new side → panel shrinks and the eye goes out
@@ -8088,7 +8100,7 @@ async function animLevel(res){ const g=$g('.gl'); if(!g) return; const du=res.af
   // a team reaching Ace: its three chances fly in one by one
   for(const t of [0,1]){ if(res.after[t]===14&&res.before[t]!==14){ const ac=g.querySelector(`.glt.t${t} .gl-ac`); if(!ac) continue; ac.innerHTML=heartsHTML(3); const hz=[...ac.querySelectorAll('.hz')];
       hz.forEach((h,i)=>{ h.style.opacity=0; setTimeout(()=>{ h.style.opacity=''; h.classList.add('enter'); snd(t===0?'tickg':'tickb'); const r=h.getBoundingClientRect(), R0=felt.getBoundingClientRect(); burst(r.left-R0.left+r.width/2,r.top-R0.top+r.height/2,14,{c:['#ff5a6a','#ffd0d6','#ffd36a'],v:2.4,g:.04,dec:.03,k:'tw',r:1.6}); },reduce?0:i*380); });
-      floatAt(ac,T('Ace: 3 tries','打 A：三次机会'),t===0?'up':'down'); await wait(reduce?100:1500); } }
+      await wait(reduce?100:1400); } }
   if(placeHi.last!=null&&placeHi.last!==M.dealer){ g.querySelectorAll('.glt').forEach(e=>e.classList.toggle('cur',e.classList.contains('t'+M.dealer))); placeHi(M.dealer); await wait(reduce?50:1100); }
   // the level card flips to next hand's level while the panel is still open
   const nextL=M&&M.lv?M.lv[M.dealer]:null, tl=g.querySelector('.gl-tile'), im=tl&&tl.querySelector('.gl-face');
