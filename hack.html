@@ -8398,7 +8398,7 @@ function ensure(){ if(root) return; root=document.createElement('div'); root.id=
 function holdBgm(on){ try{ if(on){ bgmHeld=[TR.bgm,TR.decode].filter(t=>t&&t.playing); bgmHeld.forEach(t=>t.pause(1)); }
   else { bgmHeld.forEach(t=>t.play(1.4)); bgmHeld=[]; } }catch(e){} }
 function openRoom(){ ensure(); open=true; scr='lobby'; preload(); render(); requestAnimationFrame(()=>root.classList.add('on')); snd('pop'); holdBgm(true); bgm(1); }
-function closeRoom(){ if(!root||!open) return; clearTimeout(timer); open=false; root.classList.remove('on'); bgm(null); holdBgm(false); rdClosedHook&&rdClosedHook(); }
+function closeRoom(){ if(!root||!open) return; clearTimeout(timer); open=false; root.classList.remove('on'); jingleStop(); try{ stormEnd(true); }catch(e){} bgm(null); Object.values(BGM.tr||{}).forEach(t=>{ try{ t.pause(.8); }catch(e){} }); holdBgm(false); rdClosedHook&&rdClosedHook(); }
 function keyFlash(k,dn){ const m={' ':'pass','Enter':'play','h':'hint','H':'hint','s':'sort','S':'sort'}[k]; if(!m) return; const b=$g('[data-a='+m+']'); b&&b.classList.toggle('dn',dn); }
 function onKey(e){ if(!open) return; e.stopImmediatePropagation();
   if(!e.repeat){ const k=e.key.length===1?e.key.toLowerCase():e.key; KB.push(k); if(KB.length>KONAMI.length) KB.shift(); if(KB.join()===KONAMI.join()&&scr==='table'&&H){ KB.length=0; testPanel(); return; } }
@@ -9489,7 +9489,7 @@ const sirenSVG=()=>{ const k='s'+(++SIRN); return SIREN_SVG0.replace(/id="s(bl|r
    silver-blue in the flash, distant thunder rolls in, then a thin slanting rain falls under the cards until the hand ends.
    More players on alert, denser rain and nearer thunder. Only the alert itself makes a sound. ---------- */
 const STORM={lv:0,raf:0,drops:[],rips:[],dens:0,want:0,t:0,on:false,snd:null,buf:{}};
-async function thunder(k){ try{ if(!AC) initAudio(); if(!AC) return; const key='gd-thunder'+k; if(!STORM.buf[key]) STORM.buf[key]=await fetch(VOX_URL(key)).then(r=>r.arrayBuffer()).then(a=>AC.decodeAudioData(a));
+async function thunder(k){ try{ if(!AC) initAudio(); if(!AC) return; const key='gd-thunder'+k; if(!STORM.buf[key]) STORM.buf[key]=await fetch(VOX_URL(key)).then(r=>r.arrayBuffer()).then(a=>AC.decodeAudioData(a)); if(!open) return;
     if(!gdBus){ gdBus=AC.createGain(); gdBus.gain.value=.75; gdBus.connect(musicBus||AC.destination); }
     if(STORM.snd){ thunderOff(.9); } const src=AC.createBufferSource(), g=AC.createGain(), t=AC.currentTime+.05; src.buffer=STORM.buf[key]; src.connect(g).connect(gdBus);
     const pk=[0,.55,.7,.85,1][k]||.8; g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(pk,t+(k===4?.04:k===3?.12:.3)); g.gain.setValueAtTime(pk,t+2.4); g.gain.linearRampToValueAtTime(0,t+3.8); src.start(t); src.stop(t+3.9); STORM.snd={src,g}; src.onended=()=>{ if(STORM.snd&&STORM.snd.src===src) STORM.snd=null; }; }catch(e){} }
@@ -9543,10 +9543,11 @@ let JING={src:null,timer:0,buf:{}};
 function jingleStop(){ clearTimeout(JING.timer); if(JING.src){ try{ JING.src.onended=null; JING.g.gain.setTargetAtTime(.0001,AC.currentTime,.12); JING.src.stop(AC.currentTime+.5); }catch(e){} JING.src=null; } }
 async function matchJingle(won){ try{ if(!AC) initAudio(); if(!AC) return; jingleStop(); bgm(0); const k=won?'gd-win':'gd-lose';
     if(!JING.buf[k]) JING.buf[k]=await fetch(VOX_URL(k)).then(r=>r.arrayBuffer()).then(a=>AC.decodeAudioData(a));
+    if(!open) return;
     if(!gdBus){ gdBus=AC.createGain(); gdBus.gain.value=.75; gdBus.connect(musicBus||AC.destination); }
     const src=AC.createBufferSource(), g=AC.createGain(); src.buffer=JING.buf[k]; src.connect(g).connect(gdBus); g.gain.value=1; JING.src=src; JING.g=g;
     src.onended=()=>{ if(JING.src!==src) return; JING.src=null; JING.timer=setTimeout(()=>{ if(open) bgm(1); },2000); }; src.start(AC.currentTime+.05); }catch(e){ JING.timer=setTimeout(()=>{ if(open) bgm(1); },2000); } }
-function bgm(k,xf){ try{ if(!AC) initAudio(); if(!AC) return; if(k) jingleStop(); if(k){ [TR.bgm,TR.decode].forEach(t=>{ if(t&&t.playing){ t.pause(.5); if(!bgmHeld.includes(t)) bgmHeld.push(t); } }); } if(BGM.k===k&&BGM.cur&&BGM.cur.playing) return; const old=BGM.cur, t=k?bgmTrack(k):null; BGM.k=k;
+function bgm(k,xf){ try{ if(k&&!open) return; if(!AC) initAudio(); if(!AC) return; if(k) jingleStop(); if(k){ [TR.bgm,TR.decode].forEach(t=>{ if(t&&t.playing){ t.pause(.5); if(!bgmHeld.includes(t)) bgmHeld.push(t); } }); } if(BGM.k===k&&BGM.cur&&BGM.cur.playing) return; const old=BGM.cur, t=k?bgmTrack(k):null; BGM.k=k;
     const XF=xf||(typeof SWITCH_XF!=='undefined'?SWITCH_XF:1.4); if(old&&old!==t){ old.pause(XF); }
     BGM.cur=t; if(t){ t.pos=null; if(t.buf) t.pos=t.ls; t.play(old?XF:.6); } }catch(e){} }
 /* ---------- your controls ---------- */
@@ -10401,7 +10402,7 @@ function initAudio(){
   if(AC) return; bc&&bc.postMessage('claim'); try{ AC=new (window.AudioContext||window.webkitAudioContext)(); }catch(e){ return; }
   musicBus=AC.createGain(); sfxBus=AC.createGain(); musicBus.connect(AC.destination); sfxBus.connect(AC.destination); applyVol();
   TR.bgm=new Track(S.flags.complete?AUDIO.star:AUDIO.bgm,2); TR.decode=new Track(AUDIO.decode,5); TR.decode.load(); loadGlitch(); loadSweep(); pageBufs();
-  TR.bgm.play(0);
+  if(!EMBED) TR.bgm.play(0); // inside the résumé the site's own soundtrack never plays; only the column's own sound does
 }
 function applyVol(){ if(!AC) return; const t=AC.currentTime;
   musicBus.gain.setTargetAtTime(SND.muted?0:SND.music*.8,t,.08); sfxBus.gain.setTargetAtTime(SND.muted?0:SND.sfx,t,.05);
