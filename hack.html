@@ -2853,6 +2853,26 @@ html:not([lang=zh]) .gt-phase b,.gt-phase.en b{font-family:'Newsreader','Noto Se
 .rc-div::before,.rc-div::after{content:"";flex:1;border-top:1.5px dashed rgba(255,190,120,.55)}
 .rc-bomb .gr-pv.two{transform:scale(.8)!important;transform-origin:100% 50%!important;gap:.55rem!important}
 .rc-bomb .gr-pv.two .fx-badge{transform:none!important;margin:0!important}
+/* v29 choose how to play a wild-card hand */
+.gt-choose{position:absolute;left:50%;bottom:calc(var(--handH,40%) + 4.2rem);transform:translateX(-50%);z-index:30;pointer-events:auto;min-width:min(30rem,90%);max-width:94%;padding:.7rem .8rem .8rem;border-radius:1rem;
+  background:linear-gradient(180deg,rgba(24,18,8,.97),rgba(10,8,4,.97));border:1.5px solid #d4a64a;box-shadow:0 18px 40px rgba(0,0,0,.6),0 0 0 1px rgba(0,0,0,.6);animation:gcIn .22s cubic-bezier(.2,1.2,.4,1)}
+@keyframes gcIn{from{opacity:0;transform:translate(-50%,10px) scale(.96)}}
+.gt-choose .gc-hd{display:flex;align-items:center;justify-content:space-between;margin:0 .2rem .55rem}
+.gt-choose .gc-hd b{font:400 1.05rem 'GD Display ZH','GD Display','Noto Sans SC',sans-serif;color:#ffe2a0;letter-spacing:.06em}
+.gt-choose .gc-x{width:1.8rem;height:1.8rem;border-radius:50%;border:1px solid rgba(255,220,150,.4);background:rgba(255,255,255,.06);color:#ffe2a0;font-size:1.2rem;line-height:1;cursor:pointer}
+.gt-choose .gc-x:hover{background:rgba(255,255,255,.14)}
+.gt-choose .gc-row{display:flex;align-items:center;gap:1rem;width:100%;padding:.55rem .7rem .9rem;margin-top:.45rem;border-radius:.7rem;border:1.5px solid rgba(255,220,150,.18);background:rgba(255,255,255,.04);cursor:pointer;text-align:left;color:inherit;font:inherit;transition:background .15s,border-color .15s,transform .15s}
+.gt-choose .gc-row:hover{background:rgba(255,211,106,.12);border-color:#ffd36a;transform:translateY(-1px)}
+.gt-choose .gc-cards{display:flex;flex:none}
+.gt-choose .gc-cw{position:relative;display:block;margin-right:calc(var(--cw)*-.3)}
+.gt-choose .gc-cw:last-child{margin-right:0}
+.gt-choose .gc-cw .gc{position:relative!important;transform:none!important;left:auto!important;top:auto!important;width:calc(var(--cw)*.6);height:calc(var(--cw)*.6*1.4)}
+.gt-choose .gc-cw .gc .gc-tag{font-size:calc(var(--cw)*.09)}
+.gt-choose .gc-cw.w .gc{box-shadow:0 0 0 2px #ffd36a,0 0 10px rgba(255,211,106,.6)}
+.gt-choose .gc-cw i{position:absolute;left:50%;bottom:-.75rem;transform:translateX(-50%);white-space:nowrap;font:700 .68rem/1 'Noto Sans SC',sans-serif;font-style:normal;color:#2a1803;background:#ffd36a;padding:.14rem .35rem;border-radius:.6rem;z-index:3}
+.gt-choose .gc-lb{display:flex;flex-direction:column;gap:.15rem;min-width:0}
+.gt-choose .gc-lb b{font-size:1rem;color:#fff}
+.gt-choose .gc-lb small{font-size:.82rem;color:#e9cf96}
 /* ===== Pages & Frames: a reading room, green-leather rail and paper pages ===== */
 #reader.shelf{--sh-bg:#F3EEE3;--sh-ink:#23201A;--sh-ink2:#6B6252;--sh-acc:#8B2B22;--sh-green:#1F3329;--sh-line:#DCD2BF;--cx:#8B2B22}
 #reader.shelf .rd-main,#reader.shelf .rd-leaf{background:var(--sh-bg) linear-gradient(90deg,rgba(80,60,30,.05) 1px,transparent 1px) 0 0/22px 100%}
@@ -7361,7 +7381,8 @@ function judge(cards,L,target){ let rs=readings(cards,L); if(!rs.length) return 
   if(rs.some(r=>r.type==='sflush')) rs=rs.filter(r=>r.type!=='straight');
   if(!target){ const nb=rs.filter(r=>!isBomb(r)); const pool=nb.length?nb:rs; return pool.sort((a,b)=>tier(b)-tier(a)||b.key-a.key)[0]; }
   const ok=rs.filter(r=>beats(r,target)); if(!ok.length) return null;
-  return ok.sort((a,b)=>(isBomb(a)-isBomb(b))||tier(a)-tier(b)||a.key-b.key)[0]; }
+  // a wild card always takes the higher reading: 4567+wild is 45678, not 34567; 77+55+wild is 777 with 55
+  return ok.sort((a,b)=>(isBomb(a)-isBomb(b))||tier(a)-tier(b)||b.key-a.key)[0]; }
 /* ---------- generating plays from a hand ---------- */
 function groups(hand,L){ const g={}; hand.forEach(c=>{ if(isWild(c,L)) return; (g[c.r]=g[c.r]||[]).push(c); }); return g; }
 function moves(hand,L,target){ const W=hand.filter(c=>isWild(c,L)), g=groups(hand,L), out=[], seen=new Set();
@@ -7530,8 +7551,10 @@ function giveBack(H,from,to,card){ const h=H.hands[from]; h.splice(h.indexOf(car
 const active=(H,s)=>!H.order.includes(s);
 function nextSeat(H,s){ for(let i=1;i<=4;i++){ const t=(s+i)%4; if(active(H,t)) return t; } return -1; }
 // play (cards may be empty = pass). Returns events for the UI.
-function play(H,seat,cards){ const ev={seat,pass:!cards.length,cards:cards.slice()}; if(!H.trick) H.played=[[],[],[],[]];
-  if(cards.length){ const combo=G.judge(cards,H.L,H.trick&&H.trick.seat!==seat?H.trick.combo:null);
+function play(H,seat,cards,force){ const ev={seat,pass:!cards.length,cards:cards.slice()}; if(!H.trick) H.played=[[],[],[],[]];
+  if(cards.length){ const tg=H.trick&&H.trick.seat!==seat?H.trick.combo:null; let combo=G.judge(cards,H.L,tg);
+    // the player picked one reading of a wild-card play: accept it if it is a real reading that beats the table
+    if(force&&G.readings(cards,H.L).some(r=>r.type===force.type&&r.key===force.key&&r.n===force.n)&&G.beats(force,tg)) combo=force;
     if(!combo) throw new Error('illegal');
     const h=H.hands[seat]; cards.forEach(c=>h.splice(h.indexOf(c),1));
     H.trick={seat,combo,cards}; H.passes=0; H.played[seat]=cards; ev.combo=combo;
@@ -8153,7 +8176,7 @@ const bdTier=(kind,n)=>kind==='sf'?'sf':kind==='kb'?'kb':'b'+Math.max(4,Math.min
 const bdHTML=(kind,n)=>`<i class="bd-ic">${BD_ICO[kind]||BD_ICO.bomb}</i>${kind==='bomb'||!kind?`<em>${n}</em>`:''}`;
 const bdLegend=()=>`<div class="bd-leg">${[4,5,6,7,8,9,10].map(n=>`<span class="bd-li"><i class="gc-bd t-${bdTier('bomb',n)} st">${bdHTML('bomb',n)}</i><small>${T(`${n} cards`,`${n} 张`)}</small></span>`).join('')}<span class="bd-li"><i class="gc-bd t-sf st">${bdHTML('sf',5)}</i><small>${T('Straight flush','同花顺')}</small></span><span class="bd-li"><i class="gc-bd t-kb st">${bdHTML('kb',4)}</i><small>${T('Joker Bomb','四大天王')}</small></span></div><p class="bd-cap">${T('Each badge takes the colour of its play effect; a bomb also shows how many cards it has, from 4 up to 10.','徽标的颜色和出牌特效一致；炸弹徽标上还标着张数，从 4 到 10。')}</p>`;
 const bdTitle=(kind,n)=>kind==='sf'?T('Straight flush: tap to select','同花顺：点一下选中'):kind==='kb'?T('Joker Bomb: tap to select','四大天王：点一下选中'):T(`${n}-card bomb: tap to select`,`${n} 张炸弹：点一下选中`);
-function markSel(){ layoutHand(); updatePre(); requestAnimationFrame(selChip); }
+function markSel(){ chooseClose(); layoutHand(); updatePre(); requestAnimationFrame(selChip); }
 /* ---------- action bar: shown only on your turn, above your hand ---------- */
 const target=()=>H.trick&&H.trick.seat!==0?H.trick.combo:null;
 const myTurn=()=>H&&H.phase==='play'&&H.turn===0&&!busy&&!ret;
@@ -8225,11 +8248,11 @@ function autoMe(){ clearTimeout(timer); const h=H.hands[0], tg=target(), h0=H, n
   if(GD.readings(h,H.L).some(GD.isBomb)) return; const j=GD.judge(h,H.L,tg); if(!j||GD.isBomb(j)) return;
   const c=$g('#gtPre'); if(c){ c.className='ga-chip on cap stat th-trib'; c.innerHTML=`<span class="t">${T('Your last cards','最后一手')}</span><b>${T('Playing them all for you…','自动全部打出…')}</b>`; }
   later(950,()=>{ sel=new Set(h.map(c=>c.id)); layoutHand(); setTimeout(()=>{ if(H===h0&&myTurn()) act(0,H.hands[0].slice()); },260); }); }
-async function act(s,cards){ if(!H||H.phase!=='play'||H.turn!==s||busy) return; busy=true; drawAct();
+async function act(s,cards,force){ if(!H||H.phase!=='play'||H.turn!==s||busy) return; busy=true; drawAct(); chooseClose();
   const fromEls=s===0?cards.map(c=>$g(`#gtHand .gc[data-id="${c.id}"]`)).filter(Boolean):null;
   const fromR=fromEls?fromEls.map(e=>e.getBoundingClientRect()):null;
   const wasNew=!H.trick||H.trick.seat===s;
-  const ev=GDM.play(H,s,cards); if(s===0) sel.clear(); hintList=null;
+  const ev=GDM.play(H,s,cards,force); if(s===0) sel.clear(); hintList=null;
   if(ev.pass){ snd('pass'); vox(s,pickOne(['x1','x1','x2','x3'])); if(s===0) layoutHand(); drawPlayed(s); drawSeat(s); }
   else { snd('play'); if(s===0) drawHand(); drawPlayed(s); drawSeat(s); await flyIn(s,fromR,fromEls);
     const c=ev.combo; voxPlay(s,c,cards,wasNew);
@@ -8977,7 +9000,25 @@ function wildFill(cs){ const L=H.L, tg=target(), {reserved}=sortGroups(), W=H.ha
 function doPlay(){ if(!myTurn()) return; let cs=selected(); let j=cs.length?GD.judge(cs,H.L,target()):null;
   if(!j&&cs.length){ const w=wildFill(cs); if(w){ cs=w.cards; j=w.j; sel=new Set(cs.map(c=>c.id)); layoutHand(); } }
   if(!j) return;
-  if(tut&&!tutAllow(cs)) return; act(0,cs); }
+  if(tut&&!tutAllow(cs)) return;
+  const opts=playOptions(cs); if(opts.length>1&&!tut){ chooseOpen(cs,opts); return; } act(0,cs); }
+// every distinct way a set of cards can be played here (a wild card can make 4567 into 34567 or 45678, 77+55 into 777+55 or 555+77, three of a kind + two wilds into a bomb or a full house)
+function playOptions(cs){ const L=H.L, tg=target(); let rs=GD.readings(cs,L); if(rs.some(r=>r.type==='sflush')) rs=rs.filter(r=>r.type!=='straight'); rs=rs.filter(r=>GD.beats(r,tg)); const seen=new Set(), out=[];
+  rs.sort((a,b)=>(GD.isBomb(a)-GD.isBomb(b))||GD.tier(b)-GD.tier(a)||b.key-a.key).forEach(r=>{ const k=r.type+':'+r.key+':'+(r.p||''); if(seen.has(k)) return; seen.add(k); out.push(r); }); return out; }
+// what each wild card stands for in a given reading, in the order the cards are laid out
+function wildAs(cards,combo){ const L=H.L, o=orderPlayed(cards,combo), as=new Map();
+  if(['straight','sflush','tube','plate'].includes(combo.type)){ const lo=combo.key-combo.len+1, k=combo.n/combo.len; o.forEach((c,i)=>{ if(GD.isWild(c,L)){ const r=lo+Math.floor(i/k); as.set(c.id,r===1?14:r); } }); }
+  else if(combo.type==='fullhouse') o.forEach((c,i)=>{ if(GD.isWild(c,L)) as.set(c.id,i<3?combo.r:combo.p); });
+  else if(combo.r) o.forEach(c=>{ if(GD.isWild(c,L)) as.set(c.id,combo.r); });
+  for(const c of o) if(as.has(c.id)&&as.get(c.id)===c.r) as.delete(c.id); // a wild card played as its own rank needs no note
+  return {o,as}; }
+function chooseClose(){ const p=$g('.gt-choose'); if(p) p.remove(); }
+function chooseOpen(cs,opts){ chooseClose(); const me=$g('.gt-me'); if(!me) return; const p=document.createElement('div'); p.className='gt-choose';
+  p.innerHTML=`<div class="gc-hd"><b>${T('Play it as…','选择打法')}</b><button class="gc-x" data-c="x" aria-label="${T('Cancel','取消')}">×</button></div>`+opts.map((r,i)=>{ const {o,as}=wildAs(cs,r), [t,d]=descParts(r);
+    return `<button class="gc-row" data-c="${i}"><span class="gc-cards">${o.map(c=>`<span class="gc-cw${as.has(c.id)?' w':''}">${cardHTML(c,'pl')}${as.has(c.id)?`<i>${T('as','当')} ${LV(as.get(c.id))}</i>`:''}</span>`).join('')}</span><span class="gc-lb"><b>${t}</b>${d?`<small>${d}</small>`:''}</span></button>`; }).join('');
+  me.appendChild(p); snd('pop');
+  p.addEventListener('pointerdown',e=>e.stopPropagation());
+  p.addEventListener('click',e=>{ const b=e.target.closest('[data-c]'); if(!b) return; const k=b.dataset.c; if(k==='x'){ snd('btn'); chooseClose(); return; } const r=opts[+k]; chooseClose(); if(myTurn()) act(0,cs,r); }); }
 function doPass(){ if(!myTurn()||!target()) return; if(tut&&!tutAllow('pass')) return; sel.clear(); act(0,[]); }
 function doHint(){ if(!myTurn()) return; if(!hintList) buildHints(); if(!hintList.length){ banner(T('Nothing beats it. Pass.','要不起，只能不出。'),'info'); return; }
   hintI=(hintI+1)%hintList.length; sel=new Set(hintList[hintI].cards.map(c=>c.id)); snd('pick'); markSel(); if(tut&&tut.st&&tut.st.you==='hint') tut.hinted=1; }
