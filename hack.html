@@ -8330,14 +8330,14 @@ function sayBubble(s,text,cls){ const b=$g('.gs'+s+' .gs-say'); if(!b) return; b
 /* played cards */
 function drawPlayed(s){ drawPlayed0(s); markPlays(); ccDraw(); }
 /* ---------- card counter: what is still out there (not in your hand, not yet played), by rank ---------- */
-let ccOn=false; try{ ccOn=localStorage.getItem('gd-cc')==='1'; }catch(e){}
+let ccOn=false; try{ ccOn=localStorage.getItem('gd-cc2')==='1'; }catch(e){}
 const CC_STAR=c=>`<svg viewBox="0 0 20 20" class="cc-star ${c}"><path d="M10 1.2l2.6 5.6 6.1.7-4.5 4.2 1.2 6-5.4-3-5.4 3 1.2-6L1.3 7.5l6.1-.7z"/></svg>`;
 function ccDraw(){ const el=$g('#gtCC'); if(!el||!H||!H.hands||root.classList.contains('dealing')) return; const L=H.L, seen={}, ok=!!H._ccOk;
   const add=c=>{ const r=c.r>=16?c.r:c.r; seen[r]=(seen[r]||0)+1; }; (H.hands[0]||[]).forEach(add); (H.log||[]).forEach(e=>{ if(e.cards) e.cards.forEach(add); });
   const order=[17,16,L].concat([14,13,12,11,10,9,8,7,6,5,4,3,2].filter(r=>r!==L));
   const cols=order.map(r=>{ const n=ok?Math.max(0,(r>=16?2:8)-(seen[r]||0)):'–'; const lab=r===17?CC_STAR('big'):r===16?CC_STAR('small'):`<b>${LV(r)}</b>`; return `<span class="cc-c${r===L?' lv':''}${r>=16?' jk':''}${n===0||!ok?' z':''}"><i class="cc-r">${lab}${r===L?`<em>${T('LV','级')}</em>`:''}</i><i class="cc-n">${n}</i></span>`; }).join('');
   if(el._k!==cols){ el._k=cols; el.querySelector('.cc-g').innerHTML=cols; } }
-function ccToggle(v){ ccOn=v==null?!ccOn:v; try{ localStorage.setItem('gd-cc',ccOn?'1':'0'); }catch(e){} const w=$g('.gt-ctrw'), b=$g('#gtCCb'); if(w) w.classList.toggle('on',ccOn); if(b){ b.classList.toggle('on',ccOn); b.setAttribute('aria-pressed',ccOn?'true':'false'); } if(ccOn) ccDraw(); }
+function ccToggle(v,temp){ if(v==null&&tut) tut.ccWas=null; ccOn=v==null?!ccOn:v; if(!temp) try{ localStorage.setItem('gd-cc2',ccOn?'1':'0'); }catch(e){} const w=$g('.gt-ctrw'), b=$g('#gtCCb'); if(w) w.classList.toggle('on',ccOn); if(b){ b.classList.toggle('on',ccOn); b.setAttribute('aria-pressed',ccOn?'true':'false'); } if(ccOn) ccDraw(); }
 function drawPlayed0(s){ const z=$g('.gp'+s); if(!z) return; const p=H.played[s];
   if(p==='pass'){ z.innerHTML=`<span class="gp-pass">${T('PASS','不出')}</span>`; return; }
   if(!p||!p.length){ z.innerHTML=''; return; }
@@ -9545,7 +9545,7 @@ function startTut(){ root.classList.remove('handend'); $$g('.gr-pop').forEach(n=
   const D=GD_TUT; if(!P) pickPlayers(); M=GDM.newMatch(); M.lv=[D.L1,D.L1]; M.dealer=0; scr='table'; sortMode=0; warned=new Set(); sel.clear(); ret=null; tribPick=null;
   H={L:D.L1,hands:D.h1.map(h=>h.map(c=>Object.assign({},c))),order:[],turn:0,lead:0,trick:null,passes:0,played:[[],[],[],[]],log:[],tribute:null,phase:'play',_ccOk:true};
   tut={i:-1}; buildTable(); root.classList.add('tutm'); busy=false; tutNext(); }
-function endTut(silent){ if(!tut) return; clearInterval(tut.iv); clearInterval(tut.tw); tut=null; root&&root.classList.remove('tutm'); $$g('.gr-tut').forEach(n=>n.remove()); if(!silent) try{ localStorage.setItem('gd-tut','1'); }catch(e){} }
+function endTut(silent){ if(!tut) return; if(tut.ccWas!=null){ ccToggle(tut.ccWas,true); tut.ccWas=null; } clearInterval(tut.iv); clearInterval(tut.tw); tut=null; root&&root.classList.remove('tutm'); $$g('.gr-tut').forEach(n=>n.remove()); if(!silent) try{ localStorage.setItem('gd-tut','1'); }catch(e){} }
 /* the tutorial guide: a dragon spirit that floats beside a spotlight, points with a beam of light and a tapping hand, and talks you through each step */
 const TAP_SVG='<svg viewBox="0 0 48 56" aria-hidden="true"><path d="M18 6a4 4 0 0 1 8 0v18l2-1a4 4 0 0 1 5 2l1-.4a4 4 0 0 1 5 2.6l1-.2a4 4 0 0 1 4.6 3.4L45 40c1 7-4 13-11 13h-6c-4 0-7.6-2-9.7-5.4L8.6 31a4 4 0 0 1 6.6-4.6L18 30z" fill="#fff8e6" stroke="#4a3208" stroke-width="2.4" stroke-linejoin="round"/><path d="M26 24v8M32 26v7M38 28v6" stroke="#4a3208" stroke-width="2" stroke-linecap="round"/></svg>';
 function tutUI(){ let o=$g('.gr-tut'); if(!o){ o=document.createElement('div'); o.className='gr-tut tut2 nodim';
@@ -9598,7 +9598,7 @@ function tutCard(st){ const o=tutUI(), bub=o.querySelector('.tut-bub'); tut.cur=
   tut.card=bub; snd('tutpop'); clearInterval(tut.iv); tut.iv=setInterval(tutPlace,200); requestAnimationFrame(tutPlace); }
 function markTut(){ $$g('#gtHand .gc').forEach(e=>e.classList.toggle('glow',!!(tut&&tut.hl&&tut.hl.includes(+e.dataset.id)))); }
 const tutPick=(h,list)=>{ const used=new Set(); return list.map(([r,s])=>{ const c=h.find(c=>c.r===r&&(r>=16||c.s===s)&&!used.has(c.id)); if(c) used.add(c.id); return c; }).filter(Boolean); };
-async function tutNext(){ if(!tut) return; tut.demo=null; if(tut.ccWas!=null){ ccToggle(tut.ccWas); tut.ccWas=null; } tut.i++; tut.waitYou=false; tut.hl=null; tut.st=null; markTut(); const st=GD_TUT.steps[tut.i]; if(!st){ endTut(); startGame(true); return; }
+async function tutNext(){ if(!tut) return; tut.demo=null; if(tut.ccWas!=null){ ccToggle(tut.ccWas,true); tut.ccWas=null; } tut.i++; tut.waitYou=false; tut.hl=null; tut.st=null; markTut(); const st=GD_TUT.steps[tut.i]; if(!st){ endTut(); startGame(true); return; }
   if(st.last&&tut.i>0&&tut.lastShown){ endTut(); startGame(true); return; }
   if(st.end){ tut.i--; return; }
   if(st.hand2){ tutHide(); const D=GD_TUT; ret=null; tribPick=null; sortMode=0; warned=new Set(); sel.clear(); bgm(1);
@@ -9611,7 +9611,7 @@ async function tutNext(){ if(!tut) return; tut.demo=null; if(tut.ccWas!=null){ c
   if(st.you){ tut.st=st; tut.waitYou=true; hintList=null; st.ids=Array.isArray(st.you)?tutPick(H.hands[0],st.you).map(c=>c.id):st.cards?tutPick(H.hands[0],st.cards).map(c=>c.id):null; tut.hinted=0; tut.badged=0; if(st.ids&&st.you!=='hint'&&st.you!=='badge') tut.hl=st.ids; tutCard(st); drawAct(); markTut(); if(st.you==='sort'){ sortMode=0; drawHand(); } return; }
   if(st.fx==='order'){ setTimeout(()=>orderArrows(),300); }
   if(st.fx==='lead'){ tutHide(); await wait(300); if(!tut) return; const t0=H.turn; H.turn=H.lead; await leadFlash(true); busy=false; if(!tut) return; H.turn=t0; }
-  if(st.cc){ tut.ccWas=ccOn; ccToggle(true); }
+  if(st.cc){ tut.ccWas=ccOn; ccToggle(true,true); }
   if(st.last) tut.lastShown=1; tutCard(st); }
 function tutAllow(x){ const st=tut&&tut.st; if(!st){ return false; }
   const ok=x==='pass'?st.you==='pass':Array.isArray(x)&&(st.you==='hint'?tut.hinted:st.you==='badge'?tut.badged:true)&&st.ids&&x.length===st.ids.length&&x.every(c=>st.ids.includes(c.id));
