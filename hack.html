@@ -2271,9 +2271,6 @@ body.zh .fx-fr b{letter-spacing:.1em!important}
 .gr-split{display:grid;grid-template-columns:minmax(12rem,19rem) 1fr;gap:1.4rem;align-items:center}
 .gr-split .gr-fig{margin:0}
 .gr-up{display:grid;grid-template-columns:repeat(3,1fr);gap:.7rem;margin:.3rem 0 .9rem}
-.gr-up div{display:flex;flex-direction:column;align-items:center;gap:.2rem;padding:.7rem;border-radius:.7rem;background:rgba(226,188,98,.07);border:1px solid rgba(226,188,98,.3)}
-.gr-up b{font:400 1.8rem/1 'GD Display','Newsreader',serif;color:#ffe08a;text-shadow:0 0 12px rgba(255,200,80,.4)}
-.gr-up span{font-size:.88rem;opacity:.8}
 .gr-flow{display:grid;grid-template-columns:1fr 1fr;gap:.7rem;margin:.4rem 0 .4rem}
 .gf-c{display:flex;flex-direction:column;gap:.3rem;padding:.8rem .95rem;border-radius:.7rem;background:rgba(0,0,0,.25);border-left:3px solid #ffd36a}
 .gf-c b{color:#ffe7a8;font-size:1rem}.gf-c span{font-size:.9rem;line-height:1.6;opacity:.88}
@@ -3074,6 +3071,166 @@ html:not([lang=zh]) .gt-choose .gc-lb b{font-family:'Newsreader','Noto Serif SC'
 .gl.gld .gl-ac{margin-left:.95rem}
 /* from the moment a hand ends until the next deal begins, the Sort and counter switches are gone at once */
 .handend #gtSort,.handend .gt-ccb,.handend .gt-ctrw{opacity:0!important;visibility:hidden!important;pointer-events:none!important;transition:none!important}
+/* ===== level panel: two golden dragons face each other over a framed plate ===== */
+.gl.glx{container-type:inline-size;display:block!important;width:var(--glw)!important;height:auto!important;aspect-ratio:1448/676;padding:0!important;gap:0!important;left:.5rem!important;top:.15rem!important;background:none!important;border:0!important;box-shadow:none!important;border-radius:0!important;transform-origin:0 0}
+.gl.glx.hot{transform:scale(1.04);box-shadow:none!important;filter:drop-shadow(0 0 14px rgba(255,200,80,.45))}
+.gl.glx>.gl-bg{position:absolute;left:3.6%;right:3.6%;top:29.5%;bottom:16.5%;border-radius:.5rem;background:radial-gradient(120% 140% at 50% 30%,rgba(26,22,16,.93),rgba(8,7,6,.96) 70%);box-shadow:inset 0 0 18px rgba(0,0,0,.8)}
+.gl.glx>.gl-fr{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;user-select:none;z-index:2;filter:drop-shadow(0 3px 5px rgba(0,0,0,.6))}
+.gl.glx .gl-eye2{position:absolute;z-index:3;width:3.4cqw;height:3.4cqw;margin:-1.7cqw 0 0 -1.7cqw;border-radius:50%;pointer-events:none;opacity:.35;transition:opacity .4s}
+.gl.glx .gl-eye2.l{left:42.55%;top:15.4%;background:radial-gradient(circle,#fff 0,#9fe0ff 28%,rgba(60,150,255,.75) 52%,transparent 72%);box-shadow:0 0 6px 2px rgba(70,160,255,.6)}
+.gl.glx .gl-eye2.r{left:57.4%;top:15.4%;background:radial-gradient(circle,#fff 0,#ffb0a0 28%,rgba(255,50,30,.8) 52%,transparent 72%);box-shadow:0 0 6px 2px rgba(255,60,40,.6)}
+.gl.glx .gl-eye2.on{opacity:1;animation:eyeFlash .38s ease-in-out 6 alternate}
+.gl.glx .gl-eye2.on.keep{animation:eyeFlash .5s ease-in-out infinite alternate}
+@keyframes eyeFlash{from{transform:scale(.9);filter:brightness(1)}to{transform:scale(1.9);filter:brightness(1.9)}}
+.gl.glx .gl-eye2.l.on{box-shadow:0 0 10px 4px rgba(80,170,255,.95),0 0 28px 10px rgba(60,140,255,.55)}
+.gl.glx .gl-eye2.r.on{box-shadow:0 0 10px 4px rgba(255,70,50,.95),0 0 28px 10px rgba(255,40,20,.55)}
+.gl.glx .gl-teams{position:absolute!important;left:6%;right:6%;top:32.5%;bottom:19.5%;z-index:4!important;display:grid!important;grid-template-columns:1fr auto 1fr;align-items:center;gap:0 3cqw;min-width:0!important}
+.gl.glx .glt{display:flex;flex-direction:column;gap:1.6cqw;min-width:0;position:static!important;padding:0!important;background:none!important;border:0!important}
+.gl.glx .glt.t0{grid-column:1;align-items:flex-start}
+.gl.glx .glt.t1{grid-column:3;align-items:flex-end}
+.gl.glx .gl-cur{grid-column:2;grid-row:1;display:flex;flex-direction:column;align-items:center;gap:1cqw;margin:0!important}
+.gl.glx .gl-row{display:flex;align-items:center;gap:2cqw;position:relative;z-index:1}
+.gl.glx .glt.t1 .gl-row{flex-direction:row-reverse}
+.gl.glx .gl-avs{display:flex}
+.gl.glx .gl-av{width:7.6cqw!important;height:7.6cqw!important}
+.gl.glx .gl-av+.gl-av{margin-left:-2.2cqw!important}
+.gl.glx .glv{font:700 9.2cqw/1 'Newsreader','Noto Serif SC',serif!important;color:#ffe3a0;text-shadow:0 2px 0 #000,0 0 10px rgba(255,200,100,.35);min-width:6cqw;text-align:center}
+.gl.glx .glt:not(.cur) .glv{color:#cdb88a}
+.gl.glx .gl-tile{width:12.8cqw!important;height:17.9cqw!important;border-radius:1.1cqw!important}
+.gl.glx .gl-cur small{font:700 2.6cqw/1 'Cormorant Garamond','Noto Serif SC',serif!important;letter-spacing:.16em!important;color:#f3d48a!important;text-shadow:0 1px 0 #000!important;margin:0!important}
+.gl.glx .gl-hi{border-radius:2.4cqw!important;z-index:0}
+.gl.glx .gl-ac{min-width:0!important;min-height:5.4cqw;margin:0!important}
+.gl.glx .gl-a{display:flex;gap:1.1cqw}
+.gl.glx .gl-a .hz{width:5.4cqw!important;height:5.4cqw!important}
+/* dragon pearls (the three tries at the Ace) */
+.gl-a .hz path.l,.gl-a .hz path.r{fill:url(#pgr)!important;stroke:#7a3a08!important;stroke-width:.6!important}
+.gl-a .hz .sw{fill:none;stroke:rgba(255,248,220,.55);stroke-width:1.1;stroke-linecap:round}
+.gl-a .hz .hl{fill:rgba(255,255,255,.75)!important}
+.gl-a .hz circle.o{fill:rgba(30,22,14,.6);stroke:rgba(243,210,122,.6);stroke-width:1.1;opacity:1;transition:opacity .18s}
+.gl-a .hz.on circle.o{opacity:0}
+.gl-a .hz.on.break circle.o,.gl-a .hz:not(.on) circle.o{opacity:1}
+.gl-a .hz:not(.on) .sw{display:none}
+.gl-a .hz.on svg{filter:drop-shadow(0 0 3px rgba(255,190,70,.75)) drop-shadow(0 1px 1px rgba(0,0,0,.7))!important}
+.gl-a .hz.break .sw{opacity:0}
+.gl-a .hz.on:not(.break) svg{animation:pearlGlow 2.6s ease-in-out infinite}
+@keyframes pearlGlow{50%{filter:drop-shadow(0 0 6px rgba(255,210,110,.95)) drop-shadow(0 1px 1px rgba(0,0,0,.7))}}
+.gl.glx{--glw:22rem}
+.gl.glx .gl-shine{display:none}
+.gl-a .hz path.l,.gl-a .hz path.r{stroke:none!important}
+.gl-a .hz .rim{fill:none;stroke:#8a4208;stroke-width:.7;opacity:0}
+.gl-a .hz.on:not(.break) .rim{opacity:1}
+.rd-rank .gc.rc.glow,.rd-rank .gc.rc.top{box-shadow:0 0 0 2px #ffd36a,0 0 16px rgba(255,200,80,.75)}
+.rd-rank .gc.rc,.rd-wild .gc.rc{backface-visibility:hidden}
+/* rules: levelling up told with avatars, crowns and the turning level card */
+.gr-up{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr));gap:.8rem}
+.gr-up .up-sc{display:flex;align-items:center;justify-content:space-between;gap:.6rem;padding:.9rem .9rem .8rem;border-radius:.7rem;background:linear-gradient(180deg,rgba(40,32,20,.75),rgba(18,14,10,.85));border:1px solid rgba(226,188,98,.3)}
+.gr-up .up-ord{display:flex;flex-direction:row;gap:.3rem}
+.gr-up .up-p{display:flex;flex-direction:column;align-items:center;gap:.15rem;width:2.3rem;position:relative}
+.gr-up .up-cr{display:block;width:1.3rem;height:1rem;opacity:0;transform:translateY(-.4rem) scale(.4)}
+.gr-up .up-cr svg{width:100%;height:100%;display:block}
+.gr-up .crowned .up-cr{animation:upCr .45s cubic-bezier(.3,1.6,.5,1) forwards;animation-delay:calc(var(--k)*.28s)}
+@keyframes upCr{to{opacity:1;transform:none}}
+.gr-up .up-av{width:2rem;height:2rem;border-radius:50%;overflow:hidden;display:block;box-shadow:0 0 0 2px #4a9cff}
+.gr-up .up-p.t1 .up-av{box-shadow:0 0 0 2px #ff6a52}
+.gr-up .up-av svg{width:100%;height:100%;display:block}
+.gr-up .up-p small{font:600 .66rem/1 'Noto Sans SC','Barlow',sans-serif;color:#e8d4a2;white-space:nowrap}
+.gr-up .up-p em{font:500 .6rem/1 'Barlow','Noto Sans SC',sans-serif;font-style:normal;color:#9fc8ff;min-height:.6rem;white-space:nowrap}
+.gr-up .up-lv{display:flex;flex-direction:column;align-items:center;gap:.25rem;perspective:400px}
+.gr-up .up-card{width:2.3rem;height:3.2rem;border-radius:.3rem;box-shadow:0 0 0 1.5px #c99a45,0 4px 10px rgba(0,0,0,.5);background:#fff}
+.gr-up .up-n{font:400 1.5rem/1 'GD Display','Newsreader',serif;text-shadow:0 0 12px rgba(255,200,80,.4);color:#ffd36a;opacity:0;transform:translateY(.3rem);transition:opacity .3s,transform .3s}
+.gr-up .up.up-sc .up-n{opacity:1;transform:none}
+.gr-up .up-lv small{font:500 .6rem/1 'Noto Sans SC','Barlow',sans-serif;color:#cdb88a;white-space:nowrap}
+@media (max-width:900px){.gr-up{grid-template-columns:1fr}}
+/* rules mini table: the partner tag sits left of the avatar, clear of the north marker */
+.mt-seat.s2 em{position:absolute;right:calc(100% + .45rem);top:calc(var(--mav,2.6rem)*.5);transform:translateY(-50%);white-space:nowrap;background:rgba(14,11,8,.85)}
+.tut-guide{z-index:5!important}
+/* tribute refusal notice: the refusing players' avatars and a short line in a lacquered plaque */
+.fx-anote{position:absolute;z-index:9;transform:translate(-50%,-50%);display:flex;align-items:center;gap:.8rem;padding:.55rem 1.3rem .55rem .65rem;border-radius:999px;pointer-events:none;
+  background:linear-gradient(180deg,rgba(70,16,10,.95),rgba(30,6,4,.95));border:1px solid #e0a64a;box-shadow:inset 0 0 0 3px rgba(30,6,4,.9),inset 0 0 0 4px rgba(233,180,100,.4),0 12px 26px rgba(0,0,0,.6),0 0 24px rgba(255,80,40,.3);
+  animation:anIn .5s cubic-bezier(.2,1.3,.4,1) both}
+.fx-anote.out{animation:anOut .4s ease forwards}
+@keyframes anIn{from{opacity:0;transform:translate(-50%,-30%) scale(.85)}}
+@keyframes anOut{to{opacity:0;transform:translate(-50%,-70%)}}
+.fx-anote .an-avs{display:flex}
+.fx-anote .an-av{width:2.6rem;height:2.6rem;border-radius:50%;overflow:hidden;display:block;background:#0d0c09;box-shadow:0 0 0 2px #5FB3E8,0 0 10px rgba(0,0,0,.6)}
+.fx-anote .an-av.t1{box-shadow:0 0 0 2px #E8835F,0 0 10px rgba(0,0,0,.6)}
+.fx-anote .an-av+.an-av{margin-left:-.6rem}
+.fx-anote .an-av svg{width:100%;height:100%;display:block}
+.fx-anote .an-tx{display:flex;flex-direction:column;gap:.15rem}
+.fx-anote b{font:700 1.25rem/1.1 'Noto Serif SC','Cormorant Garamond',serif;letter-spacing:.08em;color:#ffe6b0;text-shadow:0 1px 0 #000,0 0 10px rgba(255,150,80,.4);white-space:nowrap}
+.fx-anote small{font:500 .78rem/1.1 'Noto Sans SC','Barlow',sans-serif;letter-spacing:.06em;color:#f0c890;white-space:nowrap}
+/* a wild card picked up for you to complete the play: raised with the selection, plus a dashed gold frame and a small "auto" tab */
+#gtHand .gc.up.auto{outline:2px dashed #ffd36a;outline-offset:2px}
+#gtHand .gc.up.auto::after{content:attr(data-at);position:absolute;left:50%;top:-1.15rem;transform:translateX(-50%);padding:.08rem .4rem;border-radius:.3rem;background:#ffd36a;color:#2a1a04;font:800 .6rem/1.2 'Barlow',sans-serif;letter-spacing:.08em;white-space:nowrap;pointer-events:none}
+/* level digits sit optically on the avatars' centre line */
+.gl.glx .glv{display:flex;align-items:center;height:7.6cqw}
+.gl.glx .glv>span{display:block;line-height:1;transform:translateY(-.06em)}
+/* normal combinations: cards on the left with their play tag centred right under them, name and rule on the right */
+.rc-grid{grid-auto-rows:1fr}
+.rc-combo{grid-template-columns:11rem 1fr!important;grid-template-rows:1fr 2.3rem!important;align-items:center!important;gap:.3rem 1rem!important;min-height:8.4rem}
+.rc-combo .rc-cards{grid-column:1!important;grid-row:1!important;align-self:end;justify-self:center;min-width:0!important}
+.rc-combo .rc-tx{grid-column:2!important;grid-row:1/3!important;align-self:center}
+.rc-combo .gr-pv{grid-column:1!important;grid-row:2!important;justify-self:center!important;align-self:center!important;min-width:0!important;width:11rem;height:2.3rem;display:flex!important;align-items:center;justify-content:center;transform:none!important;margin:0!important;overflow:visible}
+.rc-combo .gr-pv .fx-badge{position:relative!important;left:auto!important;top:auto!important;margin:0!important;transform:scale(.68)!important;transform-origin:50% 50%!important;flex:none}
+/* the Sort switch inside the rules demo, same look as the table switch */
+.rd-sort{position:relative}
+.rd-sort .rd-sw{position:absolute;right:1rem;top:1rem;z-index:3;display:grid;grid-template-columns:1fr 1fr;align-items:center;width:9.4rem;height:2.1rem;border-radius:1.1rem;background:linear-gradient(180deg,#1e1810,#0e0b07);border:1px solid rgba(212,171,90,.6);box-shadow:inset 0 1px 3px rgba(0,0,0,.7);font:700 .78rem/1 'Noto Sans SC','Barlow',sans-serif;letter-spacing:.06em;color:#a89468;overflow:hidden}
+.rd-sort .rd-sw span{position:relative;z-index:2;text-align:center;transition:color .3s}
+.rd-sort .rd-sw .k{position:absolute;left:3px;top:3px;bottom:3px;width:calc(50% - 3px);border-radius:1rem;background:linear-gradient(180deg,#ffe7a0,#d9a641);box-shadow:0 2px 6px rgba(0,0,0,.5);transition:transform .35s cubic-bezier(.3,1.3,.5,1)}
+.rd-sort .rd-sw .d{color:#2a1a04}
+.rd-sort .rd-sw.on .k{transform:translateX(100%)}
+.rd-sort .rd-sw.on .d{color:#a89468}.rd-sort .rd-sw.on .s{color:#2a1a04}
+.rd-sort .rd-stage{margin-top:2.6rem}
+/* ===== rules additions ===== */
+/* clearing the Ace */
+.rd-ace{display:flex;flex-direction:column;align-items:center;gap:.9rem;padding:1.1rem .8rem}
+.ra-pan{position:relative;width:min(26rem,100%);aspect-ratio:1448/676;container-type:inline-size;transition:filter .5s}
+.ra-pan .ra-fr{position:absolute;inset:0;width:100%;height:100%;z-index:2;pointer-events:none}
+.ra-pan::before{content:"";position:absolute;left:3.6%;right:3.6%;top:29.5%;bottom:16.5%;border-radius:.5rem;background:radial-gradient(120% 140% at 50% 30%,rgba(26,22,16,.93),rgba(8,7,6,.96) 70%)}
+.ra-pan.win{filter:drop-shadow(0 0 18px rgba(255,200,80,.75)) brightness(1.15)}
+.ra-in{position:absolute;left:6%;right:6%;top:32.5%;bottom:19.5%;z-index:3;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:0 3cqw}
+.ra-t{display:flex;flex-direction:column;gap:1.6cqw}.ra-t.t0{align-items:flex-start}.ra-t.t1{align-items:flex-end}
+.ra-row{display:flex;align-items:center;gap:2cqw;padding:1cqw 2cqw;border-radius:2.4cqw}
+.ra-t.t0 .ra-row{background:rgba(60,140,255,.2);box-shadow:0 0 0 1px rgba(110,180,255,.75),0 0 14px rgba(70,150,255,.35)}
+.ra-avs{display:flex}.ra-av{width:7.6cqw;height:7.6cqw;border-radius:50%;overflow:hidden;display:block;background:#0d0c09;box-shadow:0 0 0 1.5px #5FB3E8}.ra-av.t1{box-shadow:0 0 0 1.5px #E8835F}.ra-av+.ra-av{margin-left:-2.2cqw}.ra-av svg{width:100%;height:100%;display:block}
+.ra-lv{font:700 9.2cqw/1 'Newsreader','Noto Serif SC',serif;color:#ffe3a0;text-shadow:0 2px 0 #000;min-width:6cqw;text-align:center}
+.ra-t.t1 .ra-lv{color:#cdb88a}
+.ra-card{width:12.8cqw;height:17.9cqw;border-radius:1.1cqw;background:#fff;box-shadow:0 0 0 1.5px #c99a45}
+.ra-pl .gl-a{display:flex;gap:1.1cqw}.ra-pl .gl-a .hz{width:5.4cqw;height:5.4cqw;display:block;position:relative}.ra-pl .gl-a .hz svg{width:100%;height:100%;display:block;overflow:visible}
+.ra-pl .gl-a .hz.enter{animation:hzIn .6s cubic-bezier(.25,1.6,.5,1) both}
+.ra-ord{justify-content:center}
+.ra-ord .up-p{width:3.2rem}
+.ra-ord .up-cr{display:block;width:1.3rem;height:1rem;opacity:0;transform:translateY(-.4rem) scale(.4)}.ra-ord .up-cr svg{width:100%;height:100%;display:block}
+.ra-ord .crowned .up-cr{animation:upCr .45s cubic-bezier(.3,1.6,.5,1) forwards;animation-delay:calc(var(--k)*.22s)}
+.ra-ord .up-av{width:2.2rem;height:2.2rem;border-radius:50%;overflow:hidden;display:block;box-shadow:0 0 0 2px #4a9cff}.ra-ord .up-p.t1 .up-av{box-shadow:0 0 0 2px #ff6a52}.ra-ord .up-av svg{width:100%;height:100%;display:block}
+.ra-ord .up-p small{font:600 .7rem/1 'Noto Sans SC','Barlow',sans-serif;color:#e8d4a2;min-height:.75rem}
+.ra-ord .up-p em{font:500 .62rem/1 'Barlow','Noto Sans SC',sans-serif;font-style:normal;color:#9fc8ff;min-height:.65rem}
+.ra-cap{min-height:1.2rem;font-weight:600}
+/* tribute cases */
+.rd-tg{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.9rem;margin-top:.5rem}
+.rd-tc{display:flex;flex-direction:column;gap:.35rem;padding:.85rem .9rem .9rem;border-radius:.8rem;background:rgba(0,0,0,.25);border-left:3px solid #ffd36a}
+.rd-tc.anti{border-left-color:#ff8a6a}
+.rd-tc>b{color:#ffe7a8;font-size:1rem}.rd-tc.anti>b{color:#ffc2ae}
+.rd-tc>span{font-size:.86rem;line-height:1.55;opacity:.88;min-height:5.4em}
+.rd-tc .rd-trib{min-height:0;padding:.5rem 0 0;margin:0;background:none;border:0}
+.rd-tc .mt{width:100%}
+.rd-tc .mt-seat b{font-size:.62rem;max-width:4.6rem}
+.rd-tc .mt-av{width:2.1rem;height:2.1rem}
+.rd-jk{position:absolute!important;--rcw:1.7rem;z-index:5;box-shadow:0 0 0 2px #ffd36a,0 0 14px rgba(255,200,80,.8)}
+.rd-astamp{position:absolute;z-index:6;transform:translate(-50%,-50%) rotate(-8deg);padding:.3rem .9rem;border:2.5px solid #ffd9c8;border-radius:.35rem;background:#b8261c;color:#fff;font:700 1.05rem/1.1 'Noto Serif SC','Cormorant Garamond',serif;letter-spacing:.06em;white-space:nowrap;box-shadow:0 0 0 2px #7a120c,0 6px 16px rgba(0,0,0,.55);animation:astIn .45s cubic-bezier(.3,1.8,.5,1) both}
+@keyframes astIn{from{opacity:0;transform:translate(-50%,-50%) rotate(-8deg) scale(2.2)}}
+@media (max-width:900px){.rd-tg{grid-template-columns:1fr}}
+/* card counter */
+.rd-cc{display:flex;flex-direction:column;align-items:center;gap:.8rem;padding:1.1rem .6rem}
+.rd-cc .rcc-play{display:flex;justify-content:center;min-height:3.9rem}
+.rd-cc .rcc-play .gc.rc{--rcw:2.6rem}.rd-cc .rcc-play .gc.rc+.gc.rc{margin-left:calc(var(--rcw)*-.5)}
+.rd-cc .rcc-w{position:relative;transform:none!important;border-top:1.5px solid #b8913f;border-radius:.8rem;max-width:100%;overflow-x:auto}
+.rd-cc .cc-c.hit{animation:ccHit .9s ease}
+@keyframes ccHit{0%{box-shadow:0 0 0 2px #7ef0c0,0 0 14px rgba(126,240,192,.9);transform:translateY(-3px)}100%{box-shadow:none;transform:none}}
+.ra-ord{display:flex;flex-direction:row;gap:.5rem}
+.ra-ord .up-p{display:flex;flex-direction:column;align-items:center;gap:.15rem}
+.rd-tc .mt .rd-fly{--rcw:2.1rem}
+.rd-tc .mt .gc.rc.rd-jk{--rcw:1.55rem}
 /* ===== Pages & Frames: a reading room, green-leather rail and paper pages ===== */
 #reader.shelf{--sh-bg:#F3EEE3;--sh-ink:#23201A;--sh-ink2:#6B6252;--sh-acc:#8B2B22;--sh-green:#1F3329;--sh-line:#DCD2BF;--cx:#8B2B22}
 #reader.shelf .rd-main,#reader.shelf .rd-leaf{background:var(--sh-bg) linear-gradient(90deg,rgba(80,60,30,.05) 1px,transparent 1px) 0 0/22px 100%}
@@ -7816,6 +7973,12 @@ const h2=[
   H([[8,2],[9,0],[10,3],[11,3],[12,2],[13,2],[3,1],[4,3],[6,0],[7,3],[2,2],[10,1]]),
   H([[8,0],[8,1],[8,2],[9,2],[9,3],[9,1],[3,2]]),
   H([[14,3],[8,1],[4,1],[6,2],[7,2],[10,3],[11,2],[12,3],[2,1],[3,1]])];
+// hand 3 is only dealt to show a refused tribute: the two losers hold one Big Joker each
+const h3=[
+  H([[3,0],[4,2],[6,1],[7,3],[9,0],[10,2],[12,1],[13,3],[14,0],[2,2]]),
+  H([[17,4],[5,0],[6,2],[8,3],[9,1],[11,0],[11,2],[12,3],[13,0],[4,1]]),
+  H([[3,1],[5,2],[7,0],[9,3],[10,0],[11,3],[12,2],[14,1],[14,3],[6,0]]),
+  H([[17,4],[4,0],[5,3],[7,1],[8,0],[10,1],[13,2],[2,3],[3,3],[9,2]])];
 const X=s=>({bot:s,pass:1}), B=(s,cards)=>({bot:s,cards});
 const steps=[
  // ---------- hand 1 ----------
@@ -7846,7 +8009,7 @@ const steps=[
  {say:['Borrowing the wind','借风'],b:['You are out and nobody beat your last card, so the lead passes to your ally. This is called borrowing the wind.','你已经出完，最后一手也没人压，于是由你的盟友接着领出，这叫“借风”。'],spot:'.gs2'},
  B(2,[[6,2],[6,3],[6,0],[7,2],[7,3],[7,1]]),
  {end:1},
- {say:['Levelling up','升级'],b:['You were 1st and your ally 2nd, so your team climbs three levels, from 2 to 5. An ally in 2nd is worth 3 levels, in 3rd 2, in last 1. The next hand is played at the winners’ level.','你头游、盟友二游，我方升三级，从 2 到 5。盟友二游升 3 级，三游升 2 级，下游升 1 级。下一局打胜方的级数。'],spot:'.gl'},
+ {demo:'lvup',say:['Levelling up','升级'],b:['You were 1st and your ally 2nd, so your team climbs three levels, from 2 to 5. An ally in 2nd is worth 3 levels, in 3rd 2, in last 1. The next hand is played at the winners’ level.','你头游、盟友二游，我方升三级，从 2 到 5。盟友二游升 3 级，三游升 2 级，下游升 1 级。下一局打胜方的级数。']},
  {say:['Tribute is coming','接下来要进贡'],b:['From the second hand on, the losers pay tribute before play. The other team took 3rd and last, so both of them pay: each gives their highest card, the bigger one to 1st (you), the smaller to 2nd. Each receiver gives one card back.','从第二局起，开打前输的一方要进贡。对方拿了三游和下游（双下），两人都要进贡：各交出自己最大的一张牌，大的给头游（你），小的给二游。收到的人各还一张牌。']},
  // ---------- hand 2 ----------
  {hand2:1},
@@ -7867,14 +8030,17 @@ const steps=[
  B(2,[[8,0],[8,1],[8,2],[9,2],[9,3],[9,1]]), X(3), X(1),
  B(2,[[13,2]]),
  {end:1},
- {demo:'anti',say:['Refusing tribute','抗贡'],b:['One more rule: if the players who owe tribute hold both Big Jokers between them, they show them and refuse to pay, and 1st leads instead. Watch: your opponents each hold one Big Joker. And when you pay tribute yourself and your highest card comes in several suits, you choose which one to give.','还有一条：如果该进贡的一方手里一共有两张大王，亮出来就可以抗贡，不用进贡，由头游先出。看：对手两人各有一张大王。轮到你进贡时，如果最大的牌有好几种花色，由你自己挑一张。']},
- {demo:'ahearts',say:['Three Tries at the Ace','打 A 的三次机会'],b:['When your team reaches the Ace, three hearts light up beside it: three tries to clear it.','升到 A 后，级牌旁亮起三颗心，代表三次过 A 的机会。']},
- {demo:'amiss',say:['A Miss Costs a Heart','没过，碎一颗心'],b:['Not 1st, or your ally comes last: the try is missed and a heart breaks. Lose all three and you drop back to 2.','没拿到头游，或盟友是下游，就算没过，碎一颗心。三颗都碎了，退回 2。']},
+ {say:['One More Hand','再来一局'],b:['Let us deal one more hand. Last hand the opponents came 3rd and last, so they owe a double tribute. Watch what they do.','再发一局。上一局对手是三游和下游，本该双贡。看看他们怎么做。']},
+ {hand3:1},
+ {trib:1},
+ {fx:'lead',say:['Tribute Refused','抗贡'],b:['The two players who owed tribute held both Big Jokers between them, so they refused to pay. With no tribute, last hand’s 1st player leads: you. And when you do pay tribute and your highest card comes in several suits, you choose which one to give.','该进贡的两人手里一共有两张大王，于是抗贡，不用进贡。没有进贡，就由上一局的头游先出牌，也就是你。轮到你进贡时，如果最大的牌有好几种花色，由你自己挑一张。'],spot:'.gs0'},
+ {demo:'ahearts',say:['Three Tries at the Ace','打 A 的三次机会'],b:['When your team reaches the Ace, three dragon pearls light up under its level: three tries to clear it.','升到 A 后，级数下方亮起三颗龙珠，代表三次过 A 的机会。']},
+ {demo:'amiss',say:['A Miss Breaks a Pearl','没过，碎一颗龙珠'],b:['Not 1st, or your ally comes last: the try is missed and a pearl shatters. Lose all three and you drop back to 2.','没拿到头游，或盟友是下游，就算没过，碎一颗龙珠。三颗都碎了，退回 2。']},
  {demo:'aswitch',say:['Switching Sides','换边打级牌'],b:['Every hand is played at the winning team’s level. If the opponents win, the next hand switches to their level.','每一局都打赢的那一队的级牌。对手赢了，下一局就换边，打对手的级。']},
  {demo:'awin',say:['Clearing the Ace','过 A'],b:['Come 1st at your Ace with your ally not last, and your team leaps through the Dragon Gate and wins the match.','打 A 时拿到头游，且盟友不是下游，就跃过龙门，赢下整场。']},
  {say:['You are ready','准备好了'],b:['That is the whole flow. Hint always suggests a legal play, and Rules lists every combination. Good luck at the Gate.','流程就是这些。卡住时按“提示”就能找到能出的牌，所有牌型都在“规则”里。祝你跃过龙门！'],last:1}
 ];
-return {h1,h2,steps,L1:2,L2:5,trib:[{from:3,to:0,card:[14,3]},{from:1,to:2,card:[13,2]}]};
+return {h1,h2,h3,steps,L1:2,L2:5,trib:[{from:3,to:0,card:[14,3]},{from:1,to:2,card:[13,2]}]};
 })();
 if(typeof module!=='undefined') module.exports=GD_TUT;
 
@@ -8146,9 +8312,11 @@ function snd(k){ try{ if(!AC) initAudio(); if(!AC||SND.muted) return; const t=AC
   else if(k==='suck'){ nz(t,1.1,.1,'bandpass',2400,300,3,.6); osc('sine',660,t,1.1,.04,110,.3); }
   else if(k==='swUs'){ [523,659,784,1047,1319].forEach((f,i)=>pluck(f,t+i*.07,.09,.9)); [1047,1568,2093].forEach((f,i)=>osc('sine',f,t+.36+i*.05,1.1,.05,f)); osc('sine',262,t,.6,.12,392,.02); nz(t+.3,.9,.05,'highpass',7500,0,.4,.2); }
   else if(k==='swThem'){ [784,698,622,523,415].forEach((f,i)=>pluck(f,t+i*.09,.08,.7)); osc('triangle',311,t+.45,1,.07,294); osc('triangle',370,t+.45,1,.05,349); osc('sine',73,t,1,.22,55,.03); nz(t,.6,.06,'lowpass',400,0,1,.1); }
-  else if(k==='adrop'){ osc('sawtooth',880,t,1.1,.06,110,.03); osc('sine',440,t,1.1,.08,55,.03); nz(t+.9,.9,.18,'lowpass',260,0,2,.1); osc('sine',49,t+.9,1.4,.3,36,.02); }
+  else if(k==='adrop'){ [1568,1319,1047,880,698,587].forEach((f,i)=>osc('sine',f,t+i*.08,.5,.04,f*.94)); nz(t,.9,.1,'bandpass',2400,500,1.5); osc('sine',98,t+.55,2.2,.26,73,.02); osc('triangle',196,t+.55,1.8,.08,147,.02); nz(t+.55,1.2,.12,'lowpass',220,0,2,.1); }
   else if(k==='level'){ [659,784,988,1319,1568].forEach((f,i)=>pluck(f,t+i*.06,.08,.8)); nz(t+.2,.8,.05,'highpass',7000,0,.4,.2); }
   else if(k==='tick') nz(t,.02,.12,'bandpass',4000,0,6);
+  else if(k==='pcrack'){ [3520,4186,3136].forEach((f,i)=>osc('sine',f,t+i*.07,.35,.035,f*.82)); nz(t,.06,.2,'highpass',4200,0,1); nz(t+.12,.05,.16,'highpass',3600,0,1); osc('sine',196,t,.5,.04,165); }
+  else if(k==='pshatter'){ nz(t,.45,.26,'bandpass',3200,1400,2); for(let i=0;i<9;i++) osc('sine',2400+Math.random()*2600,t+.02+i*.045,.22,.026,1600+Math.random()*600); osc('sine',330,t,.9,.1,110); osc('triangle',659,t+.25,.5,.05,587); osc('triangle',523,t+.55,.9,.05,392); }
   else if(k==='crack'){ nz(t,.05,.22,'highpass',3200,0,1); nz(t+.09,.04,.18,'highpass',2600,0,1); osc('square',1400,t,.03,.03,900); }
   else if(k==='heartbreak'){ nz(t,.35,.28,'bandpass',2400,0,3); for(let i=0;i<6;i++) osc('triangle',2600+Math.random()*1800,t+.02+i*.035,.12,.03,1800); osc('sine',523,t+.2,.4,.09,494); osc('sine',415,t+.6,.7,.09,311); }
   else if(k==='fail'){ osc('sawtooth',330,t,.3,.06,300); osc('sawtooth',311,t+.3,.3,.06,290); osc('sawtooth',294,t+.6,.8,.06,230); nz(t+.6,.4,.1,'lowpass',500,0,1); }
@@ -8171,7 +8339,7 @@ const kcap=(lab,w)=>{ w=w||40; return `<svg class="gk" viewBox="0 0 ${w} 30" sty
 function ensure(){ if(root) return; root=document.createElement('div'); root.id='gr'; root.setAttribute('data-noi18n',''); document.body.appendChild(root);
   root.addEventListener('click',onClick); root.addEventListener('pointerdown',onDown);
   addEventListener('keydown',onKey,true); addEventListener('keyup',e=>{ if(open) keyFlash(e.key,false); },true);
-  addEventListener('resize',()=>{ if(open&&scr==='table'){ sizeVars(); fitRing(); layoutHand(); layoutFans(); glFrame(); fitRes(); if(M&&placeHi.last!=null) placeHi(placeHi.last); if(tut) try{ tutUI(); }catch(e){} requestAnimationFrame(()=>{ glFrame(); if(M&&placeHi.last!=null) placeHi(placeHi.last); }); } }); }
+  addEventListener('resize',()=>{ if(open&&scr==='table'){ sizeVars(); fitRing(); layoutHand(); layoutFans(); glFrame(); glSize(); fitRes(); if(M&&placeHi.last!=null) placeHi(placeHi.last); if(tut) try{ tutUI(); }catch(e){} requestAnimationFrame(()=>{ glFrame(); if(M&&placeHi.last!=null) placeHi(placeHi.last); }); } }); }
 function holdBgm(on){ try{ if(on){ bgmHeld=[TR.bgm,TR.decode].filter(t=>t&&t.playing); bgmHeld.forEach(t=>t.pause(1)); }
   else { bgmHeld.forEach(t=>t.play(1.4)); bgmHeld=[]; } }catch(e){} }
 function openRoom(){ ensure(); open=true; scr='lobby'; preload(); render(); requestAnimationFrame(()=>root.classList.add('on')); snd('pop'); holdBgm(true); bgm(1); }
@@ -8234,13 +8402,13 @@ function buildTable(){ fdPreload(); dkImg('gd-table-dm'); dkImg('gd-table-om'); 
   sizeVars(); refreshAll(); fitRing(); }
 function refreshAll(){ if(!H) return; drawLevel(); for(let s=0;s<4;s++){ drawSeat(s); drawPlayed(s); } drawHand(); drawAct(); ccDraw(); }
 /* level panel */
-const HEART='<svg viewBox="0 0 24 22"><defs><radialGradient id="hgr" cx=".35" cy=".3" r=".8"><stop offset="0" stop-color="#ffb3b3"/><stop offset=".35" stop-color="#ff3b4e"/><stop offset="1" stop-color="#8a0618"/></radialGradient></defs><path class="o" d="M12 4.2C10.5 1.6 7.6.4 5 1.2 1.7 2.2.3 5.6 1.3 8.8 2.6 13 7 16.8 12 21c5-4.2 9.4-8 10.7-12.2 1-3.2-.4-6.6-3.7-7.6-2.6-.8-5.5.4-7 3z"/><path class="l" d="M12 4.2C10.5 1.6 7.6.4 5 1.2 1.7 2.2.3 5.6 1.3 8.8 2.6 13 7 16.8 12 21l-1.4-4 2-3.5-1.8-3.5 2-3z"/><path class="r" d="M12 4.2c1.5-2.6 4.4-3.8 7-3 3.3 1 4.7 4.4 3.7 7.6C21.4 13 17 16.8 12 21l-1.4-4 2-3.5-1.8-3.5 2-3z"/><ellipse class="hl" cx="6.6" cy="5.4" rx="2.2" ry="1.3" transform="rotate(-30 6.6 5.4)"/></svg>';
-function heartsHTML(left){ return `<span class="gl-a" title="${T('Tries at Ace','过 A 机会')}">${[0,1,2].map(i=>`<i class="hz${i<left?' on':''}">${HEART}</i>`).join('')}</span>`; }
+const HEART='<svg viewBox="0 0 24 24"><defs><radialGradient id="pgr" gradientUnits="userSpaceOnUse" cx="8.6" cy="7.8" r="15"><stop offset="0" stop-color="#fffbe8"/><stop offset=".22" stop-color="#ffe39a"/><stop offset=".55" stop-color="#f2a42e"/><stop offset=".85" stop-color="#b8560c"/><stop offset="1" stop-color="#6a2604"/></radialGradient></defs><circle class="o" cx="12" cy="12" r="9.4"/><path class="l" d="M12 2.6A9.4 9.4 0 0 0 12 21.4l-1.3-4.1 2.1-3.6-2-3.5 2-3.6z"/><path class="r" d="M12 2.6A9.4 9.4 0 0 1 12 21.4l-1.3-4.1 2.1-3.6-2-3.5 2-3.6z"/><circle class="rim" cx="12" cy="12" r="9.4"/><path class="sw" d="M7.2 14.6c1.6 2.4 5.2 2.9 7.3.9 1.6-1.6 1.2-4.2-.7-4.8-1.6-.5-2.9 1-2.1 2.2"/><ellipse class="hl" cx="8.6" cy="7.6" rx="2.6" ry="1.6" transform="rotate(-35 8.6 7.6)"/></svg>';
+function heartsHTML(left){ return `<span class="gl-a" title="${T('Dragon pearls: tries at the Ace','龙珠：过 A 机会')}">${[0,1,2].map(i=>`<i class="hz${i<left?' on':''}">${HEART}</i>`).join('')}</span>`; }
 async function shatterHearts(team){ const g=$g('.gl'); if(!g) return; const hz=[...g.querySelectorAll(`.glt.t${team} .gl-a .hz`)]; if(!hz.length) return; eyeMood(team===0?'bad':'good','keep');
   hz.forEach((h,i)=>setTimeout(()=>{ h.classList.add('fall'); },i*120)); await wait(900); }
 async function breakHeart(team){ const g=$g('.gl'); if(!g) return; const on=g.querySelectorAll(`.glt.t${team} .gl-a .hz.on:not(.break)`), h=on[on.length-1]; if(!h) return;
-  h.classList.add('shake'); snd('crack'); eyeMood(team===0?'bad':'good'); await wait(650); h.classList.remove('shake'); h.classList.add('break'); snd('heartbreak');
-  const r=h.getBoundingClientRect(), R0=felt.getBoundingClientRect(); burst(r.left-R0.left+r.width/2,r.top-R0.top+r.height/2,26,{c:['#ff3b4e','#ffb3b3','#8a0618'],v:3.2,g:.12,dec:.02,k:'sq',r:2}); await wait(1200); }
+  h.classList.add('shake'); snd('pcrack'); eyeMood(team===0?'bad':'good'); await wait(650); h.classList.remove('shake'); h.classList.add('break'); snd('pshatter');
+  const r=h.getBoundingClientRect(), R0=felt.getBoundingClientRect(); burst(r.left-R0.left+r.width/2,r.top-R0.top+r.height/2,30,{c:['#ffe39a','#fff6d0','#f2a42e','#b8560c'],v:3.2,g:.12,dec:.02,k:'sq',r:2}); await wait(1200); }
 /* ---------- test mode: ↑↑↓↓←→←→BABA at the table ---------- */
 const KONAMI=['ArrowUp','ArrowUp','ArrowDown','ArrowDown','ArrowLeft','ArrowRight','ArrowLeft','ArrowRight','b','a','b','a'], KB=[], TEST={on:false,hold:false,peek:false,seat:1};
 const TSPEC={single:[[9,0]],pair:[[9,0],[9,1]],triple:[[9,0],[9,2],[9,3]],fullhouse:[[7,0],[7,1],[7,2],[4,3],[4,0]],straight:[[3,0],[4,1],[5,2],[6,0],[7,3]],tube:[[5,0],[5,1],[6,2],[6,3],[7,0],[7,1]],plate:[[8,0],[8,1],[8,2],[9,0],[9,3],[9,1]],
@@ -8289,11 +8457,20 @@ function testPanel(){ let p=$g('.gr-test'); if(p){ p.remove(); TEST.on=TEST.hold
     else if(k==='hold'){ TEST.hold=!TEST.hold; b.classList.toggle('on',TEST.hold); if(!TEST.hold) step(); else clearTimeout(timer); } }); }
 function drawLevel(anim){ const g=$g('.gl'); if(!g) return; const d=M.dealer, prevL=g._L, FL=H.settled&&g._lvH===H?g._lvNext:H.L; g._L=FL;
   const chance=t=>M.lv[t]===14?heartsHTML(3-M.aFails[t]):'';
-  const av=k=>`<i class="gl-av s${k}" title="${pname(k)}"><svg viewBox="0 0 40 40">${AV[P[k].k]}</svg></i>`; g.classList.add('gld');
-  g.innerHTML=`<canvas class="gl-cv"></canvas><i class="gl-eye"></i><div class="gl-cur"><small>${T('LEVEL','本局级牌')}</small><div class="gl-tile"><img class="gl-face" src="${GC_IMG(cimg({r:FL,s:1}))}" alt="${SUIT[1]}${LV(FL)}"><i class="gl-shine"></i></div></div>
-   <div class="gl-teams"><i class="gl-hi"></i>${[0,1].map(t=>`<div class="glt t${t}${d===t?' cur':''}"><span class="gl-avs">${av(t)}${av(t+2)}</span><b class="glv" data-t="${t}"><span>${LV(M.lv[t])}</span></b><span class="gl-ac">${chance(t)}</span></div>`).join('')}</div>`; glFrame(); if(prevL!=null&&prevL!==FL&&!reduce){ const tl=g.querySelector('.gl-tile'); tl.classList.add('flip'); const im=tl.querySelector('.gl-face'); im.src=GC_IMG(cimg({r:prevL,s:1})); setTimeout(()=>{ im.src=GC_IMG(cimg({r:FL,s:1})); },260); setTimeout(()=>tl.classList.remove('flip'),900); } placeHi(d); }
+  const av=k=>`<i class="gl-av s${k}" title="${pname(k)}"><svg viewBox="0 0 40 40">${AV[P[k].k]}</svg></i>`; g.classList.remove('gld'); g.classList.add('glx');
+  // two golden dragons face each other across the frame: ours on the left (blue eyes), theirs on the right (red eyes); the level card sits between the two teams
+  g.innerHTML=`<i class="gl-bg"></i><img class="gl-fr" src="${GIMG('gd-lvframe')}" alt="" draggable="false"><i class="gl-eye2 l"></i><i class="gl-eye2 r"></i>
+   <div class="gl-teams"><i class="gl-hi"></i>${[0,1].map(t=>`<div class="glt t${t}${d===t?' cur':''}"><span class="gl-row"><span class="gl-avs">${av(t)}${av(t+2)}</span><b class="glv" data-t="${t}"><span>${LV(M.lv[t])}</span></b></span><span class="gl-ac">${chance(t)}</span></div>`).join('')}
+   <div class="gl-cur"><small>${T('LEVEL','本局级牌')}</small><div class="gl-tile"><img class="gl-face" src="${GC_IMG(cimg({r:FL,s:1}))}" alt="${SUIT[1]}${LV(FL)}"><i class="gl-shine"></i></div></div></div>`;
+  if(prevL!=null&&prevL!==FL&&!reduce){ const tl=g.querySelector('.gl-tile'); tl.classList.add('flip'); const im=tl.querySelector('.gl-face'); im.src=GC_IMG(cimg({r:prevL,s:1})); setTimeout(()=>{ im.src=GC_IMG(cimg({r:FL,s:1})); },260); setTimeout(()=>tl.classList.remove('flip'),900); } glSize(); placeHi(d); }
+// the dragon frame takes all the room left of your ally's seat and above your previous player's cards, never covering either
+function glSize(){ const g=$g('.gl'); if(!g||!felt) return; const R=felt.getBoundingClientRect(); if(!R.width) return; const rem=parseFloat(getComputedStyle(document.documentElement).fontSize)||16;
+  const box=s=>{ const es=$$g(s); let l=1e9,t=1e9; es.forEach(e=>{ const r=e.getBoundingClientRect(); if(r.width){ l=Math.min(l,r.left); t=Math.min(t,r.top); } }); return {l,t}; };
+  const gl=g.getBoundingClientRect(), x0=gl.left, y0=gl.top, top2=box('.gs2 .gs-id,.gs2 .gs-av,.gs2 .gs-dir,.gs2 .gs-fan,.gs2 .gs-cnt,.gs2 .gs-tx'), left3=box('.gs3 .gs-fan,.gs3 .gs-dir,.gs3 .gs-av,.gs3 .gs-id');
+  const wA=(top2.l<1e8?top2.l:R.right)-x0-rem*.8, hA=(left3.t<1e8?left3.t:R.bottom)-y0-rem*.6, w=Math.max(rem*15,Math.min(wA,hA*1448/676,rem*30));
+  g.style.setProperty('--glw',Math.round(w)+'px'); }
 function placeHi(d){ const g=$g('.gl'); if(!g) return; const tm=g.querySelector('.gl-teams'), hi=g.querySelector('.gl-hi'); if(!tm||!hi) return;
-  const put=(t,anim)=>{ const r=tm.querySelector('.glt.t'+t); if(!r) return; const v=r.querySelector('.glv'); hi.style.transition=anim?'':'none'; hi.style.top=r.offsetTop+'px'; hi.style.height=r.offsetHeight+'px'; hi.style.left=r.offsetLeft+'px'; hi.style.width=(v?v.offsetLeft+v.offsetWidth+14:r.offsetWidth)+'px'; }; // the box holds the two avatars and the level, never the Ace hearts
+  const put=(t,anim)=>{ const r0=tm.querySelector('.glt.t'+t); if(!r0) return; const r=r0.querySelector('.gl-row')||r0, px=Math.max(5,r.offsetHeight*.16), py=Math.max(3,r.offsetHeight*.1); hi.style.transition=anim?'':'none'; hi.style.top=(r.offsetTop-py)+'px'; hi.style.height=(r.offsetHeight+2*py)+'px'; hi.style.left=(r.offsetLeft-px)+'px'; hi.style.width=(r.offsetWidth+2*px)+'px'; }; // the box holds the two avatars and the level, never the Ace hearts
   const prev=placeHi.last; put(prev!=null?prev:d,false); placeHi.last=d;
   if(prev!=null&&prev!==d){ requestAnimationFrame(()=>requestAnimationFrame(()=>{ put(d,true); hi.classList.remove('mv'); void hi.offsetWidth; hi.classList.add('mv'); snd(d===0?'swUs':'swThem'); })); } }
 // order: panel grows and the eye lights → levels roll (bright chime for us, uneasy pulse for them) → the highlight crosses to the new side → panel shrinks and the eye goes out
@@ -8310,7 +8487,7 @@ async function animLevel(res){ const g=$g('.gl'); if(!g) return; const du=res.af
   await wait(Math.max(1500,...[0,1].map(t=>res.aReset===t?1700:Math.abs(res.after[t]-res.before[t])*330+700)));
   // a team reaching Ace: its three chances fly in one by one
   for(const t of [0,1]){ if(res.after[t]===14&&res.before[t]!==14){ const ac=g.querySelector(`.glt.t${t} .gl-ac`); if(!ac) continue; ac.innerHTML=heartsHTML(3); const hz=[...ac.querySelectorAll('.hz')];
-      hz.forEach((h,i)=>{ h.style.opacity=0; setTimeout(()=>{ h.style.opacity=''; h.classList.add('enter'); snd(t===0?'tickg':'tickb'); const r=h.getBoundingClientRect(), R0=felt.getBoundingClientRect(); burst(r.left-R0.left+r.width/2,r.top-R0.top+r.height/2,14,{c:['#ff5a6a','#ffd0d6','#ffd36a'],v:2.4,g:.04,dec:.03,k:'tw',r:1.6}); },reduce?0:i*380); });
+      hz.forEach((h,i)=>{ h.style.opacity=0; setTimeout(()=>{ h.style.opacity=''; h.classList.add('enter'); snd(t===0?'tickg':'tickb'); const r=h.getBoundingClientRect(), R0=felt.getBoundingClientRect(); burst(r.left-R0.left+r.width/2,r.top-R0.top+r.height/2,14,{c:['#ffe39a','#fff6d0','#f2a42e'],v:2.4,g:.04,dec:.03,k:'tw',r:1.6}); },reduce?0:i*380); });
       await wait(reduce?100:1400); } }
   if(placeHi.last!=null&&placeHi.last!==M.dealer){ g.querySelectorAll('.glt').forEach(e=>e.classList.toggle('cur',e.classList.contains('t'+M.dealer))); placeHi(M.dealer); await wait(reduce?50:1100); }
   // the level card flips to next hand's level while the panel is still open
@@ -8403,7 +8580,7 @@ function layoutHand(){ const h=$g('#gtHand'); if(!h||!h._cols) return; const col
   const step=n>1?Math.min(cw*1.04,(W-cw-gapB0)/(n-1)):0, gapB=gapB0?Math.min(gapB0,Math.max(cw*.1,cw*1.12-step)):0, tot=cw+step*(n-1)+gapB, tags=[], full=[]; let x=(W-tot)/2, z=1;
   cols.forEach((col,ci)=>{ if(ci>0&&cols[ci-1].bomb&&!col.bomb) x+=gapB;
     col.cards.forEach((c,i)=>{ const e=h.querySelector(`.gc[data-id="${c.id}"]`); if(!e) return; const y=Hh-ch-(col.cards.length-1-i)*vs, up=col.cards.slice(i).some(x=>sel.has(x.id))?-cw*.24:0;
-      e.style.transform=`translate(${x}px,${y+up}px)`; e.style.zIndex=z++; e.classList.toggle('up',sel.has(c.id)); e.classList.toggle('grp',!!(col.bomb&&col.cards.every(x=>sel.has(x.id)))); e.dataset.x=x; e.dataset.y=y; });
+      e.style.transform=`translate(${x}px,${y+up}px)`; e.style.zIndex=z++; e.classList.toggle('up',sel.has(c.id)); e.classList.toggle('auto',autoW.has(c.id)); if(autoW.has(c.id)) e.dataset.at=T('Auto','自动'); e.classList.toggle('grp',!!(col.bomb&&col.cards.every(x=>sel.has(x.id)))); e.dataset.x=x; e.dataset.y=y; });
     if(col.tag) tags.push({ci,cx:x+cw/2,tag:col.tag});
     if(col.bomb&&col.cards.every(c=>sel.has(c.id))) full.push({x,top:Hh-ch-(col.cards.length-1)*vs-cw*.24,h:ch+(col.cards.length-1)*vs,kind:col.kind||'bomb'});
     x+=step; });
@@ -8423,7 +8600,11 @@ const bdTier=(kind,n)=>kind==='sf'?'sf':kind==='kb'?'kb':'b'+Math.max(4,Math.min
 const bdHTML=(kind,n)=>`<i class="bd-ic">${BD_ICO[kind]||BD_ICO.bomb}</i>${kind==='bomb'||!kind?`<em>${n}</em>`:''}`;
 const bdLegend=()=>`<div class="bd-leg">${[4,5,6,7,8,9,10].map(n=>`<span class="bd-li"><i class="gc-bd t-${bdTier('bomb',n)} st">${bdHTML('bomb',n)}</i><small>${T(`${n} cards`,`${n} 张`)}</small></span>`).join('')}<span class="bd-li"><i class="gc-bd t-sf st">${bdHTML('sf',5)}</i><small>${T('Straight flush','同花顺')}</small></span><span class="bd-li"><i class="gc-bd t-kb st">${bdHTML('kb',4)}</i><small>${T('Joker Bomb','四大天王')}</small></span></div><p class="bd-cap">${T('Each badge takes the colour of its play effect; a bomb also shows how many cards it has, from 4 up to 10.','徽标的颜色和出牌特效一致；炸弹徽标上还标着张数，从 4 到 10。')}</p>`;
 const bdTitle=(kind,n)=>kind==='sf'?T('Straight flush: tap to select','同花顺：点一下选中'):kind==='kb'?T('Joker Bomb: tap to select','四大天王：点一下选中'):T(`${n}-card bomb: tap to select`,`${n} 张炸弹：点一下选中`);
-function markSel(){ chooseClose(); layoutHand(); updatePre(); requestAnimationFrame(selChip); }
+let autoW=new Set();
+let autoOff=false;
+function autoWild(){ autoW.forEach(id=>sel.delete(id)); autoW=new Set(); if(!sel.size) autoOff=false; if(autoOff||!H||H.phase!=='play'||!myTurn()||!sel.size) return;
+  const cs=selected(); if(GD.judge(cs,H.L,target())) return; const w=wildFill(cs); if(!w) return; w.cards.forEach(c=>{ if(!sel.has(c.id)){ sel.add(c.id); autoW.add(c.id); } }); }
+function markSel(){ chooseClose(); autoWild(); layoutHand(); updatePre(); requestAnimationFrame(selChip); }
 /* ---------- action bar: shown only on your turn, above your hand ---------- */
 const target=()=>H.trick&&H.trick.seat!==0?H.trick.combo:null;
 const myTurn=()=>H&&H.phase==='play'&&H.turn===0&&!busy&&!ret;
@@ -8457,7 +8638,10 @@ function buildHints(){ const tg=target(), hand=H.hands[0], L=H.L, ms=GD.moves(ha
     const wild=m.cards.filter(c=>GD.isWild(c,L)).length; sc+=wild*9;
     sc+=m.cards.filter(c=>c.r===L&&!GD.isWild(c,L)).length*2.5+m.cards.filter(c=>c.r>=16).length*3;
     sc+=(GD.plan(GD.without(hand,m.cards),L).s-base)*2.2+(m.combo.key||0)*.06;
-    if(key(m)===bk) sc-=1.5; return sc; };
+    if(key(m)===bk) sc-=1.5;
+    // a full house carries the smallest real pair: a rank you hold exactly twice beats breaking up a triple, and lower beats higher
+    if(t==='fullhouse'&&m.combo.p!=null){ const pr=m.combo.p, have=pr>=16?jk:(cnt[pr]||0), vp=pr===L?15:pr; sc+=(have>2?30:0)+vp*.8; }
+    return sc; };
   // never offer a play that splits a bomb (part of a 4+ group): a 6-bomb is not cut down to 5, nor broken for a single
   // the groups Sort would make (four jokers, straight flushes, bombs) are kept whole: a play either is one of them or touches none of their cards
   const {groups,reserved}=sortGroups();
@@ -8976,9 +9160,9 @@ async function bombFx(n,x,y,by,src,R){ const k=Math.max(0,Math.min(4,n-4)), pal=
   await W([1100,1300,1700,1900,2200][k]); }
 
 /* ---------- level panel: a golden dragon coils round the panel; its eye reacts ---------- */
-function eyeMood(k,hold){ const g0=$g('.gl'); if(!g0) return; const e=g0.querySelector('.gl-eye'); if(!e) return; g0.classList.remove('m-good','m-bad'); e.classList.remove('good','bad'); void e.offsetWidth; e.classList.add(k); g0.classList.add('m-'+k); snd(k==='good'?'eyegood':'eyebad');
-  clearTimeout(g0._mt); if(hold!=='keep') g0._mt=setTimeout(()=>{ e.classList.remove(k); g0.classList.remove('m-'+k); },hold||2800); }
-function eyeOff(){ const g0=$g('.gl'); if(!g0) return; clearTimeout(g0._mt); const e=g0.querySelector('.gl-eye'); e&&e.classList.remove('good','bad'); g0.classList.remove('m-good','m-bad'); }
+function eyeMood(k,hold){ const g0=$g('.gl'); if(!g0) return; const e=g0.querySelector(k==='good'?'.gl-eye2.l':'.gl-eye2.r'); g0.classList.remove('m-good','m-bad'); g0.querySelectorAll('.gl-eye2').forEach(x=>x.classList.remove('on','keep')); if(!e) return; void e.offsetWidth; e.classList.add('on'); if(hold==='keep') e.classList.add('keep'); g0.classList.add('m-'+k); snd(k==='good'?'eyegood':'eyebad');
+  clearTimeout(g0._mt); if(hold!=='keep') g0._mt=setTimeout(()=>{ e.classList.remove('on'); g0.classList.remove('m-'+k); },hold||2800); }
+function eyeOff(){ const g0=$g('.gl'); if(!g0) return; clearTimeout(g0._mt); g0.querySelectorAll('.gl-eye2').forEach(x=>x.classList.remove('on','keep')); g0.classList.remove('m-good','m-bad'); }
 /* ---------- dragons drawn from the table art: an ink head (cut from the disc) on a shaded, scaled body ---------- */
 const HEADI=new Image(), HA={x:.153,y:.706}, HE={x:.639,y:.559}, HS={x:.967,y:.714}; let headOK=false, HEADC={};
 function headImg(){ if(!HEADI.src){ HEADI.onload=()=>{ headOK=true; HEADC={}; try{ glFrame(); }catch(e){} }; HEADI.src=GIMG('gd-head'); } return headOK?HEADI:null; }
@@ -9294,7 +9478,7 @@ function smartPick(card){ const tg=target(); if(!tg||tg.type==='single'||GD.isBo
 function onDown(e){ const tag=e.target.closest('#gtHand .gt-tag,#gtHand .gc-bd'); if(tag&&H&&H.phase==='play'){ const col=($g('#gtHand')._cols||[])[+tag.dataset.col]; if(col){ const all=col.cards.every(c=>sel.has(c.id)); if(all) col.cards.forEach(c=>sel.delete(c.id)); else sel=new Set(col.cards.map(c=>c.id)); if(tut&&tut.st&&tut.st.you==='badge') tut.badged=all?0:1; snd('pick'); markSel(); } return; }
   const c=e.target.closest('#gtHand .gc'); if(!c){ if(e.target.closest('.gt-cloth')&&sel.size&&H&&H.phase==='play'){ sel.clear(); markSel(); } return; } e.preventDefault();
   if(tribPick){ pickTrib(+c.dataset.id); return; } if(ret){ pickReturn(+c.dataset.id); return; } if(!H||H.phase!=='play') return;
-  const id=+c.dataset.id, on=!sel.has(id), card0=H.hands[0].find(x=>x.id===id);
+  const id=+c.dataset.id; if(autoW.has(id)){ autoW.delete(id); sel.delete(id); autoOff=true; snd('pick'); markSel(); return; } const on=!sel.has(id), card0=H.hands[0].find(x=>x.id===id);
   if(on&&!sel.size&&myTurn()&&!(tut&&tut.st&&tut.st.ids)){ const m=smartPick(card0); if(m){ sel=new Set(m.cards.map(x=>x.id)); snd('pick'); markSel(); return; } }
   drag={on,ids:new Set([id])}; on?sel.add(id):sel.delete(id); snd('pick'); markSel();
   const mv=ev=>{ const el=document.elementFromPoint(ev.clientX,ev.clientY); const cc=el&&el.closest&&el.closest('#gtHand .gc'); if(!cc) return; const k=+cc.dataset.id; if(drag.ids.has(k)) return; drag.ids.add(k); drag.on?sel.add(k):sel.delete(k); snd('pick'); markSel(); };
@@ -9358,7 +9542,7 @@ function dimTrib(){ if(!tribPick) return; $$g('#gtHand .gc').forEach(e=>e.classL
 function pickTrib(id){ if(!tribPick.ids.has(id)){ snd('err'); return; } sel=new Set([id]); snd('pick'); layoutHand(); const b=$g('[data-a=tribok]'); if(b) b.disabled=false; }
 function confirmTrib(){ const c=H.hands[0].find(x=>sel.has(x.id)); if(!tribPick||!c||!tribPick.ids.has(c.id)) return; const r=tribPick.res; tribPick=null; sel.clear(); $$g('#gtHand .gc').forEach(e=>e.classList.remove('dim')); drawAct(); r(c); }
 async function doTribute(){ const t=H.tribute, h0t=H; drawLevel();
-  if(t.anti){ const holders=[0,1,2,3].filter(s=>H.hands[s].some(c=>c.r===17)&&(M.last.slice(2).includes(s)));
+  if(t.anti){ const holders=t.seats||[0,1,2,3].filter(s=>H.hands[s].some(c=>c.r===17)&&(M.last.slice(2).includes(s)));
     const own=H.hands.flatMap((h,s)=>holders.includes(s)?h.filter(c=>c.r===17).map(c=>[c,s]):[]).slice(0,2); await antiFx(own.map(x=>x[0]),own.map(x=>x[1])); H.phase='play'; return; }
   eyeMood(t.pairs[0].to%2===0?'good':'bad'); phaseTip(T('Tribute','进贡'),t.pairs.length>1?T('Double tribute: the losing pair each give their highest card to the winners.','双下：输的两人各把最大的一张牌交给赢家。'):T('The 4th player gives their highest card to the 1st player.','下游把手里最大的一张牌交给头游。'),'trib'); await wait(900);
   for(const p of t.pairs){ if(p.from===0){ const c=await chooseTribute(p); if(H!==h0t) return; p.card=c; }
@@ -9431,13 +9615,13 @@ function rules(after){ const p=document.createElement('div'); p.className='gr-po
   const sec=(k,i,title,body,cls)=>`<section id="gr-r-${k}" class="${cls||''}"><h4><i>${String(i).padStart(2,'0')}</i>${title}</h4>${body}</section>`;
   const lg=zh()?'zh':'en', fig=(k,cap,marks)=>`<figure class="gr-fig"><div class="gr-fw"><img src="${GIMG('gd-r-'+k+'-'+lg)}" alt="" loading="lazy">${(marks||[]).map(([x,y],i)=>`<i class="gr-mk" style="left:${x}%;top:${y}%">${i+1}</i>`).join('')}</div><figcaption>${cap}</figcaption></figure>`;
   const leg=list=>`<ol class="gr-leg">${list.map((t,i)=>`<li><i class="gr-mk st">${i+1}</i><span>${t}</span></li>`).join('')}</ol>`;
-  const TM=[[12,78],[89,40],[31,4.5],[10.5,34],[25,7],[36,67.5],[97.4,89],[66.4,7.2]];
-  const combo=(name,desc,list,type)=>`<div class="rc-combo"><div class="rc-cards">${row(list)}</div><div class="rc-tx"><b>${name}</b><span>${desc}</span></div>${type?`<em class="gr-pv">${badgeStatic(GD.TYPE[type][zh()?1:0],type)}</em>`:''}</div>`;
+  const TM=[[12,78],[89,40],[31,4.5],[10.5,34],[29.2,19.5],[36,67.5],[97.4,89],[66.4,7.2]];
+  const combo=(name,desc,list,type)=>`<div class="rc-combo"><div class="rc-cards">${row(list)}</div><div class="rc-tx"><b>${name}</b><span>${desc}</span></div><em class="gr-pv">${badgeStatic(GD.TYPE[type][zh()?1:0],type)}</em></div>`;
   const a=rk(0), b=rk(1);
   const NORMAL=[
-    combo(T('Single','单张'),T('Any one card.','任意一张牌。'),[[a,0]]),
-    combo(T('Pair','对子'),T('Two cards of one rank. Two jokers of the same kind also count.','两张点数相同的牌，两张相同的王也算。'),[[a,0],[a,1]]),
-    combo(T('Triple','三同张'),T('Three cards of one rank.','三张点数相同的牌。'),[[a,0],[a,2],[a,3]]),
+    combo(T('Single','单张'),T('Any one card.','任意一张牌。'),[[a,0]],'single'),
+    combo(T('Pair','对子'),T('Two cards of one rank. Two jokers of the same kind also count.','两张点数相同的牌，两张相同的王也算。'),[[a,0],[a,1]],'pair'),
+    combo(T('Triple','三同张'),T('Three cards of one rank.','三张点数相同的牌。'),[[a,0],[a,2],[a,3]],'triple'),
     combo(T('Full house','三带二'),T('A triple plus a pair. Only the triple counts: 777 with 44 beats 666 with AA.','三同张带一对，只比三张：777 带 44 大于 666 带 AA。'),[[7,0],[7,1],[7,2],[4,3],[4,0]].map(([r,s])=>[r===L?(r===7?9:3):r,s]),'fullhouse'),
     combo(T('Straight','顺子'),T('Exactly five ranks in a row, any suits. The Ace can sit at the top (10 J Q K A) or play as 1 (A 2 3 4 5).','正好五张连续的牌，花色不限。A 可以在最上头（10 J Q K A），也可以当 1 用（A 2 3 4 5）。'),[[10,0],[11,1],[12,2],[13,0],[14,3]],'straight'),
     combo(T('Plank','木板'),T('Three pairs in a row, like 556677.','三个相连的对子，比如 556677。'),[[5,0],[5,1],[6,2],[6,3],[7,0],[7,1]],'tube'),
@@ -9452,10 +9636,10 @@ function rules(after){ const p=document.createElement('div'); p.className='gr-po
     bomb(T('7-card bomb','七张炸弹'),T('Seven cards of one rank.','七张同点数的牌。'),ex(7,r7),BL(7),'bomb',3),
     bomb(T('6-card bomb','六张炸弹'),T('Six cards of one rank. From here up, every bomb beats a straight flush.','六张同点数的牌。从这里往上的炸弹都比同花顺大。'),ex(6,r6),BL(6),'bomb',2),
     `<li class="rc-div">${T('Six or more above this line beat a straight flush; five or fewer below it do not','线上 6 张及以上，压得过同花顺；线下 5 张及以下，压不过')}</li>`,
-    bomb(T('Straight flush','同花顺'),T('A straight in a single suit. Beats any five- or four-card bomb.','同一花色的顺子，比五张和四张炸弹都大。'),run(9,[2,2,2,2,2]),T('Straight Flush!','同花顺！'),'sflush',0),
+    bomb(T('Straight flush','同花顺'),T('A straight in a single suit. It is a kind of bomb, not a normal combination: it beats every normal play and any five- or four-card bomb.','同一花色的顺子。它属于炸弹，不是普通牌型：能压住所有普通牌型，也比五张和四张炸弹都大。'),run(9,[2,2,2,2,2]),T('Straight Flush!','同花顺！'),'sflush',0),
     bomb(T('5-card bomb','五张炸弹'),T('Five cards of one rank.','五张同点数的牌。'),ex(5,r5),BL(5),'bomb',1),
     bomb(T('4-card bomb','四张炸弹'),T('Four cards of one rank.','四张同点数的牌。'),ex(4,r4),T('Bomb!','炸弹！'),'bomb',0)];
-  const NAV=[['table',T('The table','牌桌')],['types',T('Combinations','普通牌型')],['bombs',T('Bombs','炸弹')],['level',T('Level & wild','级牌与逢人配')],['sort',T('Your hand','理牌')],['trick',T('Playing a trick','出牌与一圈')],['win',T('Levelling up','升级与过 A')],['trib',T('Tribute','进贡还贡')]];
+  const NAV=[['table',T('The table','牌桌')],['types',T('Combinations','普通牌型')],['bombs',T('Bombs','炸弹')],['level',T('Level & wild','级牌与逢人配')],['sort',T('Your hand','理牌')],['trick',T('Playing a trick','出牌与一圈')],['win',T('Levelling up','升级')],['ace',T('Clearing the Ace','过 A')],['trib',T('Tribute','进贡还贡')],['cc',T('Card counter','记牌器')]];
   // a small but real-looking table: felt, the dragon disc, four seats with their avatars
   const avk=P?[0,1,2,3].map(i=>P[i].k):Object.keys(AV).slice(0,4), nm=i=>P?pname(i):[T('You','你'),T('Next','下家'),T('Partner','对家'),T('Prev','上家')][i];
   const seat4=(cls)=>`<div class="mt ${cls||''}"><i class="mt-felt"></i><img class="mt-disc" src="${GIMG('gd-table')}" alt="">${[0,1,2,3].map(i=>`<span class="mt-seat s${i} t${i%2}"><span class="mt-av"><svg viewBox="0 0 40 40">${AV[avk[i]]}</svg><i class="mt-ring"></i><i class="mt-crown"></i></span><b>${nm(i)}</b><em>${[T('You','你'),T('Next','下家'),T('Partner','对家'),T('Prev','上家')][i]}</em></span>`).join('')}<div class="rd-plays"></div><div class="rd-stage"></div></div>`;
@@ -9465,7 +9649,7 @@ function rules(after){ const p=document.createElement('div'); p.className='gr-po
     <p>${T('Two decks with jokers, 108 cards. Four players get 27 cards each. You and the player opposite are allies. Play goes counter-clockwise: you, next, partner, previous.','两副牌加大小王共 108 张，四人每人 27 张。你和对面的人是盟友。出牌按逆时针：你 → 下家 → 对家 → 上家。')}</p>
     <div class="rd rd-order">${seat4()}<small class="rd-cap">${T('Counter-clockwise: you → next → partner → previous','逆时针：你 → 下家 → 对家 → 上家')}</small></div>
     ${fig('table',T('A hand in progress.','对局中的牌桌。'),TM)}
-    ${leg([T('You. Your hand runs along the bottom.','你。手牌在最下方。'),T('Next player, on your right.','下家，在你右边。'),T('Partner, opposite you.','对家，坐你对面，是你的盟友。'),T('Previous player, on your left.','上家，在你左边。'),T('Level panel: shows this hand’s level card and how far each team has climbed.','级牌面板：显示本局的级牌和两队各自打到了几。'),T('Your buttons on your turn: Pass, Hint, Play.','轮到你时的按钮：不出、提示、出牌。'),T('Sort switch: Default or Sorted; sorted, bombs move to the far left.','理牌开关：在“默认”和“理牌”之间切换；理牌后炸弹排到最左边。'),T('Card counter: how many of each rank are still out, not in your hand and not yet played. Turn it on with the switch above Sort.','记牌器：按点数显示场上还剩几张（不在你手里、也还没打出来的）。用理牌上面那个开关打开。')])}`)}
+    ${leg([T('You. Your hand runs along the bottom.','你。手牌在最下方。'),T('Next player, on your right.','下家，在你右边。'),T('Partner, opposite you.','对家，坐你对面，是你的盟友。'),T('Previous player, on your left.','上家，在你左边。'),T('Level panel: two dragons face off. Your team sits on the left under the blue-eyed dragon, the opponents on the right under the red-eyed one; the card between them is this hand’s level, and dragon pearls count the tries left at the Ace. The winning side’s dragon flashes its eyes.','级牌面板：两条龙相对而立。左边蓝眼龙下是我方，右边红眼龙下是对方；中间的牌是本局级牌，龙珠表示打 A 还剩几次机会。哪方赢了，哪边的龙眼就会闪光。'),T('Your buttons on your turn: Pass, Hint, Play.','轮到你时的按钮：不出、提示、出牌。'),T('Sort switch: Default or Sorted; sorted, bombs move to the far left.','理牌开关：在“默认”和“理牌”之间切换；理牌后炸弹排到最左边。'),T('Card counter: how many of each rank are still out, not in your hand and not yet played. Turn it on with the switch above Sort.','记牌器：按点数显示场上还剩几张（不在你手里、也还没打出来的）。用理牌上面那个开关打开。')])}`)}
   ${sec('types',2,T('Normal combinations','普通牌型'),`<p class="gr-note">${T('To beat a normal combination, play the same type with the same number of cards, only higher. Suits never matter.','要压住普通牌型，必须出同一种牌型、同样张数、点数更大的牌。花色不分大小。')}</p><div class="rc-grid">${NORMAL.join('')}</div>`,'gr-sec')}
   ${sec('bombs',3,T('Bombs','炸弹'),`<p class="gr-note">${T('A bomb beats every normal combination. Bombs of one rank compare by count first: more cards win, and the same count compares by rank. Six cards is the dividing line: a bomb of six or more beats a straight flush, while five- and four-card bombs lose to it. Strongest first:','炸弹能压住任何普通牌型。同点数的炸弹先比张数，张数多的大；张数相同再比点数。6 张是一道分水岭：6 张及以上的炸弹比同花顺大，5 张和 4 张的比同花顺小。从大到小依次是：')}</p><ol class="rc-bombs">${BOMBS.join('')}</ol>`,'gr-sec bomb')}
   ${sec('level',4,T('Level card and wild card','级牌与逢人配'),`<p>${T(`Each hand is played at a level, starting at 2. Cards of the level rank (now ${LV(L)}) jump up to sit just under the jokers. Watch the order:`,`每局都有一个级数，从 2 开始。级数对应的那个点数（本局是 ${LV(L)}）会提到最前面，只排在大小王后面。看下面的顺序：`)}</p>
@@ -9474,20 +9658,28 @@ function rules(after){ const p=document.createElement('div'); p.className='gr-po
     <p>${T(`The heart level card (${SUIT[1]}${LV(L)}) is the wild card, “meets-anyone”: it can stand in for any card except a joker.`,`红心级牌（${SUIT[1]}${LV(L)}）叫“逢人配”，可以当作除大小王以外的任何一张牌。`)}</p>
     <div class="rd rd-wild"><div class="rd-stage"></div><small class="rd-cap">${T('Three of a kind + the wild card = a four-card bomb','三张同点 + 逢人配 = 四张炸弹')}</small></div>`)}
   ${sec('sort',5,T('Your hand and Sort','手牌与理牌'),`<p>${T('Cards of one rank stack into a column with the biggest ranks on the left. Flip the switch at the bottom right to Sorted and every bomb, straight flush and the four jokers move to the far left, with a round badge at the bottom left of the front card. Tap the badge to pick up the whole group; tap it again to put it down. With Sort on, three of a kind plus a wild card already shows as a bomb.','同点数的牌叠成一列，大牌在左边。把右下角的开关拨到“理牌”，所有炸弹、同花顺和四大天王会排到最左边，最前面那张牌的左下角有一个圆形徽标。点徽标可以一次选中整组，再点一次放下。理牌后，三张同点加逢人配会直接显示成炸弹。')}</p>${bdLegend()}
-    <div class="rd rd-sort"><div class="rd-stage"></div><small class="rd-cap rd-sortcap"></small></div>`)}
+    <div class="rd rd-sort"><div class="rd-sw"><span class="d">${T('Default','默认')}</span><span class="s">${T('Sorted','理牌')}</span><i class="k"></i></div><div class="rd-stage"></div><small class="rd-cap rd-sortcap"></small></div>`)}
   ${sec('trick',6,T('Playing a trick','出牌与一圈'),`<p>${T('Whoever leads may play any combination. Each next player beats it with the same type and size, plays a bomb, or passes. The play to beat always glows. When everyone else has passed, the last player to play takes the trick and leads again.','领出的人可以出任何牌型。后面的人要么出同牌型、同张数且更大的牌，要么出炸弹，要么不出。桌上发光的那一组，就是现在要压的牌。其余三人都不出时，最后出牌的人赢下这一圈，再次领出。')}</p>
     <div class="rd rd-trick">${seat4('big')}<small class="rd-cap rd-kcap"></small></div>
     <div class="gr-flow"><div class="gf-c"><b>${T('Borrowing the wind','借风')}</b><span>${T('If the player who took the trick has just gone out, their partner leads instead.','赢下这一圈的人如果刚好出完了牌，就由他的盟友接着领出。')}</span></div>
     <div class="gf-c anti"><b>${T('Warning light','报牌')}</b><span>${T('A player with 10 cards or fewer after a play has a red-and-blue siren beside their count.','出完一手后手里只剩 10 张或更少，牌数旁会亮起红蓝警灯。')}</span></div></div>`)}
-  ${sec('win',7,T('Levelling up and clearing the Ace','升级与过 A'),`<p>${T('Players finish 1st, 2nd, 3rd and last. The 1st player’s team levels up, by how well the partner did:','出完牌的先后依次是头游、二游、三游、下游。头游所在的一队升级，升几级看盟友的名次：')}</p>
-    <div class="gr-up">${[[T('Partner 2nd','盟友二游'),'+3'],[T('Partner 3rd','盟友三游'),'+2'],[T('Partner last','盟友下游'),'+1']].map(([x,y])=>`<div><b>${y}</b><span>${x}</span></div>`).join('')}</div>
-    <p>${T('The next hand is played at the winning team’s level. A team playing its own Ace wins the match by coming 1st with the partner not last; this table allows three tries at the Ace, after which the team drops back to 2.','下一局打胜方的级数。打自己的 A 时，头游且盟友不是下游，就算跃过龙门赢下整场。本桌打 A 有三次机会，三次没过退回 2。')}</p>`)}
-  ${sec('trib',8,T('Tribute, return and refusal','进贡、还贡与抗贡'),`<p>${T('From the second hand on, the losers pay tribute before play starts.','从第二局起，开打前输的一方要进贡。')}</p>
-    <div class="rd rd-trib">${seat4('big')}<small class="rd-cap rd-tcap"></small></div>
-    <div class="gr-flow"><div class="gf-c"><b>${T('Single tribute','单贡')}</b><span>${T('Last gives 1st their highest card (never the heart level card) and then leads. If that card comes in several suits, the payer chooses.','下游把最大的一张牌（红心级牌除外）交给头游，然后由下游先出。最大的牌有几种花色时，由进贡的人自己挑。')}</span></div>
-    <div class="gf-c"><b>${T('Double tribute','双贡')}</b><span>${T('If one team took 3rd and last, both pay: the higher card to 1st, the lower to 2nd. If equal, the player sitting next after 1st (counter-clockwise) pays 1st. Whoever paid 1st leads.','一队拿了三游和下游（双下）时两人都进贡：大的给头游，小的给二游；一样大时，按逆时针紧挨头游之后的那个人进贡给头游。进贡给头游的人先出。')}</span></div>
-    <div class="gf-c ret"><b>${T('Return','还贡')}</b><span>${T('Each receiver gives back one card of 10 or lower that is not a level card.','收到贡牌的人还一张 10 或以下、并且不是级牌的牌。')}</span></div>
-    <div class="gf-c anti"><b>${T('Refusing tribute','抗贡')}</b><span>${T('If those who owe tribute hold both Big Jokers between them, nobody pays and 1st leads.','要进贡的一方手里一共有两张大王，就可以抗贡，不用进贡，由头游先出。')}</span></div></div>`)}
+  ${sec('win',7,T('Levelling up','升级'),`<p>${T('Players finish 1st, 2nd, 3rd and last. The 1st player’s team levels up, by how well the partner did:','出完牌的先后依次是头游、二游、三游、下游。头游所在的一队升级，升几级看盟友的名次：')}</p>
+    <div class="gr-up">${[[[0,2,1,3],3],[[0,1,2,3],2],[[0,1,3,2],1]].map(([o,n])=>`<div class="up-sc" data-n="${n}"><div class="up-ord">${o.map((st,rk)=>`<span class="up-p t${st%2}" style="--k:${rk}"><i class="up-cr">${CROWN[rk]}</i><span class="up-av"><svg viewBox="0 0 40 40">${AV[avk[st]]}</svg></span><small>${RANKN()[rk]}</small><em>${st===0?T('You','你'):st===2?T('Partner','对家'):''}</em></span>`).join('')}</div><div class="up-lv"><img class="up-card" src="${GC_IMG(cimg({r:2,s:1}))}" alt=""><b class="up-n">+${n}</b><small>${T('Our level','我方级数')}</small></div></div>`).join('')}</div>
+    <p>${T('The next hand is always played at the winning team’s level, so the card in the middle of the level panel can switch sides from hand to hand.','下一局永远打赢的那一队的级数，所以级牌面板中间那张牌会随着输赢在两队之间切换。')}</p>`)}
+  ${sec('ace',8,T('Clearing the Ace','过 A'),`<p>${T('The Ace is the last rapid below the Dragon Gate. When your team’s level reaches the Ace, three dragon pearls light up under it: three tries to clear it.','A 是龙门前的最后一道急流。我方级数升到 A 时，级数下方亮起三颗龙珠，代表三次过 A 的机会。')}</p>
+    <div class="gr-flow"><div class="gf-c"><b>${T('Cleared','过 A')}</b><span>${T('In a hand played at your Ace, come 1st with your partner anywhere but last. Your team leaps the Dragon Gate and wins the match.','在打我方 A 的那一局里，拿到头游，并且盟友不是下游，就算过 A，跃过龙门，赢下整场。')}</span></div>
+    <div class="gf-c anti"><b>${T('Missed','没过')}</b><span>${T('Not 1st, or 1st with your partner last: one pearl shatters. If the opponents won that hand, the next one is played at their level, and you must win a hand back before playing the Ace again. When all three pearls are gone, your level drops back to 2.','没拿到头游，或者头游但盟友是下游，就碎一颗龙珠。如果那一局是对手赢了，下一局打对手的级，我方要再赢回一局才能重新打 A。三颗龙珠全碎，级数退回 2。')}</span></div></div>
+    <div class="rd rd-ace"><div class="ra-pan"><img class="ra-fr" src="${GIMG('gd-lvframe')}" alt=""><div class="ra-in"><div class="ra-t t0"><span class="ra-row"><span class="ra-avs">${[0,2].map(i=>`<i class="ra-av t0"><svg viewBox="0 0 40 40">${AV[avk[i]]}</svg></i>`).join('')}</span><b class="ra-lv">K</b></span><span class="ra-pl">${heartsHTML(0)}</span></div><img class="ra-card" src="${GC_IMG(cimg({r:13,s:1}))}" alt=""><div class="ra-t t1"><span class="ra-row"><b class="ra-lv">9</b><span class="ra-avs">${[1,3].map(i=>`<i class="ra-av t1"><svg viewBox="0 0 40 40">${AV[avk[i]]}</svg></i>`).join('')}</span></span></div></div></div>
+    <div class="up-ord ra-ord">${[0,1,2,3].map(i=>`<span class="up-p t${i%2}" data-s="${i}"><i class="up-cr"></i><span class="up-av"><svg viewBox="0 0 40 40">${AV[avk[i]]}</svg></span><small></small><em>${i===0?T('You','你'):i===2?T('Partner','对家'):''}</em></span>`).join('')}</div>
+    <small class="rd-cap ra-cap"></small></div>`)}
+  ${sec('trib',9,T('Tribute, return and refusal','进贡、还贡与抗贡'),`<p>${T('From the second hand on, the losers pay tribute before play starts. The crowns show how the last hand finished.','从第二局起，开打前输的一方要进贡。皇冠表示上一局的名次。')}</p>
+    <div class="rd-tg">${[['single',T('Single tribute','单贡'),T('Last gives 1st their highest card (never the heart level card; if it comes in several suits, the payer chooses). 1st gives back one card of 10 or lower that is not a level card. Last leads.','下游把最大的一张牌（红心级牌除外；有几种花色时自己挑）交给头游，头游还一张 10 或以下、不是级牌的牌，然后下游先出。')],
+      ['double',T('Double tribute','双贡'),T('One team took 3rd and last: both pay, the higher card to 1st and the lower to 2nd (if equal, the one sitting next after 1st, counter-clockwise, pays 1st). Each receiver returns a card; whoever paid 1st leads.','一队拿了三游和下游（双下），两人都进贡：大的给头游，小的给二游（一样大时，逆时针紧挨头游之后的人进贡给头游）。收到的人各还一张，进贡给头游的人先出。')],
+      ['anti1',T('Refusing a single tribute','单贡抗贡'),T('Last must hold both Big Jokers alone to refuse. Then nobody pays and last hand’s 1st leads.','单贡时，下游必须自己手里有两张大王才能抗贡。抗贡后不用进贡，由上一局的头游先出。')],
+      ['anti2',T('Refusing a double tribute','双贡抗贡'),T('The two losers only need both Big Jokers between them, one each is enough. Then nobody pays and last hand’s 1st leads.','双贡时，输的两人手里加起来有两张大王就能抗贡，一人一张也行。抗贡后不用进贡，由上一局的头游先出。')]].map(([k,t,d])=>`<div class="rd-tc ${k.startsWith('anti')?'anti':''}"><b>${t}</b><span>${d}</span><div class="rd rd-trib" data-k="${k}">${seat4()}<small class="rd-cap rd-tcap"></small></div></div>`).join('')}</div>`)}
+  ${sec('cc',10,T('Card counter','记牌器'),`<p>${T('Two decks hold eight of every rank and two of each joker. The counter starts from those totals, takes away the cards in your own hand and every card already played, and shows what is left: the cards still hidden in the other three hands. It cannot tell you who holds them; that is still up to you.','两副牌里，每个点数各有 8 张，大小王各 2 张。记牌器从这些总数出发，减去你自己手里的牌和已经打出去的牌，剩下的就是还藏在另外三家手里的牌。它不会告诉你牌在谁手里，那还得靠你自己判断。')}</p>
+    <div class="rd rd-cc"><div class="rcc-play"></div><div class="gt-ctr rcc-w"><div class="cc-hd">${T('Cards Remaining','场上余牌')}</div><div class="cc-g rcc"></div></div><small class="rd-cap rcc-cap"></small></div>
+    <p class="gr-note">${T('Tip: the counter makes the game easier while you learn. Remembering what has been played is one of the core skills of Guandan, so once you are comfortable, switch it off and train your own memory.','建议：刚上手时开着记牌器会轻松很多。记牌本身就是掼蛋的核心功夫之一，熟悉以后不妨把它关掉，练练自己的记性。')}</p>`)}
   </div><p class="gr-cred">${T('Card faces: Adrian Kennard’s playing cards, CC0 (public domain). Joker dragons: original artwork. Raised fist: Microsoft Fluent Emoji (MIT). Computer players: the guandan-medium network from wlx7/guandan-rl (MIT).','牌面：Adrian Kennard 扑克牌设计，CC0（公有领域）。大小王龙纹为原创插画。抗贡拳头：Microsoft Fluent Emoji（MIT 许可）。电脑对手：wlx7/guandan-rl 的 guandan-medium 神经网络模型（MIT 许可）。')}</p></div></div></div>`;
   const body=p.querySelector('.gr-rbody'), nb=[...p.querySelectorAll('.gr-rnav button')];
   p.querySelector('.gr-rnav').addEventListener('click',e=>{ const b=e.target.closest('[data-r]'); if(!b) return; const t=p.querySelector('#gr-r-'+b.dataset.r); body.scrollTo({top:t.offsetTop-body.offsetTop-8,behavior:reduce?'auto':'smooth'}); });
@@ -9499,35 +9691,52 @@ function rulesDemos(p,L){ const alive=()=>p.isConnected, sleep=ms=>new Promise(r
   const mk=(r,s,plain)=>{ const e=cardEl({id:-1,r,s:r>=16?4:s},'rc',plain); return e; };
   // move elements to new spots with a smooth glide (FLIP)
   const flip=(els,apply,dur)=>{ const a=els.map(e=>e.getBoundingClientRect()); apply(); els.forEach((e,i)=>{ const b=e.getBoundingClientRect(); const dx=a[i].left-b.left, dy=a[i].top-b.top; if(dx||dy) e.animate([{transform:`translate(${dx}px,${dy}px)`},{transform:'none'}],{duration:dur||700,easing:'cubic-bezier(.3,.8,.25,1)'}); }); };
-  const loop=async(sel,fn)=>{ const box=p.querySelector(sel); if(!box) return; const io=new IntersectionObserver(es=>{ box._vis=es[0].isIntersecting; },{root:p.querySelector('.gr-rbody'),threshold:.25}); io.observe(box);
+  const loop=async(sel,fn)=>{ const box=typeof sel==='string'?p.querySelector(sel):sel; if(!box) return; const io=new IntersectionObserver(es=>{ box._vis=es[0].isIntersecting; },{root:p.querySelector('.gr-rbody'),threshold:.25}); io.observe(box);
     while(alive()){ if(box._vis||reduce){ await fn(box); } else await sleep(400); } io.disconnect(); };
   // level ranking: natural order, then the level cards rise to the front behind the jokers
   loop('.rd-rank',async box=>{ const st=box.querySelector('.rd-stage'); st.innerHTML=''; const nat=[2,3,4,5,6,7,8,9,10,11,12,13,14];
     const els=[mk(17,4,1),mk(16,4,1)].concat(nat.slice().reverse().map(r=>{ const e=mk(r,r===L?0:[0,3,2,0][r%4],r!==L); if(r===L) e.classList.add('lv'); return e; })); els.forEach(e=>st.appendChild(e));
-    await sleep(1500); if(!alive()) return; const lv=els.find(e=>e.classList.contains('lv')); lv.classList.add('rise'); await sleep(450);
-    flip(els,()=>{ st.insertBefore(lv,els[2]); },900); await sleep(1100); lv.classList.remove('rise'); lv.classList.add('top'); await sleep(2600); });
+    await Promise.all(els.map(e=>{ const im=e.querySelector('img'); return im&&im.decode?im.decode().catch(()=>{}):0; }));
+    await sleep(1300); if(!alive()) return; const lv=els.find(e=>e.classList.contains('lv')), lift=lv.offsetHeight*.42; els.forEach(e=>e.style.willChange='transform');
+    lv.classList.add('glow'); const up=lv.animate([{transform:'none'},{transform:`translateY(${-lift}px)`}],{duration:420,easing:'cubic-bezier(.3,.7,.3,1)',fill:'forwards'}); await up.finished; if(!alive()) return;
+    const a=els.map(e=>e.getBoundingClientRect()); st.insertBefore(lv,els[2]); lv.classList.add('top'); const b=els.map(e=>e.getBoundingClientRect()); up.cancel();
+    const D=1000, ez='cubic-bezier(.45,.05,.25,1)';
+    els.forEach((e,i)=>{ const dx=a[i].left-b[i].left, dy=a[i].top-b[i].top; if(e===lv) e.animate([{transform:`translate(${dx}px,${dy-lift}px)`},{transform:`translate(${dx*.5}px,${dy*.5-lift*1.7}px)`,offset:.5},{transform:`translate(0,${-lift}px)`,offset:.82},{transform:'none'}],{duration:D+200,easing:'ease-in-out'}); else if(dx||dy) e.animate([{transform:`translate(${dx}px,${dy}px)`},{transform:'none'}],{duration:D,easing:ez}); });
+    await sleep(D+260); els.forEach(e=>e.style.willChange=''); lv.classList.remove('glow'); await sleep(2400); });
   // wild card: three 9s, then the heart level card slides in and the column becomes a bomb
   loop('.rd-wild',async box=>{ const st=box.querySelector('.rd-stage'); st.innerHTML=''; const r=L===9?8:9; const grp=document.createElement('span'); grp.className='rd-grp'; st.appendChild(grp);
     [0,2,3].forEach(s=>grp.appendChild(mk(r,s,1))); const gap=document.createElement('span'); gap.className='rd-gap'; st.appendChild(gap); const w=mk(L,1,false); w.classList.add('wildc'); st.appendChild(w);
-    await sleep(1300); if(!alive()) return; flip([w],()=>{ grp.appendChild(w); gap.remove(); },800); await sleep(850);
+    await Promise.all([...st.querySelectorAll('img')].map(im=>im.decode?im.decode().catch(()=>{}):0));
+    await sleep(1200); if(!alive()) return; w.style.willChange='transform'; const a0=w.getBoundingClientRect(); grp.appendChild(w); gap.remove(); const b0=w.getBoundingClientRect(), dx=a0.left-b0.left, dy=a0.top-b0.top, h=w.offsetHeight*.35;
+    w.animate([{transform:`translate(${dx}px,${dy}px)`},{transform:`translate(${dx*.45}px,${dy-h}px)`,offset:.45},{transform:'translate(0,-3px)',offset:.85},{transform:'none'}],{duration:850,easing:'cubic-bezier(.4,.1,.3,1)'}); await sleep(880); w.style.willChange='';
+    grp.animate([{transform:'scale(1)'},{transform:'scale(1.06)',offset:.4},{transform:'scale(1)'}],{duration:420,easing:'ease-out'});
     const tag=document.createElement('span'); tag.className='gc-bd t-b4 rd-stamp'; tag.innerHTML=bdHTML('bomb',4); grp.appendChild(tag); grp.classList.add('lit'); await sleep(2600); });
+  // levelling up: the finishing crowns land one by one, then our level card turns from 2 to its new level
+  loop('.gr-up',async box=>{ const sc=[...box.querySelectorAll('.up-sc')]; sc.forEach(x=>{ x.classList.remove('crowned','up'); const c=x.querySelector('.up-card'); c.src=GC_IMG(cimg({r:2,s:1})); }); await sleep(600); if(!alive()) return;
+    sc.forEach(x=>x.classList.add('crowned')); await sleep(1500); if(!alive()) return;
+    for(const x of sc){ const c=x.querySelector('.up-card'), n=+x.dataset.n; x.classList.add('up'); c.animate([{transform:'rotateY(0)'},{transform:'rotateY(90deg)'}],{duration:220,easing:'ease-in'}).finished.then(()=>{ c.src=GC_IMG(cimg({r:2+n,s:1})); c.animate([{transform:'rotateY(-90deg)'},{transform:'rotateY(0)'}],{duration:260,easing:'ease-out'}); }); await sleep(380); }
+    await sleep(3200); });
   // sort: the same hand unsorted, then sorted into bomb columns with stamps
   loop('.rd-sort',async box=>{ const st=box.querySelector('.rd-stage'), cap=box.querySelector('.rd-sortcap'); st.innerHTML='';
-    const pool=[12,9,7,5,3,4,6].filter(r=>r!==L), q=pool[0], n=pool[1], s7=pool[2], f=pool[3], t3=pool[4];
-    const hand=[[q,0],[q,1],[q,2],[q,3],[q,0],[n,0],[n,2],[n,3],[L,1],[s7,1],[s7,2],[f,0],[f,3],[t3,1],[14,2],[13,0]];
+    const q=[12,13,11].find(r=>r!==L), n=[9,10,8].find(r=>r!==L&&r!==q), lo=[3,4,5,2,6].find(a=>[0,1,2,3,4].every(i=>![L,q,n].includes(a+i))), x1=[14,13,11,10].find(r=>![L,q,n].includes(r)&&!(r>=lo&&r<=lo+4));
+    const sfR=[0,1,2,3,4].map(i=>lo+i);
+    const hand=[[16,4],[17,4],[16,4],[17,4],[q,0],[q,1],[q,2],[q,3],[n,0],[n,2],[n,3],[L,1]].concat(sfR.map(r=>[r,0])).concat([[x1,2],[lo+2,3]]);
     const els=hand.map(([r,s])=>{ const e=mk(r,s,!(r===L&&s===1)); e.dataset.r=r; e.dataset.s=s; return e; }); els.forEach(e=>st.appendChild(e));
     const val=r=>r===L?15:r, cw=parseFloat(getComputedStyle(els[0]).width)||52, step=cw*.74, vs=cw*.28;
-    const place=sorted=>{ const cols=[]; if(sorted){ cols.push(els.filter(e=>+e.dataset.r===q)); cols.push(els.filter(e=>+e.dataset.r===n||(+e.dataset.r===L&&+e.dataset.s===1))); }
+    const isSf=e=>+e.dataset.s===0&&sfR.includes(+e.dataset.r)&&els.filter(x=>+x.dataset.s===0&&+x.dataset.r===+e.dataset.r).indexOf(e)===0, KIND=['kb','bomb','bomb','sf'];
+    const place=sorted=>{ const cols=[]; if(sorted){ cols.push(els.filter(e=>+e.dataset.r>=16)); cols.push(els.filter(e=>+e.dataset.r===q)); cols.push(els.filter(e=>+e.dataset.r===n||(+e.dataset.r===L&&+e.dataset.s===1))); cols.push(els.filter(isSf).sort((a,b)=>+b.dataset.r-+a.dataset.r)); }
       const rest=els.filter(e=>!cols.flat().includes(e)); const by={}; rest.forEach(e=>{ const r=+e.dataset.r; (by[r]=by[r]||[]).push(e); }); Object.keys(by).map(Number).sort((a,b)=>val(b)-val(a)).forEach(r=>cols.push(by[r]));
-      const maxN=Math.max(...cols.map(c=>c.length)); st.style.height=(cw*1.4+vs*(maxN-1)+6)+'px'; let x=0; st.querySelectorAll('.rd-stamp').forEach(t=>t.remove());
-      cols.forEach((c,ci)=>{ c.forEach((e,i)=>{ e.style.left=x+'px'; e.style.top=(vs*(maxN-c.length+i))+'px'; e.style.zIndex=ci*10+i; }); if(sorted&&ci<2){ const tg=document.createElement('span'), nn=c.length; tg.className='gc-bd t-'+bdTier('bomb',nn)+' rd-stamp'; tg.innerHTML=bdHTML('bomb',nn); c[c.length-1].appendChild(tg); } x+=step+(sorted&&ci===1?cw*.3:0); });
+      const maxN=Math.max(...cols.map(c=>c.length)); st._mx=Math.max(st._mx||0,maxN); st.style.height=(cw*1.4+vs*(st._mx-1)+6)+'px'; let x=0; st.querySelectorAll('.rd-stamp').forEach(t=>t.remove());
+      cols.forEach((c,ci)=>{ c.forEach((e,i)=>{ e.style.left=x+'px'; e.style.top=(vs*(st._mx-c.length+i))+'px'; e.style.zIndex=ci*10+i; }); if(sorted&&ci<4){ const tg=document.createElement('span'), nn=c.length, k=KIND[ci]; tg.className='gc-bd t-'+bdTier(k,nn)+' rd-stamp'; tg.dataset.g=ci; tg.innerHTML=bdHTML(k,nn); c[c.length-1].appendChild(tg); } x+=step+(sorted&&ci===3?cw*.3:0); });
       st.style.width=(x-step+cw)+'px'; };
-    place(false); cap.textContent=T('Before Sort','理牌前'); await sleep(2000); if(!alive()) return; flip(els,()=>place(true),850); cap.textContent=T('After Sort: two bombs on the left, the second made with the wild card','理牌后：左边两个炸弹，第二个用逢人配凑成'); await sleep(2200); if(!alive()) return;
-    const col=els.filter(e=>+e.dataset.r===q), stp=st.querySelector('.rd-stamp'), tapH=document.createElement('i'); tapH.className='rd-tap'; tapH.innerHTML=TAP_SVG; st.appendChild(tapH);
+    const sw=box.querySelector('.rd-sw'), swTap=async on=>{ const sr=st.getBoundingClientRect(), r=sw.getBoundingClientRect(); let h=st.querySelector('.rd-tap'); if(!h){ h=document.createElement('i'); h.className='rd-tap'; h.innerHTML=TAP_SVG; st.appendChild(h); }
+      h.style.left=(r.left-sr.left+r.width*(on?.75:.25))+'px'; h.style.top=(r.top-sr.top+r.height*.5)+'px'; h.classList.add('on'); await sleep(500); h.classList.add('press'); await sleep(200); h.classList.remove('press'); sw.classList.toggle('on',on); await sleep(250); h.remove(); };
+    place(true); place(false); sw.classList.remove('on'); cap.textContent=T('Before Sort','理牌前'); await sleep(1700); if(!alive()) return; await swTap(true); if(!alive()) return; flip(els,()=>place(true),850); cap.textContent=T('After Sort: the Joker Bomb, two bombs (one made with the wild card) and a straight flush, each with its badge','理牌后：四大天王、两个炸弹（其中一个用逢人配凑成）和同花顺排到左边，各带徽标'); await sleep(3200); if(!alive()) return;
+    const col=els.filter(e=>+e.dataset.r===q), stp=st.querySelector('.rd-stamp[data-g="1"]'), tapH=document.createElement('i'); tapH.className='rd-tap'; tapH.innerHTML=TAP_SVG; st.appendChild(tapH);
     const tap=async()=>{ const sr=st.getBoundingClientRect(), r=stp.getBoundingClientRect(); tapH.style.left=(r.left-sr.left+r.width*.5)+'px'; tapH.style.top=(r.top-sr.top+r.height*.5)+'px'; tapH.classList.add('on'); await sleep(500); tapH.classList.add('press'); await sleep(220); tapH.classList.remove('press'); };
     cap.textContent=T('Tap the badge: the whole bomb is picked up','点一下徽标：整组炸弹一起选中'); await tap(); col.forEach(e=>{ e.style.top=(parseFloat(e.style.top)-12)+'px'; e.classList.add('picked'); }); const fr=document.createElement('i'); fr.className='gc-full k-bomb rd-full'; const t0=Math.min(...col.map(e=>parseFloat(e.style.top))); fr.style.cssText=`left:${col[0].style.left};top:${t0}px;width:${col[0].offsetWidth}px;height:${col[0].offsetHeight+(col.length-1)*vs}px`; st.appendChild(fr); await sleep(1800); if(!alive()) return;
     cap.textContent=T('Tap it again: the bomb is put back down','再点一次：整组放下'); await tap(); col.forEach(e=>{ e.style.top=(parseFloat(e.style.top)+12)+'px'; e.classList.remove('picked'); }); fr.remove(); await sleep(1500); tapH.remove(); if(!alive()) return;
-    flip(els,()=>place(false),700); await sleep(900); });
+    await swTap(false); if(!alive()) return; flip(els,()=>place(false),700); await sleep(900); });
   const seatEl=(box,i)=>box.querySelector('.mt-seat.s'+i), turnTo=(box,i)=>box.querySelectorAll('.mt-seat').forEach(e=>e.classList.toggle('turn',e.classList.contains('s'+i)));
   const mtPos=(box,i,k)=>{ const m=box.querySelector('.mt').getBoundingClientRect(), r=seatEl(box,i).querySelector('.mt-av').getBoundingClientRect(); return {x:r.left-m.left+r.width/2,y:r.top-m.top+r.height/2}; };
   // a trick on a real table: lead, follow, follow, pass ... the player to act loses their old play, the next in line dims
@@ -9539,18 +9748,53 @@ function rulesDemos(p,L){ const alive=()=>p.isConnected, sleep=ms=>new Promise(r
       if(spots[s]) spots[s].remove(); const z=document.createElement('div'); z.className='rd-play p'+s; if(cs==='pass') z.innerHTML=`<span class="gp-pass">${T('PASS','不出')}</span>`; else { cs.forEach(([r,su])=>z.appendChild(mk(r,su,1))); top=s; } pl.appendChild(z); spots[s]=z; mark(-1); await sleep(500); }
     turnTo(box,2); cap.textContent=T('Everyone else passed: partner takes the trick and leads again','其余三人都不出：对家赢下这一圈，再次领出'); await sleep(1100);
     pl.querySelectorAll('.rd-play').forEach(e=>e.animate([{opacity:1},{opacity:0,transform:'translate(-50%,-50%) scale(.85)'}],{duration:450,fill:'forwards'})); await sleep(1500); });
-  // tribute on a real table: finishing order crowns, last pays 1st, 1st returns
-  loop('.rd-trib',async box=>{ const st=box.querySelector('.rd-stage'), cap=box.querySelector('.rd-tcap'); st.innerHTML=''; turnTo(box,-1);
-    const crowns=[[0,0],[2,1],[1,2],[3,3]]; box.querySelectorAll('.mt-crown').forEach(c=>{ c.innerHTML=''; c.className='mt-crown'; });
-    for(const [s,k] of crowns){ const c=seatEl(box,s).querySelector('.mt-crown'); c.innerHTML=`${CROWN[k]}<b>${RANKN()[k]}</b>`; c.className='mt-crown on c'+k; }
-    const fly=async(c,from,to,col)=>{ const e=mk(c[0],c[1],1); e.classList.add('rd-fly'); st.appendChild(e); const A=mtPos(box,from), B=mtPos(box,to), M={x:box.querySelector('.mt').clientWidth/2,y:box.querySelector('.mt').clientHeight*.46};
+  // tribute on real tables: last hand's crowns, then tribute and return, or the Big Jokers shown and the tribute refused
+  const lowR=[4,6,3,5].find(r=>r!==L), midR=[13,12,11].find(r=>r!==L);
+  p.querySelectorAll('.rd-trib').forEach(tb=>loop(tb,async box=>{ const k=box.dataset.k, st=box.querySelector('.rd-stage'), cap=box.querySelector('.rd-tcap'); st.innerHTML=''; turnTo(box,-1);
+    const order=k==='single'||k==='anti1'?[0,1,2,3]:[0,2,1,3]; box.querySelectorAll('.mt-crown').forEach(c=>{ c.innerHTML=''; c.className='mt-crown'; });
+    const fly=async(c,from,to,col)=>{ const e=mk(c[0],c[1],1); e.classList.add('rd-fly'); st.appendChild(e); const A=mtPos(box,from), B=mtPos(box,to), m=box.querySelector('.mt'), M={x:m.clientWidth/2+(A.x+B.x-m.clientWidth)*.12,y:m.clientHeight*.46+(A.y+B.y-m.clientHeight*.92)*.12};
       seatEl(box,from).style.setProperty('--hc',col); seatEl(box,from).classList.add('glow');
-      await e.animate([{transform:`translate(${A.x}px,${A.y}px) translate(-50%,-50%) scale(.5) rotateY(180deg)`,opacity:0},{transform:`translate(${M.x}px,${M.y}px) translate(-50%,-50%) scale(1.25)`,opacity:1,offset:.4},{transform:`translate(${M.x}px,${M.y}px) translate(-50%,-50%) scale(1.25)`,opacity:1,offset:.62},{transform:`translate(${B.x}px,${B.y}px) translate(-50%,-50%) scale(.55)`,opacity:1}],{duration:2100,easing:'cubic-bezier(.35,.6,.3,1)',fill:'forwards'}).finished.catch(()=>{});
-      seatEl(box,from).classList.remove('glow'); seatEl(box,to).style.setProperty('--hc',col); seatEl(box,to).classList.add('glow'); await sleep(600); seatEl(box,to).classList.remove('glow'); e.remove(); };
-    cap.textContent=T('Last hand: you were 1st, your previous player was last','上一局：你是头游，上家是下游'); await sleep(1500); if(!alive()) return;
-    cap.textContent=T('Tribute: Last gives 1st their highest card','进贡：下游把最大的一张牌交给头游'); await fly([14,3],3,0,'#ffd36a'); if(!alive()) return;
-    cap.textContent=T('Return: 1st gives back a card of 10 or lower, not a level card','还贡：头游还一张 10 或以下、不是级牌的牌'); await fly([L===4?6:4,2],0,3,'#7ef0c0'); if(!alive()) return;
-    cap.textContent=T('Last, who paid tribute, leads','进贡的下游先出牌'); turnTo(box,3); await sleep(1800); });
+      await e.animate([{transform:`translate(${A.x}px,${A.y}px) translate(-50%,-50%) scale(.45) rotateY(180deg)`,opacity:0},{transform:`translate(${M.x}px,${M.y}px) translate(-50%,-50%) scale(1)`,opacity:1,offset:.45},{transform:`translate(${M.x}px,${M.y}px) translate(-50%,-50%) scale(1)`,opacity:1,offset:.6},{transform:`translate(${B.x}px,${B.y}px) translate(-50%,-50%) scale(.45)`,opacity:1}],{duration:1900,easing:'cubic-bezier(.35,.6,.3,1)',fill:'forwards'}).finished.catch(()=>{});
+      seatEl(box,from).classList.remove('glow'); seatEl(box,to).style.setProperty('--hc',col); seatEl(box,to).classList.add('glow'); await sleep(450); seatEl(box,to).classList.remove('glow'); e.remove(); };
+    const show=(s,i,n)=>{ const e=mk(17,4,1); e.classList.add('rd-jk'); st.appendChild(e); const A=mtPos(box,s), m=box.querySelector('.mt'), dx=(m.clientWidth/2-A.x)*.5, dy=(m.clientHeight*.46-A.y)*.5;
+      e.style.left=(A.x+dx+(n>1?(i-.5)*m.clientWidth*.075:0))+'px'; e.style.top=(A.y+dy)+'px'; e.animate([{transform:'translate(-50%,-50%) scale(.3) rotateY(180deg)',opacity:0},{transform:'translate(-50%,-50%) scale(1) rotateY(0)',opacity:1}],{duration:600,delay:i*150,easing:'cubic-bezier(.3,1.4,.5,1)',fill:'both'}); return e; };
+    cap.textContent=T('Last hand','上一局名次'); for(let r=0;r<4;r++){ const c=seatEl(box,order[r]).querySelector('.mt-crown'); c.innerHTML=`${CROWN[r]}<b>${RANKN()[r]}</b>`; c.className='mt-crown on c'+r; await sleep(260); } await sleep(900); if(!alive()) return;
+    if(k==='single'){ cap.textContent=T('Last gives 1st their highest card','下游把最大的一张牌交给头游'); await fly([14,3],3,0,'#ffd36a'); if(!alive()) return;
+      cap.textContent=T('1st returns a card of 10 or lower','头游还一张 10 或以下的牌'); await fly([lowR,2],0,3,'#7ef0c0'); if(!alive()) return;
+      cap.textContent=T('Last, who paid, leads','进贡的下游先出'); turnTo(box,3); }
+    else if(k==='double'){ cap.textContent=T('Both pay: higher to 1st, lower to 2nd','两人都进贡：大的给头游，小的给二游'); await Promise.all([fly([14,0],3,0,'#ffd36a'),fly([midR,3],1,2,'#ffd36a')]); if(!alive()) return;
+      cap.textContent=T('Each receiver returns a card','收到的人各还一张'); await Promise.all([fly([lowR,1],0,3,'#7ef0c0'),fly([lowR===3?5:3,0],2,1,'#7ef0c0')]); if(!alive()) return;
+      cap.textContent=T('Whoever paid 1st leads','进贡给头游的人先出'); turnTo(box,3); }
+    else { const hold=k==='anti1'?[3,3]:[1,3]; cap.textContent=k==='anti1'?T('Last holds both Big Jokers','下游一人握着两张大王'):T('The losers hold one Big Joker each','输的两人各有一张大王');
+      const js=hold.map((s,i)=>show(s,i,k==='anti1'?2:1)); await sleep(1300); if(!alive()) return;
+      const m=box.querySelector('.mt'), stp=document.createElement('div'); stp.className='rd-astamp'; stp.textContent=T('Tribute Refused!','抗贡！'); stp.style.left=(m.clientWidth/2)+'px'; stp.style.top=(m.clientHeight*.46)+'px'; st.appendChild(stp);
+      cap.textContent=T('Nobody pays tribute','不用进贡'); await sleep(1500); if(!alive()) return; js.forEach(e=>e.animate([{opacity:1},{opacity:0}],{duration:400,fill:'forwards'})); stp.animate([{opacity:1},{opacity:0}],{duration:400,fill:'forwards'});
+      cap.textContent=T('Last hand’s 1st leads','由上一局的头游先出'); turnTo(box,0); }
+    await sleep(2200); }));
+  // clearing the Ace: three tries, three pearls; then a clean clear
+  loop('.rd-ace',async box=>{ const lv=box.querySelectorAll('.ra-lv'), card=box.querySelector('.ra-card'), hz=[...box.querySelectorAll('.ra-pl .hz')], cap=box.querySelector('.ra-cap'), pan=box.querySelector('.ra-pan'), ps=[...box.querySelectorAll('.ra-ord .up-p')];
+    const crowns=o=>ps.forEach(e=>{ const s=+e.dataset.s, rk=o?o.indexOf(s):-1, c=e.querySelector('.up-cr'), sm=e.querySelector('small'); c.innerHTML=rk>=0?CROWN[rk]:''; sm.textContent=rk>=0?RANKN()[rk]:''; e.classList.remove('crowned'); void e.offsetWidth; if(rk>=0){ e.style.setProperty('--k',rk); e.classList.add('crowned'); } });
+    const turn=r=>card.animate([{transform:'rotateY(0)'},{transform:'rotateY(90deg)'}],{duration:200,easing:'ease-in'}).finished.then(()=>{ card.src=GC_IMG(cimg({r,s:1})); card.animate([{transform:'rotateY(-90deg)'},{transform:'rotateY(0)'}],{duration:240,easing:'ease-out'}); });
+    const say=async(en,zh,ms)=>{ cap.textContent=T(en,zh); await sleep(ms); };
+    const brk=async i=>{ const h=hz[i]; h.classList.add('shake'); await sleep(600); h.classList.remove('shake'); h.classList.add('break'); await sleep(900); };
+    pan.classList.remove('win','cur1'); lv[0].textContent='K'; card.src=GC_IMG(cimg({r:13,s:1})); hz.forEach(h=>h.className='hz'); crowns(null);
+    await say('Your team reaches the Ace','我方升到 A',600); if(!alive()) return; lv[0].textContent='A'; await turn(14); for(const h of hz){ h.classList.add('on','enter'); await sleep(260); } await say('Three pearls: three tries','三颗龙珠：三次机会',1500); if(!alive()) return;
+    const tries=[[[1,3,0,2],'Try 1: an opponent goes out 1st','第 1 次：对手头游'],[[0,1,3,2],'Try 2: 1st, but your partner is last','第 2 次：头游，但盟友下游'],[[3,0,2,1],'Try 3: an opponent goes out 1st','第 3 次：对手头游']];
+    for(let i=0;i<3;i++){ const [o,en,zh]=tries[i]; crowns(o); await say(en,zh,1500); if(!alive()) return; cap.textContent=T('Missed: a pearl shatters','没过：碎一颗龙珠'); await brk(2-i); if(!alive()) return; await sleep(500); }
+    lv[0].textContent='2'; await turn(2); await say('All three gone: back to 2','三颗全碎：退回 2',2200); if(!alive()) return;
+    lv[0].textContent='A'; hz.forEach(h=>h.className='hz on'); await turn(14); crowns(null); await say('Another try at the Ace…','再一次打 A……',1200); if(!alive()) return;
+    crowns([0,1,2,3]); await say('1st, and your partner is 3rd','头游，盟友三游',1500); if(!alive()) return;
+    pan.classList.add('win'); await say('Cleared: through the Dragon Gate!','过 A：跃过龙门！',2600); });
+  // card counter: cards hit the table and their column counts down
+  loop('.rd-cc',async box=>{ const g=box.querySelector('.rcc'), pl=box.querySelector('.rcc-play'), cap=box.querySelector('.rcc-cap');
+    const order=[17,16,L].concat([14,13,12,11,10,9,8,7,6,5,4,3,2].filter(r=>r!==L)), N={}; order.forEach(r=>N[r]=r>=16?2:8);
+    const hand=[[14,0],[14,2],[13,1],[9,0],[9,3],[5,2],[17,4]]; hand.forEach(([r])=>N[r]--);
+    g.innerHTML=order.map(r=>`<span class="cc-c${r===L?' lv':''}${r>=16?' jk':''}" data-r="${r}"><i class="cc-r">${r===17?CC_STAR('big'):r===16?CC_STAR('small'):`<b>${LV(r)}</b>`}${r===L?`<em>${T('LV','级')}</em>`:''}</i><i class="cc-n">${N[r]}</i></span>`).join(''); pl.innerHTML='';
+    cap.textContent=T('Start: both decks, minus your own hand','起点：两副牌减去你自己的手牌'); await sleep(1800); if(!alive()) return;
+    const plays=[[[13,0],[13,3]],[[16,4]],[[14,1]],[[7,0],[7,2],[7,3]]];
+    for(const cs of plays){ pl.innerHTML=''; cs.forEach(([r,su])=>pl.appendChild(mk(r,su,1))); pl.animate([{opacity:0,transform:'translateY(-10px)'},{opacity:1,transform:'none'}],{duration:350,fill:'both'}); cap.textContent=T('A play hits the table…','有人出牌……'); await sleep(800); if(!alive()) return;
+      const r=cs[0][0]; N[r]-=cs.length; const col=g.querySelector(`.cc-c[data-r="${r}"]`); col.querySelector('.cc-n').textContent=N[r]; col.classList.toggle('z',N[r]===0); col.classList.remove('hit'); void col.offsetWidth; col.classList.add('hit'); cap.textContent=T('…and its column counts down','……对应那一列的数字就减少'); await sleep(1500); }
+    await sleep(1200); });
   // seat order: the turn glow runs round the table counter-clockwise
   loop('.rd-order',async box=>{ for(let i=0;i<4;i++){ if(!alive()) return; turnTo(box,i); await sleep(900); } });
 }
@@ -9584,7 +9828,7 @@ function tutPlace(){ const o=$g('.gr-tut'); if(!o||!tut) return; const st=tut.cu
   const cx0=(W-bw)/2+46, cand=[[cx0,Hh*.36-bh/2],[cx0,top0+40],[m+110,(Hh-bh)/2-30],[W-bw-m-20,(Hh-bh)/2-30],[W-bw-m-10,top0+16],[m+110,top0+16]];
   const avoid=[hr].concat(st&&st.you?[tutRect('#gtAct .ga-btns'),tutRect('#gtHand'),tutRect('#gtSort')]:[]).filter(Boolean); const ov=(x,y)=>avoid.reduce((a,r,i)=>{ const ix=Math.max(0,Math.min(x+bw,r.r+20)-Math.max(x,r.l-20)), iy=Math.max(0,Math.min(y+bh,r.b+20)-Math.max(y,r.t-20)); return a+ix*iy*(i===0?3:1); },0);
   let best=cand[0], bo=1e18; cand.forEach((c,i)=>{ const v=ov(c[0],c[1])+i*40; if(v<bo){ bo=v; best=c; } }); if(st&&st.show) best=[Math.max(110,(W-bw)/2+40),Math.max(top0,(Hh-bh)/2)]; if(st&&st.demo) best=[Math.max(m+120,(W-bw)/2+40),Math.max(top0,Hh-bh-28)];
-  if(!tut.pos||Math.abs(tut.pos[0]-best[0])>2||Math.abs(tut.pos[1]-best[1])>2){ tut.pos=best; bub.style.left=best[0]+'px'; bub.style.top=best[1]+'px'; gd.style.left=(best[0]-92)+'px'; gd.style.top=(best[1]-6)+'px'; }
+  if(!tut.pos||Math.abs(tut.pos[0]-best[0])>2||Math.abs(tut.pos[1]-best[1])>2){ tut.pos=best; bub.style.left=best[0]+'px'; bub.style.top=best[1]+'px'; { const gw=gd.offsetWidth||96; gd.style.left=Math.max(4,best[0]-gw-10)+'px'; gd.style.top=(best[1]-6)+'px'; } }
   if(!show){ gd.style.left=(m)+'px'; gd.style.top=(Hh-160)+'px'; tut.pos=null; }
   // beam of light from the spirit's eye to the spotlight
   const ex=parseFloat(gd.style.left)+48, ey=parseFloat(gd.style.top)+40;
@@ -9619,6 +9863,9 @@ async function tutNext(){ if(!tut) return; tut.demo=null; if(tut.ccWas!=null){ c
     H={L:D.L2,hands:D.h2.map(h=>h.map(c=>Object.assign({},c))),order:[],turn:3,lead:3,trick:null,passes:0,played:[[],[],[],[]],log:[],phase:'tribute'};
     H.tribute={anti:false,pairs:D.trib.map(p=>({from:p.from,to:p.to,card:tutPick(H.hands[p.from],[p.card])[0]}))};
     buildTable(); root.classList.add('tutm'); tutUI(); busy=true; await dealAnim(); busy=false; if(!tut) return; tutNext(); return; }
+  if(st.hand3){ tutHide(); const D=GD_TUT; ret=null; tribPick=null; sortMode=0; warned=new Set(); sel.clear(); bgm(1); root.classList.remove('handend');
+    H={L:M.lv[M.dealer],hands:D.h3.map(h=>h.map(c=>Object.assign({},c))),order:[],turn:0,lead:0,trick:null,passes:0,played:[[],[],[],[]],log:[],phase:'tribute',tribute:{anti:true,pairs:[],seats:[1,3]}};
+    buildTable(); root.classList.add('tutm'); tutUI(); busy=true; await dealAnim(); busy=false; if(!tut) return; tutNext(); return; }
   if(st.trib){ tutHide(); await doTribute(); if(!tut) return; tutNext(); return; }
   if(st.bot!=null){ tutHide(); await wait(450); if(!tut) return; const cards=st.pass?[]:tutPick(H.hands[st.bot],st.cards); for(let s=0;s<4;s++) drawSeat(s); act(st.bot,cards); return; }
   if(st.demo){ tutCard(st); tutDemo(st.demo); return; }
@@ -9639,7 +9886,9 @@ async function demoTribute(){ const L=H.L; const card=(r,s)=>({id:900+r*4+s,r,s}
   await wait(500); if(!tut||tut.demo!=='tribute') return; banner(T('Double tribute','双下 · 双贡'),'info');
   await flyCard(card(14,0),3,0); await flyCard(card(13,3),1,2); await flyCard(card(4,2),0,3,true); await flyCard(card(6,1),2,1,true); }
 async function antiFx(jj,seats){ const R=felt.getBoundingClientRect(), x=R.width/2, y=R.height*.44; seats=seats||jj.map(()=>1); const who=[...new Set(seats)];
-  banner(T(`${who.map(pname).join(' & ')} show${who.length>1||who[0]===0?'':'s'} both Big Jokers`,`${who.map(pname).join('、')} 亮出两张大王`),'big');
+  { const fx0=$g('.gt-fx'), nt=document.createElement('div'); nt.className='fx-anote'; nt.style.left=x+'px'; nt.style.top=(y-cw*1.9)+'px';
+    nt.innerHTML=`<span class="an-avs">${who.map(k=>`<i class="an-av t${k%2}"><svg viewBox="0 0 40 40">${AV[P[k].k]}</svg></i>`).join('')}</span><span class="an-tx"><b>${T('Both Big Jokers','亮出两张大王')}</b><small>${T('No tribute this hand','本局免贡')}</small></span>`;
+    fx0.appendChild(nt); setTimeout(()=>{ nt.classList.add('out'); setTimeout(()=>nt.remove(),400); },reduce?1:1500); }
   const fly=jj.map((c,i)=>{ const a=seatPt(seats[i]), e=cardEl(c,'fly'); e.style.left=a.x+'px'; e.style.top=a.y+'px'; $g('.gt-fx').appendChild(e); const tx=x+(i-(jj.length-1)/2)*cw*1.2, ty=y+cw*1.45;
     e.animate([{transform:'translate(-50%,-50%) scale(.4) rotateY(180deg)'},{transform:`translate(calc(-50% + ${tx-a.x}px),calc(-50% + ${ty-a.y}px)) scale(1.25) rotateY(0)`}],{duration:reduce?1:1000,delay:i*160,easing:'cubic-bezier(.3,.8,.3,1)',fill:'forwards'}); return {e,a,tx,ty}; });
   snd('trib'); await wait(1600);
@@ -9655,7 +9904,7 @@ async function demoAnti(){ await wait(400); if(!tut||tut.demo!=='anti') return; 
   await antiFx([{id:-1,r:17,s:4},{id:-2,r:17,s:4}],[1,3]); if(!tut||tut.demo!=='anti') return; banner(T('No tribute · 1st leads','不进贡 · 头游先出'),'info'); }
 function tutDemo(d){ if(!tut) return; const me=tut; me.demo=d; me.demoBusy=1;
   // demos run one after another, so a demo still finishing never fights the next one over the level panel
-  const run=async()=>{ if(tut!==me||me.demo!==d) return; if(d==='tribute') await demoTribute(); else if(d==='anti') await demoAnti(); else if(/^a(hearts|miss|switch|win)$/.test(d)) await demoAce(d); };
+  const run=async()=>{ if(tut!==me||me.demo!==d) return; if(d==='tribute') await demoTribute(); else if(d==='anti') await demoAnti(); else if(/^(a(hearts|miss|switch|win)|lvup)$/.test(d)) await demoAce(d); };
   me.demoP=(me.demoP||Promise.resolve()).then(run).catch(()=>{}).finally(()=>{ if(me.demo===d) me.demoBusy=0; }); }
 function tutCap(html){ const fx=$g('.gt-fx'); if(!fx) return; let c=fx.querySelector('.tut-cap'); if(!html){ if(c){ c.classList.add('out'); setTimeout(()=>c.remove(),300); } return; }
   if(c) c.remove(); const R=felt.getBoundingClientRect(); c=document.createElement('div'); c.className='tut-cap'; c.style.left=(R.width/2)+'px'; c.style.top=(R.height*.3)+'px'; c.innerHTML=html; fx.appendChild(c); }
@@ -9666,7 +9915,10 @@ async function demoAce(d){ const me=tut, M0={lv:M.lv.slice(),dealer:M.dealer,aFa
   const lvTo=async(after,dealer,o)=>{ if(!on()) return; o=o||{}; const res={before:M.lv.slice(),after:after.slice()}; placeHi.last=M.dealer;
     if(o.fail){ M.aFails[0]++; res.aFail=0; if(o.reset){ res.aReset=0; M.aFails[0]=0; } } M.dealer=dealer; M.lv=after.slice(); await animLevel(res); if(g){ g._lvNext=M.lv[M.dealer]; g._lvH=H; } drawLevel(); };
   try{ await wait(400); if(!on()) return; crowns(null);
-    if(d==='ahearts'){ set([13,2],0,0); await wait(800); await cap('Your team reaches the Ace','我方升到 A',900); await lvTo([14,2],0); await cap('3 hearts = 3 tries','三颗心 = 三次机会',3000); }
+    if(d==='lvup'){ const o=H.order.length>=2?H.order.slice():[0,2,1,3]; set([2,2],0,0); await wait(700);
+      crowns(o); await cap('You: 1st','你：头游',1500); await cap('Your ally: 2nd','盟友：二游',1500); await cap('1st + ally 2nd = up 3 levels','头游 + 盟友二游 = 升 3 级',1300);
+      await lvTo([5,2],0); await cap('Next hand is played at 5','下一局打 5',2600); }
+    else if(d==='ahearts'){ set([13,2],0,0); await wait(800); await cap('Your team reaches the Ace','我方升到 A',900); await lvTo([14,2],0); await cap('3 hearts = 3 tries','三颗心 = 三次机会',3000); }
     else if(d==='amiss'){ set([14,2],0,0); await wait(900);
       for(let i=0;i<3&&on();i++){ await cap(i<2?'Missed: one heart breaks':'Third miss: back to 2',i<2?'没过：碎一颗心':'第三次没过：退回 2',700); await lvTo([i<2?14:2,2],0,{fail:1,reset:i===2}); await wait(900); } await wait(1600); }
     else if(d==='aswitch'){ set([9,2],0,0); await wait(900); await cap('The opponents win this hand','这一局对手赢了',600); crowns([1,3,0,2]); await wait(1800);
