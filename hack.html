@@ -3001,6 +3001,9 @@ html:not([lang=zh]) .gt-choose .gc-lb b{font-family:'Newsreader','Noto Serif SC'
 .gt-me:has(.gt-act.res) .gt-ccb,.gt-me:has(.gt-act.res) #gtSort{opacity:0!important;pointer-events:none!important}
 .gt-res.dock .rs-card{background:radial-gradient(120% 80% at 50% 0%,rgb(60,48,22),rgb(16,17,20) 60%)}
 .gt-res.l.dock .rs-card{background:radial-gradient(120% 80% at 50% 0%,rgb(40,44,56),rgb(14,15,18) 60%)}
+/* the card counter and its switch leave with the Sort switch: match exit, entrance and every deal */
+.intro .gt-ccb,.outro .gt-ccb,.intro .gt-ctrw,.outro .gt-ctrw,.dealing .gt-ctrw{opacity:0!important;pointer-events:none!important;transition:none!important}
+.gt-ctrw{transition:opacity .5s ease .15s}
 /* ===== Pages & Frames: a reading room, green-leather rail and paper pages ===== */
 #reader.shelf{--sh-bg:#F3EEE3;--sh-ink:#23201A;--sh-ink2:#6B6252;--sh-acc:#8B2B22;--sh-green:#1F3329;--sh-line:#DCD2BF;--cx:#8B2B22}
 #reader.shelf .rd-main,#reader.shelf .rd-leaf{background:var(--sh-bg) linear-gradient(90deg,rgba(80,60,30,.05) 1px,transparent 1px) 0 0/22px 100%}
@@ -7764,7 +7767,7 @@ const steps=[
  B(2,[[12,0],[12,1],[12,3],[4,2],[4,3]]), X(3),
  {you:'pass',say:['A full house','三带二'],b:['Your ally played three Queens with a pair of 4s. You could bomb it, but never bomb your own ally. Pass.','盟友出了三个 Q 带一对 4。你有炸弹，但不要炸自己人，选择不出。']},
  B(1,[[7,0],[7,1],[7,2],[7,3]]), X(2), X(3),
- {you:'hint',cards:[[9,0],[9,2],[9,3],[2,1]],say:['Bomb back','炸回去'],b:['Your next player bombed your ally with four 7s. Your bomb of four 9s, made with the wild card, is bigger. Press Hint to pick it, then Play.','下家用四个 7 炸了盟友。你那个由逢人配凑成的四个 9 更大。按“提示”选中它，再按“出牌”。']},
+ {you:'badge',cards:[[9,0],[9,2],[9,3],[2,1]],say:['Bomb back','炸回去'],b:['Your next player bombed your ally with four 7s. Your bomb of four 9s, made with the wild card, is bigger. Tap the round badge on its front card to pick up the whole bomb at once, then press Play.','下家用四个 7 炸了盟友。你那个由逢人配凑成的四个 9 更大。点它最前面那张牌上的圆形徽章，整个炸弹一次全选中，再按“出牌”。']},
  X(1), X(2), X(3),
  {you:[[10,0],[11,3],[12,2],[13,1],[14,0]],say:['A straight','顺子'],b:['Everyone passed, so you lead again. Play your straight 10 J Q K A: five ranks in a row, any suits. The Ace sits at the top here.','大家都不出，又轮到你领出。打出顺子 10 J Q K A：五张连续，花色随意，这里 A 在最上头。']},
  X(1), X(2), X(3),
@@ -7794,8 +7797,9 @@ const steps=[
  B(2,[[8,0],[8,1],[8,2],[9,2],[9,3],[9,1]]), X(3), X(1),
  B(2,[[13,2]]),
  {end:1},
- {say:['Refusing tribute','抗贡'],b:['One more rule: if the players who owe tribute hold both Big Jokers between them, they refuse to pay, and 1st leads instead. And when you pay tribute yourself and your highest card comes in several suits, you choose which one to give.','还有一条：如果该进贡的一方手里一共有两张大王，就可以抗贡，不用进贡，由头游先出。轮到你进贡时，如果最大的牌有好几种花色，由你自己挑一张。']},
- {say:['Clearing the Ace','过 A'],b:['To win the match, a team playing its Ace must come 1st with the ally not last. A team gets three tries at its Ace; after three misses it drops back to 2.','打到 A 的一方，要头游且盟友不是下游，才算跃过龙门、赢下整场。打 A 有三次机会，三次没过就退回 2。']},
+ {demo:'anti',say:['Refusing tribute','抗贡'],b:['One more rule: if the players who owe tribute hold both Big Jokers between them, they show them and refuse to pay, and 1st leads instead. Watch: your opponents each hold one Big Joker. And when you pay tribute yourself and your highest card comes in several suits, you choose which one to give.','还有一条：如果该进贡的一方手里一共有两张大王，亮出来就可以抗贡，不用进贡，由头游先出。看：对手两人各有一张大王。轮到你进贡时，如果最大的牌有好几种花色，由你自己挑一张。']},
+ {demo:'amiss',say:['Three tries at the Ace','打 A 三次机会'],b:['A team that reaches the Ace gets three tries to clear it. Each try that fails costs one of the three hearts beside the level card; when the last heart breaks, the team drops back to 2. Watch the top left.','升到 A 的一方有三次打 A 的机会。每没过一次，级牌旁边的三颗心就碎一颗；三颗都碎了，就退回 2 重新打。看左上角。'],spot:'.gl'},
+ {demo:'awin',say:['Clearing the Ace','过 A'],b:['To clear the Ace and win the whole match, the team playing its Ace must come 1st, with the ally anywhere but last. Then the team leaps through the Dragon Gate.','打 A 的一方要头游，并且盟友不是下游，才算过 A，跃过龙门、赢下整场。'],spot:'.gl'},
  {say:['You are ready','准备好了'],b:['That is the whole flow. Hint always suggests a legal play, and Rules lists every combination. Good luck at the Gate.','流程就是这些。卡住时按“提示”就能找到能出的牌，所有牌型都在“规则”里。祝你跃过龙门！'],last:1}
 ];
 return {h1,h2,steps,L1:2,L2:5,trib:[{from:3,to:0,card:[14,3]},{from:1,to:2,card:[13,2]}]};
@@ -9201,7 +9205,7 @@ function smartPick(card){ const tg=target(); if(!tg||tg.type==='single'||GD.isBo
     const k=m.cards.findIndex(c=>c.r===card.r&&!GD.isWild(c,L)); if(k<0) continue;
     const cs=m.cards.slice(); cs[k]=card; const j=GD.judge(cs,L,tg); if(j&&j.type===m.combo.type) return {cards:cs,combo:j}; }
   return null; }
-function onDown(e){ const tag=e.target.closest('#gtHand .gt-tag,#gtHand .gc-bd'); if(tag&&H&&H.phase==='play'){ const col=($g('#gtHand')._cols||[])[+tag.dataset.col]; if(col){ const all=col.cards.every(c=>sel.has(c.id)); if(all) col.cards.forEach(c=>sel.delete(c.id)); else sel=new Set(col.cards.map(c=>c.id)); snd('pick'); markSel(); } return; }
+function onDown(e){ const tag=e.target.closest('#gtHand .gt-tag,#gtHand .gc-bd'); if(tag&&H&&H.phase==='play'){ const col=($g('#gtHand')._cols||[])[+tag.dataset.col]; if(col){ const all=col.cards.every(c=>sel.has(c.id)); if(all) col.cards.forEach(c=>sel.delete(c.id)); else sel=new Set(col.cards.map(c=>c.id)); if(tut&&tut.st&&tut.st.you==='badge') tut.badged=all?0:1; snd('pick'); markSel(); } return; }
   const c=e.target.closest('#gtHand .gc'); if(!c){ if(e.target.closest('.gt-cloth')&&sel.size&&H&&H.phase==='play'){ sel.clear(); markSel(); } return; } e.preventDefault();
   if(tribPick){ pickTrib(+c.dataset.id); return; } if(ret){ pickReturn(+c.dataset.id); return; } if(!H||H.phase!=='play') return;
   const id=+c.dataset.id, on=!sel.has(id), card0=H.hands[0].find(x=>x.id===id);
@@ -9218,7 +9222,7 @@ function onClick(e){ const a=e.target.closest('[data-a]'); if(!a) return; const 
   else if(k==='vol') volPop(a); else if(k==='fs') toggleFs();
   else if(k==='popx'){ snd('close'); closePop(a.closest('.gr-pop')); }
   else if(k==='tn') tutNext(); else if(k==='tx') confirmPop(T('Leave the tutorial?','退出教程？'),T('You can replay it any time from the Tutorial button.','之后随时可以点“教程”重新开始。'),T('Leave','退出教程'),()=>{ endTut(); startGame(true); });
-  else if(k==='trules'){ rules(()=>{}); }
+  else if(k==='trules'){ rules(()=>{}); } else if(k==='treplay'){ if(tut&&tut.cur&&tut.cur.demo&&!tut.demoBusy) tutDemo(tut.cur.demo); }
   else if(k==='retok') confirmReturn(); else if(k==='tribok') confirmTrib(); }
 function toggleFs(){ try{ if(document.fullscreenElement) document.exitFullscreen(); else (document.documentElement.requestFullscreen||document.documentElement.webkitRequestFullscreen).call(document.documentElement); }catch(e){} }
 function volPop(btn){ let p=$g('.gr-vol'); if(p){ p.remove(); return; } p=document.createElement('div'); p.className='gr-vol';
@@ -9476,7 +9480,7 @@ function tutUI(){ let o=$g('.gr-tut'); if(!o){ o=document.createElement('div'); 
     o.innerHTML=`<i class="tut-hole"></i><svg class="tut-beam"><defs><linearGradient id="tbg" x1="0" x2="1"><stop offset="0" stop-color="#ffe7a0" stop-opacity=".95"/><stop offset="1" stop-color="#7ee2ff" stop-opacity=".9"/></linearGradient></defs><path/><circle r="5"/></svg><i class="tut-tap">${TAP_SVG}</i>
       <div class="tut-guide"><i class="tg-halo"></i><i class="tg-disc"><img src="${GIMG('gd-spirit')}" alt=""></i></div><div class="tut-bub"></div>`; root.appendChild(o); }
   return o; }
-function tutTarget(st){ if(!st) return null; if(st.you){ if(st.you==='sort') return '#gtSort'; if(st.you==='pass') return '.ga-pass'; if(st.you==='hint') return tut.hinted?'.ga-play':'.ga-hint'; if(st.you==='ret') return st.ids&&st.ids.every(i=>sel.has(i))?'[data-a=retok]':'glow';
+function tutTarget(st){ if(!st) return null; if(st.you){ if(st.you==='sort') return '#gtSort'; if(st.you==='pass') return '.ga-pass'; if(st.you==='hint') return tut.hinted?'.ga-play':'.ga-hint'; if(st.you==='badge') return tut.badged&&st.ids&&st.ids.every(i=>sel.has(i))?'.ga-play':'#gtHand .gc-bd'; if(st.you==='ret') return st.ids&&st.ids.every(i=>sel.has(i))?'[data-a=retok]':'glow';
     const ids=st.ids||[]; return ids.length&&ids.every(i=>sel.has(i))?'.ga-play':'glow'; }
   if(st.spot&&st.spot!=='.gt-felt') return st.spot; return null; }
 function tutRect(q){ const R=root.getBoundingClientRect(); let els=[]; if(q==='glow') els=$$g('#gtHand .gc.glow'); else if(q) q.split(',').forEach(x=>{ const e=$g(x.trim()); if(e) els.push(e); });
@@ -9490,7 +9494,7 @@ function tutPlace(){ const o=$g('.gr-tut'); if(!o||!tut) return; const st=tut.cu
   const bw=bub.offsetWidth||380, bh=bub.offsetHeight||220, m=18, top0=70;
   const cx0=(W-bw)/2+46, cand=[[cx0,Hh*.36-bh/2],[cx0,top0+40],[m+110,(Hh-bh)/2-30],[W-bw-m-20,(Hh-bh)/2-30],[W-bw-m-10,top0+16],[m+110,top0+16]];
   const avoid=[hr].concat(st&&st.you?[tutRect('#gtAct .ga-btns'),tutRect('#gtHand'),tutRect('#gtSort')]:[]).filter(Boolean); const ov=(x,y)=>avoid.reduce((a,r,i)=>{ const ix=Math.max(0,Math.min(x+bw,r.r+20)-Math.max(x,r.l-20)), iy=Math.max(0,Math.min(y+bh,r.b+20)-Math.max(y,r.t-20)); return a+ix*iy*(i===0?3:1); },0);
-  let best=cand[0], bo=1e18; cand.forEach((c,i)=>{ const v=ov(c[0],c[1])+i*40; if(v<bo){ bo=v; best=c; } }); if(st&&st.show) best=[Math.max(110,(W-bw)/2+40),Math.max(top0,(Hh-bh)/2)];
+  let best=cand[0], bo=1e18; cand.forEach((c,i)=>{ const v=ov(c[0],c[1])+i*40; if(v<bo){ bo=v; best=c; } }); if(st&&st.show) best=[Math.max(110,(W-bw)/2+40),Math.max(top0,(Hh-bh)/2)]; if(st&&st.demo) best=[m+120,Math.max(top0,Hh-bh-28)];
   if(!tut.pos||Math.abs(tut.pos[0]-best[0])>2||Math.abs(tut.pos[1]-best[1])>2){ tut.pos=best; bub.style.left=best[0]+'px'; bub.style.top=best[1]+'px'; gd.style.left=(best[0]-92)+'px'; gd.style.top=(best[1]-6)+'px'; }
   if(!show){ gd.style.left=(m)+'px'; gd.style.top=(Hh-160)+'px'; tut.pos=null; }
   // beam of light from the spirit's eye to the spotlight
@@ -9503,11 +9507,11 @@ function tutPlace(){ const o=$g('.gr-tut'); if(!o||!tut) return; const st=tut.cu
 function tutHide(){ const o=$g('.gr-tut'); if(!o) return; const b=o.querySelector('.tut-bub'); b.classList.remove('on'); clearInterval(tut&&tut.tw); if(tut) tut.card=null; tutPlace(); }
 function tutCard(st){ const o=tutUI(), bub=o.querySelector('.tut-bub'); tut.cur=st;
   const n=GD_TUT.steps.filter(x=>x.say).length, k=GD_TUT.steps.slice(0,tut.i+1).filter(x=>x.say).length, act=!!st.you, txt=zh()?st.b[1]:st.b[0];
-  const doTxt=st.you==='sort'?T('Switch to Sorted','拨到“理牌”'):st.you==='pass'?T('Press Pass','按“不出”'):st.you==='hint'?T('Press Hint, then Play','先按“提示”，再按“出牌”'):st.you==='ret'?T('Tap the glowing card, then press Give back','点发光的牌，再按“还贡”'):T('Tap the glowing cards, then press Play','点选发光的牌，再按“出牌”');
+  const doTxt=st.you==='sort'?T('Switch to Sorted','拨到“理牌”'):st.you==='pass'?T('Press Pass','按“不出”'):st.you==='hint'?T('Press Hint, then Play','先按“提示”，再按“出牌”'):st.you==='ret'?T('Tap the glowing card, then press Give back','点发光的牌，再按“还贡”'):st.you==='badge'?T('Tap the round badge, then press Play','点圆形徽章，再按“出牌”'):T('Tap the glowing cards, then press Play','点选发光的牌，再按“出牌”');
   const show=st.show?`<div class="tb-show">${st.show.map(([lab,cs],i)=>`<div class="tb-row" style="--d:${.25+i*.12}s">${miniRow(cs)}<span>${zh()?lab[1]:lab[0]}</span></div>`).join('')}</div>`:'';
   bub.className='tut-bub'+(act?' tbact':'')+(st.show?' wide':''); void bub.offsetWidth;
   bub.innerHTML=`<div class="tb-top"><span class="tb-dots">${Array.from({length:n},(_,i)=>`<i class="${i<k-1?'done':i===k-1?'cur':''}"></i>`).join('')}</span><button class="tb-x" data-a="tx">${T('Leave','退出教程')}</button></div><h4>${zh()?st.say[1]:st.say[0]}</h4><p class="tb-p"></p>${show}
-    ${act?`<div class="tb-do"><i></i>${doTxt}</div>`:`<div class="tb-go"><small>${k} / ${n}</small>${st.show?`<button class="tb-rules" data-a="trules">${T('See every combination in Rules','打开规则看全部牌型')}</button>`:''}<button class="pri" data-a="tn">${st.last?T('Start a real game','开始正式对局'):T('Next','下一步')}<kbd>Enter</kbd></button></div>`}`;
+    ${act?`<div class="tb-do"><i></i>${doTxt}</div>`:`<div class="tb-go"><small>${k} / ${n}</small>${st.demo?`<button class="tb-rules" data-a="treplay">${T('Watch again','再看一遍')}</button>`:''}${st.show?`<button class="tb-rules" data-a="trules">${T('See every combination in Rules','打开规则看全部牌型')}</button>`:''}<button class="pri" data-a="tn">${st.last?T('Start a real game','开始正式对局'):T('Next','下一步')}<kbd>Enter</kbd></button></div>`}`;
   requestAnimationFrame(()=>bub.classList.add('on'));
   // typewriter, with the spirit's eye flickering while it "speaks"
   const p=bub.querySelector('.tb-p'), gd=o.querySelector('.tut-guide'); clearInterval(tut.tw); let i=0; const step=Math.max(1,Math.round(txt.length/70)); gd.classList.add('talk'); p.textContent='';
@@ -9516,7 +9520,7 @@ function tutCard(st){ const o=tutUI(), bub=o.querySelector('.tut-bub'); tut.cur=
   tut.card=bub; snd('tutpop'); clearInterval(tut.iv); tut.iv=setInterval(tutPlace,200); requestAnimationFrame(tutPlace); }
 function markTut(){ $$g('#gtHand .gc').forEach(e=>e.classList.toggle('glow',!!(tut&&tut.hl&&tut.hl.includes(+e.dataset.id)))); }
 const tutPick=(h,list)=>{ const used=new Set(); return list.map(([r,s])=>{ const c=h.find(c=>c.r===r&&(r>=16||c.s===s)&&!used.has(c.id)); if(c) used.add(c.id); return c; }).filter(Boolean); };
-async function tutNext(){ if(!tut) return; tut.i++; tut.waitYou=false; tut.hl=null; tut.st=null; markTut(); const st=GD_TUT.steps[tut.i]; if(!st){ endTut(); startGame(true); return; }
+async function tutNext(){ if(!tut) return; tut.demo=null; tut.i++; tut.waitYou=false; tut.hl=null; tut.st=null; markTut(); const st=GD_TUT.steps[tut.i]; if(!st){ endTut(); startGame(true); return; }
   if(st.last&&tut.i>0&&tut.lastShown){ endTut(); startGame(true); return; }
   if(st.end){ tut.i--; return; }
   if(st.hand2){ tutHide(); const D=GD_TUT; ret=null; tribPick=null; sortMode=0; warned=new Set(); sel.clear(); bgm(1);
@@ -9525,13 +9529,13 @@ async function tutNext(){ if(!tut) return; tut.i++; tut.waitYou=false; tut.hl=nu
     buildTable(); root.classList.add('tutm'); tutUI(); busy=true; await dealAnim(); busy=false; if(!tut) return; tutNext(); return; }
   if(st.trib){ tutHide(); await doTribute(); if(!tut) return; tutNext(); return; }
   if(st.bot!=null){ tutHide(); await wait(450); if(!tut) return; const cards=st.pass?[]:tutPick(H.hands[st.bot],st.cards); for(let s=0;s<4;s++) drawSeat(s); act(st.bot,cards); return; }
-  if(st.demo){ tutCard(st); tut.demo=st.demo; if(st.demo==='tribute') demoTribute(); else demoAnti(); return; }
-  if(st.you){ tut.st=st; tut.waitYou=true; hintList=null; st.ids=Array.isArray(st.you)?tutPick(H.hands[0],st.you).map(c=>c.id):st.cards?tutPick(H.hands[0],st.cards).map(c=>c.id):null; tut.hinted=0; if(st.ids&&st.you!=='hint') tut.hl=st.ids; tutCard(st); drawAct(); markTut(); if(st.you==='sort'){ sortMode=0; drawHand(); } return; }
+  if(st.demo){ tutCard(st); tutDemo(st.demo); return; }
+  if(st.you){ tut.st=st; tut.waitYou=true; hintList=null; st.ids=Array.isArray(st.you)?tutPick(H.hands[0],st.you).map(c=>c.id):st.cards?tutPick(H.hands[0],st.cards).map(c=>c.id):null; tut.hinted=0; tut.badged=0; if(st.ids&&st.you!=='hint'&&st.you!=='badge') tut.hl=st.ids; tutCard(st); drawAct(); markTut(); if(st.you==='sort'){ sortMode=0; drawHand(); } return; }
   if(st.fx==='order'){ setTimeout(()=>orderArrows(),300); }
   if(st.last) tut.lastShown=1; tutCard(st); }
 function tutAllow(x){ const st=tut&&tut.st; if(!st){ return false; }
-  const ok=x==='pass'?st.you==='pass':Array.isArray(x)&&(st.you==='hint'?tut.hinted:true)&&st.ids&&x.length===st.ids.length&&x.every(c=>st.ids.includes(c.id));
-  if(!ok){ snd('err'); banner(st.you==='hint'&&!tut.hinted?T('Press Hint first','先按“提示”'):T('Follow the instructions for this step','请按本步提示操作'),'info'); if(tut.card) tut.card.animate([{transform:'translateX(-6px)'},{transform:'translateX(6px)'},{transform:'none'}],{duration:240}); return false; }
+  const ok=x==='pass'?st.you==='pass':Array.isArray(x)&&(st.you==='hint'?tut.hinted:st.you==='badge'?tut.badged:true)&&st.ids&&x.length===st.ids.length&&x.every(c=>st.ids.includes(c.id));
+  if(!ok){ snd('err'); banner(st.you==='hint'&&!tut.hinted?T('Press Hint first','先按“提示”'):st.you==='badge'&&!tut.badged?T('Tap the round badge on the bomb first','先点炸弹上的圆形徽章'):T('Follow the instructions for this step','请按本步提示操作'),'info'); if(tut.card) tut.card.animate([{transform:'translateX(-6px)'},{transform:'translateX(6px)'},{transform:'none'}],{duration:240}); return false; }
   tutHide(); tut.waitYou=false; return true; }
 function tutAfterAct(){ if(!tut) return; const nx=GD_TUT.steps[tut.i+1]; if(H.phase==='done'||nx&&nx.end){ tut.i++; endHand(); return; } setTimeout(tutNext,250); }
 async function tutEnd(){ await wait(900); const res=GDM.settle(M,H); snd('win'); banner(T('Your team wins the hand','我方胜出'),'rank'); await wait(1200); await animLevel(res); drawLevel(); tutNext(); }
@@ -9553,8 +9557,21 @@ async function antiFx(jj,seats){ const R=felt.getBoundingClientRect(), x=R.width
   await wait(2800);
   fly.forEach(({e,a,tx,ty},i)=>e.animate([{transform:`translate(calc(-50% + ${tx-a.x}px),calc(-50% + ${ty-a.y}px)) scale(1.25)`},{transform:'translate(-50%,-50%) scale(.4) rotateY(180deg)',opacity:.4}],{duration:reduce?1:900,delay:i*120,easing:'ease-in',fill:'forwards'}));
   await wait(1100); fly.forEach(o=>o.e.remove()); [rays,f].forEach(e=>e.remove()); }
-async function demoAnti(){ await wait(400); if(!tut||tut.demo!=='anti') return; snd('shield'); const R=felt.getBoundingClientRect();
-  antiFx([{id:-1,r:17,s:4},{id:-2,r:17,s:4}]); }
+async function demoAnti(){ await wait(400); if(!tut||tut.demo!=='anti') return; snd('shield');
+  await antiFx([{id:-1,r:17,s:4},{id:-2,r:17,s:4}],[1,3]); if(!tut||tut.demo!=='anti') return; banner(T('No tribute · 1st leads','不进贡 · 头游先出'),'info'); }
+function tutDemo(d){ if(!tut) return; const me=tut; me.demo=d; me.demoBusy=1;
+  // demos run one after another, so a demo still finishing never fights the next one over the level panel
+  const run=async()=>{ if(tut!==me||me.demo!==d) return; if(d==='tribute') await demoTribute(); else if(d==='anti') await demoAnti(); else if(d==='amiss'||d==='awin') await demoAce(d); };
+  me.demoP=(me.demoP||Promise.resolve()).then(run).catch(()=>{}).finally(()=>{ if(me.demo===d) me.demoBusy=0; }); }
+async function demoAce(d){ const me=tut, M0={lv:M.lv.slice(),dealer:M.dealer,aFails:M.aFails.slice()}, g=$g('.gl'), G0=g?{L:g._L,n:g._lvNext,h:g._lvH}:null, on=()=>tut===me&&me.demo===d;
+  try{ await wait(500); if(!on()) return; M.dealer=0; M.lv[0]=14; M.aFails[0]=0; drawLevel(); await wait(900);
+    if(d==='amiss'){ for(let i=0;i<3&&on();i++){ banner(T(`Try ${i+1} at the Ace: missed`,`第 ${i+1} 次打 A：没过`),'info'); await wait(700); if(!on()) break;
+        const res={before:M.lv.slice(),after:M.lv.slice()}; M.aFails[0]++; res.aFail=0; if(i===2){ res.aReset=0; res.after[0]=2; M.aFails[0]=0; } M.lv=res.after.slice(); await animLevel(res); await wait(i===2?1400:900); }
+    } else { banner(T('1st, and the ally is not last','头游，且盟友不是下游'),'info'); await wait(1400); if(!on()) return;
+      const R=felt.getBoundingClientRect(), x=R.width/2, y=R.height*.42; snd('win'); flash('rgba(255,210,120,.35)',1600);
+      const dr=flyDragon($g('.gt-fx'),R.width,R.height,{dur:5200}); burst(x,y,120,{c:['#fff3c4','#ffd36a','#ff9a3a'],v:11,g:.1,k:'tr',r:2.4});
+      badge(T('Through the Dragon Gate!','跃过龙门！'),x,y,'gold',true,'seal','slam'); await wait(4200); if(dr&&dr.then) await dr; }
+  } finally { if(tut===me){ M.lv=M0.lv; M.dealer=M0.dealer; M.aFails=M0.aFails; if(g&&G0){ g._lvNext=G0.n; g._lvH=G0.h; g._L=G0.L; } placeHi.last=M.dealer; drawLevel(); } } }
 return {_nn:s=>nnMove(s), _bot:s=>botMove(s), open:openRoom, close:closeRoom, isOpen:()=>open, _wind:s=>windBanner(s), _res:(g,w)=>showResult({winner:w?0:1,up:2,order:w?[0,2,1,3]:[1,3,0,2],before:[5,3],after:w?[7,3]:[5,5],gameOver:g},!!w,3), _drg:()=>{ const R=felt.getBoundingClientRect(); return flyDragon($g('.gt-fx'),R.width,R.height,{dur:6000}); }, _s:()=>({M,H,tut}), _redraw:()=>refreshAll(), _step:()=>{ busy=false; step(); }, _newHand:()=>newHand(), _trib:()=>doTribute(), _bgm:()=>({k:BGM.k,playing:!!(BGM.cur&&BGM.cur.playing),buf:!!(BGM.cur&&BGM.cur.buf),site:!!(TR.bgm&&TR.bgm.playing)}), _siren:(s,n)=>{ warned.add(s); drawSeat(s); snd("siren"); sirenAlert(s,n); bgm(3); }, _hints:()=>{ buildHints(); return hintList.map(m=>m.combo.type+":"+m.cards.map(c=>GD.isWild(c,H.L)?"W":c.r).join(",")); }, _nh:()=>newHand(), _anti:()=>antiFx([{id:-1,r:17,s:4},{id:-2,r:17,s:4}],[1,1]), _vox:()=>({loaded:Object.keys(voxBuf),loading:Object.keys(voxLoading)}), _fx:async(s,spec)=>{ const cards=spec.map(([r,su],i)=>({id:5000+i,r,s:r>=16?4:su})); H.played[s]=cards; H.trick={seat:s,combo:GD.judge(cards,H.L,null),cards}; drawPlayed(s); await comboFx(s,H.trick.combo); }, relang:()=>{ if(open){ loadVox(); render(); if(tut&&tut.i>=0){ const st=GD_TUT.steps[tut.i]; if(st&&(st.say)) tutCard(st); } } }};
 })();
 
