@@ -2873,6 +2873,13 @@ html:not([lang=zh]) .gt-phase b,.gt-phase.en b{font-family:'Newsreader','Noto Se
 .gt-choose .gc-lb{display:flex;flex-direction:column;gap:.15rem;min-width:0}
 .gt-choose .gc-lb b{font-size:1rem;color:#fff}
 .gt-choose .gc-lb small{font-size:.82rem;color:#e9cf96}
+/* v30 a whole bomb picked up by its badge: rainbow sheen like the tutorial pick, not the blue single-pick frame */
+#gtHand .gc.hc.up.grp{box-shadow:0 10px 18px rgba(0,0,0,.45)!important}
+#gtHand .gc.hc.up.grp::before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;z-index:3;background:linear-gradient(120deg,#ff6b6b 0%,#ffc93a 16%,#7cf08f 33%,#5cc4ff 50%,#a887ff 66%,#ff7ad1 83%,#ff6b6b 100%)!important;background-size:300% 300%!important;mix-blend-mode:multiply;opacity:.36;animation:iriMove 2.6s linear infinite}
+#gtHand .gc.hc.up.grp .gc-bd{--bc:#fff}
+.gc-full{border:2.5px solid #fff!important;box-shadow:0 0 0 2px rgba(0,0,0,.45),0 0 16px 4px rgba(255,140,220,.55)!important;animation:fullIn .35s cubic-bezier(.3,1.6,.5,1),iriEdgeF 2.4s linear infinite!important}
+@keyframes iriEdgeF{0%{border-color:#ff7a9a;box-shadow:0 0 0 2px rgba(0,0,0,.45),0 0 18px 4px rgba(255,120,160,.65)}25%{border-color:#ffd24a;box-shadow:0 0 0 2px rgba(0,0,0,.45),0 0 18px 4px rgba(255,210,80,.65)}50%{border-color:#6dff9a;box-shadow:0 0 0 2px rgba(0,0,0,.45),0 0 18px 4px rgba(100,255,150,.65)}75%{border-color:#6ab8ff;box-shadow:0 0 0 2px rgba(0,0,0,.45),0 0 18px 4px rgba(100,170,255,.65)}100%{border-color:#ff7a9a;box-shadow:0 0 0 2px rgba(0,0,0,.45),0 0 18px 4px rgba(255,120,160,.65)}}
+.gc-full.k-sf,.gc-full.k-kb{border-color:#fff}
 /* ===== Pages & Frames: a reading room, green-leather rail and paper pages ===== */
 #reader.shelf{--sh-bg:#F3EEE3;--sh-ink:#23201A;--sh-ink2:#6B6252;--sh-acc:#8B2B22;--sh-green:#1F3329;--sh-line:#DCD2BF;--cx:#8B2B22}
 #reader.shelf .rd-main,#reader.shelf .rd-leaf{background:var(--sh-bg) linear-gradient(90deg,rgba(80,60,30,.05) 1px,transparent 1px) 0 0/22px 100%}
@@ -8156,7 +8163,7 @@ function layoutHand(){ const h=$g('#gtHand'); if(!h||!h._cols) return; const col
   const step=n>1?Math.min(cw*1.04,(W-cw-gapB0)/(n-1)):0, gapB=gapB0?Math.min(gapB0,Math.max(cw*.1,cw*1.12-step)):0, tot=cw+step*(n-1)+gapB, tags=[], full=[]; let x=(W-tot)/2, z=1;
   cols.forEach((col,ci)=>{ if(ci>0&&cols[ci-1].bomb&&!col.bomb) x+=gapB;
     col.cards.forEach((c,i)=>{ const e=h.querySelector(`.gc[data-id="${c.id}"]`); if(!e) return; const y=Hh-ch-(col.cards.length-1-i)*vs, up=col.cards.slice(i).some(x=>sel.has(x.id))?-cw*.24:0;
-      e.style.transform=`translate(${x}px,${y+up}px)`; e.style.zIndex=z++; e.classList.toggle('up',sel.has(c.id)); e.dataset.x=x; e.dataset.y=y; });
+      e.style.transform=`translate(${x}px,${y+up}px)`; e.style.zIndex=z++; e.classList.toggle('up',sel.has(c.id)); e.classList.toggle('grp',!!(col.bomb&&col.cards.every(x=>sel.has(x.id)))); e.dataset.x=x; e.dataset.y=y; });
     if(col.tag) tags.push({ci,cx:x+cw/2,tag:col.tag});
     if(col.bomb&&col.cards.every(c=>sel.has(c.id))) full.push({x,top:Hh-ch-(col.cards.length-1)*vs-cw*.24,h:ch+(col.cards.length-1)*vs,kind:col.kind||'bomb'});
     x+=step; });
