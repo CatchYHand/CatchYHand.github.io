@@ -3571,6 +3571,62 @@ html:not([lang=zh]) .gt-choose .gc-lb b{font-family:'Newsreader','Noto Serif SC'
 .tut-hand span{font:600 .95rem/1 'Noto Sans SC','Barlow',sans-serif;color:#e8d4a2}
 .ad-pan{width:100%!important}
 .ad-res{min-height:7rem!important}
+.ad-foot{grid-column:1/-1;display:flex;justify-content:flex-end;margin-top:-.2rem}
+.ad-play{display:inline-flex;align-items:center;gap:.45rem;font:700 .9rem/1 'Noto Sans SC','Barlow',sans-serif;padding:.6rem 1.2rem;border-radius:2rem;border:1.5px solid #d4a64a;background:linear-gradient(180deg,#f6d77e,#c9952e);color:#2a1a00;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,.4);transition:opacity .3s,filter .3s}
+.ad-play svg{width:.9rem;height:.9rem}
+.ad-play:disabled{opacity:.35;filter:grayscale(.7);cursor:default}
+/* the Rules button glows from the inside, so the button group never clips it */
+.tut-glow{position:relative;box-shadow:none!important;animation:none!important}
+.tut-glow::after{content:"";position:absolute;inset:1px;border-radius:inherit;box-shadow:inset 0 0 0 2px #ffd36a,inset 0 0 16px rgba(255,200,90,.75);background:rgba(255,211,106,.08);animation:tutGlow2 1.1s ease-in-out infinite alternate;pointer-events:none}
+@keyframes tutGlow2{from{opacity:.4}to{opacity:1}}
+/* the one page that matters most: gilded frame */
+.tut-bub.gild h4{background:linear-gradient(180deg,#fff6d0,#f2c54e 55%,#b47a14);-webkit-background-clip:text;background-clip:text;color:transparent!important;filter:drop-shadow(0 0 8px rgba(255,200,90,.45))}
+@property --gld{syntax:'<angle>';inherits:false;initial-value:0deg}
+@keyframes gldSpin{to{--gld:360deg}}
+@keyframes gldSheen{0%{background-position:150% 0}60%,100%{background-position:-50% 0}}
+/* team-game page */
+.teamp{gap:1rem!important}
+.tm-goals{display:flex;align-items:stretch;gap:.4rem}
+.tm-step{flex:1;position:relative;display:flex;flex-direction:column;align-items:center;gap:.35rem;padding:.9rem .7rem .8rem;border-radius:.8rem;background:rgba(0,0,0,.28);border:1px solid rgba(226,188,98,.3);text-align:center}
+.tm-step:first-child{border-color:#e2bc62;background:rgba(80,58,14,.35)}
+.tm-n{position:absolute;left:.5rem;top:.5rem;width:1.3rem;height:1.3rem;border-radius:50%;display:grid;place-items:center;font:800 .75rem/1 'Barlow',sans-serif;font-style:normal;color:#3d2400;background:linear-gradient(180deg,#fff2b0,#e2a92e)}
+.tm-ic{display:flex;align-items:center;gap:.25rem;height:3rem}
+.tm-av{width:2.4rem;height:2.4rem;border-radius:50%;display:block;overflow:hidden;box-shadow:0 0 0 2px #6eb4ff;flex:none}
+.tm-av.t1{box-shadow:0 0 0 2px #E8835F}
+.tm-av svg{width:100%;height:100%;display:block}
+.tm-cr{width:1.9rem;height:1.9rem;display:block}.tm-cr.sm{width:1.5rem;height:1.5rem}.tm-cr svg{width:100%;height:100%}
+.tm-plus{color:#ffd36a;font-weight:800}
+.tm-sh{width:1.8rem;height:1.8rem;color:#7ee2ff;display:block}.tm-sh svg{width:100%;height:100%}
+.tm-step b{font:700 .98rem/1.25 'Noto Sans SC','Barlow',sans-serif;color:#ffe3a0}
+.tm-step span{font:500 .8rem/1.45 'Noto Sans SC','Barlow',sans-serif;color:#e0d2ae}
+.tm-arr{flex:none;width:3rem;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.2rem;color:#d4a64a}
+.tm-arr svg{width:2.4rem}.tm-arr small{font:600 .68rem/1 'Noto Sans SC','Barlow',sans-serif;color:#c9b88f}
+.tm-row{display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.4fr);gap:.8rem}
+.tm-read,.tm-split{padding:.8rem .9rem;border-radius:.8rem;background:rgba(0,0,0,.25);border:1px solid rgba(226,188,98,.2)}
+.tm-row h5{margin:0 0 .5rem;font:700 .92rem/1.3 'Noto Sans SC','Barlow',sans-serif;color:#f3d48a}
+.tm-eyes{display:flex;gap:.4rem;margin-bottom:.5rem}
+.tm-read ul{margin:0;padding-left:1.1rem;display:flex;flex-direction:column;gap:.3rem}
+.tm-read li{font:500 .82rem/1.45 'Noto Sans SC','Barlow',sans-serif;color:#e6d8b4}
+.tm-opt{display:flex;align-items:center;gap:.8rem;padding:.45rem .6rem;border-radius:.6rem;margin-bottom:.45rem}
+.tm-opt.a{background:rgba(120,30,20,.25);border:1px solid rgba(255,120,90,.3)}
+.tm-opt.b{background:rgba(20,90,60,.25);border:1px solid rgba(95,224,160,.4)}
+.tm-cards{flex:1;display:flex;align-items:flex-end;gap:.45rem;flex-wrap:wrap}
+.tm-g{display:flex;flex-direction:column;align-items:center;gap:.15rem}
+.tm-g em{font:600 .66rem/1 'Noto Sans SC','Barlow',sans-serif;font-style:normal;color:#c9b88f;min-height:.7rem}
+.tm-g .gc.xs{width:2.2rem!important;height:3.08rem!important}
+.tm-g .gr-mini .gc+.gc{margin-left:-1.35rem!important}
+.tm-g.bomb .gr-mini{filter:drop-shadow(0 0 6px rgba(255,120,60,.6))}
+.tm-g.run .gr-mini{filter:drop-shadow(0 0 6px rgba(95,224,160,.6))}
+.tm-cnt{flex:none;display:flex;flex-direction:column;align-items:center;min-width:4.6rem}
+.tm-cnt b{font:400 1.9rem/1 'GD Display','Lilita One',serif}
+.tm-opt.a .tm-cnt b{color:#ff9a7a}.tm-opt.b .tm-cnt b{color:#7ff0b8}
+.tm-cnt small{font:600 .68rem/1.2 'Noto Sans SC','Barlow',sans-serif;color:#c9b88f;text-align:center}
+.tm-split p{margin:.2rem 0 0;font:500 .8rem/1.45 'Noto Sans SC','Barlow',sans-serif;color:#e6d8b4}
+.tm-note{display:flex;align-items:center;gap:.7rem;padding:.6rem .9rem;border-radius:.7rem;background:rgba(226,188,98,.08);border:1px dashed rgba(226,188,98,.4);font:500 .84rem/1.5 'Noto Sans SC','Barlow',sans-serif;color:#e8d4a2}
+.tm-sw{flex:none;width:2rem;color:#f3d48a}.tm-sw svg{width:100%;height:auto;display:block}
+
+.tut-bub.gild{border:3px solid transparent!important;background:radial-gradient(120% 100% at 0 0,rgba(66,48,14,.98),rgba(16,12,6,.98) 60%) padding-box,conic-gradient(from var(--gld,0deg),#7a4f0c,#ffe9a8,#c98a1e,#fff6d0,#9a6614,#ffd36a,#7a4f0c) border-box!important;animation:gldSpin 5s linear infinite,gldGlow 2.4s ease-in-out infinite alternate}
+@keyframes gldGlow{from{box-shadow:0 0 0 1px rgba(255,220,140,.35),0 0 22px rgba(255,190,70,.3),0 18px 44px rgba(0,0,0,.7)}to{box-shadow:0 0 0 1px rgba(255,230,160,.6),0 0 46px rgba(255,200,90,.6),0 18px 44px rgba(0,0,0,.7)}}
 /* ===== Pages & Frames: a reading room, green-leather rail and paper pages ===== */
 #reader.shelf{--sh-bg:#F3EEE3;--sh-ink:#23201A;--sh-ink2:#6B6252;--sh-acc:#8B2B22;--sh-green:#1F3329;--sh-line:#DCD2BF;--cx:#8B2B22}
 #reader.shelf .rd-main,#reader.shelf .rd-leaf{background:var(--sh-bg) linear-gradient(90deg,rgba(80,60,30,.05) 1px,transparent 1px) 0 0/22px 100%}
@@ -8396,9 +8452,10 @@ const steps=[
  B(2,[[2,1]]),
  {end:1},
  {say:['Back to Your Level','换回我方的级'],b:['1st and 2nd: your team climbs three levels, from 5 to 8. You won, so the level switches back: the next hand is played at your 8.','头游加二游：我方从 5 升三级到 8。这一局我们赢了，级牌又换回来：下一局打我方的 8。'],spot:'.gl'},
- {panel:'ace',say:['Clearing the Ace','过 A'],b:['When your team reaches the Ace, three dragon pearls light up: three tries. A hand at your Ace is cleared only if one of you comes 1st and the other is not last. Miss either, and a pearl shatters; lose all three and you drop back to 2. Clear it, and your team leaps through the Dragon Gate and wins the match.','升到 A 后亮起三颗龙珠：三次机会。打 A 的那一局，必须我方有一人拿头游，另一人又不是下游，才算过 A。有一条做不到就碎一颗龙珠；三颗全碎退回 2。过了 A，就跃过龙门，赢下整场。']},
+ {panel:'ace',say:['Clearing the Ace','过 A'],b:['When your team reaches the Ace, three dragon pearls light up: three tries. A hand at your Ace is cleared only if one of you comes 1st and the other is not last. Miss either, and a pearl shatters; lose all three and you drop back to 2. Clear it, and your team leaps through the Dragon Gate and wins the match. Press Play at the bottom right to watch the whole flow.','升到 A 后亮起三颗龙珠：三次机会。打 A 的那一局，必须我方有一人拿头游，另一人又不是下游，才算过 A。有一条做不到就碎一颗龙珠；三颗全碎退回 2。过了 A，就跃过龙门，赢下整场。点右下角的“播放动画”，看一遍完整流程。']},
  {say:['Card Counter','记牌器'],b:['The switch above Sort opens the card counter at the top right. Two decks hold eight of every rank; the counter takes away your own hand and every card already played, so each column shows how many of that rank are still hidden in the other three hands. The stars are the jokers, and the gold column is this hand’s level card. Once you are comfortable, try switching it off to train your memory.','理牌上面那个开关是记牌器，打开后从右上角滑下来。两副牌每个点数各 8 张，记牌器减去你的手牌和已经打出去的牌，每一列就是这个点数还藏在另外三家手里的张数。两颗星是大小王，金色那一列是本局级牌。熟悉之后，可以试着关掉它，锻炼自己的记忆。'],spot:'#gtCCb',rings:['#gtCCb','.gt-ctrw.on .gt-ctr'],cc:1},
  {panel:'guess',say:['Reading Their Hands','猜对手的牌'],b:['The counter is not only about memory. Combine how many cards a player holds with what they have just played or refused to play, and guess what is left. Then you can feed your ally without the opponents cutting in. Say your next player has 5 cards: what could they be?','记牌器不只是帮你记牌。把一个人还剩几张、最近出了什么、不肯出什么结合起来，就能猜出他手里剩的牌。这样你给盟友递牌时，才不会被对手截胡。比如下家只剩 5 张，可能是什么？']},
+ {panel:'team',gild:1,say:['Most Important: a Team Game','最重要的一课：团队游戏'],b:['Leap the Dragon Gate is won by a team, not a player. Aim for 1st yourself; if your cards are weak, help your ally to 1st instead; failing that, keep the opponents from 1st or from a high finish. Watch what your ally and the opponents play, work out what they want, and choose what to play or hold back.','跃龙门是两个人一起赢的游戏，不是一个人。首先争取自己拿头游；牌不好，就退而求其次，帮盟友拿头游；再不行，就尽量不让对手拿头游或较高的名次。多看看盟友和对手出了什么牌，想想他们要什么牌型，再决定自己该打出什么、避免什么。']},
  {rings:['[data-a=rules]'],say:['You Are Ready','准备好了'],b:['That is the whole flow. When you are stuck, Hint always suggests a legal play. Every detail you met today, from combinations and bombs to tribute and the Ace, is written out with animations in Rules: the glowing button at the top. Good luck at the Gate.','流程就是这些。卡住时按“提示”，总能找到能出的牌。今天讲过的所有内容，牌型、炸弹、进贡、过 A，都配着动画写在“规则”里，就是顶部那个发光的按钮。祝你跃过龙门！'],last:1}
 ];
 return {h1,h2,h3,steps,L1:2,L2:5,trib:[{from:2,to:3,card:[13,2]}]};
@@ -8918,7 +8975,7 @@ function orderPlayed(cards,combo){ const L=H.L; const seq=combo&&['straight','sf
 let dealFlat=false;
 function columns(){ const L=H.L, hand=H.hands[0].slice(), out=[]; if(dealFlat) return hand.map(c=>({cards:[c]}));
   const byRank=cs=>{ const m=new Map(); cs.forEach(c=>{ const k=GD.cval(c,L); if(!m.has(k)) m.set(k,[]); m.get(k).push(c); });
-    return [...m.entries()].sort((a,b)=>b[0]-a[0]).map(([,v])=>({cards:v.sort((a,b)=>a.s-b.s||a.id-b.id)})); };
+    return [...m.entries()].sort((a,b)=>b[0]-a[0]).map(([,v])=>({cards:v.sort((a,b)=>GD.isWild(a,L)-GD.isWild(b,L)||a.s-b.s||a.id-b.id)})); }; // a loose wild card always sits at the front of the level-card stack, easy to tap
   if(sortMode===1){
     // try both orders — straight flushes first, or same-rank bombs first — and keep whichever leaves the stronger set of bombs (ties go to straight flushes)
     const plan=sfFirst=>{ let rest=hand.slice(); const cols=[]; const take=ids=>{ rest=rest.filter(c=>!ids.includes(c)); };
@@ -10095,7 +10152,7 @@ function rules(after,dry){ const p=document.createElement('div'); p.className='g
     <div class="rd rd-ace ad"><div class="ad-tbl"><i class="ad-felt"></i><img class="ad-disc" src="${GIMG('gd-table')}" alt="">${[0,1,2,3].map(i=>`<span class="ad-s s${i} t${i%2}"><span class="ad-av"><svg viewBox="0 0 40 40">${AV[avk[i]]}</svg><i class="ad-cr"></i></span><b>${[T('You','你'),T('Next','下家'),T('Partner','对家'),T('Prev','上家')][i]}</b><em class="ad-rk"></em></span>`).join('')}<div class="ad-try"></div></div>
     <div class="ad-side"><div class="ra-pan ad-pan"><img class="ra-fr" src="${GIMG('gd-lvframe')}" alt=""><div class="ra-in"><div class="ra-t t0"><span class="ra-row"><span class="ra-avs">${[0,2].map(i=>`<i class="ra-av t0"><svg viewBox="0 0 40 40">${AV[avk[i]]}</svg></i>`).join('')}</span><b class="ra-lv">A</b></span><span class="ra-pl">${heartsHTML(0)}</span></div><img class="ra-card" src="${GC_IMG(cimg({r:14,s:1}))}" alt=""><div class="ra-t t1"><span class="ra-row"><b class="ra-lv">9</b><span class="ra-avs">${[1,3].map(i=>`<i class="ra-av t1"><svg viewBox="0 0 40 40">${AV[avk[i]]}</svg></i>`).join('')}</span></span><span class="ra-pl"></span></div></div></div>
     <ul class="ad-chk"><li><i class="ad-m"></i><span>${T('One of you comes 1st','我方有一人拿头游')}</span></li><li><i class="ad-m"></i><span>${T('The other is not last','另一人不是下游')}</span></li></ul>
-    <div class="ad-res"><img class="ad-gold" src="${GIMG('gd-gold')}" alt=""><b></b></div></div></div>`)}
+    <div class="ad-res"><img class="ad-gold" src="${GIMG('gd-gold')}" alt=""><b></b></div></div><div class="ad-foot"><button class="ad-play" type="button"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 2.5v11l9.5-5.5z" fill="currentColor"/></svg>${T('Play the animation','播放动画')}</button></div></div>`)}
   ${sec('trib',9,T('Tribute, return and refusal','进贡、还贡与抗贡'),`<p>${T('From the second hand on, the losers pay tribute before play starts. The crowns show how the last hand finished.','从第二局起，开打前输的一方要进贡。皇冠表示上一局的名次。')}</p>
     <div class="rd-tg">${[['single',T('Single tribute','单贡'),T('Last gives 1st their highest card (never the heart level card; if it comes in several suits, the payer chooses). 1st gives back one card of 10 or lower that is not a level card. Last leads.','下游把最大的一张牌（红心级牌除外；有几种花色时自己挑）交给头游，头游还一张 10 或以下、不是级牌的牌，然后下游先出。')],
       ['double',T('Double tribute','双贡'),T('One team took 3rd and last: both pay, the higher card to 1st and the lower to 2nd (if equal, the one sitting next after 1st, counter-clockwise, pays 1st). Each receiver returns a card; whoever paid 1st leads.','一队拿了三游和下游（双下），两人都进贡：大的给头游，小的给二游（一样大时，逆时针紧挨头游之后的人进贡给头游）。收到的人各还一张，进贡给头游的人先出。')],
@@ -10198,7 +10255,7 @@ function rulesDemos(p,L){ const alive=()=>p.isConnected, sleep=ms=>new Promise(r
       cap.textContent=T('Last hand’s 1st leads','由上一局的头游先出'); turnTo(box,0); }
     await sleep(2200); }));
   // clearing the Ace: three tries, three pearls; then a clean clear
-  loop('.rd-ace',async box=>{ const seats=[...box.querySelectorAll('.ad-s')], tryEl=box.querySelector('.ad-try'), lvEl=box.querySelector('.ra-lv'), card=box.querySelector('.ra-card'), pearls=[...box.querySelectorAll('.ra-t.t0 .ra-pl .hz')], setL=r=>{ lvEl.textContent=LV(r); card.src=GC_IMG(cimg({r,s:1})); card.animate([{transform:'rotateY(90deg)'},{transform:'none'}],{duration:320}); }, chk=[...box.querySelectorAll('.ad-chk li')], res=box.querySelector('.ad-res'), resB=res.querySelector('b');
+  { const box=p.querySelector('.rd-ace.ad'); if(box){ const btn=box.querySelector('.ad-play'); const run=async()=>{ const seats=[...box.querySelectorAll('.ad-s')], tryEl=box.querySelector('.ad-try'), lvEl=box.querySelector('.ra-lv'), card=box.querySelector('.ra-card'), pearls=[...box.querySelectorAll('.ra-t.t0 .ra-pl .hz')], setL=r=>{ lvEl.textContent=LV(r); card.src=GC_IMG(cimg({r,s:1})); card.animate([{transform:'rotateY(90deg)'},{transform:'none'}],{duration:320}); }, chk=[...box.querySelectorAll('.ad-chk li')], res=box.querySelector('.ad-res'), resB=res.querySelector('b');
     const clear=()=>{ box.querySelector('.ad-pan').classList.remove('win'); seats.forEach(e=>{ e.classList.remove('rk0','rk1','rk2','rk3','on'); e.querySelector('.ad-rk').textContent=''; e.querySelector('.ad-cr').innerHTML=''; }); chk.forEach(c=>c.className=''); res.className='ad-res'; resB.textContent=''; };
     const show=async(t,en,zh)=>{ tryEl.textContent=T(en,zh); tryEl.animate([{opacity:0,transform:'translate(-50%,-50%) scale(.85)'},{opacity:1,transform:'translate(-50%,-50%) scale(1)'}],{duration:350,fill:'both'}); await sleep(t); };
     const deal=async o=>{ for(let k=0;k<4;k++){ const e=seats[o[k]]; e.classList.add('on','rk'+k); e.querySelector('.ad-rk').textContent=RANKN()[k]; if(k<3) e.querySelector('.ad-cr').innerHTML=CROWN[k]; e.animate([{transform:'translate(-50%,-50%) scale(1)'},{transform:'translate(-50%,-50%) scale(1.12)'},{transform:'translate(-50%,-50%) scale(1)'}],{duration:380}); await sleep(520); if(!alive()) return; } };
@@ -10212,7 +10269,10 @@ function rulesDemos(p,L){ const alive=()=>p.isConnected, sleep=ms=>new Promise(r
     res.className='ad-res no big'; resB.textContent=T('All three pearls gone: back to 2','三颗龙珠全碎：退回 2'); setL(2); lvEl.animate([{transform:'scale(1.5)',color:'#ff8a7a'},{transform:'scale(1)'}],{duration:600}); await sleep(2400); if(!alive()) return;
     pearls.forEach(e=>e.className='hz on'); setL(14); clear(); await show(900,'Another run at the Ace','重新打 A'); if(!alive()) return;
     await deal([2,1,0,3]); if(!alive()) return; await mark(0,true); await mark(1,true); if(!alive()) return;
-    box.querySelector('.ad-pan').classList.add('win'); res.className='ad-res win'; resB.textContent=T('Cleared: through the Dragon Gate!','过 A：跃过龙门！'); await sleep(3200); });
+    box.querySelector('.ad-pan').classList.add('win'); res.className='ad-res win'; resB.textContent=T('Cleared: through the Dragon Gate!','过 A：跃过龙门！'); await sleep(3200); };
+    // a still opening frame; the flow plays once per press
+    { box.querySelectorAll('.ra-t.t0 .ra-pl .hz').forEach(e=>e.className='hz on'); box.querySelector('.ad-try').textContent=T('Press Play','点击播放'); }
+    btn.addEventListener('click',async e=>{ e.stopPropagation(); if(btn.disabled) return; btn.disabled=true; try{ await run(); } finally{ btn.disabled=false; } }); } }
   // card counter: cards hit the table and their column counts down
   loop('.rd-cc',async box=>{ const g=box.querySelector('.rcc'), pl=box.querySelector('.rcc-play'), cap=box.querySelector('.rcc-cap');
     const order=[17,16,L].concat([14,13,12,11,10,9,8,7,6,5,4,3,2].filter(r=>r!==L)), N={}; order.forEach(r=>N[r]=r>=16?2:8);
@@ -10248,7 +10308,7 @@ function tutPlace(){ const o=$g('.gr-tut'); if(!o||!tut) return; const st=tut.cu
   const q=tutTarget(st), hr=q?tutRect(q):null, hole=o.querySelector('.tut-hole'), bub=o.querySelector('.tut-bub'), gd=o.querySelector('.tut-guide'), tap=o.querySelector('.tut-tap'), beam=o.querySelector('.tut-beam');
   const show=!!(st&&bub.classList.contains('on')); o.classList.toggle('nodim',!hr||!show||!!(st&&st.rings));
   // some steps light up two places at once (a switch and the panel it opens) with glowing rings and no dimming
-  const rg=show&&st&&st.rings?st.rings.map(tutRect).filter(Boolean):[]; let rs=[...o.querySelectorAll('.tut-ring')]; while(rs.length>rg.length) rs.pop().remove(); while(rs.length<rg.length){ const e=document.createElement('i'); e.className='tut-ring'; o.insertBefore(e,o.firstChild); rs.push(e); }
+  const rg=show&&st&&st.rings?st.rings.filter(q=>{ const e=$g(q); return !(e&&e.closest('.gr-top')); }).map(tutRect).filter(Boolean):[]; let rs=[...o.querySelectorAll('.tut-ring')]; while(rs.length>rg.length) rs.pop().remove(); while(rs.length<rg.length){ const e=document.createElement('i'); e.className='tut-ring'; o.insertBefore(e,o.firstChild); rs.push(e); }
   $$g('.tut-glow').forEach(e=>e.classList.remove('tut-glow')); if(show&&st&&st.rings) st.rings.forEach(q=>{ const e=$g(q); if(e&&e.closest('.gr-top')) e.classList.add('tut-glow'); });
   rg.forEach((r,i)=>{ rs[i].style.cssText=`left:${r.l-10}px;top:${r.t-10}px;width:${r.w+20}px;height:${r.h+20}px`; }); o.classList.toggle('pick',!!(tut&&tut.hl&&tut.hl.length));
   if(hr){ const p=q==='glow'?8:12; hole.style.cssText=`left:${hr.l-p}px;top:${hr.t-p}px;width:${hr.w+2*p}px;height:${hr.h+2*p}px`; }
@@ -10274,7 +10334,7 @@ function tutCard(st){ const o=tutUI(), bub=o.querySelector('.tut-bub'); tut.cur=
   const n=GD_TUT.steps.filter(x=>x.say).length, k=GD_TUT.steps.slice(0,tut.i+1).filter(x=>x.say).length, act=!!st.you, txt=zh()?st.b[1]:st.b[0];
   const doTxt=st.you==='sort'?T('Switch to Sorted','拨到“理牌”'):st.you==='pass'?T('Press Pass','按“不出”'):st.you==='hint'?T('Press Hint, then Play','先按“提示”，再按“出牌”'):st.you==='ret'?T('Tap the glowing card, then press Give back','点发光的牌，再按“还贡”'):st.you==='badge'?T('Tap the round badge, then press Play','点圆形徽章，再按“出牌”'):T('Tap the glowing cards, then press Play','点选发光的牌，再按“出牌”');
   const show=st.show?`<div class="tb-show">${st.show.map(([lab,cs],i)=>`<div class="tb-row" style="--d:${.25+i*.12}s">${miniRow(cs)}<span>${zh()?lab[1]:lab[0]}</span></div>`).join('')}</div>`:'';
-  const big=!!(st.panel||st.quiz); tut.quizLock=!!(st.quiz&&!st.quiz.game); o.classList.toggle('tpanel',big); bub.className='tut-bub'+(act?' tbact':'')+(st.show?' wide':'')+(st.demo?' demo':'')+(big?' huge':''); void bub.offsetWidth;
+  const big=!!(st.panel||st.quiz); tut.quizLock=!!(st.quiz&&!st.quiz.game); o.classList.toggle('tpanel',big); bub.className='tut-bub'+(st.gild?' gild':'')+(act?' tbact':'')+(st.show?' wide':'')+(st.demo?' demo':'')+(big?' huge':''); void bub.offsetWidth;
   bub.innerHTML=`<div class="tb-top"><span class="tb-dots">${Array.from({length:n},(_,i)=>`<i class="${i<k-1?'done':i===k-1?'cur':''}"></i>`).join('')}</span><button class="tb-x" data-a="tx">${T('Leave','退出教程')}</button></div><h4>${zh()?st.say[1]:st.say[0]}</h4><p class="tb-p"></p>${show}${big?'<div class="tb-panel"></div>':''}
     ${act?`<div class="tb-do"><i></i>${doTxt}</div>`:`<div class="tb-go"><small>${k} / ${n}</small>${st.demo?`<button class="tb-rules" data-a="treplay">${T('Watch again','再看一遍')}</button>`:''}${st.panel?`<button class="tb-rules" data-a="trules">${T('Open the full Rules','打开完整规则')}</button>`:''}${st.show?`<button class="tb-rules" data-a="trules">${T('See every combination in Rules','打开规则看全部牌型')}</button>`:''}<button class="pri${st.quiz&&!st.quiz.game?' locked':''}" data-a="tn">${st.last?T('Start a real game','开始正式对局'):T('Next','下一步')}<kbd>Enter</kbd></button></div>`}`;
   if(big) tutPanel(bub.querySelector('.tb-panel'),st);
@@ -10294,6 +10354,7 @@ function tutPanel(el,st){ if(!el) return; const L=H.L; el.className='tb-panel ru
   else if(P2==='ace') take([['.rd-ace']]);
   else if(P2==='cc') take([['.rd-cc']]);
   else if(P2==='guess') guessDemo(el);
+  else if(P2==='team') teamPanel(el);
   if(st.quiz) quizBuild(el,st.quiz); }
 function comboSheet(el){ el.className='tb-panel cmbs'; const L=H.L, W=[L,1], nz=r=>{ while(r===L) r=r>=14?3:r+1; return r; };
   const bd=k=>`<em class="cs-bd">${badgeStatic(GD.TYPE[k][zh()?1:0],k)}</em>`;
@@ -10319,6 +10380,18 @@ function comboSheet(el){ el.className='tb-panel cmbs'; const L=H.L, W=[L,1], nz=
   let no=0; const row=x=>x===0?`<li class="cs-div"><span>${T('6+ cards beat a straight flush · 5 or fewer lose to it','6 张以上 &gt; 同花顺 &gt; 5 张及以下')}</span></li>`:`<li class="cs-r${x[0]!=='bomb'?' '+x[0]:''}"><i>${++no}</i><div class="cs-c">${miniRow(x[3])}</div><span><b>${x[1]}</b><small>${x[2]}</small></span></li>`;
   el.innerHTML=`<div class="cs"><section class="cs-n"><h5 class="tp-h">${T('Normal combinations','普通牌型')}<small>${T('beat only the same type and size, higher rank','只能被同牌型、同张数、更大的牌压')}</small></h5><div class="cs-g">${N.map(tile).join('')}</div><ul class="cs-tip"><li>${T('Suits never matter, except in a straight flush.','花色不分大小，只有同花顺看花色。')}</li><li>${T(`Order: Big Joker, Small Joker, level card (${LV(L)}), then A K Q … 3 2.`,`大小顺序：大王、小王、级牌（${LV(L)}），再 A K Q … 3 2。`)}</li><li>${T(`The wild card ${SUIT[1]}${LV(L)} can stand in for any card except a joker.`,`逢人配 ${SUIT[1]}${LV(L)} 能当除大小王外的任何一张牌。`)}</li></ul></section>
     <section class="cs-b"><h5 class="tp-h">${T('Bombs, strongest first','炸弹（从大到小）')}<small>${T('beat every normal combination','压得住任何普通牌型')}</small></h5><ol class="cs-l">${B.map(row).join('')}</ol></section></div>`; }
+function teamPanel(el){ el.className='tb-panel teamp'; const av=k=>`<span class="tm-av t${k%2}"><svg viewBox="0 0 40 40">${AV[P[k].k]}</svg></span>`;
+  const step=(n,icon,h,t)=>`<div class="tm-step"><i class="tm-n">${n}</i><div class="tm-ic">${icon}</div><b>${h}</b><span>${t}</span></div>`;
+  const arrow=`<div class="tm-arr"><svg viewBox="0 0 40 16"><path d="M2 8h32M28 3l6 5-6 5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg><small>${T('if not','不行就')}</small></div>`;
+  const grp=(cards,lab,cls)=>`<span class="tm-g${cls?' '+cls:''}">${miniRow(cards)}<em>${lab}</em></span>`;
+  el.innerHTML=`<div class="tm-goals">${step(1,`<span class="tm-cr">${CROWN[0]}</span>${av(0)}`,T('Go out 1st yourself','自己拿头游'),T('Your first aim: empty your hand before anyone.','首要目标：自己最先出完牌。'))}${arrow}${step(2,`${av(0)}<span class="tm-plus">→</span>${av(2)}<span class="tm-cr sm">${CROWN[0]}</span>`,T('Help your ally to 1st','辅助盟友拿头游'),T('A weak hand? Feed your ally the plays they need.','牌不好，就给盟友递他需要的牌。'))}${arrow}${step(3,`<span class="tm-sh"><svg viewBox="0 0 24 24"><path d="M12 2l8 3v6c0 5.5-3.5 9.6-8 11-4.5-1.4-8-5.5-8-11V5z" fill="currentColor"/></svg></span>${av(1)}${av(3)}`,T('Hold the opponents back','压制对手'),T('Keep them from 1st, or from a high finish.','不让对手拿头游，或者名次尽量靠后。'))}</div>
+  <div class="tm-row"><div class="tm-read"><h5>${T('Read the table','看清整张牌桌')}</h5><div class="tm-eyes">${av(2)}${av(1)}${av(3)}</div><ul><li>${T('What has your ally played, and what are they waiting for?','盟友出过什么，他还在等什么牌？')}</li><li>${T('Which types are the opponents short of, or strong in?','对手缺什么牌型，又擅长什么牌型？')}</li><li>${T('So what should you play, and what should you avoid?','那我该打出什么，又该避免什么？')}</li></ul></div>
+  <div class="tm-split"><h5>${T('A bomb is not always the best use of four cards','炸弹不一定是这几张牌最好的用法')}</h5>
+    <div class="tm-opt a"><div class="tm-cards">${grp([[6,0],[6,1],[6,2],[6,3]],T('bomb','炸弹'),'bomb')}${grp([[3,0]],'')}${grp([[4,3]],'')}${grp([[5,2]],'')}${grp([[7,1]],'')}</div><div class="tm-cnt"><b>5</b><small>${T('plays to go out','手才能出完')}</small></div></div>
+    <div class="tm-opt b"><div class="tm-cards">${grp([[3,0],[4,3],[5,2],[6,0],[7,1]],T('straight','顺子'),'run')}${grp([[6,1],[6,2],[6,3]],T('triple','三张'),'')}</div><div class="tm-cnt"><b>2</b><small>${T('plays to go out','手就出完')}</small></div></div>
+    <p>${T('Breaking the four 6s into a straight carries off four awkward singles at once.','拆掉四个 6 组成顺子，一次带走四张难出的散牌。')}</p></div></div>
+  <div class="tm-note"><span class="tm-sw">${SORT_ICO[1]}</span>${T('Sort only gives you a quick first picture. How to really play your hand comes from experience and from understanding the game.','右下角的“理牌”只是给你一个直观的思路。具体怎么打，要靠经验积累和对游戏的理解。')}</div>`;
+  const a=el.querySelector('.tm-opt.a'), b=el.querySelector('.tm-opt.b'); [a,b].forEach((x,i)=>x.animate([{opacity:0,transform:'translateY(10px)'},{opacity:1,transform:'none'}],{duration:500,delay:500+i*700,fill:'backwards'})); }
 function quizBuild(el,q){ el.classList.add('quiz'); const tx=a=>zh()?a[1]:a[0], L=q.L!=null?q.L:H.L;
   const lv=`<div class="tq-lv"><small>${T('Level card','本题级牌')}</small>${cardHTML({id:-1,r:L,s:1},'xs',1)}<b>${LV(L)}</b></div>`;
   const top=`<div class="tq-top"><div class="tq-q">${tx(q.q)}</div>${lv}</div>`;
@@ -10405,10 +10478,10 @@ async function tutNext(){ if(!tut) return; tut.demo=null; if(tut.ccWas!=null){ c
   if(st.last&&tut.i>0&&tut.lastShown){ endTut(); startGame(true); return; }
   if(st.end){ tut.i--; return; }
   if(st.hand2){ tutHide(); const D=GD_TUT, k=st.hand2; ret=null; tribPick=null; sortMode=0; warned=new Set(); sel.clear(); bgm(1); root.classList.remove('handend');
-    const src=k===2?D.h3:D.h2, L0=M.lv[M.dealer];
-    H={L:L0,hands:src.map(h=>h.map(c=>Object.assign({},c))),order:[],turn:k===2?2:0,lead:k===2?2:0,trick:null,passes:0,played:[[],[],[],[]],log:[],phase:'tribute'};
+    const src=k===2?D.h3:D.h2, L0=M.lv[M.dealer]; busy=true; await handTitle(k===2?3:2,L0); if(!tut) return;
+    H={L:L0,hands:src.map(h=>h.map(c=>Object.assign({},c))),order:[],turn:k===2?2:0,lead:k===2?2:0,trick:null,passes:0,played:[[],[],[],[]],log:[],phase:'tribute',_dealPending:true};
     H.tribute=k===2?{anti:false,pairs:D.trib.map(p=>({from:p.from,to:p.to,card:tutPick(H.hands[p.from],[p.card])[0]}))}:{anti:true,pairs:[],seats:[1,3]};
-    buildTable(); root.classList.add('tutm'); tutUI(); busy=true; await handTitle(k===2?3:2,L0); if(!tut) return; await dealAnim(); busy=false; if(!tut) return; tutNext(); return; }
+    buildTable(); root.classList.add('tutm'); tutUI(); busy=true; await dealAnim(); busy=false; if(!tut) return; tutNext(); return; }
   if(st.trib){ tutHide(); await doTribute(); if(!tut) return; tutNext(); return; }
   if(st.bot!=null){ tutHide(); await wait(450); if(!tut) return; const cards=st.pass?[]:tutPick(H.hands[st.bot],st.cards); for(let s=0;s<4;s++) drawSeat(s); act(st.bot,cards); return; }
   if(st.demo){ tutCard(st); tutDemo(st.demo); return; }
