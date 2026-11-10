@@ -3479,6 +3479,48 @@ html:not([lang=zh]) .gt-choose .gc-lb b{font-family:'Newsreader','Noto Serif SC'
 .mg-p.p3{left:37%!important;transform:translate(-50%,-50%)!important}
 .mg-p .gc.xs.tagd{--cw:2.8rem!important;width:2.8rem!important;height:3.92rem!important}
 .gameq .tq-q{font-size:.95rem}
+/* bomb ordering v2: options down the left, ranked slots down the right */
+.ts-wrap{display:grid!important;grid-template-columns:minmax(0,1fr) 3rem minmax(0,1fr);gap:.6rem;align-items:start;flex-direction:initial}
+.ts-col{display:flex;flex-direction:column;gap:.4rem}
+.ts-h{font:700 .82rem/1.2 'Noto Sans SC','Barlow',sans-serif;color:#e8d4a2;text-align:center}
+.ts-mid{align-self:center;text-align:center;font:700 .8rem/1 'Noto Sans SC','Barlow',sans-serif;color:#c9b88f}
+.ts-pool{display:flex!important;flex-direction:column!important;flex-wrap:nowrap!important;gap:.5rem!important;justify-content:flex-start!important;min-height:0!important;padding:.5rem!important}
+.ts-chip{flex-direction:row!important;justify-content:flex-start!important;gap:.8rem!important;height:4.4rem;padding:.35rem .7rem!important;box-sizing:border-box}
+.ts-chip span{font-size:.9rem!important}
+.ts-chip .gc.xs.tagd{--cw:2.6rem!important;width:2.6rem!important;height:3.64rem!important}
+.ts-chip .gr-mini .gc+.gc{margin-left:-1.75rem!important}
+.ts-chip .gr-mini{flex:none;min-width:5.6rem!important;justify-content:flex-start!important}
+.ts-slots{display:flex!important;flex-direction:column!important;gap:0!important;padding:.5rem!important;border-radius:.7rem;background:rgba(0,0,0,.18)}
+.ts-gt{list-style:none;height:1rem;display:flex;align-items:center;justify-content:center;font:700 1.05rem/1 'Barlow',sans-serif;color:#ffd36a;transform:rotate(90deg)}
+.ts-slot{min-height:4.4rem!important;height:4.4rem;padding:0 0 0 2.1rem!important;align-items:center!important;justify-content:flex-start!important;box-sizing:border-box}
+.ts-slot>i{top:50%!important;transform:translateY(-50%);left:.5rem!important}
+.ts-slot .ts-chip{width:100%;height:100%;border:none!important;background:none!important;padding:0 .4rem!important}
+.ts-bar{margin-top:.5rem}
+.ts-wrap{grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;gap:1.2rem!important}
+.ts-gt{transform:none!important;height:.8rem!important;font-size:1rem!important}
+.ts-chip{height:4rem!important}
+.ts-slot{height:4rem!important;min-height:4rem!important}
+.ts-pool{gap:.8rem!important;border:none!important;background:none!important;padding:.5rem 0!important}
+.ts-col .tq-why{margin-top:.3rem}
+.ts-bar{justify-content:flex-start!important;margin-top:.2rem!important}
+.ts-chip .gr-mini .gc+.gc{margin-left:-1.5rem!important}
+.ts-gt{font-size:1.2rem!important;color:#ffd36a!important}
+/* playable hand v2 */
+.mg-tbl{background:radial-gradient(ellipse at 50% 45%,#1f3a34 0%,#122522 45%,#0a1413 80%)!important;border:2px solid rgba(212,166,74,.55)!important;box-shadow:inset 0 0 0 6px rgba(0,0,0,.35),inset 0 0 60px rgba(0,0,0,.65),0 8px 24px rgba(0,0,0,.45)!important}
+.mg-tbl .tq-disc{opacity:.28!important}
+.mg-tbl .tq-who b{font-size:.74rem}
+.mg-tbl .tq-s.turn .tq-who b{color:#9ff0ff}
+.mg-p{min-width:3rem;min-height:4rem}
+.mg-p .gr-mini{filter:drop-shadow(0 6px 10px rgba(0,0,0,.55))}
+.mg-bar{padding:.5rem .6rem;border-radius:.8rem;background:rgba(0,0,0,.3);border:1px solid rgba(226,188,98,.2)}
+.mg-goal{display:flex;align-items:center;gap:.35rem;padding-right:.7rem;margin-right:.2rem;border-right:1px solid rgba(226,188,98,.25)}
+.mg-cup{width:2.3rem;height:2.3rem;filter:drop-shadow(0 0 8px rgba(255,200,80,.45))}
+.mg-gav{position:relative;width:2rem;height:2rem;border-radius:50%;overflow:visible;display:block}
+.mg-gav svg{width:100%;height:100%;border-radius:50%;box-shadow:0 0 0 2px #6eb4ff;display:block}
+.mg-gav b{position:absolute;right:-.3rem;bottom:-.25rem;width:1rem;height:1rem;border-radius:50%;display:grid;place-items:center;font:800 .62rem/1 'Barlow',sans-serif;color:#3d2400;background:linear-gradient(180deg,#fff2b0,#e2a92e);box-shadow:0 0 0 1.5px #6e4704}
+.mg-msg{padding-left:.3rem}
+.gameq .tq-q{font-size:.86rem!important;font-weight:500!important;color:#e6d8b4!important;line-height:1.5}
+.gameq.done .mg-tbl{box-shadow:inset 0 0 0 6px rgba(0,0,0,.35),0 0 0 3px #5fe0a0,0 0 30px rgba(95,224,160,.4)!important}
 /* ===== Pages & Frames: a reading room, green-leather rail and paper pages ===== */
 #reader.shelf{--sh-bg:#F3EEE3;--sh-ink:#23201A;--sh-ink2:#6B6252;--sh-acc:#8B2B22;--sh-green:#1F3329;--sh-line:#DCD2BF;--cx:#8B2B22}
 #reader.shelf .rd-main,#reader.shelf .rd-leaf{background:var(--sh-bg) linear-gradient(90deg,rgba(80,60,30,.05) 1px,transparent 1px) 0 0/22px 100%}
@@ -8215,22 +8257,22 @@ const h1=[
   H([[6,0],[6,1],[7,0],[7,1],[7,2],[7,3],[3,2],[4,0],[5,0],[8,3],[10,1],[4,1]]),
   H([[11,1],[11,2],[12,0],[12,1],[12,3],[4,2],[4,3],[6,2],[6,3],[6,0],[7,2],[7,3],[7,1]]),
   H([[3,1],[5,3],[8,2],[8,0],[10,2],[11,0],[13,3],[2,0],[6,1],[9,1]])];
-// hand 2 is played at level 5 (your team's new level), so the heart 5 is wild
+// hand 2 is played at level 5: the opponents refuse tribute (they hold both Big Jokers), and a Joker Bomb takes 1st place from you
 const h2=[
-  H([[2,0],[2,3],[3,0],[3,3],[4,0],[4,2],[7,0],[8,3],[5,1],[10,2],[11,1],[14,0],[10,0],[11,0],[12,0],[13,0],[6,3]]),
-  H([[8,2],[9,0],[10,3],[11,3],[12,2],[13,2],[3,1],[4,3],[6,0],[7,3],[2,2],[10,1]]),
-  H([[8,0],[8,1],[8,2],[9,2],[9,3],[9,1],[3,2]]),
-  H([[14,3],[8,1],[4,1],[6,2],[7,2],[10,3],[11,2],[12,3],[2,1],[3,1]])];
-// hand 3 is only dealt to show a refused tribute: the two losers hold one Big Joker each
+  H([[3,0],[3,3],[5,0],[5,2],[4,2],[12,0],[12,1],[12,2],[12,3],[12,0],[12,2],[12,3],[13,0]]),
+  H([[9,1],[9,3],[11,2]]),
+  H([[3,1],[4,0],[6,2],[7,2],[8,0],[9,0],[2,0]]),
+  H([[16,4],[16,4],[17,4],[17,4],[14,2],[6,3]])];
+// hand 3 is played at the opponents' level 4, so the heart 4 is wild; your ally came last and pays a single tribute
 const h3=[
-  H([[3,0],[4,2],[6,1],[7,3],[9,0],[10,2],[12,1],[13,3],[14,0],[2,2]]),
-  H([[17,4],[5,0],[6,2],[8,3],[9,1],[11,0],[11,2],[12,3],[13,0],[4,1]]),
-  H([[3,1],[5,2],[7,0],[9,3],[10,0],[11,3],[12,2],[14,1],[14,3],[6,0]]),
-  H([[17,4],[4,0],[5,3],[7,1],[8,0],[10,1],[13,2],[2,3],[3,3],[9,2]])];
+  H([[2,0],[2,3],[3,0],[3,3],[4,0],[4,2],[7,0],[8,3],[4,1],[10,2],[11,1],[10,0],[11,0],[12,0],[13,0],[14,0],[14,1]]),
+  H([[8,2],[9,0],[10,3],[11,3],[12,2],[13,2],[3,1],[4,3],[6,0],[7,3],[2,2],[10,1]]),
+  H([[8,0],[8,1],[8,2],[9,2],[9,3],[9,1],[3,2],[13,2]]),
+  H([[8,1],[6,2],[7,2],[10,3],[11,2],[12,3],[2,1],[3,1],[5,0],[14,3]])];
 const X=s=>({bot:s,pass:1}), B=(s,cards)=>({bot:s,cards});
 const steps=[
  // ---------- hand 1 ----------
- {say:['Welcome to the Dragon Gate','欢迎来到跃龙门'],b:['I am the Dragon Spirit, keeper of this Gate, and I will walk you through your first two hands, every card set up in advance. Four seats, two alliances: you sit at the bottom and your ally sits opposite. Play goes counter-clockwise: you, your next player, your ally, then your previous player.','我是守护这道龙门的龙灵，接下来陪你完整地打两局，每个人的牌都已经安排好。四个座位，两两结盟：你坐在下方，盟友坐你对面。出牌按逆时针：你 → 下家 → 盟友 → 上家。'],spot:'.gt-felt',fx:'order'},
+ {say:['Welcome to the Dragon Gate','欢迎来到跃龙门'],b:['I am the Dragon Spirit, keeper of this Gate, and I will walk you through your first three hands, every card set up in advance. Four seats, two alliances: you sit at the bottom and your ally sits opposite. Play goes counter-clockwise: you, your next player, your ally, then your previous player.','我是守护这道龙门的龙灵，接下来陪你完整地打三局，每个人的牌都已经安排好。四个座位，两两结盟：你坐在下方，盟友坐你对面。出牌按逆时针：你 → 下家 → 盟友 → 上家。'],spot:'.gt-felt',fx:'order'},
  {say:['The Level Card','级牌'],b:['Both teams start at 2, and this hand is played at 2. Every 2 becomes the strongest ordinary card, under only the two jokers. The heart 2 is the wild card: it can stand in for any card except a joker.','两队都从 2 开始，这一局打 2。所有的 2 变成最大的普通牌，只比大小王小。红心 2 是“逢人配”，可以当成除大小王以外的任何一张牌。'],spot:'.gl'},
  {say:['Your Hand','你的手牌'],b:['Cards of the same rank stack in one column; bigger ranks sit on the left. The card stamped WILD is your heart 2.','同点数的牌叠成一列，大牌在左边。印着“逢人配”的就是你的红心 2。'],spot:'#gtHand'},
  {say:['What You Can Play','能出哪些牌'],b:['These are the ordinary combinations. To beat one, play the same type with the same number of cards, only higher. Suits never matter.','这些是普通牌型。要压住别人，必须出同一种牌型、同样张数、点数更大的牌。花色不分大小。'],show:[[['Single','单张'],[[9,0]]],[['Pair','对子'],[[9,0],[9,1]]],[['Triple','三同张'],[[9,0],[9,2],[9,3]]],[['Full house: a triple plus a pair; only the triple counts','三带二：三张加一对，只比三张'],[[7,0],[7,1],[7,2],[4,3],[4,0]]]]},
@@ -8245,7 +8287,7 @@ const steps=[
  {quiz:{L:5,q:['The level card is 5. Which full house is the biggest?','本题级牌是 5。哪一个三带二最大？'],o:[{c:[[12,0],[12,2],[12,3],[11,0],[11,2]],t:['QQQ with JJ','QQQ 带 JJ']},{c:[[14,0],[14,2],[14,3],[3,0],[3,2]],t:['AAA with 33','AAA 带 33']},{c:[[5,0],[5,2],[5,3],[2,0],[2,2]],t:['555 with 22','555 带 22']}],a:2,why:['A full house compares only its triple. At level 5 the triple 5s are level cards and beat even AAA; the pair never counts.','三带二只比三张。级牌是 5，三张 5 是级牌，比 AAA 还大；带的对子不算。'],hint:['Which part of a full house counts, and which rank is the level card?','三带二比的是哪一部分？本题级牌又是谁？']},say:['Practice 4: Full Houses','练习 4：三带二'],b:['Two traps in one.','一题两个坑。']},
 {quiz:{L:2,q:['Someone played a straight from 10 to A. Which of these beats it?','有人出了顺子 10 到 A。下面哪一手能压住它？'],o:[{c:[[17],[17]],t:['A pair of Big Jokers','一对大王']},{c:[[3,0],[4,0],[5,0],[6,0],[7,0]],t:['Straight flush 3 to 7','同花顺 3 到 7']},{c:[],t:['Nothing: 10 to A is the top straight','压不住：10 到 A 已经是最大的顺子']}],a:1,why:['A straight flush is a bomb, not a straight. Even the lowest one beats the highest plain straight.','同花顺是炸弹，不是顺子。哪怕是最小的同花顺，也比最大的普通顺子大。'],hint:['A same-suit straight is not a normal combination.','同一花色的顺子，已经不是普通牌型了。']},say:['Practice 5: Straight or Bomb?','练习 5：顺子还是炸弹？'],b:['Small cards, big power.','小牌也能有大威力。']},
  {quiz:{L:2,sort:[{c:[[16],[16],[17],[17]],t:['Joker Bomb','四大天王']},{c:[[3,0],[3,1],[3,2],[3,3],[3,0],[3,2]],t:['Six 3s','六个 3']},{c:[[9,2],[10,2],[11,2],[12,2],[13,2]],t:['Straight flush 9 to K','同花顺 9 到 K']},{c:[[11,0],[11,1],[11,2],[11,3],[11,0]],t:['Five Jacks','五个 J']},{c:[[2,0],[2,2],[2,3],[2,0]],t:['Four 2s','四个 2']},{c:[[14,0],[14,1],[14,2],[14,3]],t:['Four Aces','四个 A']}],q:['The level card is 2. Drag the six bombs into order, strongest first.','本题级牌是 2。把六个炸弹按从大到小拖进格子里。'],why:['Joker Bomb first. Then count the cards: six or more beat a straight flush, which beats any five-card bomb. With the same count, rank decides, and the level 2s beat the Aces.','四大天王最大。然后先数张数：6 张及以上比同花顺大，同花顺又比五张炸弹大。张数一样才比点数，级牌 2 比 A 大。'],hint:['Count the cards first; six is the dividing line around the straight flush. Same count? Then the level card wins.','先数张数，6 张是同花顺上下的分水岭；张数一样，再看谁是级牌。']},say:['Practice 6: Order the Bombs','练习 6：炸弹排排队'],b:['One question covers every bomb rule.','一道题把炸弹的规矩全考到。']},
- {quiz:{L:2,game:[[[3,2],[3,1],[5,2],[8,2],[8,0]],[[12,1],[4,2],[7,2],[9,0]],[[4,0],[4,1]],[[7,0],[7,1],[12,3]]],sol:[[[3,2],[3,1]],[[8,2],[8,0]],[[5,2]]],goal:['Goal: you and your ally finish 1st and 2nd. Every hand is face up. Your lead.','目标：你和盟友拿下头游和二游。所有人的牌都亮着，你先出。'],q:['Play it out yourself. Opponents always beat with their smallest cards; your ally never covers you unless it lets them go out.','自己动手打完这一手。对手总用最小的牌来压；盟友不会压你，除非这样能直接出完。'],why:['Lead the small pair: your next player has no pair, so your ally plays 44 and goes out. Then take back the lead with 88 and finish with the 5.','先出小对 3：下家没有对子，盟友就能出 44 走掉。然后用 88 把出牌权拿回来，最后出 5 收尾。'],hint:['Your ally holds a pair. What can the next player not beat?','盟友手里是一对。下家压不住的是什么？']},say:['Practice 7: Feed Your Ally','练习 7：给盟友递牌'],b:['A small game with only one way through. Stuck? Press Show me, or Next to skip.','这是一个只有一种解法的小游戏。想不出来可以按“看答案”，也可以直接按“下一步”跳过。']},
+ {quiz:{L:2,game:[[[7,3],[13,2],[11,3],[7,0],[9,2],[11,0],[5,3],[3,0]],[[4,3],[8,1],[13,0],[13,3],[7,0]],[[9,3],[14,0],[8,0],[9,1]],[[8,0],[4,0],[14,2],[13,1]]],sol:[[[9,2]],null,[[11,3],[11,0]],[[7,3],[7,0]],[[3,0]],null,[[5,3]],[[13,2]]],q:['Every hand is face up. Opponents always beat with their smallest cards; your ally never covers you unless that lets them go out. Lead longest first, smallest first, is how everyone else leads.','所有人的牌都亮着。对手总用最小的牌来压；盟友不会压你，除非这样能直接出完。其他人领出时，先出张数最多、点数最小的牌。'],why:['Lead the 9 so your next player spends a King and your ally takes over with the Ace. When your ally leads their 9s, cover them with your Jacks to keep control, cash the 7s, then lead the little 3: now your ally can go out with the 8. Answer the 4 with your 5 and finish with the King.','先出 9，逼下家花掉一张 K，盟友用 A 接过来。盟友领出对 9 时，用对 J 压住拿回主动，再出对 7，然后领出小 3：盟友正好用 8 走掉。最后用 5 接住 4，再用 K 收尾。'],hint:['Your ally needs the lead at the right moment. Keep control with your pairs, and lead small only when your ally can follow and the next player cannot stop them.','盟友需要在合适的时机拿到出牌权。先用对子控制局面，等盟友跟得上、下家又拦不住时，再出小牌。']},say:['Practice 7: Feed Your Ally','练习 7：给盟友递牌'],b:['Win with your ally: both of you out before either opponent. There is only one way through. Stuck? Press Show me, or Next to skip.','和盟友一起赢：在两个对手之前都出完。只有一种走法。想不出来可以按“看答案”，或直接按“下一步”跳过。']},
  {say:['Time for a Real Hand','实战演练'],b:['That is the theory. Now let us play a real hand together: I will point at what to do, and you make the moves. The cards in your hand are the ones dealt to you.','理论就讲到这里。下面进入实战演练，我们一起打一手真正的牌：我来指点，你来动手，用的就是刚才发给你的这手牌。']},
  {you:[[3,0],[3,3]],swipe:1,say:['Lead a Pair','领出一对'],b:['You lead first, so any combination is allowed. Tap your two 3s, then press Play. Tip: to pick several cards quickly, hold down the left mouse button on one card and slide across the others.','你先出，任何牌型都可以。点你的两张 3，再按“出牌”。小技巧：想快速选好几张，可以在一张牌上按住左键，再滑过其他牌。']},
  {say:['Warning Light','报牌'],b:['You now hold 10 cards. With 10 or fewer, a siren lights up beside your count so everyone knows you are getting close.','你现在只剩 10 张。手牌 10 张或以下时，牌数旁边会亮起警灯，大家都知道你快出完了。'],spot:'.gs0 .gs-cnt'},
@@ -8266,38 +8308,54 @@ const steps=[
  B(2,[[6,2],[6,3],[6,0],[7,2],[7,3],[7,1]]),
  {end:1},
  {panel:'levels',say:['Levelling Up','升级'],b:['You were 1st and your ally 2nd, so your team climbs three levels, from 2 to 5. An ally in 2nd is worth 3 levels, in 3rd 2, in last 1. The next hand is played at the winners’ level.','你头游、盟友二游，我方升三级，从 2 到 5。盟友二游升 3 级，三游升 2 级，下游升 1 级。下一局打胜方的级数。']},
- {panel:'tribute',say:['Tribute Is Coming','接下来要进贡'],b:['From the second hand on, the losers pay tribute before play. The other team took 3rd and last, so both of them pay: each gives their highest card, the bigger one to 1st (you), the smaller to 2nd. Each receiver gives one card back.','从第二局起，开打前输的一方要进贡。对方拿了三游和下游（双下），两人都要进贡：各交出自己最大的一张牌，大的给头游（你），小的给二游。收到的人各还一张牌。']},
- // ---------- hand 2 ----------
+ {panel:'tribute',say:['Tribute Is Coming','接下来要进贡'],b:['From the second hand on, the losers pay tribute before play: the last player gives their highest card to the 1st, and if the losers came 3rd and last, both of them pay. The receiver gives one small card back. There is one way out: if the players who owe tribute hold both Big Jokers between them, they may refuse.','从第二局起，开打前输家要进贡：下游把最大的一张牌交给头游；如果输的一方是三游和下游，两人都要进贡。收到的人还一张小牌。只有一种情况可以不进贡：该进贡的人手里加起来有两张大王，就可以抗贡。']},
+ // ---------- hand 2: a hand you lose ----------
  {hand2:1},
  {say:['A New Hand at Level 5','第二局打 5'],b:['Your team is on 5 now, so every 5 is a level card and the heart 5 is wild.','我方现在是 5，所有的 5 都是级牌，红心 5 是逢人配。'],spot:'.gl'},
  {trib:1},
- {you:'ret',cards:[[6,3]],say:['Give One Back','还贡'],b:['You received an Ace. Now return one card of 10 or lower that is not a level card. Tap the glowing 6, then press Give back.','你收到了一张 A。现在要还一张 10 或以下、并且不是级牌的牌。点发光的 6，再按“还贡”。']},
- {fx:'lead',say:['Who Leads','谁先出'],b:['Whoever paid tribute to 1st leads this hand: your previous player.','给头游进贡的人先出，这一局是你的上家。'],spot:'.gs3'},
- B(3,[[8,1]]),
- {you:[[14,3]],say:['Use the Tribute','用上贡牌'],b:['Your previous player led a single 8. Beat it with the Ace you just received.','上家出了单张 8。用你刚收到的 A 压住它。']},
+ {fx:'lead',say:['Tribute Refused','抗贡'],b:['The two players who owe tribute hold both Big Jokers between them, so they refuse to pay. With no tribute, last hand’s 1st player leads: you. Remember what this tells you: both Big Jokers are on the other side.','该进贡的两个人手里加起来有两张大王，于是抗贡，不用进贡。没有进贡，就由上一局的头游先出，也就是你。记住这条信息：两张大王都在对手那边。'],spot:'.gs0'},
+ {you:[[3,0],[3,3]],say:['Lead Your Small Pair','先出小对'],b:['Start with your pair of 3s.','先出你的一对 3。']},
+ B(1,[[9,1],[9,3]]), X(2), X(3),
+ {you:[[5,0],[5,2]],say:['A Pair of Level Cards','级牌对子'],b:['Every 5 is a level card this hand, so your two 5s make a pair beaten only by a pair of jokers. Play them over the 9s.','这一局 5 是级牌，你的一对 5 只有对王能压。用它压住对 9。']},
  X(1), X(2), X(3),
- {you:[[2,0],[2,3],[3,0],[3,3],[4,0],[4,2]],say:['A Plank','木板'],b:['Lead your plank 223344: three pairs in a row. In runs, cards keep their natural order, so 2 3 4 connect.','领出木板 223344：三个相连的对子。在连牌里牌按本来的点数排，所以 2、3、4 是连着的。']},
- X(1), X(2), X(3),
- {you:[[7,0],[8,3],[5,1],[10,2],[11,1]],say:['The Wild Card in a Straight','逢人配补顺子'],b:['You hold 7, 8, 10 and J. The heart 5 is wild, so it can play the missing 9. Select those five cards and play the straight 7 to J.','你有 7、8、10、J，红心 5 是逢人配，可以当缺的那张 9。选中这五张，打出顺子 7 到 J。']},
- B(1,[[8,2],[9,0],[10,3],[11,3],[12,2]]), X(2), X(3),
- {you:[[10,0],[11,0],[12,0],[13,0],[14,0]],say:['A Straight Flush','同花顺'],b:['Your next player beat you with 8 to Q. A straight in one suit is a straight flush, a bomb stronger than any five-card bomb. Play your spades 10 to A and go out first again.','下家用 8 到 Q 压了你。同一花色的顺子就是同花顺，是比五张炸弹还大的炸弹。打出黑桃 10 到 A，再次头游。']},
- X(1), X(2), X(3),
- {say:['Your Ally Takes the Wind','盟友借风'],b:['You are out again, so your ally leads. Watch them finish: a steel plate, 888999, then their last card.','你又出完了，由盟友借风领出。看他收尾：先出钢板 888999，再出最后一张。'],spot:'.gs2'},
- B(2,[[8,0],[8,1],[8,2],[9,2],[9,3],[9,1]]), X(3), X(1),
- B(2,[[13,2]]),
+ {you:[[4,2]],say:['Lead a Single','出单张'],b:['Your lead again. Play the 4 of clubs and keep your seven Queens and your King for later.','又轮到你领出。先出梅花 4，七个 Q 和 K 留在手里。']},
+ X(1), B(2,[[9,0]]), B(3,[[14,2]]),
+ {you:[[12,0],[12,1],[12,2],[12,3],[12,0],[12,2],[12,3]],swipe:1,say:['Seven Queens: a Sure Win?','七个头，稳了？'],b:['Your previous player covered your ally with an Ace. You hold seven Queens, a seven-card bomb, and after it only your King is left. It looks like 1st place is yours. Play the bomb.','上家用 A 压了盟友。你手里有七个 Q，是个七张的大炸弹，炸完只剩一张 K。头游看起来稳了。打出炸弹。']},
+ X(1), X(2), B(3,[[16],[16],[17],[17]]),
+ {you:'pass',say:['Four Jokers!','四大天王！'],b:['Your previous player dropped all four jokers: the Joker Bomb, which beats every other bomb. Nothing can answer it, so press Pass. The refused tribute was the warning: both Big Jokers were on their side.','上家甩出四张王：四大天王，比任何炸弹都大，没有牌能压。只能按“不出”。之前的抗贡就是信号：两张大王都在对手那边。'],spot:'.gp3'},
+ X(1), X(2), B(3,[[6,3]]),
+ {you:[[13,0]],say:['Settle for 2nd','保住二游'],b:['They went out first with their last card. Beat the 6 with your King and go out 2nd.','他打出最后一张，拿了头游。用你的 K 压住 6，拿下二游。']},
+ X(1), X(2),
+ {say:['Your Ally Is Stuck','盟友被卡住了'],b:['You are out, so your ally borrows the wind and leads. But your next player is down to one card.','你出完了，盟友借风领出。可是下家只剩最后一张牌了。'],spot:'.gs2'},
+ B(2,[[3,1]]), B(1,[[11,2]]),
  {end:1},
- {say:['One More Hand','再来一局'],b:['Let us deal one more hand. Last hand the opponents came 3rd and last, so they owe a double tribute. Watch what they do.','再发一局。上一局对手是三游和下游，本该双贡。看看他们怎么做。']},
- {hand3:1},
+ {say:['This Hand Is Lost','这局输了'],b:['The opponents came 1st and 3rd, so they climb two levels, from 2 to 4 (an ally in 2nd is worth 3, in 3rd 2, last 1). Your ally came last, so before the next hand they owe a single tribute to the opponents’ 1st.','对手拿了头游和三游，升两级，从 2 到 4（盟友二游升 3 级，三游升 2 级，下游升 1 级）。盟友是下游，下一局开打前要单贡给对方头游。'],spot:'.gl'},
+ // ---------- hand 3: played at the opponents' level ----------
+ {hand2:2},
+ {say:['Their Level Now: 4','换边打 4'],b:['The opponents won, so the level switches sides: this hand is played at their level 4. Every 4 is a level card and the heart 4 is wild. Win it, and the level switches back to you.','对手赢了，级牌换边：这一局打对手的 4。所有的 4 都是级牌，红心 4 是逢人配。这一局赢回来，就又换回我方的级。'],spot:'.gl'},
  {trib:1},
- {fx:'lead',say:['Tribute Refused','抗贡'],b:['The two players who owed tribute held both Big Jokers between them, so they refused to pay. With no tribute, last hand’s 1st player leads: you. And when you do pay tribute and your highest card comes in several suits, you choose which one to give.','该进贡的两人手里一共有两张大王，于是抗贡，不用进贡。没有进贡，就由上一局的头游先出牌，也就是你。轮到你进贡时，如果最大的牌有好几种花色，由你自己挑一张。'],spot:'.gs0'},
+ {fx:'lead',say:['Single Tribute','单贡'],b:['Your ally came last, so they gave their highest card to the opponents’ 1st and got a small card back. Whoever pays tribute leads: your ally.','盟友是下游，把最大的一张牌进贡给对方头游，又收回一张小牌。进贡的人先出：这一局由盟友领出。'],spot:'.gs2'},
+ B(2,[[3,2]]), B(3,[[8,1]]),
+ {you:[[14,1]],say:['Take the Lead','抢回出牌权'],b:['Your previous player covered your ally with an 8. Beat it with your Ace of hearts.','上家用 8 压了盟友。用你的红桃 A 压回去。']},
+ X(1), X(2), X(3),
+ {you:[[2,0],[2,3],[3,0],[3,3],[4,0],[4,2]],say:['A Plank','木板'],b:['Lead your plank 223344: three pairs in a row. In runs, cards keep their natural order, so 2 3 4 connect even though 4 is the level card.','领出木板 223344：三个相连的对子。在连牌里牌按本来的点数排，所以 2、3、4 是连着的，哪怕 4 是级牌。']},
+ X(1), X(2), X(3),
+ {you:[[7,0],[8,3],[4,1],[10,2],[11,1]],say:['The Wild Card in a Straight','逢人配补顺子'],b:['You hold 7, 8, 10 and J. The heart 4 is wild, so it can play the missing 9. Select those five cards and play the straight 7 to J.','你有 7、8、10、J，红心 4 是逢人配，可以当缺的那张 9。选中这五张，打出顺子 7 到 J。']},
+ B(1,[[8,2],[9,0],[10,3],[11,3],[12,2]]), X(2), X(3),
+ {you:[[10,0],[11,0],[12,0],[13,0],[14,0]],say:['A Straight Flush','同花顺'],b:['Your next player beat you with 8 to Q. A straight in one suit is a straight flush, a bomb stronger than any five-card bomb. Play your spades 10 to A and go out first.','下家用 8 到 Q 压了你。同一花色的顺子就是同花顺，是比五张炸弹还大的炸弹。打出黑桃 10 到 A，拿下头游。']},
+ X(1), X(2), X(3),
+ {say:['Your Ally Takes the Wind','盟友借风'],b:['You are out, so your ally leads. Watch them finish: a steel plate, 888999, then their last card.','你出完了，由盟友借风领出。看他收尾：先出钢板 888999，再出最后一张。'],spot:'.gs2'},
+ B(2,[[8,0],[8,1],[8,2],[9,2],[9,3],[9,1]]), X(3), X(1),
+ B(2,[[2,1]]),
+ {end:1},
+ {say:['Back to Your Level','换回我方的级'],b:['1st and 2nd: your team climbs three levels, from 5 to 8. You won, so the level switches back: the next hand is played at your 8.','头游加二游：我方从 5 升三级到 8。这一局我们赢了，级牌又换回来：下一局打我方的 8。'],spot:'.gl'},
  {panel:'ace',say:['Three Tries at the Ace','打 A 的三次机会'],b:['When your team reaches the Ace, three dragon pearls light up: three tries to clear it. Not 1st, or your ally comes last, and a pearl shatters; lose all three and you drop back to 2. Watch it play out.','升到 A 后亮起三颗龙珠，代表三次过 A 的机会。没拿头游，或者盟友是下游，就碎一颗；三颗全碎，退回 2。看一遍完整的过程。']},
- {demo:'aswitch',say:['Switching Sides','换边打级牌'],b:['Every hand is played at the winning team’s level. If the opponents win, the next hand switches to their level.','每一局都打赢的那一队的级牌。对手赢了，下一局就换边，打对手的级。']},
  {demo:'awin',say:['Clearing the Ace','过 A'],b:['Come 1st at your Ace with your ally not last, and your team leaps through the Dragon Gate and wins the match.','打 A 时拿到头游，且盟友不是下游，就跃过龙门，赢下整场。']},
  {say:['Card Counter','记牌器'],b:['The switch above Sort opens the card counter at the top right. Two decks hold eight of every rank; the counter takes away your own hand and every card already played, so each column shows how many of that rank are still hidden in the other three hands. The stars are the jokers, and the gold column is this hand’s level card. Once you are comfortable, try switching it off to train your memory.','理牌上面那个开关是记牌器，打开后从右上角滑下来。两副牌每个点数各 8 张，记牌器减去你的手牌和已经打出去的牌，每一列就是这个点数还藏在另外三家手里的张数。两颗星是大小王，金色那一列是本局级牌。熟悉之后，可以试着关掉它，锻炼自己的记忆。'],spot:'#gtCCb',rings:['#gtCCb','.gt-ctrw.on .gt-ctr'],cc:1},
  {panel:'guess',say:['Reading Their Hands','猜对手的牌'],b:['The counter is not only about memory. Combine how many cards a player holds with what they have just played or refused to play, and guess what is left. Then you can feed your ally without the opponents cutting in. Say your next player has 5 cards: what could they be?','记牌器不只是帮你记牌。把一个人还剩几张、最近出了什么、不肯出什么结合起来，就能猜出他手里剩的牌。这样你给盟友递牌时，才不会被对手截胡。比如下家只剩 5 张，可能是什么？']},
  {rings:['[data-a=rules]'],say:['You Are Ready','准备好了'],b:['That is the whole flow. When you are stuck, Hint always suggests a legal play. Every detail you met today, from combinations and bombs to tribute and the Ace, is written out with animations in Rules: the glowing button at the top. Good luck at the Gate.','流程就是这些。卡住时按“提示”，总能找到能出的牌。今天讲过的所有内容，牌型、炸弹、进贡、过 A，都配着动画写在“规则”里，就是顶部那个发光的按钮。祝你跃过龙门！'],last:1}
 ];
-return {h1,h2,h3,steps,L1:2,L2:5,trib:[{from:3,to:0,card:[14,3]},{from:1,to:2,card:[13,2]}]};
+return {h1,h2,h3,steps,L1:2,L2:5,trib:[{from:2,to:3,card:[13,2]}]};
 })();
 if(typeof module!=='undefined') module.exports=GD_TUT;
 
@@ -10224,7 +10282,7 @@ function quizDone(el,msg){ el.classList.add('done'); snd('crown'); const w=el.qu
 function sortBuild(el,q,top,L){ el.classList.add('sortq'); const tx=a=>zh()?a[1]:a[0]; const n=q.sort.length;
   const ord=[...Array(n).keys()]; for(let i=n-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [ord[i],ord[j]]=[ord[j],ord[i]]; } if(ord.every((v,i)=>v===i)) ord.reverse();
   const chip=k=>`<div class="ts-chip" data-k="${k}">${miniRow(q.sort[k].c,L)}<span>${tx(q.sort[k].t)}</span></div>`;
-  el.innerHTML=`${top}<div class="ts-wrap"><div class="ts-pool">${ord.map(chip).join('')}</div><div class="ts-arrow">${T('Drag each one into a slot ↓','把选项拖进下面的格子 ↓')}</div><ol class="ts-slots">${[...Array(n).keys()].map(i=>`<li class="ts-slot" data-n="${i}"><i>${i+1}</i><em>${i===0?T('strongest','最大'):i===n-1?T('weakest','最小'):''}</em></li>`).join('')}</ol><div class="ts-bar"><button class="ts-chk" type="button">${T('Check','检查')}</button></div></div><div class="tq-why"></div>`;
+  el.innerHTML=`${top}<div class="ts-wrap"><div class="ts-col"><div class="ts-h">${T('Drag each bomb to the right →','把炸弹拖到右边的格子里 →')}</div><div class="ts-pool">${ord.map(chip).join('')}</div><div class="ts-bar"><button class="ts-chk" type="button">${T('Check','检查')}</button></div><div class="tq-why"></div></div><div class="ts-col"><div class="ts-h">${T('Strongest at the top','从大到小，最大的在上面')}</div><ol class="ts-slots">${[...Array(n).keys()].map(i=>`${i?'<li class="ts-gt" aria-hidden="true">&gt;</li>':''}<li class="ts-slot" data-n="${i}"><i>${i+1}</i></li>`).join('')}</ol></div></div>`;
   const pool=el.querySelector('.ts-pool'), why=el.querySelector('.tq-why');
   const home=c=>{ pool.appendChild(c); };
   const drop=(c,slot)=>{ if(!slot){ home(c); return; } const old=slot.querySelector('.ts-chip'); if(old&&old!==c){ const from=c.parentElement; if(from&&from.classList.contains('ts-slot')) from.appendChild(old); else home(old); } slot.appendChild(c); slot.classList.remove('ok','no'); snd('tick'); };
@@ -10241,10 +10299,10 @@ function sortBuild(el,q,top,L){ el.classList.add('sortq'); const tx=a=>zh()?a[1]
 function gameBuild(el,q,top,L){ el.classList.add('gameq'); if(tut){ tut.quizLock=false; } const tx=a=>zh()?a[1]:a[0], me=tut;
   const role=k=>[T('You','你'),T('Next · opponent','下家 · 对手'),T('Ally','对家 · 盟友'),T('Previous · opponent','上家 · 对手')][k];
   el.innerHTML=`${top}<div class="tq-tbl mg-tbl"><img class="tq-disc" src="${GIMG('gd-table')}" alt="">${[0,1,2,3].map(s=>`<div class="tq-s s${s}"><span class="tq-who"><span class="tq-av"><svg viewBox="0 0 40 40">${AV[P[s].k]}</svg></span><b>${role(s)}</b><em></em></span><span class="mg-h"></span></div><div class="mg-p p${s}"></div>`).join('')}</div>
-    <div class="mg-bar"><span class="mg-msg"></span><button type="button" data-mg="reset" class="mg-b ghost">${T('Restart','重来')}</button><button type="button" data-mg="show" class="mg-b ghost">${T('Show me','看答案')}</button><button type="button" data-mg="pass" class="mg-b">${T('Pass','不出')}</button><button type="button" data-mg="play" class="mg-b go">${T('Play','出牌')}</button></div><div class="tq-why"></div>`;
+    <div class="mg-bar"><span class="mg-goal" title="${T('Goal: you and your ally finish 1st and 2nd','目标：你和盟友拿下头游和二游')}"><svg class="mg-cup" viewBox="0 0 48 48" aria-hidden="true"><path d="M14 6h20v8c0 7-4.5 12-10 12S14 21 14 14z" fill="url(#mgcg)" stroke="#7a4f08" stroke-width="1.5"/><path d="M14 9H7c0 7 3.5 10 8 10M34 9h7c0 7-3.5 10-8 10" fill="none" stroke="#e6b84a" stroke-width="2.6" stroke-linecap="round"/><path d="M21 26h6v7h-6z" fill="#c8901e"/><path d="M15 40c0-4 4-7 9-7s9 3 9 7z" fill="url(#mgcg)" stroke="#7a4f08" stroke-width="1.5"/><path d="M19 11l2 4 4.5.6-3.3 3 .9 4.4L19 21l-4 2 .8-4.4-3.2-3 4.4-.6z" fill="#fff6cc" opacity=".85" transform="translate(5 -2) scale(.9)"/><defs><linearGradient id="mgcg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff0a8"/><stop offset=".5" stop-color="#f2c54e"/><stop offset="1" stop-color="#b47a14"/></linearGradient></defs></svg><span class="mg-gav"><svg viewBox="0 0 40 40">${AV[P[0].k]}</svg><b>1</b></span><span class="mg-gav"><svg viewBox="0 0 40 40">${AV[P[2].k]}</svg><b>2</b></span></span><span class="mg-msg"></span><button type="button" data-mg="reset" class="mg-b ghost">${T('Restart','重来')}</button><button type="button" data-mg="show" class="mg-b ghost">${T('Show me','看答案')}</button><button type="button" data-mg="pass" class="mg-b">${T('Pass','不出')}</button><button type="button" data-mg="play" class="mg-b go">${T('Play','出牌')}</button></div><div class="tq-why"></div>`;
   const msg=el.querySelector('.mg-msg'), why=el.querySelector('.tq-why'); let S=null, run=0;
   const alive=()=>tut===me&&el.isConnected;
-  const reset=()=>{ run++; let id=0; S={h:q.game.map(h=>h.map(([r,s])=>({id:id++,r,s}))),trick:null,turn:0,order:[],pc:0,shown:[null,null,null,null],sel:new Set(),over:0}; why.className='tq-why'; why.textContent=''; say(tx(q.goal)); draw(); };
+  const reset=()=>{ run++; let id=0; S={h:q.game.map(h=>h.map(([r,s])=>({id:id++,r,s}))),trick:null,turn:0,order:[],pc:0,shown:[null,null,null,null],sel:new Set(),over:0}; why.className='tq-why'; why.textContent=''; say(T('Your lead.','你先出。')); draw(); };
   const say=t=>{ msg.textContent=t; };
   const nextS=s=>{ for(let k=1;k<=4;k++){ const t=(s+k)%4; if(S.h[t].length) return t; } return -1; };
   const draw=()=>{ for(let s=0;s<4;s++){ const z=el.querySelector('.tq-s.s'+s), hc=z.querySelector('.mg-h'); z.classList.toggle('turn',!S.over&&S.turn===s); z.querySelector('em').textContent=S.h[s].length?T(S.h[s].length+(S.h[s].length>1?' cards':' card'),S.h[s].length+' 张'):(['1st','2nd','3rd'][S.order.indexOf(s)]?T(['1st!','2nd!','3rd'][S.order.indexOf(s)],['头游！','二游！','三游'][S.order.indexOf(s)]):'');
@@ -10268,7 +10326,7 @@ function gameBuild(el,q,top,L){ el.classList.add('gameq'); if(tut){ tut.quizLock
   const youPlay=cards=>{ const tg=S.trick?S.trick.combo:null; const j=GD.judge(cards,L,tg); if(!j){ snd('err'); say(tg?T('That does not beat the cards on the table.','这手牌压不过桌上的牌。'):T('That is not a valid combination.','这不是一个合法的牌型。')); return false; } S.sel.clear(); apply(0,{cards,combo:j}); if(!S.over) loop(run); return true; };
   el.addEventListener('click',e=>{ const b=e.target.closest('[data-mg]'); if(!b||!el.contains(b)) return; e.stopPropagation(); const k=b.dataset.mg;
     if(k==='reset'){ reset(); loop(run); return; }
-    if(k==='show'){ reset(); const r=run; (async()=>{ for(const mv of q.sol){ while(alive()&&r===run&&!S.over&&S.turn!==0) await wait(120); if(!(alive()&&r===run)||S.over) return; say(T('Watch…','看好了……')); await wait(700); const cs=mv.map(([rr,ss])=>S.h[0].find(c=>c.r===rr&&c.s===ss)); cs.forEach(c=>S.sel.add(c.id)); draw(); await wait(650); if(!(alive()&&r===run)) return; youPlay(cs); } })(); return; }
+    if(k==='show'){ reset(); const r=run; (async()=>{ for(const mv of q.sol){ while(alive()&&r===run&&!S.over&&S.turn!==0) await wait(120); if(!(alive()&&r===run)||S.over) return; say(T('Watch…','看好了……')); await wait(700); if(!mv){ apply(0,null); if(!S.over) loop(run); continue; } const cs=mv.map(([rr,ss])=>S.h[0].find(c=>c.r===rr&&c.s===ss)); cs.forEach(c=>S.sel.add(c.id)); draw(); await wait(650); if(!(alive()&&r===run)) return; youPlay(cs); } })(); return; }
     if(S.over||S.turn!==0) return;
     if(k==='c'){ const id=+b.dataset.id; S.sel.has(id)?S.sel.delete(id):S.sel.add(id); snd('tick'); draw(); return; }
     if(k==='pass'){ if(!S.trick) return; S.sel.clear(); apply(0,null); if(!S.over) loop(run); return; }
@@ -10297,12 +10355,10 @@ const tutPick=(h,list)=>{ const used=new Set(); return list.map(([r,s])=>{ const
 async function tutNext(){ if(!tut) return; tut.demo=null; if(tut.ccWas!=null){ ccToggle(tut.ccWas,true); tut.ccWas=null; } tut.i++; tut.waitYou=false; tut.hl=null; tut.st=null; markTut(); const st=GD_TUT.steps[tut.i]; if(!st){ endTut(); startGame(true); return; }
   if(st.last&&tut.i>0&&tut.lastShown){ endTut(); startGame(true); return; }
   if(st.end){ tut.i--; return; }
-  if(st.hand2){ tutHide(); const D=GD_TUT; ret=null; tribPick=null; sortMode=0; warned=new Set(); sel.clear(); bgm(1);
-    H={L:D.L2,hands:D.h2.map(h=>h.map(c=>Object.assign({},c))),order:[],turn:3,lead:3,trick:null,passes:0,played:[[],[],[],[]],log:[],phase:'tribute'};
-    H.tribute={anti:false,pairs:D.trib.map(p=>({from:p.from,to:p.to,card:tutPick(H.hands[p.from],[p.card])[0]}))};
-    buildTable(); root.classList.add('tutm'); tutUI(); busy=true; await dealAnim(); busy=false; if(!tut) return; tutNext(); return; }
-  if(st.hand3){ tutHide(); const D=GD_TUT; ret=null; tribPick=null; sortMode=0; warned=new Set(); sel.clear(); bgm(1); root.classList.remove('handend');
-    H={L:M.lv[M.dealer],hands:D.h3.map(h=>h.map(c=>Object.assign({},c))),order:[],turn:0,lead:0,trick:null,passes:0,played:[[],[],[],[]],log:[],phase:'tribute',tribute:{anti:true,pairs:[],seats:[1,3]}};
+  if(st.hand2){ tutHide(); const D=GD_TUT, k=st.hand2; ret=null; tribPick=null; sortMode=0; warned=new Set(); sel.clear(); bgm(1); root.classList.remove('handend');
+    const src=k===2?D.h3:D.h2, L0=M.lv[M.dealer];
+    H={L:L0,hands:src.map(h=>h.map(c=>Object.assign({},c))),order:[],turn:k===2?2:0,lead:k===2?2:0,trick:null,passes:0,played:[[],[],[],[]],log:[],phase:'tribute'};
+    H.tribute=k===2?{anti:false,pairs:D.trib.map(p=>({from:p.from,to:p.to,card:tutPick(H.hands[p.from],[p.card])[0]}))}:{anti:true,pairs:[],seats:[1,3]};
     buildTable(); root.classList.add('tutm'); tutUI(); busy=true; await dealAnim(); busy=false; if(!tut) return; tutNext(); return; }
   if(st.trib){ tutHide(); await doTribute(); if(!tut) return; tutNext(); return; }
   if(st.bot!=null){ tutHide(); await wait(450); if(!tut) return; const cards=st.pass?[]:tutPick(H.hands[st.bot],st.cards); for(let s=0;s<4;s++) drawSeat(s); act(st.bot,cards); return; }
@@ -10317,7 +10373,7 @@ function tutAllow(x){ const st=tut&&tut.st; if(!st){ return false; }
   if(!ok){ snd('err'); banner(st.you==='hint'&&!tut.hinted?T('Press Hint first','先按“提示”'):st.you==='badge'&&!tut.badged?T('Tap the round badge on the bomb first','先点炸弹上的圆形徽章'):T('Follow the instructions for this step','请按本步提示操作'),'info'); if(tut.card) tut.card.animate([{transform:'translateX(-6px)'},{transform:'translateX(6px)'},{transform:'none'}],{duration:240}); return false; }
   tutHide(); tut.waitYou=false; return true; }
 function tutAfterAct(){ if(!tut) return; const nx=GD_TUT.steps[tut.i+1]; if(H.phase==='done'||nx&&nx.end){ tut.i++; endHand(); return; } setTimeout(tutNext,250); }
-async function tutEnd(){ await wait(900); const res=GDM.settle(M,H); snd('win'); banner(T('Your team wins the hand','我方胜出'),'rank'); await wait(1200); await animLevel(res); drawLevel(); tutNext(); }
+async function tutEnd(){ await wait(900); const res=GDM.settle(M,H), we=res.winner===0; snd(we?'win':'lose'); banner(we?T('Your team wins the hand','我方胜出'):T('The opponents win this hand','这一局对手胜出'),'rank'); await wait(1200); await animLevel(res); drawLevel(); tutNext(); }
 async function orderArrows(){ const fx=$g('.gt-fx'); if(!fx) return; const pts=[0,1,2,3].map(seatPt); for(let i=0;i<4;i++){ const a=pts[i], b=pts[(i+1)%4]; const d=fxEl('fx-dot','',a.x,a.y);
     d.animate([{transform:'translate(-50%,-50%)',opacity:1},{transform:`translate(calc(-50% + ${b.x-a.x}px), calc(-50% + ${b.y-a.y}px))`,opacity:1}],{duration:650,easing:'ease-in-out',fill:'forwards'}); await wait(650); d.remove(); if(!tut) return; } }
 async function demoTribute(){ const L=H.L; const card=(r,s)=>({id:900+r*4+s,r,s});
