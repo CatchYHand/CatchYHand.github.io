@@ -4260,38 +4260,41 @@ html:not([lang=zh]) .gt-choose .gc-lb b{font-family:'Newsreader','Noto Serif SC'
 .en.sp{grid-template-columns:auto;grid-template-areas:"i" "l"}
 .en.sp .en-i{justify-self:center;width:min(38cqw,52cqh)!important;height:min(38cqw,52cqh)!important}
 @container (max-height:2.1rem){ .en{grid-template-areas:"i n"} .en.sp{grid-template-areas:"i"} .en-i{width:min(34cqw,64cqh)!important;height:min(34cqw,64cqh)!important} .en.sp .en-i{width:min(40cqw,70cqh)!important;height:min(40cqw,70cqh)!important} .en-n{font-size:min(40cqw,72cqh)!important} }
-/* quick reference (left column, during play) */
-.jq-ref{flex:1;min-height:0;display:flex;flex-direction:column}
-.jq-ref:empty{display:none}
-.jq-refb{flex:1;min-height:0;overflow:auto;padding:.75rem .85rem .85rem!important;scrollbar-width:thin}
-.jq-refb h4{margin:0 0 .15rem}
-.jq-rsub{margin:0 0 .55rem;font:600 .72rem/1.35 var(--f-body);color:#cdb88a}
-.jq-ladder,.jq-sps{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:.28rem;position:relative}
-.jq-ladder::before{content:"";position:absolute;left:1.6rem;top:.6rem;bottom:.6rem;width:2px;margin-left:-1px;background:linear-gradient(180deg,rgba(255,211,106,.75),rgba(255,211,106,.12));border-radius:2px}
-.jq-ladder li,.jq-sps li{display:grid;grid-template-columns:3.2rem 1fr;align-items:center;gap:.6rem;position:relative}
-.jq-ref .jq-lt{width:3.2rem;height:1.5rem;border-radius:.28rem}
-.jq-ref .jq-lt .jz{font-size:min(36cqw,62cqh)!important}
-.jq-ladder b,.jq-sps b{display:flex;align-items:baseline;gap:.35rem;font:700 .78rem/1.2 var(--f-body);color:#f4e6c4}
-.jq-ladder em,.jq-sps em{font:700 .66rem/1 var(--f-mono,monospace);font-style:normal;color:#c99a37}
-.jq-ladder small,.jq-sps small{display:block;margin-top:.08rem;font:500 .66rem/1.3 var(--f-body);color:#bfa878}
-.jq-sps li{align-items:start}.jq-sps li .jq-lt{margin-top:.1rem}
-.jq-refb .jr-div{margin:.7rem 0 .45rem;font-size:.64rem}
-.jq-ladder,.jq-sps{gap:.2rem}
-.jq-ref .jq-lt{height:1.32rem;width:3.1rem}
-.jq-ladder li,.jq-sps li{grid-template-columns:3.1rem 1fr;gap:.55rem;align-items:center!important}
-.jq-ladder li>div,.jq-sps li>div{display:flex;flex-wrap:wrap;align-items:baseline;column-gap:.45rem;row-gap:0;min-width:0}
-.jq-ladder b{font:700 .74rem/1.15 var(--f-body)}
-.jq-ladder em,.jq-sps em{font-size:.68rem}
-.jq-ladder small,.jq-sps small{display:inline;margin:0;font:500 .68rem/1.25 var(--f-body);color:#d1bb8b}
-.jq-refb:not(.zh) .jq-ladder small{display:block;flex-basis:100%}
-.jq-ladder::before{left:1.55rem}
-.jq-refb .jr-div{margin:.55rem 0 .4rem}
-.jq-sps li .jq-lt{margin-top:0}
-.jq-refb:not(.zh) .jq-sps small{display:block;flex-basis:100%}
-.jq-sps b{font:700 .74rem/1.15 var(--f-body)}
 @container (max-height:2.1rem){ .en-i{width:min(36cqw,72cqh)!important;height:min(36cqw,72cqh)!important} .en.sp .en-i{width:min(44cqw,84cqh)!important;height:min(44cqw,84cqh)!important} }
 .en:not(.sp) .en-i{width:min(34cqw,50cqh)!important;height:min(34cqw,50cqh)!important}
 @container (max-height:2.1rem){ .en:not(.sp) .en-i{width:min(36cqw,72cqh)!important;height:min(36cqw,72cqh)!important} }
+.jq-tov.hi{z-index:47}
+
+/* quick reference (left column, during play): officers as a ladder, the three special pieces as cards */
+.jq-ref{flex:1;min-height:0;display:flex;flex-direction:column}
+.jq-ref:empty{display:none}
+.jq-refb{flex:1;min-height:0;overflow:auto;padding:.8rem .9rem .9rem!important;scrollbar-width:thin}
+.jq-rh{display:flex;align-items:baseline;justify-content:space-between;gap:.5rem;margin-bottom:.6rem}
+.jq-rh h4{margin:0!important}
+.jq-rh span{font:600 .66rem/1.2 var(--f-body);color:#bfa676;text-align:right}
+.jq-ladder{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:.32rem;position:relative}
+.jq-ladder::before{content:"";position:absolute;left:1.7rem;top:.5rem;bottom:.5rem;width:2px;margin-left:-1px;background:linear-gradient(180deg,rgba(255,211,106,.8),rgba(255,211,106,.08));border-radius:2px}
+.jq-ladder li{display:grid;grid-template-columns:3.4rem 1fr auto;align-items:center;gap:.65rem;min-height:1.5rem}
+.jq-ref .jq-lt{width:3.4rem;height:1.5rem;border-radius:.3rem}
+.jq-ref .jq-lt .jz{font-size:min(34cqw,60cqh)!important}
+.jq-ladder .tx{min-width:0;display:flex;flex-direction:column;justify-content:center}
+.jq-ladder .tx b{font:700 .78rem/1.15 var(--f-body);color:#f4e6c4;white-space:nowrap}
+.jq-ladder .tx small{font:500 .66rem/1.25 var(--f-body);color:#d6bd86}
+.jq-refb.zh .jq-ladder .tx small{font-size:.72rem}
+.jq-ladder>li>em,.jq-spc em{font:700 .64rem/1 var(--f-mono,monospace);font-style:normal;color:#e9c46a;background:rgba(201,154,55,.14);border:1px solid rgba(201,154,55,.35);border-radius:1rem;padding:.16rem .42rem}
+.jq-refb .jr-div{margin:.75rem 0 .55rem;font-size:.64rem}
+.jq-spc{display:grid;grid-template-columns:repeat(3,1fr);gap:.4rem}
+.jq-spc>div{display:flex;flex-direction:column;align-items:center;gap:.28rem;padding:.45rem .3rem .5rem;border-radius:.55rem;background:rgba(255,255,255,.035);border:1px solid rgba(226,188,98,.16);text-align:center}
+.jq-spc .jq-lt{width:100%;max-width:3.6rem;height:1.55rem}
+.jq-spc b{display:flex;align-items:center;gap:.3rem;font:700 .74rem/1.1 var(--f-body);color:#f4e6c4}
+.jq-spc em{padding:.1rem .34rem;font-size:.58rem}
+.jq-spc small{font:500 .64rem/1.3 var(--f-body);color:#d6bd86}
+.jq-refb.zh .jq-spc small{font-size:.68rem}
+/* the controls box is a little tighter while the reference sits below it */
+.jq.play .jq-ctl .jq-box.st,.jq.over .jq-ctl .jq-box.st{padding-top:.7rem;padding-bottom:.75rem}
+.jq.play .jq-ctl .jq-box.st>p{margin:.2rem 0 0;font-size:.74rem}
+.jq.play .jq-ctl .jq-bt{margin-top:.5rem}
+.jq.play .jq-ctl .jq-bt button{padding:.5rem .5rem}
 /* ===== Pages & Frames: a reading room, green-leather rail and paper pages ===== */
 #reader.shelf{--sh-bg:#F3EEE3;--sh-ink:#23201A;--sh-ink2:#6B6252;--sh-acc:#8B2B22;--sh-green:#1F3329;--sh-line:#DCD2BF;--cx:#8B2B22}
 #reader.shelf .rd-main,#reader.shelf .rd-leaf{background:var(--sh-bg) linear-gradient(90deg,rgba(80,60,30,.05) 1px,transparent 1px) 0 0/22px 100%}
@@ -9452,7 +9455,7 @@ const SORT_ICO=['<svg viewBox="0 0 28 24" aria-hidden="true"><g class="cd"><rect
 const ICO={rules:'<path d="M5 4.5h5.5a2.5 2.5 0 0 1 2.5 2.5v13a2 2 0 0 0-2-2H5zM19 4.5h-3.5A2.5 2.5 0 0 0 13 7v13a2 2 0 0 1 2-2h4z"/>',tut:'<path d="M3 9l9-4.5L21 9l-9 4.5z"/><path d="M7 11v4.5c0 1.4 2.2 2.5 5 2.5s5-1.1 5-2.5V11M21 9v5"/>',restart:'<path d="M4.5 12a7.5 7.5 0 1 0 2.2-5.3"/><path d="M4 4v4h4"/>',leave:'<rect x="4" y="4" width="6.5" height="6.5" rx="1.2"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="1.2"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="1.2"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.2"/>',vol:'<path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path d="M15.5 9q1.6 3 0 6M18 6.5q3.6 5.5 0 11"/>',fs:'<path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/>',close:'<path d="M6 6l12 12M18 6L6 18"/>'};
 const icon=k=>`<svg class="gi" viewBox="0 0 24 24" aria-hidden="true">${ICO[k]}</svg>`;
 function ctrlHTML(){ const b=(k,lab,cls)=>`<button class="gr-btn2 ${cls||''}" data-a="${k}" title="${lab}">${icon(k)}${cls&&cls.includes('io')?'':`<span>${lab}</span>`}</button>`;
-  return (scr==='junqi'?`<div class="gr-grp help">${b('rules',T('Rules','规则'))}</div><div class="gr-grp game">${b('restart',T('New Game','新的一局'))}${b('leave',T('All Games','游戏列表'))}</div>`:'')+(scr==='table'?`<div class="gr-grp help">${b('rules',T('Rules','规则'))}${b('tut',T('Tutorial','教程'))}</div><div class="gr-grp game">${b('restart',T('New Game','新的一局'))}${b('leave',T('All Games','游戏列表'))}</div>`:'')+
+  return (scr==='junqi'?`<div class="gr-grp help">${b('rules',T('Rules','规则'))}${b('tut',T('Tutorial','教程'))}</div><div class="gr-grp game">${b('restart',T('New Game','新的一局'))}${b('leave',T('All Games','游戏列表'))}</div>`:'')+(scr==='table'?`<div class="gr-grp help">${b('rules',T('Rules','规则'))}${b('tut',T('Tutorial','教程'))}</div><div class="gr-grp game">${b('restart',T('New Game','新的一局'))}${b('leave',T('All Games','游戏列表'))}</div>`:'')+
    `<div class="gr-grp sys">${b('vol',T('Volume','音量'),'io')}${b('fs',T('Full screen','全屏'),'io')}</div><button class="gr-btn2 cls" data-a="close" title="${T('Close','关闭')}">${icon('close')}<span>${T('Close','关闭')}</span><kbd>ESC</kbd></button>`; }
 function paint(html){ const keep=$$g(':scope>.gr-pop'); root.innerHTML=html; keep.forEach(n=>root.appendChild(n)); fsSync(); }
 // the full-screen button shows "enter" or "exit" to match the current state
@@ -10646,7 +10649,7 @@ function onDown(e){ const tag=e.target.closest('#gtHand .gt-tag,#gtHand .gc-bd')
 function onClick(e){ const a=e.target.closest('[data-a]'); if(scr==='junqi'&&!a){ jqClick(e); return; } if(!a) return; const k=a.dataset.a; if(['rules','tut','restart','leave','close','game','tn','tx'].includes(k)) snd('btn');
   if(k==='close') closeRoom(); else if(k==='leave'){ if(scr==='junqi') jqLeave(); else askLeave(); } else if(k==='game'){ if(a.dataset.g==='junqi') jqOpen(); else startGame(false); }
   else if(k==='play') doPlay(); else if(k==='pass') doPass(); else if(k==='hint') doHint(); else if(k==='sort') doSort(); else if(k==='cc'){ snd('btn'); ccToggle(); }
-  else if(k==='rules'){ if(scr==='junqi') jqRules(); else rules(); } else if(k==='tut') confirmPop(T('Start the tutorial?','开始教程？'),T('The current game will be abandoned and a practice hand will be dealt.','当前对局会被放弃，改为发一局练习牌。'),T('Start tutorial','开始教程'),()=>startTut());
+  else if(k==='rules'){ if(scr==='junqi') jqRules(); else rules(); } else if(k==='tut'&&scr==='junqi'){ if(JQ&&JQ.phase==='play'&&!JQ.tut) confirmPop(T('Start the tutorial?','开始教程？'),T('The current game will be abandoned.','当前对局会被放弃。'),T('Start tutorial','开始教程'),()=>{ jqStopReplay(); jqTutStart(); }); else { jqStopReplay(); $$g('.gr-pop').forEach(n=>n.remove()); jqTutStart(); } } else if(k==='tut') confirmPop(T('Start the tutorial?','开始教程？'),T('The current game will be abandoned and a practice hand will be dealt.','当前对局会被放弃，改为发一局练习牌。'),T('Start tutorial','开始教程'),()=>startTut());
   else if(k==='restart'&&scr==='junqi') confirmPop(T('Start a new game?','重新开始？'),T('The current game will be lost.','当前对局不会保存。'),T('New game','重新开始'),()=>jqNew());
   else if(k==='restart') confirmPop(T('Start a new game?','重新开始？'),T('The current game will be lost.','当前对局不会保存。'),T('New game','重新开始'),()=>startGame(true));
   else if(k==='vol') volPop(a); else if(k==='fs') toggleFs();
@@ -10771,7 +10774,7 @@ const JQ_EN={9:'Marshal',8:'General',7:'Maj.Gen',6:'Brigadier',5:'Colonel',4:'Ma
 const JQ_ENF={9:'Field Marshal',8:'General',7:'Major General',6:'Brigadier',5:'Colonel',4:'Major',3:'Captain',2:'Lieutenant',1:'Engineer',10:'Bomb',11:'Landmine',12:'Flag'};
 const JQ_V={9:10,8:8,7:6,6:4.6,5:3.6,4:2.7,3:2,2:1.5,1:2.6,10:5.5,11:2.2,12:60};
 // insignia for the English pieces: crown in laurels, stars, chevrons, crossed spade and pick, mine, burst, flag
-const JQ_ICO={"9": "<svg viewBox=\"0 0 24 24\"><path d=\"M7.4 14.6L6.6 8.8 9.6 11.2 12 7 14.4 11.2 17.4 8.8 16.6 14.6Z\"/><path d=\"M7.4 15.4h9.2v1.8H7.4z\"/><circle cx=\"6.6\" cy=\"8\" r=\"1\"/><circle cx=\"12\" cy=\"6.1\" r=\"1.05\"/><circle cx=\"17.4\" cy=\"8\" r=\"1\"/><ellipse cx=\"7.59\" cy=\"20.19\" rx=\"1.05\" ry=\"2.2\" transform=\"rotate(138 7.59 20.19)\"/><ellipse cx=\"5.13\" cy=\"18.47\" rx=\"1.05\" ry=\"2.2\" transform=\"rotate(157 5.13 18.47)\"/><ellipse cx=\"3.41\" cy=\"16.1\" rx=\"1.05\" ry=\"2.2\" transform=\"rotate(176 3.41 16.1)\"/><ellipse cx=\"2.64\" cy=\"13.35\" rx=\"1.05\" ry=\"2.2\" transform=\"rotate(195 2.64 13.35)\"/><ellipse cx=\"2.88\" cy=\"10.52\" rx=\"1.05\" ry=\"2.2\" transform=\"rotate(214 2.88 10.52)\"/><ellipse cx=\"16.41\" cy=\"20.19\" rx=\"1.05\" ry=\"2.2\" transform=\"rotate(42 16.41 20.19)\"/><ellipse cx=\"18.87\" cy=\"18.47\" rx=\"1.05\" ry=\"2.2\" transform=\"rotate(23 18.87 18.47)\"/><ellipse cx=\"20.59\" cy=\"16.1\" rx=\"1.05\" ry=\"2.2\" transform=\"rotate(4 20.59 16.1)\"/><ellipse cx=\"21.36\" cy=\"13.35\" rx=\"1.05\" ry=\"2.2\" transform=\"rotate(-15 21.36 13.35)\"/><ellipse cx=\"21.12\" cy=\"10.52\" rx=\"1.05\" ry=\"2.2\" transform=\"rotate(-34 21.12 10.52)\"/></svg>", "8": "<svg viewBox=\"0 0 24 24\"><path d=\"M12 2L13.14 5.04L16.37 5.18L13.84 7.2L14.7 10.32L12 8.53L9.3 10.32L10.16 7.2L7.63 5.18L10.86 5.04Z\"/><path d=\"M6.4 10.8L7.54 13.84L10.77 13.98L8.24 16L9.1 19.12L6.4 17.33L3.7 19.12L4.56 16L2.03 13.98L5.26 13.84Z\"/><path d=\"M17.6 10.8L18.74 13.84L21.97 13.98L19.44 16L20.3 19.12L17.6 17.33L14.9 19.12L15.76 16L13.23 13.98L16.46 13.84Z\"/></svg>", "7": "<svg viewBox=\"0 0 24 24\"><path d=\"M6.8 7L8.03 10.3L11.56 10.45L8.8 12.65L9.74 16.05L6.8 14.1L3.86 16.05L4.8 12.65L2.04 10.45L5.57 10.3Z\"/><path d=\"M17.2 7L18.43 10.3L21.96 10.45L19.2 12.65L20.14 16.05L17.2 14.1L14.26 16.05L15.2 12.65L12.44 10.45L15.97 10.3Z\"/></svg>", "6": "<svg viewBox=\"0 0 24 24\"><path d=\"M12 0.8L12.84 3.04L15.23 3.15L13.36 4.64L14 6.95L12 5.63L10 6.95L10.64 4.64L8.77 3.15L11.16 3.04Z\"/><path d=\"M3.5 10.8L12 15L20.5 10.8L20.5 7.9L12 12.1L3.5 7.9Z\"/><path d=\"M3.5 17L12 21.2L20.5 17L20.5 14.1L12 18.3L3.5 14.1Z\"/></svg>", "5": "<svg viewBox=\"0 0 24 24\"><path d=\"M3 7.4L12 12.4L21 7.4L21 4L12 9L3 4Z\"/><path d=\"M3 14.6L12 19.6L21 14.6L21 11.2L12 16.2L3 11.2Z\"/></svg>", "4": "<svg viewBox=\"0 0 24 24\"><path d=\"M1.5 14.2L12 7L22.5 14.2L22.5 18.6L12 11.4L1.5 18.6Z\"/></svg>", "3": "<svg viewBox=\"0 0 24 24\"><path d=\"M3 10.4L12 4.6L21 10.4L21 14L12 8.2L3 14Z\"/><path d=\"M3 17.6L12 11.8L21 17.6L21 21.2L12 15.4L3 21.2Z\"/></svg>", "2": "<svg viewBox=\"0 0 24 24\"><path d=\"M4.5 14.2L12 8.6L19.5 14.2L19.5 17.6L12 12L4.5 17.6Z\"/></svg>", "1": "<svg viewBox=\"0 0 24 24\"><path d=\"M4.4 21.6l-1.6-1.6 9.4-9.4 1.6 1.6z\"/><path d=\"M1.9 19.3l3.2 3.2 1.1-1.1-3.2-3.2z\"/><path d=\"M11.6 10.2l3 3 2.2-2.2c.5-.5.5-1.3 0-1.8l-1.2-1.2c-.5-.5-1.3-.5-1.8 0z\"/><path d=\"M14.2 7.6l2.6 2.6 3.6-3.6-2.6-2.6z\"/><path d=\"M20 21.6l1.6-1.6-11.2-11.2-1.6 1.6z\"/><path d=\"M3.2 7.2C5.6 3.6 10 2 14.2 3l.6 1.4-2.2 2.2-1.6-.3C8.3 5.7 5.7 6.4 3.2 7.2z\"/></svg>", "11": "<svg viewBox=\"0 0 24 24\"><path d=\"M2 12.4c0-1.9 4.5-3.3 10-3.3s10 1.4 10 3.3v4.2c0 1.9-4.5 3.4-10 3.4S2 18.5 2 16.6z\"/><path class=\"d\" d=\"M3.2 15.4c1.6 1.2 5 1.9 8.8 1.9s7.2-.7 8.8-1.9v1c-1.6 1.2-5 1.9-8.8 1.9s-7.2-.7-8.8-1.9z\"/><path class=\"d\" fill-rule=\"evenodd\" d=\"M12 9.6c3.6 0 6.3.9 6.3 2.1S15.6 13.8 12 13.8 5.7 12.9 5.7 11.7 8.4 9.6 12 9.6zm0 1c-2.5 0-4.4.5-4.4 1.1s1.9 1.1 4.4 1.1 4.4-.5 4.4-1.1-1.9-1.1-4.4-1.1z\"/></svg>", "10": "<svg viewBox=\"0 0 24 24\"><path d=\"M12 3.22L13.26 9.14L16.54 6.49L15.27 10.51L21.55 9.06L16.67 12.56L20.31 14.34L15.87 14.88L19.94 19.73L14.5 16.9L14.37 20.86L12 17.47L9.04 22.77L9.7 16.59L5.65 18.43L7.81 15.02L1.61 14.62L7.81 12.63L4.36 9.88L8.56 10.37L6.32 4.81L10.8 9.32Z\"/></svg>", "12": "<svg viewBox=\"0 0 24 24\"><path d=\"M4.1 3.4h1.8v19H4.1z\"/><circle cx=\"5\" cy=\"2.6\" r=\"1.5\"/><path d=\"M6.4 4.4c2.8-1.5 5.3.6 8.2.2 2.2-.3 4-1.3 6.1-1.7v10.2c-2.1.4-3.9 1.4-6.1 1.7-2.9.4-5.4-1.7-8.2-.2z\"/></svg>"};
+const JQ_ICO={"9": "<svg viewBox=\"0 0 24 24\"><path d=\"M10.8 20.12A8.6 8.6 0 0 1 3.92 8.66\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.1\" stroke-linecap=\"round\"/><path transform=\"translate(8.91 19.63) rotate(-102.95)\" d=\"M0 0Q1.5 -2.05 0 -4.1Q-1.5 -2.05 0 0Z\"/><path transform=\"translate(5.94 17.71) rotate(-79.23)\" d=\"M0 0Q1.5 -2.05 0 -4.1Q-1.5 -2.05 0 0Z\"/><path transform=\"translate(4 14.75) rotate(-55.51)\" d=\"M0 0Q1.5 -2.05 0 -4.1Q-1.5 -2.05 0 0Z\"/><path transform=\"translate(3.41 11.27) rotate(-31.79)\" d=\"M0 0Q1.5 -2.05 0 -4.1Q-1.5 -2.05 0 0Z\"/><path d=\"M13.2 20.12A8.6 8.6 0 0 0 20.08 8.66\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.1\" stroke-linecap=\"round\"/><path transform=\"translate(15.09 19.63) rotate(102.95)\" d=\"M0 0Q1.5 -2.05 0 -4.1Q-1.5 -2.05 0 0Z\"/><path transform=\"translate(18.06 17.71) rotate(79.23)\" d=\"M0 0Q1.5 -2.05 0 -4.1Q-1.5 -2.05 0 0Z\"/><path transform=\"translate(20 14.75) rotate(55.51)\" d=\"M0 0Q1.5 -2.05 0 -4.1Q-1.5 -2.05 0 0Z\"/><path transform=\"translate(20.59 11.27) rotate(31.79)\" d=\"M0 0Q1.5 -2.05 0 -4.1Q-1.5 -2.05 0 0Z\"/><path d=\"M7 15.6L6 8.2l3.4 3.2L12 6l2.6 5.4L18 8.2l-1 7.4z\"/><path d=\"M7 16.4h10v1.9H7z\"/><circle cx=\"6\" cy=\"7.4\" r=\"1.05\"/><circle cx=\"12\" cy=\"5\" r=\"1.15\"/><circle cx=\"18\" cy=\"7.4\" r=\"1.05\"/><path class=\"d\" d=\"M11.1 12.6l.9-1.3.9 1.3-.9 1.3z\"/></svg>", "8": "<svg viewBox=\"0 0 24 24\"><path d=\"M12 2L13.14 5.04L16.37 5.18L13.84 7.2L14.7 10.32L12 8.53L9.3 10.32L10.16 7.2L7.63 5.18L10.86 5.04Z\"/><path d=\"M6.4 10.8L7.54 13.84L10.77 13.98L8.24 16L9.1 19.12L6.4 17.33L3.7 19.12L4.56 16L2.03 13.98L5.26 13.84Z\"/><path d=\"M17.6 10.8L18.74 13.84L21.97 13.98L19.44 16L20.3 19.12L17.6 17.33L14.9 19.12L15.76 16L13.23 13.98L16.46 13.84Z\"/></svg>", "7": "<svg viewBox=\"0 0 24 24\"><path d=\"M6.8 7L8.03 10.3L11.56 10.45L8.8 12.65L9.74 16.05L6.8 14.1L3.86 16.05L4.8 12.65L2.04 10.45L5.57 10.3Z\"/><path d=\"M17.2 7L18.43 10.3L21.96 10.45L19.2 12.65L20.14 16.05L17.2 14.1L14.26 16.05L15.2 12.65L12.44 10.45L15.97 10.3Z\"/></svg>", "6": "<svg viewBox=\"0 0 24 24\"><path d=\"M12 0.8L12.84 3.04L15.23 3.15L13.36 4.64L14 6.95L12 5.63L10 6.95L10.64 4.64L8.77 3.15L11.16 3.04Z\"/><path d=\"M3.5 10.8L12 15L20.5 10.8L20.5 7.9L12 12.1L3.5 7.9Z\"/><path d=\"M3.5 17L12 21.2L20.5 17L20.5 14.1L12 18.3L3.5 14.1Z\"/></svg>", "5": "<svg viewBox=\"0 0 24 24\"><path d=\"M3 7.4L12 12.4L21 7.4L21 4L12 9L3 4Z\"/><path d=\"M3 14.6L12 19.6L21 14.6L21 11.2L12 16.2L3 11.2Z\"/></svg>", "4": "<svg viewBox=\"0 0 24 24\"><path d=\"M1.5 14.2L12 7L22.5 14.2L22.5 18.6L12 11.4L1.5 18.6Z\"/></svg>", "3": "<svg viewBox=\"0 0 24 24\"><path d=\"M3 10.4L12 4.6L21 10.4L21 14L12 8.2L3 14Z\"/><path d=\"M3 17.6L12 11.8L21 17.6L21 21.2L12 15.4L3 21.2Z\"/></svg>", "2": "<svg viewBox=\"0 0 24 24\"><path d=\"M4.5 14.2L12 8.6L19.5 14.2L19.5 17.6L12 12L4.5 17.6Z\"/></svg>", "1": "<svg viewBox=\"0 0 24 24\"><path d=\"M7.49 8.91L18.89 20.31L20.31 18.89L8.91 7.49Z\"/><path d=\"M18.97 21.77L21.77 18.97L20.63 17.83L17.83 20.63Z\"/><path d=\"M3.4 7.6L7.6 3.4c.5-.5 1.3-.5 1.8 0l2.2 2.2-6 6-2.2-2.2c-.5-.5-.5-1.3 0-1.8z\"/><path d=\"M8.54 10.66L9.94 12.06L12.06 9.94L10.66 8.54Z\"/><path d=\"M15.49 7.09L3.69 18.89L5.11 20.31L16.91 8.51Z\"/><path d=\"M2.63 18.97L5.03 21.37L6.17 20.23L3.77 17.83Z\"/><path d=\"M10.4 2.4Q16.6 2.6 21.6 13.6L20.4 13.9Q16.2 6.4 10.4 3.8Z\"/></svg>", "11": "<svg viewBox=\"0 0 24 24\"><path d=\"M2 12.4c0-1.9 4.5-3.3 10-3.3s10 1.4 10 3.3v4.2c0 1.9-4.5 3.4-10 3.4S2 18.5 2 16.6z\"/><path class=\"d\" d=\"M3.2 15.4c1.6 1.2 5 1.9 8.8 1.9s7.2-.7 8.8-1.9v1c-1.6 1.2-5 1.9-8.8 1.9s-7.2-.7-8.8-1.9z\"/><path class=\"d\" fill-rule=\"evenodd\" d=\"M12 9.6c3.6 0 6.3.9 6.3 2.1S15.6 13.8 12 13.8 5.7 12.9 5.7 11.7 8.4 9.6 12 9.6zm0 1c-2.5 0-4.4.5-4.4 1.1s1.9 1.1 4.4 1.1 4.4-.5 4.4-1.1-1.9-1.1-4.4-1.1z\"/></svg>", "10": "<svg viewBox=\"0 0 24 24\"><path d=\"M12 3.22L13.26 9.14L16.54 6.49L15.27 10.51L21.55 9.06L16.67 12.56L20.31 14.34L15.87 14.88L19.94 19.73L14.5 16.9L14.37 20.86L12 17.47L9.04 22.77L9.7 16.59L5.65 18.43L7.81 15.02L1.61 14.62L7.81 12.63L4.36 9.88L8.56 10.37L6.32 4.81L10.8 9.32Z\"/></svg>", "12": "<svg viewBox=\"0 0 24 24\"><path d=\"M4.1 3.4h1.8v19H4.1z\"/><circle cx=\"5\" cy=\"2.6\" r=\"1.5\"/><path d=\"M6.4 4.4c2.8-1.5 5.3.6 8.2.2 2.2-.3 4-1.3 6.1-1.7v10.2c-2.1.4-3.9 1.4-6.1 1.7-2.9.4-5.4-1.7-8.2-.2z\"/></svg>"};
 const JQ_CAMP=new Set(['2,1','2,3','3,2','4,1','4,3','7,1','7,3','8,2','9,1','9,3']), JQ_HQ=new Set(['0,1','0,3','11,1','11,3']);
 const jqKey=(r,c)=>r+','+c, jqCamp=(r,c)=>JQ_CAMP.has(jqKey(r,c)), jqHQ=(r,c)=>JQ_HQ.has(jqKey(r,c));
 const jqRailRow=r=>r===1||r===5||r===6||r===10, jqRailCol=(r,c)=>(c===0||c===4)&&r>=1&&r<=10;
@@ -11014,12 +11017,12 @@ function jqRender(){ const S=JQ; root.className='on jqm'; const opp=U[S.opp];
 function jqRefDraw(){ const S=JQ, el=$g('.jq-ref'); if(!el) return; if(!S||S.phase==='setup'){ el.innerHTML=''; return; }
   const B=(e,z)=>T(e,z), tile=t=>`<span class="jq-lt b"><span class="jq-ltf">${jqFace(t)}</span></span>`;
   const nm={9:B('Field Marshal','司令'),8:B('General','军长'),7:B('Major General','师长'),6:B('Brigadier','旅长'),5:B('Colonel','团长'),4:B('Major','营长'),3:B('Captain','连长'),2:B('Lieutenant','排长'),1:B('Engineer','工兵')};
-  const note={9:B('Its fall exposes your Flag','阵亡后军旗暴露'),1:B('Turns on rails, clears mines','铁路拐弯，能挖地雷')};
-  const sp=[[12,B('Flag','军旗'),B('Lost if any enemy reaches it','被敌方棋子摸到即输')],[10,B('Bomb','炸弹'),B('Takes out whatever it meets','与碰到的棋子同归于尽')],[11,B('Mine','地雷'),B('Kills officers; Engineers clear it','军官撞上即亡，工兵能挖')]];
-  el.innerHTML=`<div class="jq-box jq-refb${zh()?' zh':''}"><h4>${T('Ranks','棋子大小')}</h4><p class="jq-rsub">${T('Higher rank wins; equal ranks both fall.','官大吃官小，同级同归于尽。')}</p>
-    <ol class="jq-ladder">${[9,8,7,6,5,4,3,2,1].map(t=>`<li>${tile(t)}<div>${zh()?'':`<b>${nm[t]}</b>`}<em>×${JQ_N[t]}</em>${note[t]?`<small>${note[t]}</small>`:''}</div></li>`).join('')}</ol>
+  const note={9:B('Its fall exposes your Flag','阵亡则军旗暴露'),1:B('Turns on rails, digs mines','铁路可拐弯 · 能挖雷')};
+  const sp=[[12,B('Flag','军旗'),B('Lost if reached','被摸到即输')],[10,B('Bomb','炸弹'),B('Takes both out','碰谁同归于尽')],[11,B('Mine','地雷'),B('Kills officers','军官撞上即亡')]];
+  el.innerHTML=`<div class="jq-box jq-refb${zh()?' zh':''}"><div class="jq-rh"><h4>${T('Ranks','棋子大小')}</h4><span>${T('Higher wins · equals both fall','官大吃官小 · 同级同归于尽')}</span></div>
+    <ol class="jq-ladder">${[9,8,7,6,5,4,3,2,1].map(t=>`<li>${tile(t)}<div class="tx">${zh()?'':`<b>${nm[t]}</b>`}${note[t]?`<small>${note[t]}</small>`:''}</div><em>×${JQ_N[t]}</em></li>`).join('')}</ol>
     <div class="jr-div"><span>${T('Special pieces','特殊棋子')}</span></div>
-    <ul class="jq-sps">${sp.map(([t,n,d])=>`<li>${tile(t)}<div>${zh()?'':`<b>${n}</b>`}<em>×${JQ_N[t]}</em><small>${d}</small></div></li>`).join('')}</ul></div>`; }
+    <div class="jq-spc">${sp.map(([t,n,d])=>`<div>${tile(t)}<b>${zh()?'':n}<em>×${JQ_N[t]}</em></b><small>${d}</small></div>`).join('')}</div></div>`; }
 function jqPieceHTML(p,S,rp){ const mine=p.side===0, exp=p.t===12&&S.flagShown[p.side], show=mine||rp||S.over!=null||exp||S.open, m=!show&&S.marks[p.id];
   return `<div class="jq-p ${mine?'b':'r'}${show||m?' up':' dn'}${m?' mk':''}${exp&&!rp?' ex':''}" data-id="${p.id}" style="left:${jqPos(p.k)[0]}%;top:${jqPos(p.k)[1]}%">
     <div class="jq-pf">${show?jqFace(p.t):m?jqMarkFace(m):JQ_SEAL()}</div>${exp&&!rp?jqEye(S,p.side):''}</div>`; }
@@ -11157,8 +11160,8 @@ async function jqDo(m){ const S=JQ; S.busy=true; S.sel=null; jqDraw(); const p=j
   const w=jqWinner(S); jqDraw(); jqLogDraw(); if(w!=null){ S.busy=false; jqEnd(w,w===0?T('You captured the enemy Flag.','你扛走了敌方军旗。'):w===1?T('The enemy captured your Flag.','敌方扛走了你的军旗。'):''); return; }
   S.turn=1-S.turn; if(!jqAllMoves(S,S.turn).length){ S.busy=false; jqEnd(1-S.turn,S.turn===0?T('You have no pieces that can move.','你已经没有可以走的棋子了。'):T('The opponent has no pieces that can move.','对手已经没有可以走的棋子了。')); return; }
   S.busy=false; jqCtl(); jqDraw(); if(S.turn===1) jqAiTurn(); }
-async function jqAiTurn(){ const S=JQ; S.busy=true; jqCtl(); jqDraw(); await new Promise(k=>setTimeout(k,reduce?20:220)); if(JQ!==S||S.over!=null||S.phase!=='play') return;
-  const t0=performance.now(); const m=jqAiMove2(S)||jqAiMove(S); const wait=Math.max(0,(reduce?0:380)-(performance.now()-t0)); await new Promise(k=>setTimeout(k,wait)); if(JQ!==S||S.phase!=='play') return;
+async function jqAiTurn(){ const S=JQ; S.busy=true; jqCtl(); jqDraw(); await new Promise(k=>setTimeout(k,reduce?20:450)); if(JQ!==S||S.over!=null||S.phase!=='play') return;
+  const t0=performance.now(); const m=jqAiMove2(S)||jqAiMove(S); const wait=Math.max(0,(reduce?0:600)-(performance.now()-t0)); await new Promise(k=>setTimeout(k,wait)); if(JQ!==S||S.phase!=='play') return;
   S.busy=false; if(!m){ jqEnd(0,T('The opponent cannot move.','对手无子可走。')); return; } jqDo(m); }
 function jqUndo(){ const S=JQ; if(S.busy||S.turn!==0) return; let n=S.moves.length; const mineAt=i=>S.moves[i].id<100;
   n--; while(n>=0&&!mineAt(n)) n--; if(n<0) return; const moves=S.moves.slice(0,n);
@@ -11242,7 +11245,7 @@ function jqTutVeil(sp){ const bd=$g('.jq-board'); if(!bd) return; let v=bd.query
 function jqTutPlace(){ if(!JQT||!JQ||scr!=='junqi'){ const o=$g('.jq-tov'); if(o) o.remove(); return; }
   const o=jqTutUI(), sp=jqTutSpec(), hole=o.querySelector('.tut-hole'), tap=o.querySelector('.tut-tap'), beam=o.querySelector('.tut-beam'), R=root.getBoundingClientRect();
   jqTutVeil(sp);
-  const hr=sp.page?jqTutRect(sp.page):null, was=o.classList.contains('nodim'); o.classList.toggle('nodim',!hr); if(hr){ const p=8; hole.style.cssText=`left:${hr.l-p}px;top:${hr.t-p}px;width:${hr.w+2*p}px;height:${hr.h+2*p}px${was?';transition:none':''}`; if(was) requestAnimationFrame(()=>requestAnimationFrame(()=>{ hole.style.transition=''; })); }
+  const hr=sp.page?jqTutRect(sp.page):null, was=o.classList.contains('nodim'); o.classList.toggle('hi',!!(sp.page&&sp.page.split(',').some(q=>{ const e=$g(q.trim()); return e&&e.closest('.gr-top'); }))); o.classList.toggle('nodim',!hr); if(hr){ const p=8; hole.style.cssText=`left:${hr.l-p}px;top:${hr.t-p}px;width:${hr.w+2*p}px;height:${hr.h+2*p}px${was?';transition:none':''}`; if(was) requestAnimationFrame(()=>requestAnimationFrame(()=>{ hole.style.transition=''; })); }
   let tp=null; if(sp.tapK) tp=jqTutKeyPt(sp.tapK); else if(sp.tapSel){ const r=jqTutRect(sp.tapSel); if(r) tp={x:r.l+r.w*.5,y:r.t+r.h*.55}; }
   tap.classList.toggle('on',!!tp); tap.classList.toggle('rc',!!(tp&&sp.rc)); if(tp){ tap.style.left=tp.x+'px'; tap.style.top=tp.y+'px'; }
   // the beam runs from the general's portrait to the spot
