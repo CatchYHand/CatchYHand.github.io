@@ -4308,6 +4308,7 @@ html:not([lang=zh]) .gt-choose .gc-lb b{font-family:'Newsreader','Noto Serif SC'
 .jq-tcard.fl::after{content:"";position:absolute;inset:-1px;border-radius:inherit;pointer-events:none;box-shadow:inset 0 1px 0 rgba(255,230,160,.25)}
 .jq-tcard.fl::after{display:none!important}
 .jq-tcard.fl{overflow-x:hidden!important;overflow-y:auto;scrollbar-width:thin}
+.jq-lhint{margin:.5rem 0 0;font:500 .72rem/1.45 var(--f-body);color:#cdb88a}
 /* ===== Pages & Frames: a reading room, green-leather rail and paper pages ===== */
 #reader.shelf{--sh-bg:#F3EEE3;--sh-ink:#23201A;--sh-ink2:#6B6252;--sh-acc:#8B2B22;--sh-green:#1F3329;--sh-line:#DCD2BF;--cx:#8B2B22}
 #reader.shelf .rd-main,#reader.shelf .rd-leaf{background:var(--sh-bg) linear-gradient(90deg,rgba(80,60,30,.05) 1px,transparent 1px) 0 0/22px 100%}
@@ -11037,8 +11038,8 @@ function jqRefDraw(){ const S=JQ, el=$g('.jq-ref'); if(!el) return; if(!S||S.pha
     <div class="jr-div"><span>${T('Special pieces','特殊棋子')}</span></div>
     <div class="jq-spc">${sp.map(([t,n,d])=>`<div>${tile(t)}<b>${zh()?'':n}<em>×${JQ_N[t]}</em></b><small>${d}</small></div>`).join('')}</div></div>`; }
 function jqPieceHTML(p,S,rp){ const mine=p.side===0, exp=p.t===12&&S.flagShown[p.side], show=mine||rp||S.over!=null||exp||S.open, m=!show&&S.marks[p.id];
-  return `<div class="jq-p ${mine?'b':'r'}${show||m?' up':' dn'}${m?' mk':''}${exp&&!rp?' ex':''}" data-id="${p.id}" style="left:${jqPos(p.k)[0]}%;top:${jqPos(p.k)[1]}%">
-    <div class="jq-pf">${show?jqFace(p.t):m?jqMarkFace(m):JQ_SEAL()}</div>${exp&&!rp?jqEye(S,p.side):''}</div>`; }
+  return `<div class="jq-p ${mine?'b':'r'}${show||m?' up':' dn'}${m?' mk':''}${exp?' ex':''}" data-id="${p.id}" style="left:${jqPos(p.k)[0]}%;top:${jqPos(p.k)[1]}%">
+    <div class="jq-pf">${show?jqFace(p.t):m?jqMarkFace(m):JQ_SEAL()}</div>${exp?jqEye(S,p.side):''}</div>`; }
 function jqHits(){ const S=JQ, out=[];
   if(S.phase==='play'&&S.turn===0&&!S.busy&&S.sel!=null){ const only=S.tut&&typeof jqTutOnly==='function'?jqTutOnly():null; jqMoves(S,jqP(S,S.sel)).forEach(m=>{ if(!only||m.to===only) out.push([m.to,m.atk]); }); }
   if(S.phase==='setup'){ const p=S.box!=null?jqP(S,S.box):S.sel!=null?jqP(S,S.sel):null;
@@ -11057,7 +11058,7 @@ function jqCtl(){ const S=JQ, c=$g('.jq-ctl'); if(!c) return;
   if(S.phase==='setup'){ const left=S.pcs.filter(p=>p.side===0&&!p.k).length;
     c.innerHTML=`<div class="jq-box st"><h4>${T('Deploy your army','布阵')}</h4><p>${T('Pick a piece from the box on the right and tap a lit square to place it, or choose a ready-made layout below.','从右边棋盒里选一枚棋子，再点棋盘上亮起的格子放下；也可以直接选用下面的系统布阵。')}</p>
       <div class="jq-bt three"><button data-j="rand">${T('Random','随机布阵')}</button><button data-j="last">${T('Last used','上次阵型')}</button><button data-j="clear">${T('Clear','全部收回')}</button></div>
-      <h5 class="jq-sub">${T('Ready-made layouts','系统布阵')}</h5><div class="jq-lays">${JQ_LAYOUTS.map((_,i)=>`<button data-j="lay${i}" class="${S.preset===i?'on':''}">${T('Layout '+(i+1),'布阵'+(i+1))}</button>`).join('')}</div>
+      <h5 class="jq-sub">${T('Ready-made layouts','系统布阵')}</h5><div class="jq-lays">${JQ_LAYOUTS.map((_,i)=>`<button data-j="lay${i}" class="${S.preset===i?'on':''}">${T('Layout '+(i+1),'布阵'+(i+1))}</button>`).join('')}</div><p class="jq-lhint">${T('After picking a layout you can still rearrange it: left-click two of your pieces to swap them, or right-click a piece to send it back to the box.','选定阵型后仍可随时调整：左键依次点两枚棋子即可互换位置，右键点棋子可将其放回棋盒。')}</p>
       <button class="jq-go" data-j="start" ${left?'disabled':''}>${left?T(`${left} pieces still in the box`,`棋盒里还有 ${left} 枚棋子`):T('Start the battle','布阵完成，开战')}</button></div>`; }
   else if(S.tut&&S.phase==='play'){ c.innerHTML=`<div class="jq-box st"><h4 class="jq-turn">${T('Training','教学演练')}</h4><p>${T('Follow the old general on the right.','跟着右边老将军的指引操作。')}</p><div class="jq-bt"><button data-j="undo" ${S.moves.some(m=>m.id<100)&&!S.busy?'':'disabled'}>${T('Undo','悔棋')}</button><button data-j="tutx">${T('Leave','退出教学')}</button></div></div>`; }
   else if(S.phase==='play'){ const canUndo=S.turn===0&&!S.busy&&S.moves.some(m=>m.id<100);
@@ -11129,13 +11130,15 @@ function jqClick(e){ const S=JQ; if(!S) return; const b=e.target.closest('[data-
       if(S.box!=null){ const p=jqP(S,S.box), t=p.t; if(q){ delete S.at[q.k]; q.k=null; } p.k=to; S.at[to]=p.id; const nx=S.pcs.find(x=>x.side===0&&!x.k&&x.t===t); S.box=nx?nx.id:null; if(S.tut) jqTutEvt({type:'place',t}); }
       else if(S.sel!=null){ const p=jqP(S,S.sel), from=p.k; delete S.at[from]; if(q){ q.k=from; S.at[from]=q.id; } p.k=to; S.at[to]=p.id; S.sel=null; }
       jqSnd('place'); jqRefresh(); return; }
-    const pe=e.target.closest('.jq-p.b'); if(pe){ const id=+pe.dataset.id; S.sel=S.sel===id?null:id; S.box=null; jqSnd('pick'); jqRefresh(); return; }
+    const pe=e.target.closest('.jq-p.b'); if(pe&&S.sel!=null&&+pe.dataset.id!==S.sel){ const a=jqP(S,S.sel), b=jqP(S,+pe.dataset.id), ka=a.k, kb=b.k; if(jqLegalSpot(a.t,...jqRC(kb),0)&&jqLegalSpot(b.t,...jqRC(ka),0)){ a.k=kb; b.k=ka; S.at[kb]=a.id; S.at[ka]=b.id; S.sel=null; S.preset=-1; jqSnd('place'); jqRefresh(); return; } jqSnd('err'); return; }
+    if(pe){ const id=+pe.dataset.id; S.sel=S.sel===id?null:id; S.box=null; jqSnd('pick'); jqRefresh(); return; }
     if(S.sel!=null||S.box!=null){ S.sel=null; S.box=null; jqRefresh(); } return; }
   if(S.phase!=='play'||S.turn!==0||S.busy) return;
   if(to&&S.sel!=null){ const m=jqMoves(S,jqP(S,S.sel)).find(x=>x.to===to); if(m){ const mv={id:S.sel,to:m.to,path:m.path}; if(S.tut&&!jqTutAllow(mv)){ S.sel=null; jqDraw(); return; } jqDo(mv); return; } }
   const pe=e.target.closest('.jq-p'); if(!pe){ if(S.sel!=null){ S.sel=null; jqDraw(); } return; } const p=jqP(S,+pe.dataset.id);
   if(p.side===0){ if(!jqMovable(S,p)||!jqMoves(S,p).length){ jqSnd('err'); S.sel=null; jqDraw(); return; } S.sel=S.sel===p.id?null:p.id; if(S.sel!=null) jqSnd('pick'); jqDraw(); } }
 function jqMark(e){ const S=JQ; if(!S||!e.target.closest('.jq-mid')) return; e.preventDefault();
+  if(S.phase==='setup'){ let q=e.target.closest('.jq-p.b'); if(!q){ const h=e.target.closest('.jq-hit'); const x=h&&jqAt(S,h.dataset.to); if(x&&x.side===0) q=$g(`.jq-p[data-id="${x.id}"]`); } if(!q) return; const p=jqP(S,+q.dataset.id); if(!p||!p.k) return; delete S.at[p.k]; p.k=null; if(S.sel===p.id) S.sel=null; S.preset=-1; jqSnd('place'); jqRefresh(); return; }
   if(S.phase!=='play') return; let pe=e.target.closest('.jq-p.r'); if(!pe){ const h=e.target.closest('.jq-hit'); if(h){ const q=jqAt(S,h.dataset.to); if(q&&q.side===1) pe=$g(`.jq-p[data-id="${q.id}"]`); } }
   if(!pe) return; const id=+pe.dataset.id, p=jqP(S,id); if(p.t===12&&S.flagShown[1]) return;
   $$g('.jq-mpop').forEach(n=>n.remove()); const opts=[9,8,7,6,5,4,3,2,1,10,11,12,'q','x','big','small']; const pop=document.createElement('div'); pop.className='jq-mpop';
@@ -11201,9 +11204,9 @@ function jqRpCtl(){ const S=JQ, c=$g('.jq-ctl'); if(!c||!JQRP) return; const n=S
     <div class="jq-rpb"><button data-j="rpprev" title="${T('Previous move','上一步')}" ${JQRP.i?'':'disabled'}><svg viewBox="0 0 24 24"><path d="M6 5v14M18 5L9 12l9 7z"/></svg></button><button class="pl" data-j="rpplay" title="${JQRP.play?T('Pause','暂停'):T('Play','自动播放')}">${JQRP.play?'<svg viewBox="0 0 24 24"><path d="M8 5v14M16 5v14"/></svg>':'<svg viewBox="0 0 24 24"><path d="M7 4.5v15l12.5-7.5z"/></svg>'}</button><button data-j="rpnext" title="${T('Next move','下一步')}" ${JQRP.i<n?'':'disabled'}><svg viewBox="0 0 24 24"><path d="M18 5v14M6 5l9 7-9 7z"/></svg></button></div>
     <button class="jq-go alt" data-j="rpexit">${T('Leave the replay','退出复盘')}</button><button class="jq-go" data-j="again">${T('Play again','再来一局')}</button></div>`; jqLogDraw(); }
 async function jqRpStep(){ const S=JQ, R=JQRP; if(!R||R.i>=S.moves.length||R.busy) return; R.busy=true; const m=S.moves[R.i], st=R.S, p=jqP(st,m.id), from=p.k;
-  await jqAnimMove(st,m); if(JQRP!==R) return; const info=jqApply(st,m); st.last={from,to:m.to,side:p.side};
+  await jqAnimMove(st,m); if(JQRP!==R) return; const fs0=st.flagShown.slice(); const info=jqApply(st,m); st._eyeAt=st._eyeAt||{}; [0,1].forEach(s=>{ if(st.flagShown[s]&&!fs0[s]) st._eyeAt[s]=performance.now(); }); st.last={from,to:m.to,side:p.side};
   if(info.res) await jqClash(info,m.to); else jqSnd('move'); if(JQRP!==R) return; R.i++; st.turn=1-st.turn; R.busy=false; jqDraw(st); jqRpCtl();
-  if(R.play){ if(R.i<S.moves.length) R.timer=setTimeout(jqRpStep,reduce?40:520); else { R.play=false; jqRpCtl(); } } }
+  if(R.play){ if(R.i<S.moves.length) R.timer=setTimeout(jqRpStep,reduce?40:950); else { R.play=false; jqRpCtl(); } } }
 function jqRpBtn(k){ const S=JQ, R=JQRP; if(!R) return;
   if(k==='exit'){ jqStopReplay(); S.phase='over'; jqRender(); return; }
   if(k==='play'){ R.play=!R.play; clearTimeout(R.timer); if(R.play){ if(R.i>=S.moves.length){ R.i=0; R.S=jqBuild(S,0); jqDraw(R.S); } jqRpStep(); } jqRpCtl(); return; }
