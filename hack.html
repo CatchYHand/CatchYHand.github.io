@@ -11278,7 +11278,7 @@ function jqTutPlace(){ if(!JQT||!JQ||scr!=='junqi'){ const o=$g('.jq-tov'); if(o
   else beam.classList.remove('on'); }
 const JQ_TUT_ROADS=['8,0>8,1','7,2>8,2','8,2>9,2','8,3>8,4','11,0>11,1'], JQ_TUT_RAILS=['6,0>6,1','6,1>6,2','6,2>6,3','6,3>6,4','6,0>7,0','7,0>8,0','8,0>9,0','9,0>10,0','10,0>10,1','10,1>10,2','10,2>10,3','10,3>10,4','6,4>7,4','7,4>8,4','8,4>9,4','9,4>10,4'];
 const JQ_PZ=[[1,12,'0,3'],[1,11,'0,4'],[1,11,'1,3'],[1,7,'1,4'],[1,9,'3,4'],[1,1,'5,0'],[1,4,'4,2'],[1,8,'2,1'],[0,12,'11,1'],[0,11,'11,0'],[0,11,'11,2'],[0,11,'10,1'],[0,10,'6,4'],[0,8,'8,4'],[0,1,'10,4'],[0,2,'9,1'],[0,5,'7,2']];
-const JQ_DRILL=[[0,10,'7,3'],[0,3,'7,2'],[0,7,'10,0'],[0,1,'10,4'],[0,4,'10,2'],[0,12,'11,1'],[0,11,'11,0'],[0,11,'11,2'],[1,2,'3,0'],[1,8,'2,0'],[1,6,'4,1'],[1,5,'2,2'],[1,12,'0,3'],[1,11,'0,2'],[1,11,'0,4'],[1,9,'4,3']];
+const JQ_DRILL=[[0,10,'7,3'],[0,3,'7,2'],[0,7,'10,0'],[0,1,'10,2'],[0,4,'9,2'],[0,8,'5,4'],[0,12,'11,1'],[0,11,'11,0'],[0,11,'11,2'],[1,2,'3,0'],[1,8,'2,0'],[1,6,'4,1'],[1,5,'2,2'],[1,12,'0,3'],[1,11,'0,2'],[1,11,'0,4'],[1,9,'4,3']];
 function jqTutSteps(){ const B=(e,z)=>[e,z];
   return [
   {sc:'empty',say:B('Commander, word from the front: the enemy has taken up position across the valley. I am the old general who will walk you through this map table before the real fighting starts.','总司令，前线来报：敌军已经在山谷对面摆好了阵。我是老将军，开战之前，先陪你把这张沙盘看个明白。')},
@@ -11302,9 +11302,9 @@ function jqTutSteps(){ const B=(e,z)=>[e,z];
   {quiz:{q:B('An Engineer attacks a landmine. What happens?','工兵去碰地雷，结果是？'),o:[B('The Engineer is blown up','工兵被炸死'),B('The mine is cleared','地雷被挖掉'),B('Both are removed','同归于尽')],a:1,why:B('Only the Engineer can clear a mine.','只有工兵能挖地雷。')}},
   {quiz:{q:B('Your Colonel attacks a hidden piece and is lost; the other piece stays put. What could it be?','你的团长去攻一枚暗棋，团长没了，对方纹丝不动。它可能是？'),o:[B('Surely a higher officer','一定是大官'),B('Surely a landmine','一定是地雷'),B('A higher officer, or a landmine','可能是大官，也可能是地雷')],a:2,why:B('The referee never says which. Working that out is half the game.','裁判不会告诉你是哪一种，推理它正是军棋的乐趣。')}},
   {task:{type:'move',from:'7,2',to:'6,2'},say:B('Now let us move. On a road a piece goes one step. Tap your Captain, then tap the lit square in front of it.','下面练习走棋。公路上一次走一格：点你的连长，再点它前面亮起的格子。')},
+  {task:{type:'move',from:'6,2',to:'7,1'},say:B('Camps keep a piece safe. Pull your Captain straight back into the camp beside it, and the enemy can do nothing about it.','行营能护住棋子。把连长撤进旁边的行营，敌人就拿它没办法了。')},
   {task:{type:'move',from:'10,0',to:'6,0'},say:B('On a railway a piece can go much further. Tap your Major General and run it straight up the left railway to the front.','铁路上可以走得远得多。点你的师长，沿左边的铁路一口气开到前线。')},
-  {task:{type:'move',from:'10,4',to:'5,2'},say:B('Only the Engineer may turn corners on the railway. Send it up the right-hand line, across the front, and along to the middle station.','只有工兵能在铁路上拐弯。让工兵沿右边铁路北上，跨过前线，再拐到中间那一站。')},
-  {task:{type:'move',from:'6,2',to:'7,1'},say:B('Camps keep a piece safe. Pull your Captain back into the camp beside it, and the enemy can do nothing about it.','行营能护住棋子。把连长撤进旁边的行营，敌人就拿它没办法了。')},
+  {task:{type:'move',from:'10,2',to:'5,2'},say:B('Only the Engineer may turn corners on the railway, and it can turn as often as the track allows in a single move. Send it east along your back line, up the right-hand railway, across your front line and up through the middle crossing: three turns in one go.','只有工兵能在铁路上拐弯，而且一步之内想拐几次都行。让工兵沿最后一条铁路向右，再沿右边铁路北上，接着沿前线往左，最后从中间路口冲过前线：一步拐三个弯。')},
   {task:{type:'move',from:'6,0',to:'3,0'},say:B('Time to attack. That hidden piece on the left looks suspicious. Charge it with your Major General.','该进攻了。左边那枚暗棋看着可疑，让师长沿铁路冲过去撞它。')},
   {hlFn:S=>S.last?[S.last.from,S.last.to]:[],say:B('Taken! But you still do not know what it was: the referee only says who survived. The two red frames show where the last move began and ended.','吃掉了！可你仍然不知道它是什么，裁判只说谁活了下来。两个红框标出了上一步的起点和终点。')},
   {glow:'.jq-rlog .jq-lr:last-child',say:B('Your move is now in the record on the right: a blue line, your Major General attacking, and the result after the arrow.','右边记录里多了一条蓝色的：你的师长发起进攻，箭头后面是结果。')},
@@ -11312,9 +11312,10 @@ function jqTutSteps(){ const B=(e,z)=>[e,z];
   {enemy:{from:'2,0',to:'3,0'},say:B('Watch out: the enemy strikes back. Their piece just took your Major General.','小心，敌军反击了，你的师长被吃掉了。')},
   {task:{type:'undo'},glow:'[data-j=undo]',say:B('A move you regret can be taken back. Press Undo on the left: your last move and the enemy reply both go back.','走错了可以悔棋。点左边的“悔棋”，你的上一步和对方的回应会一起撤回。')},
   {say:B('Everything is back where it was, and the record has dropped those two lines.','棋子都回到了原位，记录里的两条也删掉了。')},
-  {enemy:{from:'4,3',to:'5,2'},say:B('Look out! A piece charges out of the right-hand camp and flattens your Engineer at the front. Charging like that, it is most likely their Field Marshal.','当心！右边行营里冲出一枚棋子，把你前线的工兵吃掉了。看这股冲劲，多半是敌方司令。')},
-  {task:{type:'move',from:'7,3',to:'6,2'},say:B('No officer can stop a Field Marshal, but a Bomb can. Slide your Bomb out of its camp to the square right behind the front.','军官挡不住司令，炸弹却可以。把你的炸弹从行营里斜着挪出来，放到前线正后方那一格。')},
-  {task:{type:'move',from:'6,2',to:'5,2'},say:B('Now ram it!','冲上去，撞它！')},
+  {enemy:{from:'4,3',to:'5,4'},say:B('Look out! A piece charges out of the right-hand camp and takes your General on the front line.','当心！右边行营里冲出一枚棋子，把你前线的军长吃掉了。')},
+  {say:B('Think it through. Only a Field Marshal outranks a General. It moved, so it is no landmine, and a Bomb would have gone up together with your General. That leaves one answer: it is their Field Marshal.','推理一下：能吃掉军长的军官只有司令。它会走，所以不是地雷；如果是炸弹，就该和军长同归于尽。所以它只可能是敌方司令。')},
+  {task:{type:'move',from:'7,3',to:'6,4'},say:B('No officer can stop a Field Marshal, but a Bomb can. Slide your Bomb out of its camp to the square right below it.','军官挡不住司令，炸弹却可以。把你的炸弹从行营里斜着挪出来，放到它正下方那一格。')},
+  {task:{type:'move',from:'6,4',to:'5,4'},say:B('Now ram it!','冲上去，撞它！')},
   {hlFn:S=>{ const f=S.pcs.find(p=>p.side===1&&p.t===12&&!p.dead); return f?[f.k]:[]; },say:B('Both pieces are gone, and an eye has opened over their Flag. Whenever a Field Marshal falls, the referee shows where that side’s Flag stands, so it really was their Marshal. The same holds for you: lose your own Marshal and your Flag is exposed.','两枚棋子同归于尽，对方军旗上也睁开了一只眼睛。哪一方的司令阵亡，裁判就会亮出那一方军旗的位置，所以刚才那枚确实是敌方司令。反过来也一样：你的司令一倒，你的军旗也会暴露。')},
   {sc:'puzzle',say:B('Last lesson: an endgame, both armies face up. The enemy Engineer is eyeing your Flag, while your own Engineer has a chance at theirs. Follow my lead; each step has one best move.','最后一课：残局，双方明牌。敌方工兵正盯着你的军旗，你的工兵也有机会偷袭敌营。跟着我走，每一步都只有一个最好的走法。')},
   {task:{type:'move',from:'6,4',to:'3,4'},say:B('First clear the road. Send your Bomb up the right-hand railway into the enemy Field Marshal.','先清路。让炸弹沿右边铁路冲上去，和敌方司令同归于尽。')},
