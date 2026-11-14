@@ -11404,13 +11404,14 @@ function bgmTrack(k){ if(BGM.tr[k]) return BGM.tr[k]; if(typeof Track==='undefin
   const t=new Track(VOX_URL('gd-bgm'+k),k===4?0:k===6?1.5:3); t.dest=gdBus; if(k===4) t.trim=function(){ this.ls=0; this.le=this.buf.duration; if(this.pos==null) this.pos=0; }; t.schedule=function(){ const c=this.cur, endAt=c.at+(this.le-c.offset), nextAt=endAt+this.gap, lead=Math.max(0,(nextAt-AC.currentTime-1)*1000); this.timer=setTimeout(()=>{ if(!this.playing) return; this.cur=this.seg(Math.max(AC.currentTime+.05,nextAt),this.ls,0); this.schedule(); },lead); }; const seg=t.seg.bind(t); t.seg=(at,off,fade)=>{ const sg=seg(at,off,fade); return sg; }; return BGM.tr[k]=t; }
 // end of the match: a victory or defeat piece plays once, then after two seconds the lobby theme comes back and loops
 let JING={src:null,timer:0,buf:{}};
-function jingleStop(){ clearTimeout(JING.timer); if(JING.src){ try{ JING.src.onended=null; JING.g.gain.setTargetAtTime(.0001,AC.currentTime,.12); JING.src.stop(AC.currentTime+.5); }catch(e){} JING.src=null; } }
-async function matchJingle(won){ try{ if(!AC) initAudio(); if(!AC) return; const jq=scr==='junqi'; if(jq) JING.back=6; else if(BGM.k) JING.back=BGM.k; jingleStop(); bgm(0,jq?.9:undefined); const k=jq?(won==='draw'?'jq-draw':won?'jq-win':'jq-lose'):(won?'gd-win':'gd-lose');
+// every stop bumps a generation number, so a jingle still loading, or a 'bring the theme back' timer, from an older ending can never start later
+function jingleStop(){ JING.gen=(JING.gen||0)+1; clearTimeout(JING.timer); if(JING.src){ try{ JING.src.onended=null; JING.g.gain.setTargetAtTime(.0001,AC.currentTime,.12); JING.src.stop(AC.currentTime+.5); }catch(e){} JING.src=null; } }
+async function matchJingle(won){ try{ if(!AC) initAudio(); if(!AC) return; const jq=scr==='junqi'; if(jq) JING.back=6; else if(BGM.k) JING.back=BGM.k; jingleStop(); bgm(0,jq?.9:undefined); const gen=JING.gen, k=jq?(won==='draw'?'jq-draw':won?'jq-win':'jq-lose'):(won?'gd-win':'gd-lose');
     if(!JING.buf[k]) JING.buf[k]=await fetch(VOX_URL(k)).then(r=>r.arrayBuffer()).then(a=>AC.decodeAudioData(a));
-    if(!open) return;
+    if(!open||JING.gen!==gen) return;
     if(!gdBus){ gdBus=AC.createGain(); gdBus.gain.value=1; gdBus.connect(musicBus||AC.destination); }
     const src=AC.createBufferSource(), g=AC.createGain(); src.buffer=JING.buf[k]; src.connect(g).connect(gdBus); g.gain.value=musicGain(k); JING.src=src; JING.g=g;
-    src.onended=()=>{ if(JING.src!==src) return; JING.src=null; JING.timer=setTimeout(()=>{ if(open) bgm(JING.back||(scr==='table'?1:scr==='junqi'?6:4),null,scr!=='junqi'); },2000); }; src.start(AC.currentTime+.05); }catch(e){ JING.timer=setTimeout(()=>{ if(open) bgm(JING.back||(scr==='table'?1:scr==='junqi'?6:4),null,scr!=='junqi'); },2000); } }
+    src.onended=()=>{ if(JING.src!==src) return; JING.src=null; JING.timer=setTimeout(()=>{ if(open&&JING.gen===gen&&!JQDP) bgm(JING.back||(scr==='table'?1:scr==='junqi'?6:4),null,scr!=='junqi'); },2000); }; src.start(AC.currentTime+.05); }catch(e){ const g0=JING.gen; JING.timer=setTimeout(()=>{ if(open&&JING.gen===g0&&!JQDP) bgm(JING.back||(scr==='table'?1:scr==='junqi'?6:4),null,scr!=='junqi'); },2000); } }
 function bgm(k,xf,resume){ try{ if(!bgm._mood&&typeof jqMoodStop==='function') jqMoodStop(); if(k&&!resume) JING.back=0; if(k!==0&&typeof jqDepStop==='function') jqDepStop(); if(k&&!open) return; if(!AC) initAudio(); if(!AC) return; if(k) jingleStop(); if(k){ [TR.bgm,TR.decode].forEach(t=>{ if(t&&t.playing){ t.pause(.5); if(!bgmHeld.includes(t)) bgmHeld.push(t); } }); } if(BGM.k===k&&BGM.cur&&BGM.cur.playing) return; const old=BGM.cur, t=k?bgmTrack(k):null; BGM.k=k;
     const XF=xf||(typeof SWITCH_XF!=='undefined'?SWITCH_XF:1.4); if(old&&old!==t){ old.pause(XF); }
     BGM.cur=t; if(t){ if(!(resume&&t.pos!=null)){ t.pos=null; if(t.buf) t.pos=t.ls; } t.play(resume?1.2:old?XF:.6); } }catch(e){} }
@@ -12008,7 +12009,7 @@ function jqDepFadeSeg(s,t){ const X=JQD.XF; try{ s.g.gain.cancelScheduledValues(
 // keep one pass queued ahead: each loop starts a hair early at A-XF so the two passes overlap through the crossfade
 function jqDepQueue(){ const P=JQDP; if(!P||P.cd) return; const last=P.segs[P.segs.length-1]; if(!last) return; const X=JQD.XF, nextAt=last.at+(JQD.B-last.off)-X;
   jqDepFadeSeg(last,nextAt+X); const s=jqDepSeg(nextAt,JQD.A-X,JQD.B,true); P.timer=setTimeout(jqDepQueue,Math.max(50,(s.at+(JQD.B-s.off)-AC.currentTime-1.5)*1000)); }
-async function jqDepPlay(){ const S0=JQ; const b=await jqDepLoad(); if(!b||JQ!==S0||!S0||S0.phase!=='setup'||!open) return; jqDepStop(0);
+async function jqDepPlay(){ const S0=JQ; const b=await jqDepLoad(); if(!b||JQ!==S0||!S0||S0.phase!=='setup'||!open) return; jqDepStop(0); jingleStop(); if(BGM.cur&&BGM.cur.playing) bgm(0,.6); // the deployment music always plays alone
   const g=AC.createGain(); g.gain.value=musicGain('jq-deploy'); g.connect(jqDepOut()); JQDP={g,segs:[],timer:0,cd:false}; const at=AC.currentTime+.06; jqDepSeg(at,0,JQD.B,false);
   JQDP.timer=setTimeout(jqDepQueue,Math.max(50,(JQD.B-1.5)*1000)); }
 function jqDepStop(fade){ const P=JQDP; if(!P) return; JQDP=null; clearTimeout(P.timer); try{ const t=AC.currentTime; P.g.gain.cancelScheduledValues(t); P.g.gain.setValueAtTime(P.g.gain.value,t); P.g.gain.linearRampToValueAtTime(0,t+(fade==null?.8:fade)+.01); P.segs.forEach(s=>{ try{ s.src.stop(t+(fade==null?.8:fade)+.05); }catch(e){} }); }catch(e){} }
@@ -12099,7 +12100,7 @@ function jqCountdown(info){ return new Promise(done=>{ const o=document.createEl
 function jqOpen(){ scr='junqi'; JQ=jqNewState(); jqLoadSnd(); jqRender(); jqWelcome(); bgm(6); }
 // a new game always starts with the choice of opponent; o.cancel lets the player back out, o.warn says a game is in progress
 function jqNew(o){ o=o||{}; jqLevelPick(o).then(v=>{ if(v==null){ if(o.back) o.back(); return; } jqNewGo(v); }); }
-function jqNewGo(level){ if(typeof jqTutKill==='function') jqTutKill(); jqStopReplay(); jqLvSet(level); JQ=jqNewState(); JQ.level=level; JQ._layP=jqxLayout(); jqRender(); const S=JQ; bgm(0); jqDepStop(.4); jqDepLoad(); jqPhaseCard().then(()=>{ if(JQ===S&&S.phase==='setup') jqDepPlay(); }); }
+function jqNewGo(level){ if(typeof jqTutKill==='function') jqTutKill(); jqStopReplay(); jqLvSet(level); JQ=jqNewState(); JQ.level=level; JQ._layP=jqxLayout(); jqRender(); const S=JQ; jingleStop(); bgm(0); jqDepStop(.4); jqDepLoad(); jqPhaseCard().then(()=>{ if(JQ===S&&S.phase==='setup') jqDepPlay(); }); }
 function jqLeave(){ if(!JQ){ toLobby(); return; } confirmPop(T('Back to all games?','返回游戏列表？'),JQ.tut?T('The tutorial will end here.','教学会在这里结束。'):JQ.phase==='setup'?T('Your deployment will be lost.','当前的部署会丢失。'):T('The current game will be lost.','当前对局会丢失，无法恢复。'),T('Leave','离开'),()=>{ if(typeof jqTutKill==='function') jqTutKill(); jqStopReplay(); JQ=null; toLobby(); }); }
 function jqRefresh(){ jqDraw(); jqCtl(); jqLogDraw(); }
 function jqPlace(lay){ const S=JQ; S.pcs.filter(p=>p.side===0).forEach(p=>{ if(p.k) delete S.at[p.k]; p.k=null; }); const pool={}; S.pcs.filter(p=>p.side===0).forEach(p=>(pool[p.t]=pool[p.t]||[]).push(p));
@@ -12458,7 +12459,7 @@ function jqmTarget(S,lvl){ const K=jqmRead(S), T=jqmTension(S);
   else if(T.us>=3&&s>=0){ s=1; m=3; }                  // their shown Flag is in reach
   // the same squeeze on the enemy: down to their last few units, and we are not behind, the advantage climbs
   else if(T.emob<=5&&s>=0&&!(endg&&T.mob<=T.emob)){ s=1; m=Math.max(m,T.emob<=3?3:2); if(T.us>=2) m=Math.max(m,2); }
-  else { if(endg){ if(!m) s=-1; m=Math.max(m,s<0?endg:Math.min(endg,2)); }
+  else { if(endg){ if(!m) s=-1; m=Math.max(m,endg); }
     // a headquarters under threat lifts the stage; with no clear lead, the side under threat sets the direction
     const t=m?(s>0?T.us:T.them):Math.max(T.us,T.them);
     if(t>=2){ if(!m) s=T.them>=T.us?-1:1; m=Math.max(m,2); }
