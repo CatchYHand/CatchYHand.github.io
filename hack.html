@@ -10640,7 +10640,7 @@ function comboTag(c){ const [t,r]=descParts(c), lk=LOOK[c.type]||LOOK.single; re
 function badgeStatic(text,type){ const lk=LOOK[type]; return `<span class="fx-badge still ${lk[0]} fr-${lk[1]}"><span class="fx-fr"><b data-t="${text}">${text}</b></span></span>`; }
 /* ---------- combo effects ---------- */
 // art that has been redrawn goes out under a new file name, so no browser keeps showing the old picture
-const GIMG_V={'jq-pc8':'jq-pc8b','jq-hd8':'jq-hd8b'}, GIMG=k=>'/assets/img/games/'+(GIMG_V[k]||k)+'.webp';
+const GIMG_V={'jq-pc8':'jq-pc8c','jq-hd8':'jq-hd8c'}, GIMG=k=>'/assets/img/games/'+(GIMG_V[k]||k)+'.webp';
 const FXK=1.3; // effects linger a little longer
 let parts=[], drawers=[], praf=0;
 function pcv(){ const c=$g('.gt-pc'); if(!c) return null; const r=felt.getBoundingClientRect(), d=Math.min(2,devicePixelRatio||1); if(c.width!==Math.round(r.width*d)){ c.width=Math.round(r.width*d); c.height=Math.round(r.height*d); } return c; }
