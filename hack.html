@@ -1252,7 +1252,7 @@ body.zh .us-lb figcaption{font:400 1.2rem/1.5 'Long Cang',cursive}
 .gc.xs .gc-tag,.gc.xs .gc-jk{display:none}
 .gc.fly{position:absolute;z-index:5}
 /* card backs */
-.gb{position:absolute;display:block;width:calc(var(--cw)*.56);height:calc(var(--cw)*.78);border-radius:calc(var(--cw)*.06);border:2px solid #F6EEDC;
+#gr .gb{position:absolute;display:block;width:calc(var(--cw)*.56);height:calc(var(--cw)*.78);border-radius:calc(var(--cw)*.06);border:2px solid #F6EEDC;
   background:radial-gradient(circle at 50% 50%,#E2BC62 0 9%,transparent 10%),repeating-linear-gradient(45deg,rgba(255,226,160,.22) 0 2px,transparent 2px 7px),repeating-linear-gradient(-45deg,rgba(255,226,160,.22) 0 2px,transparent 2px 7px),linear-gradient(160deg,#A8261E,#6E1410);
   box-shadow:inset 0 0 0 3px #8E1D17,inset 0 0 0 4px rgba(226,188,98,.6),0 2px 4px rgba(0,0,0,.45)}
 .gb.fly{z-index:6}
@@ -1268,8 +1268,8 @@ body.zh .us-lb figcaption{font:400 1.2rem/1.5 'Long Cang',cursive}
 .gt-emb b{display:block;font:700 clamp(3rem,7vw,5.6rem)/1 'Noto Serif SC',serif;letter-spacing:.35em;margin-right:-.35em}
 .gt-emb small{font:600 .9rem var(--f-mono);letter-spacing:.8em}
 /* level panel */
-.gl{position:absolute;left:1.8rem;top:1.6rem;z-index:4;display:flex;gap:.8rem;align-items:stretch;padding:.7rem .85rem;border-radius:1rem;background:linear-gradient(180deg,rgba(8,20,14,.82),rgba(5,12,9,.72));border:1px solid rgba(226,188,98,.45);box-shadow:0 10px 24px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,236,190,.12);transition:box-shadow .3s}
-.gl.hot{box-shadow:0 0 0 3px rgba(226,188,98,.5),0 0 40px rgba(226,188,98,.45)}
+#gr .gl{position:absolute;left:1.8rem;top:1.6rem;z-index:4;display:flex;gap:.8rem;align-items:stretch;padding:.7rem .85rem;border-radius:1rem;background:linear-gradient(180deg,rgba(8,20,14,.82),rgba(5,12,9,.72));border:1px solid rgba(226,188,98,.45);box-shadow:0 10px 24px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,236,190,.12);transition:box-shadow .3s}
+#gr .gl.hot{box-shadow:0 0 0 3px rgba(226,188,98,.5),0 0 40px rgba(226,188,98,.45)}
 .gl-cur{display:flex;flex-direction:column;align-items:center;gap:.3rem}
 .gl-cur small{font:700 .62rem var(--f-mono);letter-spacing:.18em;color:var(--gold)}
 .gl-tile{position:relative;width:3.1rem;height:4.2rem;border-radius:.4rem;background:linear-gradient(160deg,#FFFDF6,#EFE5CF);display:grid;place-items:center;box-shadow:0 4px 10px rgba(0,0,0,.4)}
@@ -1496,7 +1496,7 @@ body.zh .us-lb figcaption{font:400 1.2rem/1.5 'Long Cang',cursive}
 .gr-tdo::before{content:"";width:.65rem;height:.65rem;border-radius:50%;background:#7EE2FF;box-shadow:0 0 10px #7EE2FF;animation:grWarn 1s infinite}
 @media (max-width:900px){
   .gt-felt{border-radius:1.2rem}.gt-cloth{inset:.5rem;border-radius:1rem}
-  .gl{left:.9rem;top:.9rem;padding:.5rem}.gl-tile{width:2.4rem;height:3.2rem}.gl-tile b{font-size:1.6rem}.gl-cur span{display:none}
+  #gr .gl{left:.9rem;top:.9rem;padding:.5rem}.gl-tile{width:2.4rem;height:3.2rem}.gl-tile b{font-size:1.6rem}.gl-cur span{display:none}
   .gt-tools{right:.9rem;top:.9rem}.gt-tools button{padding:.35rem .7rem;font-size:.8rem!important}
   .gs1{right:.6rem}.gs3{left:.6rem}.gs-tx small{display:none}
   .gt-me .gs0{left:.6rem;bottom:.6rem}.gt-sort{right:.6rem;bottom:.6rem}
@@ -1523,7 +1523,7 @@ body.zh .us-lb figcaption{font:400 1.2rem/1.5 'Long Cang',cursive}
 .gt-mk b{position:relative;font:700 1.15rem 'Noto Serif SC','Newsreader',serif;color:#E9C98A;text-shadow:0 0 8px rgba(233,201,138,.4)}
 .gt-mk.n{left:49.3%;top:4.2%}.gt-mk.s{left:49.3%;top:89.6%}.gt-mk.w{left:5.2%;top:46.4%}.gt-mk.e{left:92.9%;top:46.4%}
 .gt-emb{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font:700 clamp(2rem,4vw,3.2rem)/1 'Noto Serif SC',serif;letter-spacing:.4em;margin-right:-.4em;color:rgba(214,176,112,.12);font-style:normal;white-space:nowrap}
-.gb{background:radial-gradient(circle at 50% 50%,#E2BC62 0 8%,transparent 9%),repeating-linear-gradient(45deg,rgba(255,226,160,.2) 0 2px,transparent 2px 7px),repeating-linear-gradient(-45deg,rgba(255,226,160,.2) 0 2px,transparent 2px 7px),linear-gradient(160deg,#9b2119,#5c100c)}
+#gr .gb{background:radial-gradient(circle at 50% 50%,#E2BC62 0 8%,transparent 9%),repeating-linear-gradient(45deg,rgba(255,226,160,.2) 0 2px,transparent 2px 7px),repeating-linear-gradient(-45deg,rgba(255,226,160,.2) 0 2px,transparent 2px 7px),linear-gradient(160deg,#9b2119,#5c100c)}
 /* seats: name, then card count with warning light, under the avatar */
 .gs1{top:40%}.gs3{top:40%}.gp1{top:40%}.gp3{top:40%}
 .gs-cnt{position:relative;left:auto;top:auto;transform:none;display:flex;align-items:center;gap:.35rem;margin-top:.1rem}
@@ -2017,8 +2017,8 @@ body.zh .fx-fr b{letter-spacing:.1em!important}
 .fx-cap{position:absolute;z-index:8;white-space:nowrap;pointer-events:none}
 .fx-cap span{display:block;font:400 1.15rem 'GD Display','GD Display ZH','Noto Sans SC',sans-serif;color:#fff3cf;padding:.5rem 1.2rem;border-radius:2rem;background:rgba(10,12,16,.88);border:1.5px solid #e2bc62;box-shadow:0 10px 24px rgba(0,0,0,.5),0 0 18px rgba(226,188,98,.35);letter-spacing:.04em}
 .fx-ring{position:absolute;width:calc(var(--cw)*2.6);height:calc(var(--cw)*2.6);border-radius:50%;border:3px solid rgba(255,215,120,.9);box-shadow:0 0 30px rgba(255,200,90,.6),inset 0 0 30px rgba(255,200,90,.35);pointer-events:none;z-index:5}
-.gl.hot{box-shadow:0 0 0 3px rgba(255,214,110,.85),0 0 60px rgba(255,200,80,.6)!important;transform:scale(1.06);transition:transform .4s,box-shadow .4s}
-.gl{transition:transform .4s,box-shadow .4s;transform-origin:0 0}
+#gr .gl.hot{box-shadow:0 0 0 3px rgba(255,214,110,.85),0 0 60px rgba(255,200,80,.6)!important;transform:scale(1.06);transition:transform .4s,box-shadow .4s}
+#gr .gl{transition:transform .4s,box-shadow .4s;transform-origin:0 0}
 .glv .roll{transition-timing-function:cubic-bezier(.3,.1,.2,1)!important}
 .gl-a{gap:.12rem!important;align-items:center}
 .gl-a .hz{width:1.15rem;height:1.05rem;border:0!important;background:none!important;box-shadow:none!important;border-radius:0;display:block;position:relative}
@@ -2099,7 +2099,7 @@ body.zh .fx-fr b{letter-spacing:.1em!important}
 .gc-bomb.k-sf.en b{font-size:calc(var(--cw)*.09)!important}
 /* ===== v13 ===== */
 /* card backs: the red dragon artwork */
-.gb{background:var(--gbk) center/cover no-repeat,#7a1410!important;border:1.5px solid #f3e6c8!important;box-shadow:0 1px 3px rgba(0,0,0,.45)}
+#gr .gb{background:var(--gbk) center/cover no-repeat,#7a1410!important;border:1.5px solid #f3e6c8!important;box-shadow:0 1px 3px rgba(0,0,0,.45)}
 .gs1 .gs-fan .gb,.gs3 .gs-fan .gb{background-image:var(--gbkh)!important}
 /* bomb stamp: dark pill, bright lettering, coloured flames without white tips so it never melts into the card */
 .gc-bomb{background:linear-gradient(180deg,#2b0f09,#120604)!important;border:1.5px solid var(--bc,#ff6a3a)!important;box-shadow:0 0 0 1.5px rgba(0,0,0,.6),0 2px 6px rgba(0,0,0,.55),0 0 9px var(--bg2,rgba(255,90,40,.55))!important;padding:.2em .5em .16em!important;animation:bmbGlow 2.4s ease-in-out infinite var(--fd,0s)!important}
@@ -2565,17 +2565,17 @@ html[lang=en] .wl-story p,.wl-story:lang(en) p{text-indent:0}
 .rc-bomb .rc-tx b{color:#ffb08f}
 .rc-bomb .gr-pv{transform:scale(.8);transform-origin:100% 50%}
 .r3 .gr-pv.bt2 .fx-badge{filter:hue-rotate(255deg) saturate(1.25)}.r3 .gr-pv.bt3 .fx-badge{filter:hue-rotate(215deg) saturate(1.3)}.r3 .gr-pv.bt4 .fx-badge{filter:hue-rotate(168deg) saturate(1.2) brightness(1.12)}
-.rd{position:relative;margin:.8rem 0 1rem;padding:1rem;border-radius:.9rem;background:radial-gradient(120% 120% at 50% 0,rgba(30,40,34,.6),rgba(0,0,0,.35));border:1px solid rgba(226,188,98,.2);display:flex;flex-direction:column;align-items:center;gap:.6rem;overflow:hidden}
+#gr .rd{position:relative;margin:.8rem 0 1rem;padding:1rem;border-radius:.9rem;background:radial-gradient(120% 120% at 50% 0,rgba(30,40,34,.6),rgba(0,0,0,.35));border:1px solid rgba(226,188,98,.2);display:flex;flex-direction:column;align-items:center;gap:.6rem;overflow:hidden}
 .rd-cap{font-size:.85rem;color:#e8d6a6;opacity:.85;text-align:center}
 .rd-rank .rd-stage,.rd-wild .rd-stage{display:flex;align-items:flex-end;min-height:5rem}
 .rd-rank .gc.rc{--rcw:2.9rem}.rd-rank .gc.rc+.gc.rc{margin-left:calc(var(--rcw)*-.5)}
 .rd-rank .gc.rc:nth-child(2){margin-right:.4rem}
 .rd-rank .gc.rc.rise{transform:translateY(-1.4rem);box-shadow:0 0 0 2px #ffd36a,0 0 18px rgba(255,200,80,.8);transition:transform .4s}
 .rd-rank .gc.rc.top{box-shadow:0 0 0 2px #ffd36a,0 0 12px rgba(255,200,80,.6);margin-right:.4rem}
-.rd-wild .rd-stage{gap:0}.rd-grp{display:inline-flex;align-items:flex-end;position:relative;padding:.3rem;border-radius:.5rem;transition:box-shadow .4s}
+.rd-wild .rd-stage{gap:0}#gr .rd-grp{display:inline-flex;align-items:flex-end;position:relative;padding:.3rem;border-radius:.5rem;transition:box-shadow .4s}
 .rd-grp .gc.rc+.gc.rc{margin-left:calc(var(--rcw)*-.55)}
-.rd-grp.lit{box-shadow:0 0 0 2px #ff8a5a,0 0 22px rgba(255,90,40,.6)}
-.rd-gap{width:3rem}
+#gr .rd-grp.lit{box-shadow:0 0 0 2px #ff8a5a,0 0 22px rgba(255,90,40,.6)}
+#gr .rd-gap{width:3rem}
 .rd-wild .wildc{box-shadow:0 0 0 2px #ff5a6a,0 0 14px rgba(255,80,100,.6)}
 .rd-stamp{position:absolute!important;left:.5rem!important;bottom:.5rem!important;font-size:.8rem}
 .rd-sort .rd-stage{position:relative;transition:height .5s,width .5s}
@@ -4551,7 +4551,7 @@ html:not([lang=zh]) .gt-choose .gc-lb b{font-family:'Newsreader','Noto Serif SC'
 @keyframes phIn{from{opacity:0}}@keyframes phOut{to{opacity:0}}
 .grain{position:absolute;inset:-50%;opacity:.22;pointer-events:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 .95 0 0 0 0 .85 0 0 0 1.4 -.45'/%3E%3C/filter%3E%3Crect width='220' height='220' filter='url(%23n)'/%3E%3C/svg%3E");animation:grain .5s steps(4) infinite;mix-blend-mode:screen}
 @keyframes grain{25%{transform:translate(-3%,2%)}50%{transform:translate(2%,-3%)}75%{transform:translate(-2%,-1%)}}
-.scr{position:absolute;top:-5%;bottom:-5%;width:1.5px;background:linear-gradient(180deg,transparent,rgba(240,225,190,.35) 20%,rgba(240,225,190,.1) 60%,transparent);pointer-events:none}
+#gr .scr{position:absolute;top:-5%;bottom:-5%;width:1.5px;background:linear-gradient(180deg,transparent,rgba(240,225,190,.35) 20%,rgba(240,225,190,.1) 60%,transparent);pointer-events:none}
 .scr.s1{left:23%;animation:scr1 1.7s steps(1) infinite}.scr.s2{left:71%;animation:scr2 2.3s steps(1) infinite}
 @keyframes scr1{0%{left:23%;opacity:.8}30%{left:61%;opacity:0}55%{left:38%;opacity:.6}80%{left:84%;opacity:.3}}
 @keyframes scr2{0%{left:71%;opacity:.5}40%{left:12%;opacity:.8}70%{left:55%;opacity:0}}
@@ -11834,11 +11834,19 @@ function jqRefDraw(){ jqRadioDraw(); }
 function jqPieceHTML(p,S,rp){ const mine=p.side===0, exp=p.t===12&&S.flagShown[p.side], show=mine||rp||S.over!=null||exp||S.open||(JQ_CHEAT&&!S.tut), m=!show&&S.marks[p.id];
   return `<div class="jq-p ${mine?'b':'r'}${show||m?' up':' dn'}${m?' mk':''}${exp?' ex':''}" data-id="${p.id}" style="left:${jqPos(p.k)[0]}%;top:${jqPos(p.k)[1]}%">
     <div class="jq-pf">${show?jqFace(p.t):m?jqMarkFace(m):JQ_SEAL()}</div>${exp?jqEye(S,p.side):''}</div>`; }
+// after this placement, is there still a legal square for every unit waiting on standby? The Flag needs a free headquarters,
+// mines the back two rows, bombs anything behind the front row; the zones nest, so counting zone by zone is enough
+function jqRoomLeft(S,id,to){ const mine=S.pcs.filter(x=>x.side===0), pos={}; mine.forEach(x=>pos[x.id]=x.k); const q=jqAt(S,to);
+  if(q&&q.side===0&&q.id!==id) pos[q.id]=pos[id]||null; pos[id]=to; const occ=new Set(Object.values(pos).filter(Boolean));
+  const need=[0,0,0,0], free=[0,0,0,0]; // headquarters, back two rows, behind the front row, anywhere
+  mine.forEach(x=>{ if(pos[x.id]) return; const z=x.t===12?0:x.t===11?1:x.t===10?2:3; for(let i=z;i<4;i++) need[i]++; });
+  for(let r=6;r<12;r++) for(let c=0;c<5;c++){ if(jqCamp(r,c)||occ.has(jqKey(r,c))) continue; free[3]++; if(r>=7) free[2]++; if(r>=10) free[1]++; if(jqHQ(r,c)) free[0]++; }
+  return need.every((n,i)=>n<=free[i]); }
 function jqHits(){ const S=JQ, out=[];
   if(S.phase==='play'&&S.turn===0&&!S.busy&&S.sel!=null){ const only=S.tut&&typeof jqTutOnly==='function'?jqTutOnly():null; jqMoves(S,jqP(S,S.sel)).forEach(m=>{ if(!only||m.to===only) out.push([m.to,m.atk]); }); }
   if(S.phase==='setup'){ const p=S.box!=null?jqP(S,S.box):S.sel!=null?jqP(S,S.sel):null;
     if(p) for(let r=6;r<12;r++) for(let c=0;c<5;c++){ const k=jqKey(r,c); if(jqCamp(r,c)||k===p.k) continue; const q=jqAt(S,k);
-      if(!jqLegalSpot(p.t,r,c,0)) continue; if(q&&!(p.k&&jqLegalSpot(q.t,...jqRC(p.k),0))) continue; out.push([k,false,!!q]); } }
+      if(!jqLegalSpot(p.t,r,c,0)) continue; if(q&&!(p.k&&jqLegalSpot(q.t,...jqRC(p.k),0))) continue; if(!jqRoomLeft(S,p.id,k)) continue; out.push([k,false,!!q]); } }
   return out.map(([k,atk,sw])=>{ const [x,y]=jqPos(k); return `<i class="jq-hit${atk?' atk':''}${sw?' sw':''}" data-to="${k}" style="left:${x}%;top:${y}%">${atk?JQ_DUEL:'<b><s></s><s></s><s></s><s></s></b>'}</i>`; }).join(''); }
 // two swords crossing over a piece you can attack: each strikes once, then both spin, over and over
 const JQ_SWORD='<svg viewBox="0 -6 40 126"><defs><linearGradient id="jqbl" x1="0" x2="1"><stop offset="0" stop-color="#f4f6f8"/><stop offset=".48" stop-color="#c9ced4"/><stop offset=".52" stop-color="#8d949c"/><stop offset="1" stop-color="#b9bfc6"/></linearGradient><linearGradient id="jqgd" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#ffe08a"/><stop offset="1" stop-color="#b8841c"/></linearGradient></defs><path d="M20 -4l7 10v72H13V6z" fill="url(#jqbl)" stroke="#5c636b" stroke-width="1.2"/><path d="M20 -2v80" stroke="rgba(255,255,255,.7)" stroke-width="1"/><rect x="4" y="77" width="32" height="7" rx="2" fill="url(#jqgd)" stroke="#7a5410" stroke-width="1"/><rect x="16.5" y="84" width="7" height="22" rx="2" fill="#3a2f28" stroke="#1d1712" stroke-width="1"/><circle cx="20" cy="111" r="7" fill="url(#jqgd)" stroke="#7a5410" stroke-width="1"/></svg>';
@@ -12233,24 +12241,28 @@ function jqRadioDraw(fresh){ const S=JQ, el=$g('.jq-ref'); if(!el) return; if(!S
   if(fresh&&last&&!reduce){ box.classList.remove('rx'); void box.offsetWidth; box.classList.add('rx'); const n=L.querySelector('.jq-rm.new p'); if(n){ const full=n.textContent; n.textContent=''; n.classList.add('typing'); let i=0; const step=()=>{ if(!n.isConnected) return; i=Math.min(full.length,i+Math.max(1,Math.round(full.length/40))); n.textContent=full.slice(0,i); if(i<full.length) setTimeout(step,22); else n.classList.remove('typing'); }; setTimeout(step,380); } } }
 
 /* ---------- Vanguard battle score: the even-battle theme (bgm 5), then an advantage track and a disadvantage track, three stages each.
-   The three stages of a track are parallel takes on one shared timeline: switching stage keeps the timeline position and only changes
+   The three stages of a track are parallel takes: switching stage keeps the place in the musical phrase and only changes
    which take is heard. The state is judged from public information only: how many units each side has left, where they stand, and
    whether a Flag has been exposed. Never from what the hidden enemy pieces really are. ---------- */
-const JQM_TR={a:{url:'jq-mood-a',L:69.079,beat:60/111.18},d:{url:'jq-mood-d',L:95.97,beat:.5}};
+// each stage is one take: a seamless loop cut where the music repeats itself (s = place in the file, len = loop length,
+// per = length of the repeating phrase, h = where in that phrase the take begins), so a stage switch keeps the musical position
+const JQM_TR={a:{url:'jq-mood-a',st:[{s:0.000000,len:51.767483,per:17.255828,h:5.169728},{s:51.767483,len:51.867483,per:17.289161,h:11.612426},{s:103.634966,len:51.867483,per:17.289161,h:5.203061}]},d:{url:'jq-mood-d',st:[{s:0.000000,len:63.900998,per:31.950499,h:21.616667},{s:63.900998,len:64.000998,per:32.000499,h:17.600000},{s:127.901995,len:63.967664,per:31.983832,h:13.583333}]}};
 const JQM={buf:{},load:{},cur:null,state:'n',since:0,gen:0,pend:null};
 function jqmLoad(k){ if(JQM.buf[k]) return Promise.resolve(JQM.buf[k]); if(JQM.load[k]) return JQM.load[k]; if(!AC) return Promise.resolve(null);
   return JQM.load[k]=fetch(VOX_URL(JQM_TR[k].url)).then(r=>r.arrayBuffer()).then(a=>AC.decodeAudioData(a)).then(b=>JQM.buf[k]=b).catch(()=>{ delete JQM.load[k]; return null; }); }
 function jqmOut(){ if(!gdBus){ gdBus=AC.createGain(); gdBus.gain.value=.75; gdBus.connect(musicBus||AC.destination); } return gdBus; }
 // one looping take: the stage's own stretch of the file, looped sample-accurately
-function jqmVoice(k,stage,at,pos,fade){ const T=JQM_TR[k], b=JQM.buf[k], src=AC.createBufferSource(), g=AC.createGain(); src.buffer=b; src.loop=true; src.loopStart=stage*T.L; src.loopEnd=(stage+1)*T.L;
-  src.connect(g).connect(jqmOut()); g.gain.setValueAtTime(fade?0.0001:1,at); if(fade) g.gain.exponentialRampToValueAtTime(1,at+fade); src.start(at,stage*T.L+pos); return {src,g}; }
+function jqmVoice(k,stage,at,pos,fade){ const T=JQM_TR[k].st[stage], b=JQM.buf[k], src=AC.createBufferSource(), g=AC.createGain(); src.buffer=b; src.loop=true; src.loopStart=T.s; src.loopEnd=T.s+T.len;
+  src.connect(g).connect(jqmOut()); g.gain.setValueAtTime(fade?0.0001:1,at); if(fade) g.gain.exponentialRampToValueAtTime(1,at+fade); src.start(at,T.s+pos); return {src,g}; }
 function jqmKill(v,at,fade){ if(!v) return; try{ v.g.gain.cancelScheduledValues(at); v.g.gain.setValueAtTime(Math.max(.0001,v.g.gain.value),at); v.g.gain.exponentialRampToValueAtTime(.0001,at+fade); v.src.stop(at+fade+.05); }catch(e){} }
 // where we are on the shared timeline at audio time t
-const jqmPos=(c,t)=>{ const L=JQM_TR[c.k].L; return (((t-c.anchor)%L)+L)%L; };
+const jqmPos=(c,t)=>{ const L=JQM_TR[c.k].st[c.stage].len; return (((t-c.anchor)%L)+L)%L; };
+// the same point of the phrase in another stage's take
+function jqmMap(k,from,to,pos){ const A=JQM_TR[k].st[from], B=JQM_TR[k].st[to], ph=((A.h+pos)%A.per)/A.per, i=Math.floor(pos/A.per)%Math.round(B.len/B.per); return (i*B.per+((ph*B.per-B.h)%B.per+B.per)%B.per)%B.len; }
 async function jqmPlay(k,stage){ if(!AC||!open) return; const gen=JQM.gen, S0=JQ, b=await jqmLoad(k); if(!b||!JQ||JQ!==S0||scr!=='junqi'||gen!==JQM.gen||S0.over!=null||S0.phase!=='play') return; const now=AC.currentTime, c=JQM.cur;
   if(c&&c.k===k){ if(c.stage===stage) return;
     // same track, another stage: right now, at the same point of the shared timeline; the old take fades while the new one takes over
-    const at=now+.03, pos=jqmPos(c,at); jqmKill(c.v,at,.9); c.v=jqmVoice(k,stage,at,pos,.12); c.stage=stage; return; }
+    const at=now+.03, pos=jqmMap(k,c.stage,stage,jqmPos(c,at)); jqmKill(c.v,at,.9); c.v=jqmVoice(k,stage,at,pos,.12); c.stage=stage; c.anchor=at-pos; return; }
   // from the even-battle theme (or the other track): the neutral theme fades away while the new track comes in from the top
   if(c) jqmKill(c.v,now,1.6); bgm._mood=true; bgm(0,2.2); bgm._mood=false;
   const at=now+.5, v=jqmVoice(k,stage,at,0,1.8); JQM.cur={k,stage,v,anchor:at}; }
