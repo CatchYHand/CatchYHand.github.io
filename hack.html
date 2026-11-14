@@ -5034,6 +5034,10 @@ html:not([lang=zh]) .gt-choose .gc-lb b{font-family:'Newsreader','Noto Serif SC'
 .jq-resign svg .cloth{fill:#fff;stroke:#f3e6d6;stroke-width:.8;stroke-linejoin:round}
 .jq:not(.setup) .jq-rlog>.jq-lsys{justify-content:center!important;align-self:stretch!important}
 .jq .jq-pl .jq-left small{white-space:nowrap}
+
+.jq-bt .jq-undo{background:linear-gradient(180deg,#3d4b5c,#283240)!important;border-color:#6f86a0!important;color:#e8eef6!important}
+.jq-bt .jq-undo:hover:not(:disabled){background:linear-gradient(180deg,#4a5b70,#313d4e)!important;border-color:#9fb6d0!important}
+.jq-undo .pips b{border-color:#ffd36a!important}
 /* ===== Pages & Frames: a reading room, green-leather rail and paper pages ===== */
 #reader.shelf{--sh-bg:#F3EEE3;--sh-ink:#23201A;--sh-ink2:#6B6252;--sh-acc:#8B2B22;--sh-green:#1F3329;--sh-line:#DCD2BF;--cx:#8B2B22}
 #reader.shelf .rd-main,#reader.shelf .rd-leaf{background:var(--sh-bg) linear-gradient(90deg,rgba(80,60,30,.05) 1px,transparent 1px) 0 0/22px 100%}
@@ -11837,11 +11841,11 @@ function jqCtl(){ const S=JQ, c=$g('.jq-ctl'); if(!c) return;
     c.innerHTML=`<div class="jq-box st"><h4>${T('Deployment Plan','部署方案')}<span class="jq-tag">${T('CLASSIFIED','绝密')}</span></h4><p>${T('Pick a unit on standby on the right and tap a lit square to deploy it, or pick a preset layout by number below.','从右边的待命部队里选一枚棋子，再点棋盘上亮起的格子部署；也可以直接按编号选用下面的默认布阵。')}</p>
       <div class="jq-bt three"><button data-j="rand">${T('Random','随机布阵')}</button><button data-j="last">${T('Last Used','上次阵型')}</button><button data-j="clear">${T('Clear','全部收回')}</button></div>
       <h5 class="jq-sub">${T('Preset Layouts','默认布阵')}<small>${T('No.','编号')}</small></h5><div class="jq-lays">${JQ_LAYOUTS.map((_,i)=>`<button data-j="lay${i}" class="${S.preset===i?'on':''}"><i>#</i>${i+1}</button>`).join('')}</div><p class="jq-lhint">${T('Once deployed, you can still adjust the layout: left-click two of your units to swap their positions, or right-click a unit to put it back on standby.','部署好之后仍可随时调整：左键依次点两支部队即可互换部署位置，右键点部队可让它暂时回到待命。')}</p>
-      <button class="jq-go jq-launch" data-j="start" ${left?'disabled':''}><svg class="lem" viewBox="0 0 100 100" aria-hidden="true">${JQ_EMB.ours}</svg><span>${left?T(`${left} ${left===1?'Unit':'Units'} Still on Standby`,`还有 ${left} 枚棋子待命`):T('Start the Battle','布阵完成，开战')}</span><i class="chev" aria-hidden="true"></i></button></div>`; }
+      <button class="jq-go jq-launch" data-j="start" ${left?'disabled':''}><svg class="lem" viewBox="0 0 100 100" aria-hidden="true">${JQ_EMB.ours}</svg><span>${left?T(`${left} ${left===1?'Unit':'Units'} Still on Standby`,`还有 ${left} 支部队待命`):T('Start the Battle','布阵完成，开战')}</span><i class="chev" aria-hidden="true"></i></button></div>`; }
   else if(S.tut&&S.phase==='play'){ c.innerHTML=`<div class="jq-box st"><h4 class="jq-turn">${T('Training exercise','教学演练')}</h4><p>${T('Carry out the orders in each dispatch from headquarters.','按总指挥部电报的指示操作。')}</p><div class="jq-bt">${jqUndoBtn(S,S.moves.some(m=>m.id<100)&&!S.busy)}<button data-j="tutx">${T('Leave','退出教学')}</button></div></div>`; }
-  else if(S.phase==='play'){ const canUndo=S.turn===0&&!S.busy&&S.moves.some(m=>m.id<100);
-    c.innerHTML=`<div class="jq-box st"><h4 class="jq-turn">${S.turn===0?T('Your move','轮到你走'):T('Opponent is thinking…','对手思考中…')}</h4><p>${T('Right-click an enemy unit to mark what you think it is.','右键点击敌方部队，可以标记你对它的判断。')}</p>
-      <div class="jq-bt">${jqUndoBtn(S,canUndo)}<button data-j="giveup" class="jq-resign"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="pole" d="M5 2.5v19"/><path class="cloth" d="M5.6 3.5c2.6-1.2 4.6 1.2 7.2 0 2.1-.9 3.7-.6 5.6.3v8.4c-1.9-.9-3.5-1.2-5.6-.3-2.6 1.2-4.6-1.2-7.2 0z"/></svg><span>${T('Resign','认输')}</span></button></div></div>`; }
+  else if(S.phase==='play'||S.phase==='toss'||S.phase==='count'){ const live=S.phase==='play', canUndo=live&&S.turn===0&&!S.busy&&S.moves.some(m=>m.id<100);
+    c.innerHTML=`<div class="jq-box st"><h4 class="jq-turn">${!live?T('Tossing for the first move…','掷硬币决定先手…'):S.turn===0?T('Your move','轮到你走'):T('Opponent is thinking…','对手思考中…')}</h4><p>${T('Right-click an enemy unit to mark what you think it is.','右键点击敌方部队，可以标记你对它的判断。')}</p>
+      <div class="jq-bt">${jqUndoBtn(S,canUndo)}<button data-j="giveup" class="jq-resign" ${live?'':'disabled'}><svg viewBox="0 0 24 24" aria-hidden="true"><path class="pole" d="M5 2.5v19"/><path class="cloth" d="M5.6 3.5c2.6-1.2 4.6 1.2 7.2 0 2.1-.9 3.7-.6 5.6.3v8.4c-1.9-.9-3.5-1.2-5.6-.3-2.6 1.2-4.6-1.2-7.2 0z"/></svg><span>${T('Resign','认输')}</span></button></div></div>`; }
   else if(S.phase==='replay') jqRpCtl();
   else if(S.phase==='over') c.innerHTML=`<div class="jq-box st"><h4 class="jq-turn">${S.over==='draw'?T('Draw','和棋'):S.over===0?T('You win','你赢了'):T('You lose','你输了')}</h4><p>${S.why||''}</p><button class="jq-go" data-j="replay">${T('Replay this game','复盘')}</button><button class="jq-go alt" data-j="again">${T('Play again','再来一局')}</button></div>`;
   else c.innerHTML=''; }
