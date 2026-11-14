@@ -11623,9 +11623,11 @@ function jqRandomLayout(side){ // side 0 -> rows 6..11 (front 6), side 1 -> rows
   return put; }
 function jqLegalSpot(t,r,c,side){ const i=side?5-r:r-6; if(t===12) return jqHQ(r,c); if(t===11) return i>=4; if(t===10) return i!==0; return true; }
 const jqP=(S,id)=>S.pcs.find(p=>p.id===id), jqAt=(S,k)=>S.at[k]!=null?jqP(S,S.at[k]):null;
+// a Bomb may never enter the enemy headquarters, so it can never carry off the Flag
+const jqBombBar=(side,k)=>{ const [r,c]=jqRC(k); return jqHQ(r,c)&&r===(side?11:0); };
 function jqMovable(S,p){ return !p.dead&&p.t!==11&&p.t!==12&&!jqHQ(...jqRC(p.k)); }
 // every square a piece can reach this turn; attacks land on enemy pieces that are not in a camp
-function jqMoves(S,p){ if(!jqMovable(S,p)) return []; const out=new Map(), from=p.k, can=k=>{ const q=jqAt(S,k); if(!q) return 1; if(q.side===p.side) return 0; return jqCamp(...jqRC(k))?0:2; };
+function jqMoves(S,p){ if(!jqMovable(S,p)) return []; const out=new Map(), from=p.k, can=k=>{ if(p.t===10&&jqBombBar(p.side,k)) return 0; const q=jqAt(S,k); if(!q) return 1; if(q.side===p.side) return 0; return jqCamp(...jqRC(k))?0:2; };
   for(const k of JQ_ADJ[from]||[]){ const c=can(k); if(c) out.set(k,{to:k,atk:c===2,path:[from,k]}); }
   if(JQ_RAIL[from]){
     if(p.t===1){ // the engineer turns corners: a search over the rail net through empty stations
@@ -11708,7 +11710,7 @@ const JQX=(()=>{ const N=60, ADJ=[], RAIL=[], CAMP=[], HQ=[], R=i=>Math.floor(i/
 function jqxFrom(S,types){ const P=[], B=new Array(60).fill(-1); S.pcs.forEach(p=>{ if(p.dead) return; const [r,c]=jqRC(p.k), i=JQX.K(r,c); const t=p.side===1?p.t:types[p.id]; B[i]=P.length; P.push({t,s:p.side,at:i,alive:true,id:p.id}); }); return {P,B}; }
 function jqxMoves(X,s){ const out=[], {P,B}=X, A=JQX;
   for(let pi=0;pi<P.length;pi++){ const p=P[pi]; if(!p.alive||p.s!==s||p.t===11||p.t===12||A.HQ[p.at]) continue; const seen=new Set();
-    const can=j=>{ const q=B[j]; if(q<0) return 1; if(P[q].s===s) return 0; return A.CAMP[j]?0:2; };
+    const can=j=>{ if(p.t===10&&A.HQ[j]&&A.R(j)===(s?11:0)) return 0; const q=B[j]; if(q<0) return 1; if(P[q].s===s) return 0; return A.CAMP[j]?0:2; };
     const add=(j,atk)=>{ if(!seen.has(j)){ seen.add(j); out.push([pi,j,atk]); } };
     for(const j of A.ADJ[p.at]){ const c=can(j); if(c) add(j,c===2); }
     if(A.RAIL[p.at].length){
@@ -11739,7 +11741,7 @@ function jqxEval(X){ const {P}=X, A=JQX; let sc=0, f=[-1,-1], big=[0,0];
     else if(A.HQ[p.at]&&p.t!==12&&p.t!==11) v*=.35; // stuck in a headquarters
     sc+=sg*v; }
   // a flag with enemies nearby and few defenders is in danger
-  for(const s of [0,1]){ const mf=f[s]; if(mf<0) continue; let thr=0; for(const p of P){ if(!p.alive||p.s===s||p.t===11||p.t===12) continue; const d=dist(p.at,mf); if(d<=3) thr+=(4-d)*.9; } sc+=(s===1?-1:1)*thr; }
+  for(const s of [0,1]){ const mf=f[s]; if(mf<0) continue; let thr=0; for(const p of P){ if(!p.alive||p.s===s||p.t===10||p.t===11||p.t===12) continue; const d=dist(p.at,mf); if(d<=3) thr+=(4-d)*.9; } sc+=(s===1?-1:1)*thr; }
   return sc; }
 // draw one full guess of your army from the beliefs, honouring the piece counts
 function jqxSample(S){ const B=S.ai.B, ids=S.pcs.filter(p=>p.side===0&&!p.dead).map(p=>p.id), quota={}, gone=S.ai.gone||{};
@@ -12572,7 +12574,7 @@ function jqTutSteps(){ const B=(e,z)=>[e,z];
   {subj:['ENEMY INTELLIGENCE','敌情通报'],task:{type:'move',from:'6,4',to:'5,4'},say:B('Ram it!','撞上去！')},
   {subj:['ENEMY INTELLIGENCE','敌情通报'],hlFn:S=>{ const f=S.pcs.find(p=>p.side===1&&p.t===12&&!p.dead); return f?[f.k]:[]; },say:B('Both units are gone, and an eye has opened over the enemy Flag. When a Field Marshal falls, word spreads and that side can no longer hide its Flag, which confirms it was their Marshal. The same goes for us: lose our Marshal and our Flag is exposed.','两枚同归于尽，敌方军旗上睁开了一只眼睛。哪一方的司令阵亡，消息便会传遍战场，那一方的军旗再也藏不住，这也证实了那正是敌方司令。我方同样如此：司令一旦阵亡，军旗即告暴露。')},
   {subj:['OPERATION ORDER','作战命令'],sc:'puzzle',say:B('Final exercise: an endgame with both armies revealed. The enemy Engineer is closing on our Flag, and ours has a route to theirs. Follow orders to the letter; every step has one best move.','最后一课：明牌残局。敌方工兵正逼近我方军旗，我方工兵也有一条直取敌营的路线。严格照令执行，每一步只有一个最佳走法。')},
-  {subj:['OPERATION ORDER','作战命令'],task:{type:'move',from:'6,4',to:'3,4'},say:B('Step one, clear the way: send the Bomb up the right-hand railway into the enemy Field Marshal.','第一步，扫清障碍：命令炸弹沿右侧铁路北上，与敌方司令同归于尽。')},
+  {subj:['OPERATION ORDER','作战命令'],task:{type:'move',from:'6,4',to:'3,4'},say:B('Step one, clear the way. A Bomb can never enter an enemy headquarters, so it cannot take the Flag itself; send it up the right-hand railway into the enemy Field Marshal.','第一步，扫清障碍。炸弹不能进入敌方大本营，夺不了军旗，就让它沿右侧铁路北上，与敌方司令同归于尽。')},
   {subj:['OPERATION ORDER','作战命令'],enemy:{from:'5,0',to:'10,1'},say:B('Enemy Marshal down, their Flag exposed! But their Engineer has run down the left railway and dug out the mine at our gate. Next move, it takes our Flag!','敌方司令阵亡，军旗暴露！但敌方工兵已沿左侧铁路南下，挖掉了我方大本营门前的地雷，下一步就要夺旗！')},
   {subj:['OPERATION ORDER','作战命令'],task:{type:'move',from:'9,1',to:'10,1'},say:B('Strike now! The Lieutenant in the camp directly above can take it!','立即出击！正上方行营里的排长可以吃掉它！')},
   {subj:['OPERATION ORDER','作战命令'],enemy:{from:'4,2',to:'5,2'},say:B('Threat neutralised. The enemy Major starts to push forward.','险情解除。敌方营长开始向前推进。')},
@@ -12751,7 +12753,7 @@ function jqDemoCheck(){ const bad=[], K=(r,c)=>jqKey(r,c);
       for(let i=1;i<path.length;i++){ const a=K(...path[i-1]), b=K(...path[i]); if(!(JQ_ADJ[a]||[]).includes(b)) bad.push(tag+' not adjacent '+a+'-'+b); if(path.length>2&&!(JQ_RAIL[a]||[]).includes(b)) bad.push(tag+' long move off rail '+a+'-'+b);
         if(i<path.length-1&&occ(...path[i],s.m)) bad.push(tag+' path blocked at '+b); }
       if(path.length>2&&p.t!==1){ const dr=new Set(), dc=new Set(); path.forEach(([r,c])=>{ dr.add(r); dc.add(c); }); if(dr.size>1&&dc.size>1) bad.push(tag+' non-engineer turned '+s.m); }
-      const to=path[path.length-1], d=occ(...to,s.m); if(d){ if(P[d].s===p.s) bad.push(tag+' attacks own piece '+d); if(jqCamp(...to)) bad.push(tag+' attacks into camp '+d); const res=jqFight(p.t,P[d].t); if(res==='A'){ delete P[d]; p.at=to; } else if(res==='D') delete P[s.m]; else { delete P[s.m]; delete P[d]; } } else p.at=to;
+      const to=path[path.length-1], d=occ(...to,s.m); if(p.t===10&&jqBombBar(p.s,K(...to))) bad.push(tag+' bomb into enemy HQ '+s.m); if(d){ if(P[d].s===p.s) bad.push(tag+' attacks own piece '+d); if(jqCamp(...to)) bad.push(tag+' attacks into camp '+d); const res=jqFight(p.t,P[d].t); if(res==='A'){ delete P[d]; p.at=to; } else if(res==='D') delete P[s.m]; else { delete P[s.m]; delete P[d]; } } else p.at=to;
       const w=scn.win; if(to[0]<w[0]||to[0]>w[1]) bad.push(tag+' leaves window'); } }
   function same2(a,b){ return a&&b&&a[0]===b[0]&&a[1]===b[1]; }
   return bad; }
@@ -12759,7 +12761,7 @@ function jqRules(back){ $$g('.jq-rules').forEach(n=>n.remove()); const o=documen
   const ord=[12,9,8,7,6,5,4,3,2,1,10,11], tile=(t,s)=>`<span class="jq-lt ${s?'r':'b'} big"><span class="jq-ltf">${jqFace(t)}</span></span>`;
   const B=(e,z)=>[e,z], ul=a=>`<ul>${a.map(x=>`<li>${T(...x)}</li>`).join('')}</ul>`, sec=(id,t,b)=>`<section id="jr-${id}"><h3>${t}</h3>${b}</section>`, demo=k=>`<div class="jr-dm" data-sc="${k}"></div>`;
   const tie=t=>B(`Meets an enemy ${JQ_ENF[t]}: both leave the board.`,`遇上敌方${JQ_ZH[t]}：同归于尽。`);
-  const info={12:[B('1 per side · no rank','每方 1 枚 · 不分大小'),[B('Starts in one of your two headquarters and never moves.','开局放在两个大本营之一，整局不能移动。'),B('Any enemy piece that reaches it, even a Bomb, captures it and wins the game.','任何敌方棋子攻到它（哪怕是炸弹）都能把它夺走，赢下整局。'),B('If your Field Marshal falls, its position is revealed to the enemy.','己方司令阵亡后，军旗位置随即暴露给敌方。')]],
+  const info={12:[B('1 per side · no rank','每方 1 枚 · 不分大小'),[B('Starts in one of your two headquarters and never moves.','开局放在两个大本营之一，整局不能移动。'),B('Any enemy piece except a Bomb that reaches it captures it and wins the game.','除炸弹以外，任何敌方棋子攻到它都能把它夺走，赢下整局。'),B('If your Field Marshal falls, its position is revealed to the enemy.','己方司令阵亡后，军旗位置随即暴露给敌方。')]],
     9:[B('1 per side · the highest rank','每方 1 枚 · 全军最大'),[B('Beats every other officer.','能吃掉其他所有军官。'),tie(9),B('Once it falls, your Flag’s position is revealed.','它一阵亡，己方军旗的位置就会暴露。')]],
     8:[B('1 per side · second','每方 1 枚 · 第二'),[B('Beats the Major General and every officer below.','能吃师长及以下所有军官。'),B('Loses to the Field Marshal.','碰上司令会被吃掉。'),tie(8)]],
     7:[B('2 per side · third','每方 2 枚 · 第三'),[B('Beats the Brigadier and every officer below.','能吃旅长及以下所有军官。'),B('Loses to the General and the Field Marshal.','碰上军长、司令会被吃掉。'),tie(7)]],
@@ -12769,11 +12771,11 @@ function jqRules(back){ $$g('.jq-rules').forEach(n=>n.remove()); const o=documen
     3:[B('3 per side · seventh','每方 3 枚 · 第七'),[B('Beats the Lieutenant and the Engineer.','能吃排长和工兵。'),B('Loses to the Major and above.','碰上营长及以上会被吃掉。'),tie(3)]],
     2:[B('3 per side · eighth','每方 3 枚 · 第八'),[B('Beats only the Engineer.','只能吃工兵。'),B('Loses to the Captain and above.','碰上连长及以上会被吃掉。'),tie(2)]],
     1:[B('3 per side · the lowest rank','每方 3 枚 · 最小'),[B('Loses to every other officer.','碰上其他军官都会被吃掉。'),tie(1),B('The only piece that can turn corners on the railway.','全军唯一能在铁路上拐弯的棋子。'),B('The only piece that can clear a landmine; it then takes the mine’s place.','也是唯一能挖地雷的棋子，挖掉后占住那一格。')]],
-    10:[B('2 per side · no rank','每方 2 枚 · 不分大小'),[B('Moves like an ordinary officer; it cannot turn corners on the railway.','走法和普通军官一样，不能在铁路上拐弯。'),B('When it attacks or is attacked, both pieces leave the board.','无论是它主动进攻，还是被别人进攻，双方都一起出局。'),B('The one exception: a Bomb that reaches the enemy Flag captures it.','唯一的例外：炸弹攻到敌方军旗时，直接夺下军旗。'),B('May not start on the front row.','开局不能放在第一排。'),B('Hitting a Bomb looks and sounds exactly like a tie between equal ranks, so it is up to you to work out which it was.','撞上炸弹和同级相碰，画面与音效完全一样，究竟是哪一种，要靠你自己判断。')]],
+    10:[B('2 per side · no rank','每方 2 枚 · 不分大小'),[B('May not start on the front row.','开局不能放在第一排。'),B('Moves like an ordinary officer; it cannot turn corners on the railway.','走法和普通军官一样，不能在铁路上拐弯。'),B('When it attacks or is attacked, both pieces leave the board.','无论是它主动进攻，还是被别人进攻，双方都一起出局。'),B('It may never enter an enemy headquarters, so it can never capture the Flag.','不能进入敌方大本营，所以永远夺不了军旗。'),B('Hitting a Bomb looks and sounds exactly like a tie between equal ranks, so it is up to you to work out which it was.','撞上炸弹和同级相碰，画面与音效完全一样，究竟是哪一种，要靠你自己判断。')]],
     11:[B('3 per side · no rank','每方 3 枚 · 不分大小'),[B('Starts on your back two rows and never moves.','只能放在最后两排，整局不能移动。'),B('Any officer other than an Engineer that attacks it is destroyed; the mine stays where it is.','除工兵以外，任何军官进攻它都会被炸死，地雷留在原地。'),B('An Engineer digs it up and takes its place; a Bomb and the mine go up together.','工兵能挖掉它并占住那一格；炸弹碰上它则同归于尽。'),B('Hitting a mine looks and sounds exactly like hitting a bigger piece, so the attacker has to work out which it was.','撞上地雷和撞上大子，画面与音效完全一样，进攻方得自己判断是哪一种。')]]};
   // the board, annotated in reading order: headquarters first, mountains last
   const X=jqX, Y=jqY, RH=JQ_RH, BX=96.5, M=[
-    {n:1,k:'hq',sh:`<rect class="an" x="${X(3)-9.2}" y="${Y(0)-6}" width="18.4" height="13.4" rx="2"/>`,from:[X(3)+9.2,Y(0)],y:Y(0),t:T('Headquarters','大本营'),d:T('The two squares with a notch on one edge, in the second and fourth columns of each back row. Your Flag must start in one of them. Any piece that enters a headquarters, yours or the enemy’s, can never move again, so a raider that picks the wrong one is stuck there for good.','双方最后一排第二、第四列那两个带缺口的格子。军旗必须放在其中一个里。不论是哪一方的大本营，棋子一旦进入就再也不能移动；进攻时选错了大本营，这枚棋子就只能困死在里面。')},
+    {n:1,k:'hq',sh:`<rect class="an" x="${X(3)-9.2}" y="${Y(0)-6}" width="18.4" height="13.4" rx="2"/>`,from:[X(3)+9.2,Y(0)],y:Y(0),t:T('Headquarters','大本营'),d:T('The two squares with a notch on one edge, in the second and fourth columns of each back row. Your Flag must start in one of them. Any piece that enters a headquarters, yours or the enemy’s, can never move again, so a raider that picks the wrong one is stuck there for good. A Bomb may never enter an enemy headquarters.','双方最后一排第二、第四列那两个带缺口的格子。军旗必须放在其中一个里。不论是哪一方的大本营，棋子一旦进入就再也不能移动；进攻时选错了大本营，这枚棋子就只能困死在里面。炸弹不能进入敌方大本营。')},
     {n:2,k:'post',sh:`<rect class="an" x="${X(4)-8.6}" y="${Y(2)-5}" width="17.2" height="10" rx="2"/>`,from:[X(4)+8.6,Y(2)],y:Y(2),t:T('Posts','兵站'),d:T('The plain squares. This is where pieces stand, and where they can be attacked.','普通的方格。棋子平时就停在这里，也会在这里遭到攻击。')},
     {n:3,k:'camp',sh:`<circle class="an" cx="${X(2)}" cy="${Y(3)}" r="7.4"/>`,from:[X(2)+7.4,Y(3)],y:Y(3),t:T('Camps','行营'),d:T('The circles with a tent. A piece inside a camp cannot be attacked, but it is free to come out and strike. Camps start empty, and they also connect diagonally to the squares around them.','画着帐篷的圆圈。行营里的棋子不会受到攻击，却可以随时出营进攻。开局时行营必须空着；行营与四周的格子还可以斜向通行。')},
     {n:4,k:'road',sh:`<path class="an" d="M${X(3)+5.8} ${Y(4)}H${X(4)-7.6}"/><circle class="an0" cx="${(X(3)+X(4))/2+1}" cy="${Y(4)}" r="2.8"/>`,from:[(X(3)+X(4))/2+3.8,Y(4)],y:Y(4),t:T('Roads','公路'),d:T('The thin brown lines. Along a road a piece moves one square per turn.','棕色的细线。沿公路每次只能走一格。')},
