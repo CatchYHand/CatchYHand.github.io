@@ -11298,9 +11298,9 @@ const sirenSVG=()=>{ const k='s'+(++SIRN); return SIREN_SVG0.replace(/id="s(bl|r
    More players on alert, denser rain and nearer thunder. Only the alert itself makes a sound. ---------- */
 const STORM={lv:0,raf:0,drops:[],rips:[],dens:0,want:0,t:0,on:false,snd:null,buf:{}};
 async function thunder(k){ try{ if(!AC) initAudio(); if(!AC) return; const key='gd-thunder'+k; if(!STORM.buf[key]) STORM.buf[key]=await fetch(VOX_URL(key)).then(r=>r.arrayBuffer()).then(a=>AC.decodeAudioData(a)); if(!open) return;
-    if(!gdBus){ gdBus=AC.createGain(); gdBus.gain.value=.75; gdBus.connect(musicBus||AC.destination); }
+    if(!gdBus){ gdBus=AC.createGain(); gdBus.gain.value=1; gdBus.connect(musicBus||AC.destination); }
     if(STORM.snd){ thunderOff(.9); } const src=AC.createBufferSource(), g=AC.createGain(), t=AC.currentTime+.05; src.buffer=STORM.buf[key]; src.connect(g).connect(gdBus);
-    const pk=[0,.55,.7,.85,1][k]||.8; g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(pk,t+(k===4?.04:k===3?.12:.3)); g.gain.setValueAtTime(pk,t+2.4); g.gain.linearRampToValueAtTime(0,t+3.8); src.start(t); src.stop(t+3.9); STORM.snd={src,g}; src.onended=()=>{ if(STORM.snd&&STORM.snd.src===src) STORM.snd=null; }; }catch(e){} }
+    const pk=([0,.55,.7,.85,1][k]||.8)*.75; g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(pk,t+(k===4?.04:k===3?.12:.3)); g.gain.setValueAtTime(pk,t+2.4); g.gain.linearRampToValueAtTime(0,t+3.8); src.start(t); src.stop(t+3.9); STORM.snd={src,g}; src.onended=()=>{ if(STORM.snd&&STORM.snd.src===src) STORM.snd=null; }; }catch(e){} }
 function thunderOff(sec){ const x=STORM.snd; if(!x||!AC) return; STORM.snd=null; try{ const t=AC.currentTime; x.g.gain.cancelScheduledValues(t); x.g.gain.setValueAtTime(x.g.gain.value,t); x.g.gain.linearRampToValueAtTime(0,t+sec); x.src.stop(t+sec+.05); }catch(e){} }
 function storm(lv){ const f=$g('.gt-felt'); if(!f) return; STORM.lv=Math.min(4,lv); STORM.want=[0,.55,1.05,1.65,2.4][STORM.lv]; STORM.heavy=[0,0,.3,.58,.85][STORM.lv]; STORM.endT=0; const cv0=$g('.gt-rain'); if(cv0) cv0.style.opacity=''; STORM.on=true; f.classList.add('storm'); f.style.setProperty('--vig',[0,.42,.52,.62,.72][STORM.lv]);
   thunder(Math.min(4,STORM.lv));
@@ -11345,16 +11345,16 @@ const XICO='<svg class="xi" viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5
 /* ---------- music: game-room theme (4) in the lobby; Army Chess menu and tutorial theme (6), battle theme (5) once the fight starts; Guandan's menu theme (1) on its welcome, rules, tutorial and before the deal; play theme (2) after the deal; tense theme (3) after the first warning ---------- */
 let gdBus=null, BGM={cur:null,k:null,tr:{}};
 function bgmTrack(k){ if(BGM.tr[k]) return BGM.tr[k]; if(typeof Track==='undefined'||!AC) return null;
-  if(!gdBus){ gdBus=AC.createGain(); gdBus.gain.value=.75; gdBus.connect(musicBus||AC.destination); }
-  const t=new Track(VOX_URL('gd-bgm'+k),k===4?0:k===6?1.5:3); if(k===4) t.trim=function(){ this.ls=0; this.le=this.buf.duration; if(this.pos==null) this.pos=0; }; t.schedule=function(){ const c=this.cur, endAt=c.at+(this.le-c.offset), nextAt=endAt+this.gap, lead=Math.max(0,(nextAt-AC.currentTime-1)*1000); this.timer=setTimeout(()=>{ if(!this.playing) return; this.cur=this.seg(Math.max(AC.currentTime+.05,nextAt),this.ls,0); this.schedule(); },lead); }; const seg=t.seg.bind(t); t.seg=(at,off,fade)=>{ const sg=seg(at,off,fade); try{ sg.g.disconnect(); sg.g.connect(gdBus); }catch(e){} return sg; }; return BGM.tr[k]=t; }
+  if(!gdBus){ gdBus=AC.createGain(); gdBus.gain.value=1; gdBus.connect(musicBus||AC.destination); }
+  const t=new Track(VOX_URL('gd-bgm'+k),k===4?0:k===6?1.5:3); t.dest=gdBus; if(k===4) t.trim=function(){ this.ls=0; this.le=this.buf.duration; if(this.pos==null) this.pos=0; }; t.schedule=function(){ const c=this.cur, endAt=c.at+(this.le-c.offset), nextAt=endAt+this.gap, lead=Math.max(0,(nextAt-AC.currentTime-1)*1000); this.timer=setTimeout(()=>{ if(!this.playing) return; this.cur=this.seg(Math.max(AC.currentTime+.05,nextAt),this.ls,0); this.schedule(); },lead); }; const seg=t.seg.bind(t); t.seg=(at,off,fade)=>{ const sg=seg(at,off,fade); return sg; }; return BGM.tr[k]=t; }
 // end of the match: a victory or defeat piece plays once, then after two seconds the lobby theme comes back and loops
 let JING={src:null,timer:0,buf:{}};
 function jingleStop(){ clearTimeout(JING.timer); if(JING.src){ try{ JING.src.onended=null; JING.g.gain.setTargetAtTime(.0001,AC.currentTime,.12); JING.src.stop(AC.currentTime+.5); }catch(e){} JING.src=null; } }
 async function matchJingle(won){ try{ if(!AC) initAudio(); if(!AC) return; const jq=scr==='junqi'; if(jq) JING.back=6; else if(BGM.k) JING.back=BGM.k; jingleStop(); bgm(0,jq?.9:undefined); const k=jq?(won?'jq-win':'jq-lose'):(won?'gd-win':'gd-lose');
     if(!JING.buf[k]) JING.buf[k]=await fetch(VOX_URL(k)).then(r=>r.arrayBuffer()).then(a=>AC.decodeAudioData(a));
     if(!open) return;
-    if(!gdBus){ gdBus=AC.createGain(); gdBus.gain.value=.75; gdBus.connect(musicBus||AC.destination); }
-    const src=AC.createBufferSource(), g=AC.createGain(); src.buffer=JING.buf[k]; src.connect(g).connect(gdBus); g.gain.value=1; JING.src=src; JING.g=g;
+    if(!gdBus){ gdBus=AC.createGain(); gdBus.gain.value=1; gdBus.connect(musicBus||AC.destination); }
+    const src=AC.createBufferSource(), g=AC.createGain(); src.buffer=JING.buf[k]; src.connect(g).connect(gdBus); g.gain.value=musicGain(k); JING.src=src; JING.g=g;
     src.onended=()=>{ if(JING.src!==src) return; JING.src=null; JING.timer=setTimeout(()=>{ if(open) bgm(JING.back||(scr==='table'?1:scr==='junqi'?6:4),null,scr!=='junqi'); },2000); }; src.start(AC.currentTime+.05); }catch(e){ JING.timer=setTimeout(()=>{ if(open) bgm(JING.back||(scr==='table'?1:scr==='junqi'?6:4),null,scr!=='junqi'); },2000); } }
 function bgm(k,xf,resume){ try{ if(!bgm._mood&&typeof jqMoodStop==='function') jqMoodStop(); if(k&&!resume) JING.back=0; if(k!==0&&typeof jqDepStop==='function') jqDepStop(); if(k&&!open) return; if(!AC) initAudio(); if(!AC) return; if(k) jingleStop(); if(k){ [TR.bgm,TR.decode].forEach(t=>{ if(t&&t.playing){ t.pause(.5); if(!bgmHeld.includes(t)) bgmHeld.push(t); } }); } if(BGM.k===k&&BGM.cur&&BGM.cur.playing) return; const old=BGM.cur, t=k?bgmTrack(k):null; BGM.k=k;
     const XF=xf||(typeof SWITCH_XF!=='undefined'?SWITCH_XF:1.4); if(old&&old!==t){ old.pause(XF); }
@@ -11920,7 +11920,7 @@ const JQD={A:12.282,B:41.081,C:[38.678,41.081],bars:[0.057,2.681,5.09,7.482,9.87
 let JQDP=null;
 function jqDepLoad(){ if(JQD.buf) return Promise.resolve(JQD.buf); try{ if(!AC) initAudio(); }catch(e){} if(!AC) return Promise.resolve(null);
   if(!JQD.loading) JQD.loading=fetch(VOX_URL('jq-deploy')).then(r=>r.arrayBuffer()).then(b=>AC.decodeAudioData(b)).then(b=>JQD.buf=b).catch(()=>null); return JQD.loading; }
-function jqDepOut(){ if(!gdBus){ gdBus=AC.createGain(); gdBus.gain.value=.75; gdBus.connect(musicBus||AC.destination); } return gdBus; }
+function jqDepOut(){ if(!gdBus){ gdBus=AC.createGain(); gdBus.gain.value=1; gdBus.connect(musicBus||AC.destination); } return gdBus; }
 // one pass of [off,end) starting at audio time `at`, with short equal-power fades at both ends so seams never click
 function jqDepSeg(at,off,end,fadeIn){ const P=JQDP, src=AC.createBufferSource(), g=AC.createGain(); src.buffer=JQD.buf; src.connect(g).connect(P.g);
   const X=JQD.XF; if(fadeIn){ g.gain.setValueAtTime(0,at); g.gain.linearRampToValueAtTime(1,at+X); } else g.gain.setValueAtTime(1,at);
@@ -11930,7 +11930,7 @@ function jqDepFadeSeg(s,t){ const X=JQD.XF; try{ s.g.gain.cancelScheduledValues(
 function jqDepQueue(){ const P=JQDP; if(!P||P.cd) return; const last=P.segs[P.segs.length-1]; if(!last) return; const X=JQD.XF, nextAt=last.at+(JQD.B-last.off)-X;
   jqDepFadeSeg(last,nextAt+X); const s=jqDepSeg(nextAt,JQD.A-X,JQD.B,true); P.timer=setTimeout(jqDepQueue,Math.max(50,(s.at+(JQD.B-s.off)-AC.currentTime-1.5)*1000)); }
 async function jqDepPlay(){ const S0=JQ; const b=await jqDepLoad(); if(!b||JQ!==S0||!S0||S0.phase!=='setup'||!open) return; jqDepStop(0);
-  const g=AC.createGain(); g.gain.value=1; g.connect(jqDepOut()); JQDP={g,segs:[],timer:0,cd:false}; const at=AC.currentTime+.06; jqDepSeg(at,0,JQD.B,false);
+  const g=AC.createGain(); g.gain.value=musicGain('jq-deploy'); g.connect(jqDepOut()); JQDP={g,segs:[],timer:0,cd:false}; const at=AC.currentTime+.06; jqDepSeg(at,0,JQD.B,false);
   JQDP.timer=setTimeout(jqDepQueue,Math.max(50,(JQD.B-1.5)*1000)); }
 function jqDepStop(fade){ const P=JQDP; if(!P) return; JQDP=null; clearTimeout(P.timer); try{ const t=AC.currentTime; P.g.gain.cancelScheduledValues(t); P.g.gain.setValueAtTime(P.g.gain.value,t); P.g.gain.linearRampToValueAtTime(0,t+(fade==null?.8:fade)+.01); P.segs.forEach(s=>{ try{ s.src.stop(t+(fade==null?.8:fade)+.05); }catch(e){} }); }catch(e){} }
 function jqDepPos(t){ const P=JQDP; if(!P) return null; const live=P.segs.filter(s=>s.at<=t&&t<s.stopAt); const s=live[live.length-1]; return s?{seg:s,pos:s.off+(t-s.at)}:null; }
@@ -12250,10 +12250,10 @@ const JQM_TR={a:{url:'jq-mood-a',st:[{s:0.000000,len:51.767483,per:17.255828,h:5
 const JQM={buf:{},load:{},cur:null,state:'n',since:0,gen:0,pend:null};
 function jqmLoad(k){ if(JQM.buf[k]) return Promise.resolve(JQM.buf[k]); if(JQM.load[k]) return JQM.load[k]; if(!AC) return Promise.resolve(null);
   return JQM.load[k]=fetch(VOX_URL(JQM_TR[k].url)).then(r=>r.arrayBuffer()).then(a=>AC.decodeAudioData(a)).then(b=>JQM.buf[k]=b).catch(()=>{ delete JQM.load[k]; return null; }); }
-function jqmOut(){ if(!gdBus){ gdBus=AC.createGain(); gdBus.gain.value=.75; gdBus.connect(musicBus||AC.destination); } return gdBus; }
+function jqmOut(k){ if(!gdBus){ gdBus=AC.createGain(); gdBus.gain.value=1; gdBus.connect(musicBus||AC.destination); } JQM.out=JQM.out||{}; if(!JQM.out[k]){ const g=AC.createGain(); g.gain.value=musicGain('jq-mood-'+k); g.connect(gdBus); JQM.out[k]=g; } return JQM.out[k]; }
 // one looping take: the stage's own stretch of the file, looped sample-accurately
 function jqmVoice(k,stage,at,pos,fade){ const T=JQM_TR[k].st[stage], b=JQM.buf[k], src=AC.createBufferSource(), g=AC.createGain(); src.buffer=b; src.loop=true; src.loopStart=T.s; src.loopEnd=T.s+T.len;
-  src.connect(g).connect(jqmOut()); g.gain.setValueAtTime(fade?0.0001:1,at); if(fade) g.gain.exponentialRampToValueAtTime(1,at+fade); src.start(at,T.s+pos); return {src,g}; }
+  src.connect(g).connect(jqmOut(k)); g.gain.setValueAtTime(fade?0.0001:1,at); if(fade) g.gain.exponentialRampToValueAtTime(1,at+fade); src.start(at,T.s+pos); return {src,g}; }
 function jqmKill(v,at,fade){ if(!v) return; try{ v.g.gain.cancelScheduledValues(at); v.g.gain.setValueAtTime(Math.max(.0001,v.g.gain.value),at); v.g.gain.exponentialRampToValueAtTime(.0001,at+fade); v.src.stop(at+fade+.05); }catch(e){} }
 // where we are on the shared timeline at audio time t
 const jqmPos=(c,t)=>{ const L=JQM_TR[c.k].st[c.stage].len; return (((t-c.anchor)%L)+L)%L; };
@@ -12268,29 +12268,70 @@ async function jqmPlay(k,stage){ if(!AC||!open) return; const gen=JQM.gen, S0=JQ
   const at=now+.5, v=jqmVoice(k,stage,at,0,1.8); JQM.cur={k,stage,v,anchor:at}; }
 function jqmToNeutral(){ const c=JQM.cur; if(!c||!AC) return; jqmKill(c.v,AC.currentTime,2.2); JQM.cur=null; bgm._mood=true; bgm(5,2.4,true); bgm._mood=false; }
 function jqMoodStop(fade){ const c=JQM.cur; JQM.cur=null; JQM.state='n'; JQM.gen++; JQM.pend=null; if(c&&AC) jqmKill(c.v,AC.currentTime,fade==null?.8:fade); }
-// the reading of the battle, from your side of the table
-function jqmScore(S){ const alive=s=>S.pcs.filter(p=>p.side===s&&!p.dead), me=alive(0), en=alive(1);
-  const row=p=>jqRC(p.k)[0], hq=[[0,1],[0,3]], near=(p,r,c)=>{ const [a,b]=jqRC(p.k); return Math.abs(a-r)+Math.abs(b-c)<=1; };
-  const deepMe=me.filter(p=>jqMovable(S,p)&&row(p)<=1).length, deepEn=en.filter(p=>row(p)>=10).length;
-  let s=(me.length-en.length)*1.0+Math.min(3,deepMe)*1.2-Math.min(3,deepEn)*1.2;
-  const ef=S.flagShown[1]?en.find(p=>p.t===12):null, mf=S.flagShown[0]?me.find(p=>p.t===12):null;
-  if(ef){ s+=2.5; if(me.some(p=>jqMovable(S,p)&&near(p,...jqRC(ef.k)))) s+=5; }
-  if(mf){ s-=2.5; if(en.some(p=>near(p,...jqRC(mf.k)))) s-=5; }
-  const mob=me.filter(p=>jqMovable(S,p)).length; if(mob<=3) s-=4;
-  return s; }
-// thresholds with a wide dead band: a stage is entered at UP and only left below DN, so a single trade cannot bounce the music
-const JQM_UP={a1:3,a2:6,a3:10}, JQM_DN={a1:.5,a2:3.5,a3:7};
-function jqMoodEval(S){ if(!S||S.tut||S.phase!=='play'||S.over!=null||!AC||jqWinner(S)!=null) return; const s=jqmScore(S), st=JQM.state, now=AC.currentTime;
-  const lvl=st==='n'?0:(st[0]==='a'?1:-1)*+st[1], dwell=now-JQM.since, dir=lvl>0?1:lvl<0?-1:0, v=s*(dir||1), L=Math.abs(lvl);
-  let want=lvl, urgent=false;
-  if(lvl===0){ if(S.plies>=6){ if(s>=JQM_UP.a1) want=1; else if(-s>=JQM_UP.a1) want=-1; } }
-  else { if(L<3&&v>=JQM_UP['a'+(L+1)]) want=lvl+dir;
-    else if(v<JQM_DN['a'+L]){ const flip=v<=-JQM_UP.a1; if(dwell>=(flip?12:30)) want=lvl-dir; }
-    // the decisive moments jump straight in: a Flag about to fall
-    if(L<3&&Math.abs(s)>=JQM_UP.a3&&Math.sign(s)===dir){ want=3*dir; urgent=true; } }
-  if(lvl===0&&Math.abs(s)>=JQM_UP.a3){ want=Math.sign(s); urgent=true; }
+// ---------- when the music moves: three readings of the battle, all from what you can know at the table ----------
+// value of a unit to the music: the big pieces matter most, an engineer is worth a little more than a lieutenant (it clears mines)
+const JQM_V={9:10,8:8,7:6,6:4.5,5:3.5,4:2.5,3:1.5,2:1,1:1.5,10:4,11:.8,12:0};
+// replay the game and keep, for every enemy unit, the ranks it could still be given everything announced so far.
+// Your losses count at their real value; an enemy loss counts at the average of the ranks it could have been.
+function jqmRead(S){ const R={...S,pcs:S.init.map(p=>({...p,moved:false,dead:false})),at:{},plies:0,quiet:0,lost:[[],[]],flagShown:[false,false]}; R.pcs.forEach(p=>R.at[p.k]=p.id);
+  const C={}; R.pcs.filter(p=>p.side===1).forEach(p=>{ const [r,c]=jqRC(p.k), w={}; for(const t in JQ_N) if(jqLegalSpot(+t,r,c,1)) w[t]=JQ_N[t]; C[p.id]=w; });
+  const keep=(id,f)=>{ const w=C[id], n={}; for(const t in w) if(f(+t)) n[t]=w[t]; if(Object.keys(n).length) C[id]=n; };
+  const ev=id=>{ const w=C[id]; let a=0,b=0; for(const t in w){ a+=w[t]*JQM_V[t]; b+=w[t]; } return b?a/b:2; };
+  const rank=t=>t>=1&&t<=9;
+  let gain=0, lost=0, mom=0, last=null; const N=S.moves.length;
+  S.moves.forEach((m,i)=>{ const p=jqP(R,m.id), q=jqAt(R,m.to), shown=R.flagShown[1];
+    if(p.side===1) keep(p.id,t=>t!==11&&t!==12); // it moved: not a mine, not the Flag
+    const info=jqApply(R,m); if(!info.res) return;
+    const me=p.side===0?p:q, en=p.side===0?q:p, a=me.t, res=info.res, enAtt=p.side===1;
+    if(a!==10&&en.t!==12){
+      if(res==='X') keep(en.id,t=>t===a||t===10);
+      else { const enWon=enAtt?res==='A':res==='D';
+        if(enWon) keep(en.id,t=>a===11?(enAtt&&t===1):(rank(t)&&t>a)||(!enAtt&&t===11&&a!==1));
+        else keep(en.id,t=>a===11?(t>=2&&t<=9):(enAtt?rank(t)&&t<a:(rank(t)&&t<a)||(a===1&&t===11))); } }
+    if(!shown&&R.flagShown[1]&&en.dead) C[en.id]={9:1}; // their Marshal fell: the Flag is shown, so that was him
+    const g=(en.dead?ev(en.id):0), l=(me.dead?JQM_V[me.t]:0); gain+=g; lost+=l;
+    mom+=(g-l)*Math.pow(.5,(N-1-i)/10); // recent battles count most; half the weight every ten moves
+    if(i===N-1) last={g,l,big:(me.dead&&me.t>=8)||(en.dead&&ev(en.id)>=7.5)||(en.dead&&C[en.id][9]&&Object.keys(C[en.id]).length===1)}; });
+  return {mat:gain-lost,mom,last,R,C}; }
+// how close the game is to being decided, for each side: units that can strike a headquarters next move, or stand two steps off
+function jqmTension(S){ const me=S.pcs.filter(p=>p.side===0&&!p.dead), en=S.pcs.filter(p=>p.side===1&&!p.dead);
+  const d2=(k1,k2)=>{ const [a,b]=jqRC(k1),[c,d]=jqRC(k2); return Math.abs(a-c)+Math.abs(b-d); };
+  // our threat: on their exposed Flag, or on either of their occupied headquarters while the Flag is hidden
+  const ef=S.flagShown[1]?en.find(p=>p.t===12):null, tg=ef?[ef.k]:['0,1','0,3'].filter(k=>{ const q=jqAt(S,k); return q&&q.side===1; });
+  const myMob=me.filter(p=>jqMovable(S,p)), hitUs=myMob.filter(p=>jqMoves(S,p).some(m=>tg.includes(m.to))).length, nearUs=myMob.filter(p=>tg.some(k=>d2(p.k,k)<=2)).length;
+  // their threat on our Flag; an enemy unit is read as an ordinary officer, since you cannot see what it is
+  const mf=me.find(p=>p.t===12); if(!mf) return {us:0,them:0,mob:myMob.length}; const enMob=en.filter(p=>!jqHQ(...jqRC(p.k))&&!(S.flagShown[1]&&p.t===12));
+  const hitThem=enMob.filter(p=>jqMoves(S,{...p,t:2}).some(m=>m.to===mf.k)).length, nearThem=enMob.filter(p=>d2(p.k,mf.k)<=2).length;
+  const us=ef&&hitUs?3:hitUs?2:(ef&&nearUs)?2:nearUs?1:0, them=hitThem?3:nearThem>=2?2:nearThem?1:0;
+  return {us,them,mob:myMob.length}; }
+function jqmScore(S){ const K=jqmRead(S), T=jqmTension(S); return +(K.mat+.35*K.mom).toFixed(2); }
+// the reading, as a level: + for the advantage track, - for the disadvantage track, 1..3 for the stage, 0 for the even theme
+const JQM_IN=[0,3,7,16], JQM_OUT=[0,1.2,4.5,12];
+function jqmTarget(S,lvl){ const K=jqmRead(S), T=jqmTension(S);
+  let d=K.mat+.35*K.mom; if(d<0) d*=1.15; // the bad news is felt a little sooner than the good
+  const sg=Math.sign(d), a=Math.abs(d), dir=Math.sign(lvl), L=Math.abs(lvl);
+  const enter=a>=JQM_IN[3]?3:a>=JQM_IN[2]?2:a>=JQM_IN[1]?1:0, stay=a>=JQM_OUT[3]?3:a>=JQM_OUT[2]?2:a>=JQM_OUT[1]?1:0;
+  let m=sg===dir&&sg!==0?(enter>L?enter:stay>=L?L:stay):enter, s=sg;
+  // the game itself pushes the stage up: a headquarters under threat, or your last few units
+  const endg=T.mob<=3?3:T.mob<=5?2:0;
+  if(T.them>=3){ s=-1; m=3; }                          // your Flag can be taken next move: the climax, whatever the count says
+  else if(T.us>=3&&s>=0){ s=1; m=3; }                  // their shown Flag is in reach
+  else { if(endg) { if(!s) s=-1; m=Math.max(m,s<0?endg:Math.min(endg,2)); }
+    const t=s>0?T.us:s<0?T.them:Math.max(T.us,T.them);
+    if(!s&&t>=2) s=T.them>=T.us?-1:1;
+    if(s&&t>=2) m=Math.max(m,2); if(s&&!m) m=1; }
+  const want=s*Math.min(3,m);
+  const urgent=!!(K.last&&K.last.big)||T.them>=3||(T.us>=3&&want>0);
+  return {want,urgent,d:+d.toFixed(2),T}; }
+function jqMoodEval(S){ if(!S||S.tut||S.phase!=='play'||S.over!=null||!AC||jqWinner(S)!=null) return; const st=JQM.state, now=AC.currentTime;
+  const lvl=st==='n'?0:(st[0]==='a'?1:-1)*+st[1], L=Math.abs(lvl), dwell=now-JQM.since;
+  let {want,urgent}=jqmTarget(S,lvl);
+  if(lvl===0&&S.plies<6&&!urgent) want=0;  // the opening moves stay on the even theme
   if(want===lvl){ JQM.pend=null; return; }
-  // a change has to hold for one full round (your move and the reply) before the music follows, unless it is decisive
+  // calming down is slow: the music holds a stage for a while, and steps down one stage at a time
+  const flip=lvl!==0&&want!==0&&Math.sign(want)!==Math.sign(lvl), down=lvl!==0&&(flip||Math.abs(want)<L);
+  if(down&&!urgent){ if(dwell<(flip?12:30)) return; if(!flip) want=lvl-Math.sign(lvl); }
+  // any other change has to hold for one full round (your move and the reply), unless the moment is decisive
   if(!urgent){ if(!JQM.pend||JQM.pend.want!==want){ JQM.pend={want,ply:S.plies}; return; } if(S.plies-JQM.pend.ply<2) return; }
   JQM.pend=null; JQM.since=now; JQM.state=want===0?'n':(want>0?'a':'d')+Math.abs(want);
   if(want===0) jqmToNeutral(); else jqmPlay(want>0?'a':'d',Math.abs(want)-1); }
@@ -13640,6 +13681,10 @@ try{ Object.assign(SND, JSON.parse(localStorage.getItem('ychen-snd')||'{}')); }c
 const saveSnd=()=>{ try{ localStorage.setItem('ychen-snd',JSON.stringify(SND)); }catch(e){} };
 let AC=null, musicBus=null, sfxBus=null;
 const LOOP_XF=1.8, SWITCH_XF=1.4;
+// every piece of music on the site plays at one loudness: each file gets the gain that brings it to the shared target
+// (measured in LUFS: -16 for the site and battle music, -17.5 for lobbies, menus and deployment, -15 for the end pieces)
+const MUSIC_DB={'bgm':-3.8,'star':-3.8,'decode':-5.5,'gd-bgm1':-1.6,'gd-bgm2':-1.1,'gd-bgm3':-1.1,'gd-bgm4':.9,'gd-bgm5':2.5,'gd-bgm6':1.1,'jq-deploy':-3.3,'jq-mood-a':3.4,'jq-mood-d':3.2,'jq-win':4.1,'jq-lose':2.9,'gd-win':.2,'gd-lose':.2};
+const musicGain=u=>{ const k=String(u||'').split('/').pop().replace(/\.\w+$/,''); return Math.pow(10,(MUSIC_DB[k]||0)/20); };
 class Track{
   constructor(url,gap){ this.url=url; this.gap=gap||0; this.buf=null; this.pos=null; this.playing=false; this.cur=null; this.next=null; this.timer=null; this.loading=null; }
   load(){ if(!this.loading) this.loading=fetch(this.url).then(r=>r.arrayBuffer()).then(a=>AC.decodeAudioData(a)).then(b=>{ this.buf=b; this.trim(); }).catch(()=>{}); return this.loading; }
@@ -13647,8 +13692,9 @@ class Track{
     const d=this.buf.getChannelData(0), sr=this.buf.sampleRate, th=.004; let s=0,e=d.length-1;
     while(s<d.length&&Math.abs(d[s])<th) s++; while(e>0&&Math.abs(d[e])<th) e--;
     this.ls=s/sr; this.le=e/sr; if(this.pos==null) this.pos=this.ls; }
+  bus(){ if(!this.out){ this.out=AC.createGain(); this.out.gain.value=musicGain(this.url); this.out.connect(this.dest||musicBus); } return this.out; }
   seg(at,offset,fade){ // start one pass at audio time `at`; the head of the file always starts at full level
-    const src=AC.createBufferSource(); src.buffer=this.buf; const g=AC.createGain(); src.connect(g).connect(musicBus);
+    const src=AC.createBufferSource(); src.buffer=this.buf; const g=AC.createGain(); src.connect(g).connect(this.bus());
     if(offset<=this.ls+.01||!fade){ g.gain.setValueAtTime(1,at); }
     else { g.gain.setValueAtTime(.0001,at); g.gain.exponentialRampToValueAtTime(1,at+fade); }
     src.start(at,offset,this.le-offset); const seg={src,g,at,offset}; (this.live=this.live||[]).push(seg);
