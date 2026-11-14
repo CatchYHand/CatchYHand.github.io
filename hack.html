@@ -11657,7 +11657,7 @@ function jqApply(S,mv){ const p=jqP(S,mv.id), q=jqAt(S,mv.to); let res=null;
   delete S.at[p.k]; p.moved=true;
   if(!q){ p.k=mv.to; S.at[p.k]=p.id; S.quiet++; }
   else { res=jqFight(p.t,q.t); S.quiet=0;
-    if(res==='A'){ q.dead=true; delete S.at[q.k]; p.k=mv.to; S.at[p.k]=p.id; }
+    if(res==='A'){ q.dead=true; delete S.at[q.k]; p.k=mv.to; S.at[p.k]=p.id; if(q.t===11) q.cl=true; }
     else if(res==='D'){ p.dead=true; }
     else { p.dead=true; q.dead=true; delete S.at[q.k]; if(q.t===11) p.kb=true; }
     [p,q].forEach(x=>{ if(x.dead){ S.lost[x.side].push(x.t); if(x.t===9) S.flagShown[x.side]=true; } }); }
@@ -12434,10 +12434,13 @@ function jqmTension(S){ const me=S.pcs.filter(p=>p.side===0&&!p.dead), en=S.pcs.
   const ef=S.flagShown[1]?en.find(p=>p.t===12):null, tg=ef?[ef.k]:['0,1','0,3'].filter(k=>{ const q=jqAt(S,k); return q&&q.side===1; });
   const myMob=me.filter(p=>jqMovable(S,p)), hitUs=myMob.filter(p=>jqMoves(S,p).some(m=>tg.includes(m.to))).length, nearUs=myMob.filter(p=>tg.some(k=>d2(p.k,k)<=2)).length;
   // their threat on our Flag; an enemy unit is read as an ordinary officer, since you cannot see what it is
-  const mf=me.find(p=>p.t===12); if(!mf) return {us:0,them:0,mob:myMob.length}; const enMob=en.filter(p=>!jqHQ(...jqRC(p.k))&&!(S.flagShown[1]&&p.t===12));
+  const mf=me.find(p=>p.t===12); // the enemy's units that can still move, as far as you can tell: everything outside their headquarters, less the mines
+  // that may still be hiding among the units on their back two rows that have never moved (cleared mines are known)
+  const enOut=en.filter(p=>!jqHQ(...jqRC(p.k))), still=enOut.filter(p=>!p.moved&&jqRC(p.k)[0]<=1).length, mLeft=Math.max(0,3-S.pcs.filter(p=>p.side===1&&p.t===11&&p.dead&&p.cl).length), emob=enOut.length-Math.min(mLeft,still);
+  if(!mf) return {us:0,them:0,mob:myMob.length,emob}; const enMob=en.filter(p=>!jqHQ(...jqRC(p.k))&&!(S.flagShown[1]&&p.t===12));
   const hitThem=enMob.filter(p=>jqMoves(S,{...p,t:2}).some(m=>m.to===mf.k)).length, nearThem=enMob.filter(p=>d2(p.k,mf.k)<=2).length;
   const us=ef&&hitUs?3:hitUs?2:(ef&&nearUs)?2:nearUs?1:0, them=hitThem?3:nearThem>=2?2:nearThem?1:0;
-  return {us,them,mob:myMob.length}; }
+  return {us,them,mob:myMob.length,emob}; }
 function jqmScore(S){ const K=jqmRead(S), T=jqmTension(S); return +(K.mat+.35*K.mom).toFixed(2); }
 // the reading, as a level: + for the advantage track, - for the disadvantage track, 1..3 for the stage, 0 for the even theme
 const JQM_IN=[0,4.5,8,16], JQM_OUT=[0,1.5,5,12];
@@ -12453,6 +12456,8 @@ function jqmTarget(S,lvl){ const K=jqmRead(S), T=jqmTension(S);
   const endg=T.mob<=3?3:T.mob<=5?2:0;
   if(T.them>=3){ s=-1; m=3; }                          // your Flag can be taken next move: the climax, whatever the count says
   else if(T.us>=3&&s>=0){ s=1; m=3; }                  // their shown Flag is in reach
+  // the same squeeze on the enemy: down to their last few units, and we are not behind, the advantage climbs
+  else if(T.emob<=5&&s>=0&&!(endg&&T.mob<=T.emob)){ s=1; m=Math.max(m,T.emob<=3?3:2); if(T.us>=2) m=Math.max(m,2); }
   else { if(endg){ if(!m) s=-1; m=Math.max(m,s<0?endg:Math.min(endg,2)); }
     // a headquarters under threat lifts the stage; with no clear lead, the side under threat sets the direction
     const t=m?(s>0?T.us:T.them):Math.max(T.us,T.them);
