@@ -4946,9 +4946,17 @@ html:not([lang=zh]) .gt-choose .gc-lb b{font-family:'Newsreader','Noto Serif SC'
 .jq-rm.p3 .tx{border-color:rgba(230,80,60,.55);background:linear-gradient(180deg,rgba(179,38,30,.22),rgba(179,38,30,.08))}
 .jq-rm.p3 .av{box-shadow:0 0 0 2px #d0402e,0 0 0 3.5px #1a1a12,0 0 12px rgba(220,60,40,.55)}
 /* ---------- the closing dispatch ---------- */
-#gr .jq-dw{position:absolute;left:50%;top:5%;z-index:30;width:max-content;max-width:min(86%,29rem);padding:.5rem 1.1rem .6rem;border:1px solid rgba(224,169,28,.7);border-left:4px solid #e0a91c;border-radius:.2rem;background:rgba(24,18,6,.92);color:#f3e5bd;font:600 .92rem/1.45 var(--f-body);text-align:center;box-shadow:0 6px 22px rgba(0,0,0,.55);pointer-events:none;animation:jqDw 4.4s ease both}
-#gr .jq-dw b{display:block;margin-bottom:.12rem;color:#e0a91c;font:800 .64rem/1.2 var(--f-body);letter-spacing:.16em;text-transform:uppercase}
-@keyframes jqDw{0%{opacity:0;transform:translate(-50%,-.5rem)}8%,86%{opacity:1;transform:translate(-50%,0)}100%{opacity:0;transform:translate(-50%,-.25rem)}}
+.jq:not(.setup) .jq-rlog>.jq-ldw{flex:none;align-self:stretch;box-sizing:border-box;height:var(--lh);margin:0;padding:0 .7rem;display:flex;align-items:center;justify-content:center;gap:.45rem;border-radius:.25rem;background:rgba(224,169,28,.15);border:1px solid rgba(240,185,40,.7);box-shadow:inset 3px 0 0 #e0a91c;overflow:hidden;white-space:nowrap}
+.jq-ldw .jq-dwi{flex:none;display:block;width:1.15rem;height:1.15rem}
+.jq-ldw .jq-dwi svg{display:block;width:100%;height:100%;fill:#f0b928}
+.jq-ldw .jq-dwi .k{fill:#1d1400}
+.jq-ldw b{font:700 .74rem/1.35 var(--f-body);color:#ffe7a6}
+.jq:not(.setup) .jq-rlog>.jq-ldw.two{height:calc(var(--lh) * 2 + var(--lg));justify-content:flex-start;align-items:center;gap:.6rem;padding:0 .9rem 0 .8rem;white-space:normal}
+.jq-ldw.two b{text-align:left;font-size:.82rem;line-height:1.45}
+.jq-ldw.two .jq-dwi{width:1.45rem;height:1.45rem}
+.jq-ldw{animation:none}
+.jq-ldw.in{animation:jqInC .4s .12s cubic-bezier(.2,.9,.3,1.15) both}
+.jq-ldw.gone{animation:jqOut .22s ease-in forwards}
 .jq-end2{position:absolute;inset:0;z-index:40;display:grid;place-items:center;padding:4%;background:radial-gradient(closest-side,rgba(0,0,0,.45),rgba(0,0,0,.78));animation:jqEndBg .5s ease-out both;cursor:pointer}
 .jq-end2.out{opacity:0;transition:opacity .4s}
 @keyframes jqEndBg{from{opacity:0}to{opacity:1}}
@@ -10253,9 +10261,11 @@ function head(sub){ const c=COLS.find(x=>x.style==='games'), i=COLS.indexOf(c);
 const SORT_ICO=['<svg viewBox="0 0 28 24" aria-hidden="true"><g class="cd"><rect x="3" y="6" width="9" height="13" rx="1.6" transform="rotate(-20 7.5 12.5)"/><rect x="9.5" y="4.5" width="9" height="13" rx="1.6" transform="rotate(-2 14 11)"/><rect x="16" y="6" width="9" height="13" rx="1.6" transform="rotate(18 20.5 12.5)"/></g><path class="pp" d="M6.6 10.6l1 1.4-1 1.4-1-1.4zM14 9.2l1 1.4-1 1.4-1-1.4zM21.3 10.6l1 1.4-1 1.4-1-1.4z"/></svg>',
   '<svg viewBox="0 0 28 24" aria-hidden="true"><g class="cd"><rect x="2.5" y="3" width="7" height="18" rx="1.4"/><rect x="10.5" y="7" width="7" height="14" rx="1.4"/><rect x="18.5" y="11" width="7" height="10" rx="1.4"/></g><path class="ln" d="M3.6 7h4.8M3.6 11h4.8M3.6 15h4.8M11.6 11h4.8M11.6 15h4.8M19.6 15h4.8"/><circle class="bd" cx="6" cy="18.2" r="1.7"/></svg>'];
 const ICO={rules:'<path d="M5 4.5h5.5a2.5 2.5 0 0 1 2.5 2.5v13a2 2 0 0 0-2-2H5zM19 4.5h-3.5A2.5 2.5 0 0 0 13 7v13a2 2 0 0 1 2-2h4z"/>',tut:'<path d="M3 9l9-4.5L21 9l-9 4.5z"/><path d="M7 11v4.5c0 1.4 2.2 2.5 5 2.5s5-1.1 5-2.5V11M21 9v5"/>',restart:'<path d="M4.5 12a7.5 7.5 0 1 0 2.2-5.3"/><path d="M4 4v4h4"/>',leave:'<rect x="4" y="4" width="6.5" height="6.5" rx="1.2"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="1.2"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="1.2"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.2"/>',vol:'<path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path d="M15.5 9q1.6 3 0 6M18 6.5q3.6 5.5 0 11"/>',fs:'<path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/>',close:'<path d="M6 6l12 12M18 6L6 18"/>'};
+// developer mode only: jump straight to an ending
+Object.assign(ICO,{devwin:'<path d="M7 4h10v4a5 5 0 0 1-10 0z"/><path d="M7 6H4v1.5A3.5 3.5 0 0 0 7.5 11M17 6h3v1.5a3.5 3.5 0 0 1-3.5 3.5M12 13v4M8.5 20h7M10 17h4"/>',devdraw:'<path d="M5 9h14M5 15h14"/>',devlose:'<path d="M6 21V4"/><path d="M6 4.5h11l-2.5 4 2.5 4H6"/>'});
 const icon=k=>`<svg class="gi" viewBox="0 0 24 24" aria-hidden="true">${ICO[k]}</svg>`;
 function ctrlHTML(){ const b=(k,lab,cls)=>`<button class="gr-btn2 ${cls||''}" data-a="${k}" title="${lab}">${icon(k)}${cls&&cls.includes('io')?'':`<span>${lab}</span>`}</button>`;
-  return (scr==='junqi'?`<div class="gr-grp help">${b('rules',T('Rules','规则'))}${b('tut',T('Tutorial','教程'))}</div><div class="gr-grp game">${b('restart',T('New Game','新的一局'))}${b('leave',T('All Games','游戏列表'))}</div>`:'')+(scr==='table'?`<div class="gr-grp help">${b('rules',T('Rules','规则'))}${b('tut',T('Tutorial','教程'))}</div><div class="gr-grp game">${b('restart',T('New Game','新的一局'))}${b('leave',T('All Games','游戏列表'))}</div>`:'')+
+  return (scr==='junqi'?`<div class="gr-grp dev" style="display:none">${b('devwin',T('Victory','胜利'))}${b('devdraw',T('Draw','和棋'))}${b('devlose',T('Defeat','失败'))}</div><div class="gr-grp help">${b('rules',T('Rules','规则'))}${b('tut',T('Tutorial','教程'))}</div><div class="gr-grp game">${b('restart',T('New Game','新的一局'))}${b('leave',T('All Games','游戏列表'))}</div>`:'')+(scr==='table'?`<div class="gr-grp help">${b('rules',T('Rules','规则'))}${b('tut',T('Tutorial','教程'))}</div><div class="gr-grp game">${b('restart',T('New Game','新的一局'))}${b('leave',T('All Games','游戏列表'))}</div>`:'')+
    `<div class="gr-grp sys">${b('vol',T('Volume','音量'),'io')}${b('fs',T('Full screen','全屏'),'io')}</div><button class="gr-btn2 cls" data-a="close" title="${T('Close','关闭')}">${icon('close')}<span>${T('Close','关闭')}</span><kbd>ESC</kbd></button>`; }
 function paint(html){ const keep=$$g(':scope>.gr-pop,:scope>.jq-cd,:scope>.jq-phase'); root.innerHTML=html; keep.forEach(n=>root.appendChild(n)); fsSync(); }
 // the full-screen button shows "enter" or "exit" to match the current state
@@ -11453,6 +11463,7 @@ function onDown(e){ const tag=e.target.closest('#gtHand .gt-tag,#gtHand .gc-bd')
 function onClick(e){ const a=e.target.closest('[data-a]'); if(scr==='junqi'&&!a){ jqClick(e); return; } if(!a) return; const k=a.dataset.a; if(['rules','tut','restart','leave','close','game','tn','tx'].includes(k)) snd('btn');
   if(k==='close') closeRoom(); else if(k==='leave'){ if(scr==='junqi') jqLeave(); else askLeave(); } else if(k==='game'){ if(a.dataset.g==='junqi') jqOpen(); else startGame(false); }
   else if(k==='play') doPlay(); else if(k==='pass') doPass(); else if(k==='hint') doHint(); else if(k==='sort') doSort(); else if(k==='cc'){ snd('btn'); ccToggle(); }
+  else if(k==='devwin'||k==='devdraw'||k==='devlose') jqDevEnd(k);
   else if(k==='rules'){ if(scr==='junqi') jqRules(); else rules(); } else if(k==='tut'&&scr==='junqi'){ const inGame=JQ&&!JQ.tut&&(JQ.phase==='play'||JQ.phase==='toss'), inTut=JQ&&JQ.tut; confirmPop(T('Start the tutorial?','开始教程？'),inGame?T('The game in progress will be abandoned and cannot be resumed.','当前对局会被放弃，无法恢复。'):inTut?T('The tutorial will start again from the beginning.','教学会从头重新开始。'):JQ&&(JQ.phase==='over'||JQ.phase==='replay')?T('This finished game and its replay will be closed.','这局已结束的对局和复盘会被关闭。'):T('Your current deployment will be cleared.','当前的布阵会被清空。'),T('Start tutorial','开始教程'),()=>{ jqStopReplay(); jqTutStart(); }); } else if(k==='tut') confirmPop(T('Start the tutorial?','开始教程？'),T('The current game will be abandoned and a practice hand will be dealt.','当前对局会被放弃，改为发一局练习牌。'),T('Start tutorial','开始教程'),()=>startTut());
   else if(k==='restart'&&scr==='junqi') jqNew({cancel:true,warn:JQ&&!JQ.tut&&JQ.phase!=='over'&&(JQ.moves&&JQ.moves.length||JQ.phase==='play')});
   else if(k==='restart') confirmPop(T('Start a new game?','重新开始？'),T('The current game will be lost.','当前对局不会保存。'),T('New game','重新开始'),()=>startGame(true));
@@ -11913,7 +11924,8 @@ function jqDraw(rp){ const S=rp||JQ, box=$g('.jq-pcs'); if(!box) return;
   if(!rp&&S.sel!=null){ const el=box.querySelector(`[data-id="${S.sel}"]`); if(el) el.classList.add('sel'); }
   const cnt=s=>S.pcs.filter(p=>p.side===s&&!p.dead).length; const a=$g('.jq-pl.o .jq-left b'), b=$g('.jq-pl.m .jq-left b'); if(a) a.textContent=S.phase==='setup'||S.phase==='count'?'—':cnt(1); if(b) b.textContent=S.phase==='setup'?cnt(0):cnt(0);
   $$g('.jq-pl').forEach(e=>e.classList.toggle('on',(S.phase==='play'||S.phase==='replay')&&((S.turn===0)===e.classList.contains('m')))); }
-function jqCtl(){ const S=JQ, c=$g('.jq-ctl'); if(!c) return;
+function jqDevEnd(k){ const S=JQ; if(!S||S.tut||!JQ_CHEAT||(S.phase!=='play'&&S.phase!=='over')) return; S.busy=false; const w=k==='devwin'?0:k==='devlose'?1:'draw'; jqEnd(w,'',w===0?'winFlag':w===1?'loseFlag':'draw'); }
+function jqCtl(){ const S=JQ, dv=JQ_CHEAT&&S&&!S.tut; $$g('.gr-grp.dev').forEach(n=>{ n.style.display=dv?'':'none'; n.querySelectorAll('button').forEach(x=>x.disabled=!(S&&(S.phase==='play'||S.phase==='over'))); }); const c=$g('.jq-ctl'); if(!c) return;
   if(S.phase==='setup'){ const left=S.pcs.filter(p=>p.side===0&&!p.k).length;
     c.innerHTML=`<div class="jq-box st"><h4>${T('Deployment Plan','部署方案')}<span class="jq-tag">${T('CLASSIFIED','绝密')}</span></h4><p>${T('Pick a unit on standby on the right and tap a lit square to deploy it, or pick a preset layout by number below.','从右边的待命部队里选一枚棋子，再点棋盘上亮起的格子部署；也可以直接按编号选用下面的默认布阵。')}</p>
       <div class="jq-bt three"><button data-j="rand">${T('Random','随机布阵')}</button><button data-j="last">${T('Last Used','上次阵型')}</button><button data-j="clear">${T('Clear','全部收回')}</button></div>
@@ -11937,18 +11949,24 @@ function jqLogEntry(S,m,info,att){ const mine=att.side===0, kn=(p,dead)=>({s:p.s
   const e={n:S.moves.length,s:att.side,a:kn(att,false),rl:jqRailPath(m.path)};
   if(info.res){ e.d=kn(info.def,false); e.ra={...e.a,dead:att.dead}; e.rd={...e.d,dead:info.def.dead}; }
   const rv=[]; [att,info.def].forEach(p=>{ if(p&&p.dead&&p.t===9) rv.push(p.side); }); if(rv.length) e.rv=rv; return e; }
+const JQ_WARNI='<i class="jq-dwi"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.6L23 21.4H1z"/><path class="k" d="M10.9 9h2.2l-.4 6.6h-1.4zM12 17.2a1.3 1.3 0 1 1 0 2.6 1.3 1.3 0 0 1 0-2.6z"/></svg></i>';
+const jqDwRow=(n,r)=>`<div class="jq-ldw" data-n="${n}">${JQ_WARNI}<b>${T(`If no battle takes place within the next ${r} moves, the game will be declared a draw!`,`如果在${r}步之内再不发生任何交战，将自动判和！`)}</b></div>`;
 function jqLogDraw(){ const S=JQ, box=$g('.jq-rlog'); if(!box) return;
   if(S.phase==='setup'){ const ord=[12,9,8,7,6,5,4,3,2,1,10,11], all=S.pcs.filter(p=>p.side===0).sort((a,b)=>ord.indexOf(a.t)-ord.indexOf(b.t)||a.id-b.id), n=all.filter(p=>!p.k).length;
     // every unit keeps its own slot in the staging area: deployed ones leave a stencilled outline behind
     box._parts=null; box.innerHTML=`<p class="jq-stgh">${n?T(`<b>${n}</b> of 25 units awaiting orders. Pick one, then a lit square.`,`<b>${n}</b> / 25 支部队待命。选中一枚，再点棋盘上亮起的格子。`):`<span class="jq-done">${T('All units in position. Start the Battle!','所有部队已就位，可以开战了！')}</span>`}</p><div class="jq-boxp">${all.map(p=>p.k?`<button class="jq-bx gh" disabled tabindex="-1" aria-hidden="true"><span class="jq-lt b"><span class="jq-ltf">${jqFace(p.t)}</span></span></button>`:`<button class="jq-bx${S.box===p.id?' on':''}" data-j="bx${p.id}"><span class="jq-lt b"><span class="jq-ltf">${jqFace(p.t)}</span></span></button>`).join('')}</div>${S.sel!=null?`<button class="jq-back" data-j="unplace">${T('Put the selected unit back on standby','让选中的部队回到待命')}</button>`:''}`; return; }
   const see=JQ_CHEAT&&!S.tut&&S.over==null, hidden=e=>e&&e.s===1&&S.over==null&&!see?{...e,t:null}:e;
   if(!S.log.length){ box.innerHTML=`<p class="jq-hint">${T('Every action by either side will be logged here in the reports.','双方的每一次行动，都会被战报记录在这里。')}</p>`; box._parts=null; return; }
-  const parts=[]; (see&&S.moves.length?jqRpLog():S.log).forEach(e=>{ parts.push(`<div class="jq-lr s${e.s}" data-n="${e.n}"><b class="jq-ln">${e.n}</b>${jqLogTile(hidden(e.a))}${e.d?JQ_SWORDS+jqLogTile(hidden(e.d))+JQ_ARROW+jqLogTile(hidden(e.ra))+jqLogTile(hidden(e.rd)):e.rl?JQ_MOVEI:JQ_MOVE1}</div>`);
-    (e.rv||[]).forEach(s=>parts.push(`<div class="jq-lsys s${s}" data-n="${e.n}"><span class="jq-lt ${s?'r':'b'} fl"><span class="jq-ltf">${jqFace(12)}</span>${JQ_EYE}</span><b>${s?T('Enemy Marshal down: their Flag is exposed','敌方司令阵亡，军旗暴露'):T('Your Marshal is down: your Flag is exposed','我方司令阵亡，军旗暴露')}</b></div>`)); });
+  // the draw clock in the reports: after the enemy's move, once 30 and once 10 moves remain without a battle
+  const parts=[]; let qq=0, w30=0, w10=0; (see&&S.moves.length?jqRpLog():S.log).forEach(e=>{ parts.push(`<div class="jq-lr s${e.s}" data-n="${e.n}"><b class="jq-ln">${e.n}</b>${jqLogTile(hidden(e.a))}${e.d?JQ_SWORDS+jqLogTile(hidden(e.d))+JQ_ARROW+jqLogTile(hidden(e.ra))+jqLogTile(hidden(e.rd)):e.rl?JQ_MOVEI:JQ_MOVE1}</div>`);
+    (e.rv||[]).forEach(s=>parts.push(`<div class="jq-lsys s${s}" data-n="${e.n}"><span class="jq-lt ${s?'r':'b'} fl"><span class="jq-ltf">${jqFace(12)}</span>${JQ_EYE}</span><b>${s?T('Enemy Marshal down: their Flag is exposed','敌方司令阵亡，军旗暴露'):T('Your Marshal is down: your Flag is exposed','我方司令阵亡，军旗暴露')}</b></div>`));
+    if(e.d){ qq=0; w30=w10=0; } else qq++;
+    if(e.s===1){ const lim=qq>=110&&!w10?110:qq>=90&&!w30?90:0; if(lim){ w30=1; if(lim===110) w10=1; parts.push(jqDwRow(e.n,120-qq)); } } });
   const prev=box._parts, kids=[...box.children].filter(n=>!n.classList.contains('gone')); let added=0;
   if(prev&&kids.length===prev.length&&parts.length>=prev.length&&prev.every((h,i)=>h===parts[i])){ parts.slice(prev.length).forEach(h=>{ box.insertAdjacentHTML('beforeend',h); box.lastElementChild.classList.add('in'); added++; }); }
   else if(prev&&kids.length===prev.length&&parts.length<prev.length&&parts.every((h,i)=>h===prev[i])){ kids.slice(parts.length).forEach(n=>{ n.classList.add('gone'); setTimeout(()=>n.remove(),reduce?0:230); }); }
   else if(!prev||prev.length!==parts.length||prev.some((h,i)=>h!==parts[i])) box.innerHTML=parts.join('');
+  box.querySelectorAll('.jq-ldw').forEach(n=>{ n.classList.remove('two'); if(n.scrollWidth>n.clientWidth+1) n.classList.add('two'); }); // one line if it fits, otherwise two
   box._parts=parts;
   box.querySelectorAll('.jq-lr').forEach(n=>n.classList.toggle('cur',!!(JQRP&&JQRP.i===+n.dataset.n)));
   const cur=box.querySelector('.jq-lr.cur'); if(cur) cur.scrollIntoView({block:'nearest',behavior:'smooth'}); else if(added) box.scrollTo({top:box.scrollHeight,behavior:reduce?'auto':'smooth'}); else if(!prev) box.scrollTop=box.scrollHeight; }
@@ -12260,8 +12278,8 @@ const JQ_RADIO={
   enemyStuck:[['An enemy unit just walked into our empty headquarters. It’s stuck there.','一枚敌军闯进了我们空着的大本营，出不来了。'],['They picked the wrong door. That unit is out of the war.','他们走错了门，那一枚算是废了。']],
   quiet1:[['All quiet for a while now. Someone has to make a move.','前线沉寂好一阵了，总得有人先动手。'],['No contact in a long time. Probing attack, perhaps?','很久没有交火了，要不要来一次试探性进攻？'],['Forty moves without a shot. Command is getting restless.','四十步没开一枪，指挥部有点坐不住了。']],
   quiet2:[['Eighty quiet moves. At a hundred and twenty it’s called a draw.','已连续八十步无交战，到一百二十步就判和。'],['The front has gone dead quiet. Fight, or settle for a draw.','前线一片死寂。要么打起来，要么接受和棋。']],
-  draw30:[['If no battle takes place within the next 30 moves, the game will be declared a draw!','如果在30步之内再不发生任何交战，将自动判和！']],
-  draw10:[['If no battle takes place within the next 10 moves, the game will be declared a draw!','如果在10步之内再不发生任何交战，将自动判和！']],
+  draw30:[['All units! {n} more moves without a battle and this ends in a draw! Find a fight!','全军注意！再有{n}步不交战，这一仗就要判和！主动寻找战机！'],['{n} moves to a forced ceasefire! Somebody hit something!','离强制停火只剩{n}步了！赶紧找个目标打一仗！']],
+  draw10:[['Only {n} moves left! Attack now, or we settle for a draw!','只剩{n}步了！现在不进攻，就只能握手言和！'],['Last call! {n} moves until the ceasefire!','最后通牒！再过{n}步就停火了！']],
   ahead:[['We’re up {n} units! Keep the pressure on!','我军兵力领先 {n} 枚！保持压力！'],['Their numbers are thinning! Don’t get careless!','敌军兵力越来越少！别大意！'],['Advantage ours, {n} units up! Don’t let up now!','我军领先 {n} 枚！这时候别松劲！']],
   behind:[['We’re down {n} units! Tighten up and pick our fights!','我军兵力落后 {n} 枚！收紧阵型，挑准时机再打！'],['Casualties mounting! Protect what we have left!','伤亡在增加！保护好剩下的部队！'],['They have {n} more units than us! Cunning now, not courage!','敌军比我们多 {n} 枚！现在要靠计谋，不能硬拼！']],
   lastStand:[['Only {n} units left that can still move! Make every move count!','能动的部队只剩 {n} 枚了！每一步都要算准！'],['We’re nearly out of mobile units! If we can’t move, we lose!','可机动的兵力快没了！动不了就输了！']],
@@ -12316,8 +12334,8 @@ function jqRadioEvent(S,info,from){ if(!S||S.over!=null||jqWinner(S)!=null||!jqA
   const mob=S.pcs.filter(x=>x.side===0&&!x.dead&&jqMovable(S,x)).length; if(mob<=3&&!F.last){ F.last=1; add('lastStand','hq',{n:mob},2); }
   for(const [n,k] of [[40,'quiet1'],[80,'quiet2']]) if(S.quiet===n&&!F.q[n]){ F.q[n]=1; add(k,'hq',{},1,1); }
   S._rfs=S.flagShown.slice();
-  // the draw clock: 30 and 10 moves left always get through, on the radio and across the board
-  const dw={90:'draw30',110:'draw10'}[S.quiet]; if(dw&&!F.q[S.quiet]){ F.q[S.quiet]=1; jqRPost(S,dw,'hq',{},2,'warn'); jqDrawWarn(dw); return; }
+  // the draw clock: once 30, then 10, moves remain, Command calls it in right after the enemy has moved (the same moment the reports log it)
+  if(!me){ const lim=S.quiet>=110&&!F.q[110]?110:S.quiet>=90&&!F.q[90]?90:0; if(lim){ F.q[lim]=1; if(lim===110) F.q[90]=1; jqRPost(S,lim===110?'draw10':'draw30','hq',{n:120-S.quiet},3); return; } }
   if(!C.length) return; C.sort((a,b)=>b.pri-a.pri); const gap=S.plies-(S._rlast==null?-9:S._rlast);
   // field reports come from an officer who saw it happen; the big picture comes from Command
   const wit=()=>{ const ts=[...new Set(S.pcs.filter(x=>x.side===0&&!x.dead&&x.t>=2&&x.t<=8).map(x=>x.t))]; return ts.length?ts[Math.floor(Math.random()*ts.length)]:'hq'; };
@@ -12326,8 +12344,7 @@ function jqRadioEvent(S,info,from){ if(!S||S.over!=null||jqWinner(S)!=null||!jqA
     if(c.pri>=3||(c.pri===2&&gap>=1&&Math.random()<c.ch)||(c.pri===1&&gap>=3&&Math.random()<c.ch)){ jqRPost(S,c.k,sp,c.v,c.pri); return; } } }
 function jqRadioStart(S){ S.radio=[]; S._rf={deep:{},intr:{},q:{}}; S._rfs=[false,false]; S._rlast=null; jqRPost(S,S.first===0?'startUs':'startThem','hq',{},1); }
 function jqRadioEnd(S,code){ const k={winFlag:'winFlag',winStuck:'winStuck',loseFlag:'loseFlag',loseStuck:'loseStuck',resign:'resign',draw:'draw'}[code]; if(k) jqRPost(S,k,'hq',{},3); }
-function jqDrawWarn(k){ const fx=$g('.jq-mid'); if(!fx) return; $$g('.jq-dw').forEach(n=>n.remove()); const d=document.createElement('div'); d.className='jq-dw'; d.innerHTML=`<b>${T('Warning','警告')}</b>${jqRText({k,i:0,v:{}})}`; fx.appendChild(d); setTimeout(()=>d.remove(),4400); }
-function jqRadioUndo(S){ if(S._rf&&S._rf.q) for(const n in S._rf.q) if(+n>S.quiet) delete S._rf.q[n]; $$g('.jq-dw').forEach(n=>n.remove()); if(S.radio) S.radio=S.radio.filter(m=>m.ply<=S.plies); S._rlast=S.radio&&S.radio.length?S.radio[S.radio.length-1].ply:null; S._rfs=S.flagShown.slice(); jqRadioDraw(); }
+function jqRadioUndo(S){ if(S._rf&&S._rf.q) for(const n in S._rf.q) if(+n>S.quiet) delete S._rf.q[n]; if(S.radio) S.radio=S.radio.filter(m=>m.ply<=S.plies); S._rlast=S.radio&&S.radio.length?S.radio[S.radio.length-1].ply:null; S._rfs=S.flagShown.slice(); jqRadioDraw(); }
 // the set itself: a header with the channel, a signal lamp and a level meter, then the traffic, newest at the bottom
 function jqRadioDraw(fresh){ const S=JQ, el=$g('.jq-ref'); if(!el) return; if(!S||S.phase==='setup'||S.phase==='count'){ el.innerHTML=''; return; }
   let box=el.querySelector('.jq-radio'); const list=S.radio||[];
