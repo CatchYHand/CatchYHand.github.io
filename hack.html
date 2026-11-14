@@ -11720,11 +11720,11 @@ function jqAiMove2(S,opt){ opt=opt||{}; const K=opt.samples||10, A=JQX;
    board never freezes while it thinks. The engine only gets public information. ---------- */
 const JQX_URL='/assets/js/jq-engine.js';
 const JQ_LV=[
-  {k:1,img:'jq-lv1',en:'Recruit Camp',zh:'新兵营',den:'Takes what it can, dodges what it must, and reads every battle report.',dzh:'会吃会躲，能从每一次交战结果里看出门道。'},
-  {k:2,img:'jq-lv2',en:'Scout Company',zh:'侦察连',den:'Guesses your layout the way real players deploy, guards its Flag and holds the camps.',dzh:'按真人布阵的习惯推测你的阵型，护旗、抢行营都有章法。'},
-  {k:3,img:'jq-lv3',en:'Field Regiment',zh:'野战团',den:'Thinks several moves deep, opens two roads to your Flag and sets double threats.',dzh:'推演更深，会从两路逼近你的军旗，制造双重威胁。'},
-  {k:4,img:'jq-lv4',en:'General Staff',zh:'参谋部',den:'Its full analysis on every move: it hoards its big pieces and sends small ones to find yours.',dzh:'每一步都全力推演，惜用大子，先派小子摸清你的底细。'},
-  {k:5,img:'jq-lv5',en:'Supreme Command',zh:'统帅部',den:'Intelligence has handed it your whole deployment. It sees every one of your units and plans against them.',dzh:'情报部门已把你的部署全盘送到它手里：你的每一支部队它都看得见，再全力推演。'}];
+  {k:1,img:'jq-lv1',en:'Recruit Camp',zh:'新兵营',den:'Fresh from training and bound for the front, these soldiers have almost no combat experience and deploy exactly as their manuals taught them.',dzh:'一群刚刚完成训练奔赴前线的士兵，几乎没有作战经验，只会按照自己从书上学到的方式排兵布阵。'},
+  {k:2,img:'jq-lv2',en:'Scout Company',zh:'侦察连',den:'They understand strategy far better than recruits: they read the enemy’s position, put what they learn together, and every move has a method behind it.',dzh:'对于作战谋略有着比新兵更透彻的了解，能够洞察敌情并融会贯通，一招一式皆有章法。'},
+  {k:3,img:'jq-lv3',en:'Field Regiment',zh:'野战团',den:'Seasoned veterans who flank, encircle and drive deep into enemy lines, skilled at double threats and infiltration behind the front.',dzh:'拥有非常丰富的作战经验，经常穿插包围，深入敌营，擅长制造双重威胁和敌后渗透作战。'},
+  {k:4,img:'jq-lv4',en:'General Staff',zh:'参谋部',den:'Every move at the front is thought through and war-gamed, with a fine sense of what each unit can do. They probe your limits step by step, then strike once, fatally.',dzh:'前线军情的每一步都经过深思熟虑的推演，对于部队战斗力的把控非常精妙，总是一步步试探你的底线然后一击致命。'},
+  {k:5,img:'jq-lv5',en:'Supreme Command',zh:'统帅部',den:'Intelligence has delivered your entire deployment plan into their hands, while you know nothing about theirs. This is not a fair fight: think twice before every move!',dzh:'情报部门已将你的部署方略完整地送到了他们的手里，而你对他们却一无所知。这是一场不公平的战斗，记得三思而后行！'}];
 const jqLvOf=k=>JQ_LV.find(x=>x.k===k)||JQ_LV[2];
 function jqLvGet(){ let v=3; try{ v=+localStorage.getItem('jq-level')||3; }catch(e){} return v>=1&&v<=5?v:3; }
 function jqLvSet(v){ try{ localStorage.setItem('jq-level',String(v)); }catch(e){} }
