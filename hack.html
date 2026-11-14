@@ -4933,6 +4933,12 @@ html:not([lang=zh]) .gt-choose .gc-lb b{font-family:'Newsreader','Noto Serif SC'
 .jq-rm .who{display:flex;align-items:baseline;gap:.4rem}
 .jq-rm .who b{font:800 .66rem/1.2 var(--f-body);letter-spacing:.1em;text-transform:uppercase;color:#e2bc62}
 .jq-rm .who em{padding:.08rem .3rem;border-radius:.15rem;background:#b3261e;color:#fff;font:800 .55rem/1.2 var(--f-body);letter-spacing:.12em;text-transform:uppercase;font-style:normal}
+#gr .jq-rm .who em.w{background:#e0a91c;color:#1d1400}
+#gr .jq-rm .who b{flex:none;overflow:visible}
+#gr .jq-rm .who em{flex:none;letter-spacing:.06em}
+#gr .jq-rm .who small{flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:clip;text-align:right}
+#gr .jq-rm.wn .tx{border-color:rgba(224,169,28,.5);background:linear-gradient(180deg,rgba(224,169,28,.16),rgba(224,169,28,.05))}
+#gr .jq-rm.wn .av{box-shadow:0 0 0 2px #d9a21c,0 0 0 3.5px #1a1a12,0 0 10px rgba(224,169,28,.45)}
 .jq-rm .who small{margin-left:auto;font:600 .6rem/1 'Courier New',monospace;color:rgba(233,214,164,.45);white-space:nowrap}
 .jq-rm p{margin:.22rem 0 0;font:500 .8rem/1.45 var(--f-body);color:#efe4c6}
 .jq-rm p.typing::after{content:"▍";margin-left:1px;color:#9fdc6a;animation:jqBlink .7s steps(2) infinite}
@@ -12146,6 +12152,19 @@ function jqRpBtn(k){ const S=JQ, R=JQRP; if(!R) return;
 /* ---------- Army Chess field radio: your officers call in when something on the battlefield matters (never for a routine step).
    Every message uses only what you could know yourself: your own pieces, who survived, and what the rules let you deduce. ---------- */
 const JQ_RADIO={
+  // the commander's word whenever the battle music changes: which way it turned, and how far
+  mA1:[['The balance is tipping our way. Keep the pressure on.','战局开始向我军倾斜，保持压力。'],['Reports are good: we have the edge now. Don’t get careless.','前线战报不错，我们占了上风，别大意。'],['Their lines are giving. Press on, but keep formation.','敌军防线开始松动，继续施压，保持阵型。'],['We are ahead now. Make every exchange count.','我军已占优势，每一次交换都要算清楚。']],
+  mA2:[['Our advantage is widening. Their reserves are thinning out.','优势正在扩大，敌军预备队越来越少了。'],['We are setting the pace now. Keep them off balance.','节奏掌握在我们手里，别让他们缓过气来。'],['Good work, all units. The pressure is telling.','各部干得漂亮，压力已经见效了。'],['They are running out of answers. Tighten the ring.','敌军已经应接不暇，收紧包围圈。']],
+  mA3:[['This is it. One more push and their headquarters falls.','决胜时刻！再加一把劲，敌军大本营就要失守了。'],['All units, final assault. Finish it!','全军注意，发起总攻，一举拿下！'],['Victory is within reach. No mistakes now.','胜利就在眼前，这时候绝不能出错。'],['Their command is collapsing. Go for the Flag!','敌军指挥体系正在崩溃，直取军旗！']],
+  mAdown:[['Our lead is slipping. Consolidate before pushing again.','我们的优势在缩小，先稳住阵脚再推进。'],['They are fighting back. Don’t overextend.','敌军开始反扑，不要冒进。'],['The attack has lost momentum. Regroup and reassess.','攻势放缓了，重新整队，再看形势。'],['Still ahead, but the margin is thinner. Stay sharp.','我们仍然领先，但优势变小了，提高警惕。']],
+  mAn:[['Our edge is gone. It is an even fight again.','我们的优势没了，双方又回到均势。'],['They have clawed it back. Level game, all units.','敌军扳回了局面，现在势均力敌。'],['The field is balanced again. Patience.','战场重新回到平衡，耐住性子。'],['We have lost the upper hand. Time to win it back.','上风丢了，得重新建立优势。']],
+  mD1:[['Heads up: the enemy has gained the upper hand.','注意，敌军占了上风。'],['We are falling behind. Tighten the defence.','我军开始落后，加强防守。'],['Losses are mounting. Choose your fights carefully.','损失在增加，每一仗都要慎重。'],['The enemy has the edge. No reckless attacks.','敌军略占优势，不要贸然进攻。']],
+  mD2:[['The situation is getting worse. Shore up the line!','形势在恶化，赶紧稳住防线！'],['We are under heavy pressure. Hold your ground.','我军承受重压，坚守阵地。'],['They are pressing hard. Cover the headquarters.','敌军攻势猛烈，护住大本营。'],['Too many losses. Stop trading and defend.','损失太大了，别再硬拼，转入防守。']],
+  mD3:[['Critical! The enemy is at our gates!','危急！敌军已经打到家门口了！'],['All units, defend the Flag with everything we have!','全军听令，拼尽全力死守军旗！'],['This is the last line. Not one step back!','这是最后一道防线，一步也不许退！'],['Our headquarters is in danger. Hold at all costs!','大本营告急，不惜一切代价守住！']],
+  mDdown:[['The pressure is easing. Keep it that way.','压力在减轻，保持住。'],['We have steadied the line. Well held.','防线稳住了，守得好。'],['They are losing steam. Start looking for chances.','敌军攻势减弱，开始寻找机会。'],['Things are improving. Don’t give it back.','局面在好转，别再让回去。']],
+  mDn:[['We have evened it up. Well fought!','我们扳平了局面，打得好！'],['The deficit is gone. It is anyone’s game now.','劣势已经抹平，现在胜负难料。'],['Back on equal terms. Now let’s take the lead.','重新回到均势，接下来争取领先。'],['We have recovered. Steady now, and build from here.','局面挽回了，稳住，从这里再打起。']],
+  mAD:[['The tide has turned against us. Regroup!','战局逆转，形势对我们不利，重新整队！'],['We have lost the initiative. Switch to defence.','我们失去了主动权，转入防守。'],['Sudden reversal! Watch the headquarters.','局势突变！注意大本营。']],
+  mDA:[['We have turned it around! Press the advantage.','我们扭转了战局！乘胜追击。'],['Reversal! Now they are the ones on the back foot.','局势逆转，轮到他们被动了！'],['The tide is turning our way. Strike while we can.','形势转向我们这边，趁热打铁。']],
   startUs:[['All units, this is HQ. Radio silence is lifted. We have the first move.','全体注意，这里是总指挥部。解除无线电静默，我军先手。'],['HQ to all commands: the coin is ours. Advance with care.','总指挥部通报：我军取得先手，各部谨慎推进。'],['The initiative is ours. Make the first move count.','主动权在我们手里，第一步要走得漂亮。'],['Lines open, weather clear, first move ours. Good hunting.','线路畅通，天气晴朗，我军先行。祝各位好运。']],
   startThem:[['HQ to all units: the enemy moves first. Hold your positions and watch.','总指挥部通报：敌军先手。各部坚守阵地，注意观察。'],['They have the initiative. Let them show their hand first.','主动权在对方。先让他们亮出底牌。'],['Enemy to move. Nobody fires until we know what is out there.','敌军先动。摸清对面之前，谁也不许乱动。'],['Stand by, all stations. The enemy has the first move.','各台注意，敌军先行，原地待命。']],
   winS:[['{me} here. Target destroyed {fl}.','{me}报告：{fl}目标已被歼灭。'],['Broke through {fl}. Whatever that was, it is gone now.','{fl}突破成功。不管那是什么，现在都没了。'],['{me} reporting: enemy position taken. Pressing on.','{me}报告：敌军阵地已拿下，继续推进。'],['Clean hit. They should have kept that one at home.','干净利落。他们真该把那枚棋子留在家里。'],['Another one down. Send me the next.','又解决一个，下一个是谁？'],['Line breached {fl}. Requesting further orders.','{fl}防线已被撕开，请求下一步指示。'],['{ded}','{ded}']],
@@ -12193,7 +12212,7 @@ function jqRDed(t){ if(t===2) return ['That had to be an Engineer: nothing else 
 function jqRText(m){ const L=zh()?1:0; let s=JQ_RADIO[m.k][m.i][L]; const v=m.v||{};
   if(s.includes('{ded}')) s=jqRDed(v.t)[L];
   return s.replace('{me}',v.t?(L?JQ_ZH[v.t]:JQ_ENF[v.t]):'').replace('{fl}',v.c!=null?jqRFlank(v.c)[L]:'').replace('{n}',v.n!=null?v.n:''); }
-function jqRPost(S,k,sp,v,pri){ if(!S) return; S.radio=S.radio||[]; S.radio.push({k,i:jqRPick(k),sp,v:v||{},ply:S.plies,pri:pri||1,id:(S._rid=(S._rid||0)+1)}); if(S.radio.length>40) S.radio.shift(); S._rlast=S.plies; jqRadioDraw(true); jqRadioBlip(pri); }
+function jqRPost(S,k,sp,v,pri,tag){ if(!S) return; S.radio=S.radio||[]; S.radio.push({k,i:jqRPick(k),sp,v:v||{},ply:S.plies,pri:pri||1,tag:tag||null,id:(S._rid=(S._rid||0)+1)}); if(S.radio.length>40) S.radio.shift(); S._rlast=S.plies; jqRadioDraw(true); jqRadioBlip(pri); }
 // a short burst of static as a message comes in
 function jqRadioBlip(pri){ try{ if(!AC||SND.muted||reduce) return; const n=AC.sampleRate*.16, b=AC.createBuffer(1,n,AC.sampleRate), d=b.getChannelData(0); for(let i=0;i<n;i++) d[i]=(Math.random()*2-1)*(1-i/n);
     const s=AC.createBufferSource(), f=AC.createBiquadFilter(), g=AC.createGain(); s.buffer=b; f.type='bandpass'; f.frequency.value=pri>=3?1800:1300; f.Q.value=1.2; g.gain.value=pri>=3?.07:.045; s.connect(f).connect(g).connect(typeof sfxBus!=='undefined'&&sfxBus?sfxBus:AC.destination); s.start(); }catch(e){} }
@@ -12235,7 +12254,7 @@ function jqRadioDraw(fresh){ const S=JQ, el=$g('.jq-ref'); if(!el) return; if(!S
   if(!box){ el.innerHTML=`<div class="jq-radio"><div class="jq-rdh"><svg class="ant" viewBox="0 0 24 24"><path d="M12 13v8M8 21h8M12 13l-4-9M12 13l4-9M7 9a7 7 0 0 0 10 0"/></svg><b>${T('Field Radio','前线电台')}</b><span class="ch">CH 07 · 41.25</span><i class="lamp"></i></div><div class="jq-rdg"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div><div class="jq-rdl"></div></div>`; box=el.querySelector('.jq-radio'); }
   const L=box.querySelector('.jq-rdl'), last=list[list.length-1];
   L.innerHTML=list.length?list.map(m=>{ const av=GIMG(m.sp==='hq'?'jq-hdchief':'jq-hd'+m.sp);
-      return `<div class="jq-rm p${m.pri}${m.sp==='hq'?' hq':''}${fresh&&m===last?' new':''}" data-r="${m.id}"><span class="av"><img src="${av}" alt=""></span><div class="tx"><div class="who"><b>${jqRName(m.sp)}</b>${m.pri>=3?`<em>${T('Urgent','紧急')}</em>`:''}<small>${T('Move','第')} ${m.ply}${zh()?' 步':''}</small></div><p>${jqRText(m)}</p></div></div>`; }).join('')
+      return `<div class="jq-rm p${m.pri}${m.tag==='warn'?' wn':''}${m.sp==='hq'?' hq':''}${fresh&&m===last?' new':''}" data-r="${m.id}"><span class="av"><img src="${av}" alt=""></span><div class="tx"><div class="who"><b>${jqRName(m.sp)}</b>${m.pri>=3?`<em>${T('Urgent','紧急')}</em>`:m.tag==='warn'?`<em class="w">${T('Warning','警告')}</em>`:''}<small>${T('Move','第')} ${m.ply}${zh()?' 步':''}</small></div><p>${jqRText(m)}</p></div></div>`; }).join('')
     :`<p class="jq-rdq">${T('Standing by. Your officers will call in when something on the field is worth reporting.','守听中。战场上一有值得报告的情况，各部军官就会来电。')}</p>`;
   L.scrollTop=L.scrollHeight;
   if(fresh&&last&&!reduce){ box.classList.remove('rx'); void box.offsetWidth; box.classList.add('rx'); const n=L.querySelector('.jq-rm.new p'); if(n){ const full=n.textContent; n.textContent=''; n.classList.add('typing'); let i=0; const step=()=>{ if(!n.isConnected) return; i=Math.min(full.length,i+Math.max(1,Math.round(full.length/40))); n.textContent=full.slice(0,i); if(i<full.length) setTimeout(step,22); else n.classList.remove('typing'); }; setTimeout(step,380); } } }
@@ -12306,20 +12325,24 @@ function jqmTension(S){ const me=S.pcs.filter(p=>p.side===0&&!p.dead), en=S.pcs.
   return {us,them,mob:myMob.length}; }
 function jqmScore(S){ const K=jqmRead(S), T=jqmTension(S); return +(K.mat+.35*K.mom).toFixed(2); }
 // the reading, as a level: + for the advantage track, - for the disadvantage track, 1..3 for the stage, 0 for the even theme
-const JQM_IN=[0,3,7,16], JQM_OUT=[0,1.2,4.5,12];
+const JQM_IN=[0,4.5,8,16], JQM_OUT=[0,1.5,5,12];
 function jqmTarget(S,lvl){ const K=jqmRead(S), T=jqmTension(S);
-  let d=K.mat+.35*K.mom; if(d<0) d*=1.15; // the bad news is felt a little sooner than the good
+  let d=K.mat+.2*K.mom; if(d<0) d*=1.15; // the bad news is felt a little sooner than the good
+  // the opening is not the time for mood swings: until about move 40 the bar to enter a stage is raised (twice as high at the start),
+  // so a single early trade never moves the music, only a real blunder does
+  const early=1+Math.max(0,40-S.plies)/40;
   const sg=Math.sign(d), a=Math.abs(d), dir=Math.sign(lvl), L=Math.abs(lvl);
-  const enter=a>=JQM_IN[3]?3:a>=JQM_IN[2]?2:a>=JQM_IN[1]?1:0, stay=a>=JQM_OUT[3]?3:a>=JQM_OUT[2]?2:a>=JQM_OUT[1]?1:0;
+  const enter=a>=JQM_IN[3]*early?3:a>=JQM_IN[2]*early?2:a>=JQM_IN[1]*early?1:0, stay=a>=JQM_OUT[3]?3:a>=JQM_OUT[2]?2:a>=JQM_OUT[1]?1:0;
   let m=sg===dir&&sg!==0?(enter>L?enter:stay>=L?L:stay):enter, s=sg;
   // the game itself pushes the stage up: a headquarters under threat, or your last few units
   const endg=T.mob<=3?3:T.mob<=5?2:0;
   if(T.them>=3){ s=-1; m=3; }                          // your Flag can be taken next move: the climax, whatever the count says
   else if(T.us>=3&&s>=0){ s=1; m=3; }                  // their shown Flag is in reach
-  else { if(endg) { if(!s) s=-1; m=Math.max(m,s<0?endg:Math.min(endg,2)); }
-    const t=s>0?T.us:s<0?T.them:Math.max(T.us,T.them);
-    if(!s&&t>=2) s=T.them>=T.us?-1:1;
-    if(s&&t>=2) m=Math.max(m,2); if(s&&!m) m=1; }
+  else { if(endg){ if(!m) s=-1; m=Math.max(m,s<0?endg:Math.min(endg,2)); }
+    // a headquarters under threat lifts the stage; with no clear lead, the side under threat sets the direction
+    const t=m?(s>0?T.us:T.them):Math.max(T.us,T.them);
+    if(t>=2){ if(!m) s=T.them>=T.us?-1:1; m=Math.max(m,2); }
+    if(!m) s=0; }
   const want=s*Math.min(3,m);
   const urgent=!!(K.last&&K.last.big)||T.them>=3||(T.us>=3&&want>0);
   return {want,urgent,d:+d.toFixed(2),T}; }
@@ -12334,6 +12357,9 @@ function jqMoodEval(S){ if(!S||S.tut||S.phase!=='play'||S.over!=null||!AC||jqWin
   // any other change has to hold for one full round (your move and the reply), unless the moment is decisive
   if(!urgent){ if(!JQM.pend||JQM.pend.want!==want){ JQM.pend={want,ply:S.plies}; return; } if(S.plies-JQM.pend.ply<2) return; }
   JQM.pend=null; JQM.since=now; JQM.state=want===0?'n':(want>0?'a':'d')+Math.abs(want);
+  { const W=Math.abs(want), up=lvl===0||(Math.sign(want)===Math.sign(lvl)&&W>L), k=want===0?(lvl>0?'mAn':'mDn')
+      :up?(want>0?'mA':'mD')+W:Math.sign(want)===Math.sign(lvl)?(want>0?'mAdown':'mDdown'):W===3?(want>0?'mA3':'mD3'):(want>0?'mDA':'mAD');
+    if(typeof jqRPost==='function') jqRPost(S,k,'hq',{},2,'warn'); }
   if(want===0) jqmToNeutral(); else jqmPlay(want>0?'a':'d',Math.abs(want)-1); }
 
 /* ---------- Army Chess: welcome screen and the guided tutorial ---------- */
