@@ -12265,7 +12265,8 @@ function jqRadioDraw(fresh){ const S=JQ, el=$g('.jq-ref'); if(!el) return; if(!S
    whether a Flag has been exposed. Never from what the hidden enemy pieces really are. ---------- */
 // each stage is one take: a seamless loop cut where the music repeats itself (s = place in the file, len = loop length,
 // per = length of the repeating phrase, h = where in that phrase the take begins), so a stage switch keeps the musical position
-const JQM_TR={a:{url:'jq-mood-a',st:[{s:0.000000,len:51.767483,per:17.255828,h:5.169728},{s:51.767483,len:51.867483,per:17.289161,h:11.612426},{s:103.634966,len:51.867483,per:17.289161,h:5.203061}]},d:{url:'jq-mood-d',st:[{s:0.000000,len:63.900998,per:31.950499,h:21.616667},{s:63.900998,len:64.000998,per:32.000499,h:17.600000},{s:127.901995,len:63.967664,per:31.983832,h:13.583333}]}};
+// B = beats in one phrase, f0 = where the downbeat falls in the phrase (as a fraction); every take is lined up on the drums of stage one
+const JQM_TR={a:{url:'jq-mood-a',B:32,f0:0.01926,st:[{s:0.000000,len:51.767483,per:17.255828,h:5.169728},{s:51.767483,len:51.867483,per:17.289161,h:11.763354},{s:103.634966,len:51.867483,per:17.289161,h:5.262562}]},d:{url:'jq-mood-d',B:64,f0:0.00263,st:[{s:0.000000,len:63.900998,per:31.950499,h:21.616667},{s:63.900998,len:64.000998,per:32.000499,h:17.697233},{s:127.901995,len:63.967664,per:31.983832,h:13.684195}]}};
 const JQM={buf:{},load:{},cur:null,state:'n',since:0,gen:0,pend:null};
 function jqmLoad(k){ if(JQM.buf[k]) return Promise.resolve(JQM.buf[k]); if(JQM.load[k]) return JQM.load[k]; if(!AC) return Promise.resolve(null);
   return JQM.load[k]=fetch(VOX_URL(JQM_TR[k].url)).then(r=>r.arrayBuffer()).then(a=>AC.decodeAudioData(a)).then(b=>JQM.buf[k]=b).catch(()=>{ delete JQM.load[k]; return null; }); }
@@ -12279,14 +12280,24 @@ const jqmPos=(c,t)=>{ const L=JQM_TR[c.k].st[c.stage].len; return (((t-c.anchor)
 // the same point of the phrase in another stage's take
 function jqmMap(k,from,to,pos){ const A=JQM_TR[k].st[from], B=JQM_TR[k].st[to], ph=((A.h+pos)%A.per)/A.per, i=Math.floor(pos/A.per)%Math.round(B.len/B.per); return (i*B.per+((ph*B.per-B.h)%B.per+B.per)%B.per)%B.len; }
 async function jqmPlay(k,stage){ if(!AC||!open) return; const gen=JQM.gen, S0=JQ, b=await jqmLoad(k); if(!b||!JQ||JQ!==S0||scr!=='junqi'||gen!==JQM.gen||S0.over!=null||S0.phase!=='play') return; const now=AC.currentTime, c=JQM.cur;
-  if(c&&c.k===k){ if(c.stage===stage) return;
-    // same track, another stage: right now, at the same point of the shared timeline; the old take fades while the new one takes over
-    const at=now+.03, pos=jqmMap(k,c.stage,stage,jqmPos(c,at)); jqmKill(c.v,at,.9); c.v=jqmVoice(k,stage,at,pos,.12); c.stage=stage; c.anchor=at-pos; return; }
+  if(c&&c.k===k){
+    // a change already queued for the coming beat: drop it, and decide again from the take that is still sounding
+    if(c.sw&&c.sw.at>now+.02){ const w=c.sw; try{ c.v.src.stop(); }catch(e){} c.v=w.v; c.stage=w.stage; c.anchor=w.anchor; c.sw=null;
+      if(stage===c.stage){ try{ c.v.g.gain.cancelScheduledValues(now); c.v.g.gain.setValueAtTime(1,now); c.v.src.stop(now+1e6); }catch(e){} return; } }
+    if(c.stage===stage) return;
+    // same track, another stage: on the next downbeat (or the next beat, if the bar line is too far off), at the same point
+    // of the phrase; the old take fades while the new one takes over
+    const at=jqmNextBeat(k,c,now), pos=jqmMap(k,c.stage,stage,jqmPos(c,at)); c.sw={at,v:c.v,stage:c.stage,anchor:c.anchor};
+    jqmKill(c.v,at,.9); c.v=jqmVoice(k,stage,at,pos,.06); c.stage=stage; c.anchor=at-pos; return; }
   // from the even-battle theme (or the other track): the neutral theme fades away while the new track comes in from the top
-  if(c) jqmKill(c.v,now,1.6); bgm._mood=true; bgm(0,2.2); bgm._mood=false;
+  if(c){ jqmKill(c.v,now,1.6); if(c.sw) jqmKill(c.sw.v,now,1.6); } bgm._mood=true; bgm(0,2.2); bgm._mood=false;
   const at=now+.5, v=jqmVoice(k,stage,at,0,1.8); JQM.cur={k,stage,v,anchor:at}; }
-function jqmToNeutral(){ const c=JQM.cur; if(!c||!AC) return; jqmKill(c.v,AC.currentTime,2.2); JQM.cur=null; bgm._mood=true; bgm(5,2.4,true); bgm._mood=false; }
-function jqMoodStop(fade){ const c=JQM.cur; JQM.cur=null; JQM.state='n'; JQM.gen++; JQM.pend=null; if(c&&AC) jqmKill(c.v,AC.currentTime,fade==null?.8:fade); }
+// audio time of the next bar line of the sounding take, or of the next beat when the bar line is more than ~1.25 s away
+function jqmNextBeat(k,c,now){ const T=JQM_TR[k], A=T.st[c.stage], t0=now+.06, fr=((A.h+jqmPos(c,t0))%A.per)/A.per;
+  const ahead=x=>{ const q=(fr-T.f0)/x; return ((Math.floor(q+1e-9)+1)*x+T.f0-fr)*A.per; };
+  let w=ahead(4/T.B); if(w>1.25) w=ahead(1/T.B); return t0+w; }
+function jqmToNeutral(){ const c=JQM.cur; if(!c||!AC) return; jqmKill(c.v,AC.currentTime,2.2); if(c.sw) jqmKill(c.sw.v,AC.currentTime,2.2); JQM.cur=null; bgm._mood=true; bgm(5,2.4,true); bgm._mood=false; }
+function jqMoodStop(fade){ const c=JQM.cur; JQM.cur=null; JQM.state='n'; JQM.gen++; JQM.pend=null; if(c&&AC){ jqmKill(c.v,AC.currentTime,fade==null?.8:fade); if(c.sw) jqmKill(c.sw.v,AC.currentTime,fade==null?.8:fade); } }
 // ---------- when the music moves: three readings of the battle, all from what you can know at the table ----------
 // value of a unit to the music: the big pieces matter most, an engineer is worth a little more than a lieutenant (it clears mines)
 const JQM_V={9:10,8:8,7:6,6:4.5,5:3.5,4:2.5,3:1.5,2:1,1:1.5,10:4,11:.8,12:0};
