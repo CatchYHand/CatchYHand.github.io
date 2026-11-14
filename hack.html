@@ -4728,7 +4728,7 @@ html:not([lang=zh]) .gt-choose .gc-lb b{font-family:'Newsreader','Noto Serif SC'
 .jq-fog{height:54%!important;-webkit-mask:linear-gradient(180deg,#000 88%,transparent)!important;mask:linear-gradient(180deg,#000 88%,transparent)!important}
 .jq-fog .fogt{top:42%!important;color:#e0402c!important;text-shadow:0 2px 0 rgba(0,0,0,.6),0 0 16px rgba(0,0,0,.7),0 0 26px rgba(224,64,44,.45)!important}
 /* ===== v12: war-room backdrop, field-case panels, faction crests, launch button, numbered layouts ===== */
-.jq{background:radial-gradient(60% 75% at 50% 46%,rgba(201,154,55,.09),transparent 62%),radial-gradient(120% 100% at 50% 42%,rgba(10,9,7,.30),rgba(6,5,4,.86) 78%),var(--jqbg,none) center/cover no-repeat,#0b0a08}
+.jq{background:radial-gradient(60% 75% at 50% 46%,rgba(201,154,55,.09),transparent 62%),radial-gradient(120% 100% at 50% 42%,rgba(10,9,7,.22),rgba(6,5,4,.72) 82%),var(--jqbg,none) var(--jqbp,center)/var(--jqbs,cover) no-repeat,#0b0a08}
 .jq-box{position:relative;border-radius:.3rem;border:1px solid rgba(226,188,98,.2);background:
   linear-gradient(#d8b46a,#d8b46a) left top/.8rem 1.5px no-repeat,linear-gradient(#d8b46a,#d8b46a) left top/1.5px .8rem no-repeat,
   linear-gradient(#d8b46a,#d8b46a) right top/.8rem 1.5px no-repeat,linear-gradient(#d8b46a,#d8b46a) right top/1.5px .8rem no-repeat,
@@ -11858,7 +11858,7 @@ function jqBuild(S0,n){ const S={...S0,pcs:S0.init.map(p=>({...p,moved:false,dea
 /* ---------- render ---------- */
 const jqVS=()=>`<div class="jq-vs"><svg viewBox="0 0 120 60"><defs><linearGradient id="jqvsg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff7d6"/><stop offset=".45" stop-color="#f3c95c"/><stop offset=".55" stop-color="#c88a1e"/><stop offset="1" stop-color="#ffe7a0"/></linearGradient></defs><text x="60" y="45" text-anchor="middle" class="vs0">VS</text><text x="60" y="45" text-anchor="middle" class="vs1">VS</text></svg></div>`;
 function jqRender(){ const S=JQ; root.className='on jqm'; const opp=U[S.opp];
-  paint(head(T('Vanguard','兵锋'))+`<main class="jq ${S.phase}" style="--jqbg:url(${GIMG('jq-map')})"><div class="jq-side jq-l">
+  paint(head(T('Vanguard','兵锋'))+`<main class="jq ${S.phase}" style="--jqbg:url(${GIMG('jq-map2')})"><div class="jq-side jq-l">
       <div class="jq-pl o"><svg class="jq-plem" viewBox="0 0 100 100" aria-hidden="true">${JQ_EMB.enemy}</svg><span class="jq-av"><svg viewBox="0 0 40 40">${AV[S.opp]}</svg></span><div><b>${opp.name}</b><small>${T(jqLvOf(S.level).en+' · orange',jqLvOf(S.level).zh+' · 橙方')}</small></div><span class="jq-left"><b></b><small>${T('units left','剩余部队')}</small></span><i class="jq-tn"></i></div>
       ${jqVS()}
       <div class="jq-pl m"><svg class="jq-plem" viewBox="0 0 100 100" aria-hidden="true">${JQ_EMB.ours}</svg><span class="jq-av"><svg viewBox="0 0 40 40">${AV.me}</svg></span><div><b>${U.me.name}</b><small>${T('You · blue','你 · 蓝方')}</small></div><span class="jq-left"><b></b><small>${T('units left','剩余部队')}</small></span><i class="jq-tn"></i></div>
@@ -11867,7 +11867,17 @@ function jqRender(){ const S=JQ; root.className='on jqm'; const opp=U[S.opp];
     <div class="jq-side jq-r"><div class="jq-box lg${S.phase==='setup'?' stg':''}"><h4>${S.phase==='setup'?T('Units on Standby','待命部队'):T('Front-Line Reports','前线战报')}${S.phase==='setup'?`<span class="jq-tag">${T('STAGING AREA','集结区')}</span>`:`<span class="jq-tag live"><i></i>${T('LIVE','实时')}</span>`}</h4><div class="jq-rlog"></div></div></div></main>`);
   jqDraw(); jqCtl(); jqRefDraw(); jqLogDraw(); jqBw(); if(JQT&&S.tut) jqTutCard(); }
 // the board's width, so the units waiting off the board can be drawn at exactly the board's piece size
-function jqBw(){ const m=$g('main.jq'), bd=$g('.jq-board'); if(!m||!bd) return; const set=()=>m.style.setProperty('--bw',bd.clientWidth+'px'); set(); if(!jqBw.ro) jqBw.ro=new ResizeObserver(()=>{ const m2=$g('main.jq'), b2=$g('.jq-board'); if(m2&&b2) m2.style.setProperty('--bw',b2.clientWidth+'px'); }); jqBw.ro.disconnect(); jqBw.ro.observe(bd); }
+function jqBw(){ const m=$g('main.jq'), bd=$g('.jq-board'); if(!m||!bd) return; const set=()=>m.style.setProperty('--bw',bd.clientWidth+'px'); set(); jqBgFit(); if(!jqBw.ro) jqBw.ro=new ResizeObserver(()=>{ const m2=$g('main.jq'), b2=$g('.jq-board'); if(m2&&b2) m2.style.setProperty('--bw',b2.clientWidth+'px'); jqBgFit(); }); jqBw.ro.disconnect(); jqBw.ro.observe(bd); jqBw.ro.observe(m); }
+// the battle map is laid so that its plain middle sits right under the board and the pencilled flanks fill the strips beside it,
+// whatever the window: scaled until the plain middle spans the board, then grown further only if it would not cover the screen
+const JQ_MAP={w:1536,h:1024,l:.33,r:.67};
+function jqBgFit(){ const m=$g('main.jq'), bd=$g('.jq-board'); if(!m||!bd) return; const M=m.getBoundingClientRect(), B=bd.getBoundingClientRect(); if(!M.width||!B.width) return;
+  // the left pencil band ends right at the board's left edge; the scale is the smallest that still covers the window and lets the
+  // plain middle span the board, so the right band then begins just past the board's right edge
+  // (on the right it only has to reach under the report panel: past that edge nothing of the map can be seen)
+  const W=M.width, H=M.height, P=JQ_MAP, bl=B.left-M.left+6, br=B.right-M.left, rp=m.querySelector('.jq-side:not(.jq-l)'), R=rp&&rp.offsetWidth?Math.min(W,rp.getBoundingClientRect().left-M.left+60):W;
+  const iw=Math.max((br-bl)/(P.r-P.l), bl/P.l, (R-bl)/(1-P.l), H*P.w/P.h), ih=iw*P.h/P.w, x=bl-P.l*iw, y=(H-ih)/2;
+  m.style.setProperty('--jqbs',`${iw.toFixed(1)}px ${ih.toFixed(1)}px`); m.style.setProperty('--jqbp',`${x.toFixed(1)}px ${y.toFixed(1)}px`); }
 function jqRefDraw(){ jqRadioDraw(); }
 function jqPieceHTML(p,S,rp){ const mine=p.side===0, exp=p.t===12&&S.flagShown[p.side], show=mine||rp||S.over!=null||exp||S.open||(JQ_CHEAT&&!S.tut), m=!show&&S.marks[p.id];
   return `<div class="jq-p ${mine?'b':'r'}${show||m?' up':' dn'}${m?' mk':''}${exp?' ex':''}" data-id="${p.id}" style="left:${jqPos(p.k)[0]}%;top:${jqPos(p.k)[1]}%">
