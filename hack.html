@@ -4154,6 +4154,9 @@ html:not([lang=zh]) .gt-choose .gc-lb b{font-family:'Newsreader','Noto Serif SC'
 .jq-eye.ani .lid{animation:jqBlinkEye 1.6s ease-in-out both;animation-delay:calc(var(--ed,0ms) + 250ms)}
 /* battle record: roomy rows */
 .jq{grid-template-columns:minmax(15rem,18rem) 1fr minmax(22rem,27rem)!important}
+/* the two side columns are the same width, so the board sits in the middle of the window */
+/* both side columns are always the same width (--sw, set by jqSideFit); when the window is too narrow for both panels and a full-height board, the panels are drawn smaller (--sz) */
+@media (min-width:901px){.jq{grid-template-columns:var(--sw,22rem) minmax(0,1fr) var(--sw,22rem)!important}.jq>.jq-side{zoom:var(--sz,1)}}
 .jq-rlog{gap:.55rem}
 .jq-lr{max-width:100%;padding:.55rem .7rem;gap:.4rem;border-radius:1rem}
 .jq-rlog .jq-lt{width:3.9rem;height:2rem;border-radius:.35rem}.jq-rlog .jq-ltf .jz{font-size:1rem;letter-spacing:.04em}.jq-rlog .jq-ltf .jn{font-size:1.1rem}.jq-rlog .jq-ltf .je{display:inline;font-size:.5rem}
@@ -11884,16 +11887,20 @@ function jqRender(){ const S=JQ; root.className='on jqm'; const opp=U[S.opp];
     <div class="jq-side jq-r"><div class="jq-box lg${S.phase==='setup'?' stg':''}"><h4>${S.phase==='setup'?T('Units on Standby','待命部队'):T('Front-Line Reports','前线战报')}${S.phase==='setup'?`<span class="jq-tag">${T('STAGING AREA','集结区')}</span>`:`<span class="jq-tag live"><i></i>${T('LIVE','实时')}</span>`}</h4><div class="jq-rlog"></div></div></div></main>`);
   jqDraw(); jqCtl(); jqRefDraw(); jqLogDraw(); jqBw(); if(JQT&&S.tut) jqTutCard(); }
 // the board's width, so the units waiting off the board can be drawn at exactly the board's piece size
-function jqBw(){ const m=$g('main.jq'), bd=$g('.jq-board'); if(!m||!bd) return; const set=()=>m.style.setProperty('--bw',bd.clientWidth+'px'); set(); jqBgFit(); if(!jqBw.ro) jqBw.ro=new ResizeObserver(()=>{ const m2=$g('main.jq'), b2=$g('.jq-board'); if(m2&&b2) m2.style.setProperty('--bw',b2.clientWidth+'px'); jqBgFit(); }); jqBw.ro.disconnect(); jqBw.ro.observe(bd); jqBw.ro.observe(m); }
+// side panels: full size when there is room for them and a full-height board, otherwise both shrink together (never below 72%)
+function jqSideFit(m){ if(!m) return; if(innerWidth<=900){ m.style.removeProperty('--sz'); m.style.removeProperty('--sw'); return; } const cs=getComputedStyle(m), rem=parseFloat(getComputedStyle(document.documentElement).fontSize)||16;
+  const pad=parseFloat(cs.paddingLeft)+parseFloat(cs.paddingRight), gap=2*(parseFloat(cs.columnGap)||0), bi=(innerHeight-6.6*rem)*100/170;
+  const sw=Math.min(25*rem,Math.max(.72*22*rem,(m.clientWidth-pad-gap-bi)/2)), sz=Math.min(1,sw/(22*rem)), a=sw.toFixed(1)+'px', b=sz>=1?'':sz.toFixed(3);
+  if(m.style.getPropertyValue('--sw')!==a) m.style.setProperty('--sw',a); if((m.style.getPropertyValue('--sz')||'')!==b){ if(b) m.style.setProperty('--sz',b); else m.style.removeProperty('--sz'); } }
+function jqBw(){ const m=$g('main.jq'), bd=$g('.jq-board'); if(!m||!bd) return; jqSideFit(m); const set=()=>m.style.setProperty('--bw',bd.clientWidth+'px'); set(); jqBgFit(); if(!jqBw.ro) jqBw.ro=new ResizeObserver(()=>{ const m2=$g('main.jq'), b2=$g('.jq-board'); jqSideFit(m2); if(m2&&b2) m2.style.setProperty('--bw',b2.clientWidth+'px'); jqBgFit(); }); jqBw.ro.disconnect(); jqBw.ro.observe(bd); jqBw.ro.observe(m); }
 // the battle map is laid so that its plain middle sits right under the board and the pencilled flanks fill the strips beside it,
 // whatever the window: scaled until the plain middle spans the board, then grown further only if it would not cover the screen
-const JQ_MAP={w:1536,h:1024,l:.33,r:.67};
+const JQ_MAP={w:1536,h:1024,l:.345,r:.665};
 function jqBgFit(){ const m=$g('main.jq'), bd=$g('.jq-board'); if(!m||!bd) return; const M=m.getBoundingClientRect(), B=bd.getBoundingClientRect(); if(!M.width||!B.width) return;
-  // the left pencil band ends right at the board's left edge; the scale is the smallest that still covers the window and lets the
-  // plain middle span the board, so the right band then begins just past the board's right edge
-  // (on the right it only has to reach under the report panel: past that edge nothing of the map can be seen)
-  const W=M.width, H=M.height, P=JQ_MAP, bl=B.left-M.left+6, br=B.right-M.left, rp=m.querySelector('.jq-side:not(.jq-l)'), R=rp&&rp.offsetWidth?Math.min(W,rp.getBoundingClientRect().left-M.left+60):W;
-  const iw=Math.max((br-bl)/(P.r-P.l), bl/P.l, (R-bl)/(1-P.l), H*P.w/P.h), ih=iw*P.h/P.w, x=bl-P.l*iw, y=(H-ih)/2;
+  // the plain middle of the map is centred on the board and at least as wide as it; the pencilled flanks fill the two side columns.
+  // The scale is the smallest that does that and still covers the whole window, so nothing changes shape when the window does.
+  const W=M.width, H=M.height, P=JQ_MAP, cx=(B.left+B.right)/2-M.left, c=(P.l+P.r)/2, band=P.r-P.l;
+  const iw=Math.max(B.width*1.08/band, cx/c, (W-cx)/(1-c), H*P.w/P.h), ih=iw*P.h/P.w, x=cx-c*iw, y=(H-ih)/2;
   m.style.setProperty('--jqbs',`${iw.toFixed(1)}px ${ih.toFixed(1)}px`); m.style.setProperty('--jqbp',`${x.toFixed(1)}px ${y.toFixed(1)}px`); }
 function jqRefDraw(){ jqRadioDraw(); }
 function jqPieceHTML(p,S,rp){ const mine=p.side===0, exp=p.t===12&&S.flagShown[p.side], show=mine||rp||S.over!=null||exp||S.open||(JQ_CHEAT&&!S.tut), m=!show&&S.marks[p.id];
