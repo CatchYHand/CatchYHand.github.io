@@ -10067,7 +10067,7 @@ function pickPlayers(){ const vk=k=>(VOICE[k]||VOICE.me)[zh()?0:1];
   loadVox(); }
 const pname=s=>s===0?(zh()?'你':'You'):P[s].name;
 /* ---------- recorded voice lines: one MP3 sprite per voice and language ---------- */
-const VOX_URL=k=>'/assets/aud/gd/'+k+'.mp3';
+const VOX_V={'jq-lose':'jq-lose2'}, VOX_URL=k=>'/assets/aud/gd/'+(VOX_V[k]||k)+'.mp3';
 const AI_URL=()=>VOX_URL('gd-ai').replace(/\.mp3$/,'.wasm');
 function nnMove(s){ try{ if(!GDAI.ready()) return null; const tg=H.trick&&H.trick.seat!==s?H.trick.combo:null; let raw=GD.moves(H.hands[s],H.L,tg); const seen=new Set(), cand=[], mm=[];
     // never open a trick with a bomb (straight flushes included) while the hand is still long and nobody on the other side is close to going out
@@ -11642,7 +11642,7 @@ function jqApply(S,mv){ const p=jqP(S,mv.id), q=jqAt(S,mv.to); let res=null;
   else { res=jqFight(p.t,q.t); S.quiet=0;
     if(res==='A'){ q.dead=true; delete S.at[q.k]; p.k=mv.to; S.at[p.k]=p.id; }
     else if(res==='D'){ p.dead=true; }
-    else { p.dead=true; q.dead=true; delete S.at[q.k]; }
+    else { p.dead=true; q.dead=true; delete S.at[q.k]; if(q.t===11) p.kb=true; }
     [p,q].forEach(x=>{ if(x.dead){ S.lost[x.side].push(x.t); if(x.t===9) S.flagShown[x.side]=true; } }); }
   S.plies++; return {res,att:p,def:q}; }
 function jqWinner(S){ for(const s of [0,1]){ const f=S.pcs.find(p=>p.side===s&&p.t===12); if(f.dead) return 1-s; }
@@ -12237,9 +12237,9 @@ const JQ_RADIO={
   winJ:[['{me} here: we got one! Small fry, but it counts!','{me}报告：干掉一个！虽然只是个小角色，也算战果！'],['Lucky strike {fl}! Enemy unit down.','{fl}运气不错，敌军一部被消灭！'],['{ded}','{ded}'],['Done it, sir! Position taken.','任务完成，长官！阵地已经拿下。'],['{me} checking in: one enemy fewer {fl}.','{me}报告：{fl}敌军又少了一个。']],
   clear:[['Engineers here. It was a mine, and it’s been cleared.','工兵报告：那确实是颗地雷，已经排除了。'],['Mine cleared {fl}. The way is open!','{fl}地雷已排除，通道打开了！'],['Fuse pulled on that one. The way is safe.','引信已拆除，这条路安全了。'],['One mine fewer between us and their Flag.','通往敌方军旗的路上又少了一颗地雷。'],['Sappers done. Their minefield has a hole in it now.','排雷完毕，他们的雷区被我们开了个口子。']],
   stuckHq:[['{me} has gone into the wrong headquarters. It’s stuck there for good.','{me}闯错了大本营，再也出不来了。'],['No Flag in that headquarters. Our {me} is pinned in there now.','那个大本营里没有军旗，{me}被困死在里面了。'],['Wrong door. At least we know where their Flag is now.','走错门了。好在现在知道他们的军旗藏在哪边了。']],
-  lostAtk:[['We’ve lost the {me} {fl}. A bigger piece, or a mine.','{fl}折了一个{me}。对面要么是大官，要么是地雷。'],['The {me} is gone. Mark that square: whatever’s in it bites.','{me}没了。把那一格标出来，里面的东西不好惹。'],['Attack {fl} failed. Nobody came back.','{fl}进攻失败，一个都没回来。'],['The {me} ran into something it couldn’t handle.','{me}撞上了啃不动的硬骨头。'],['That one held. Right-click it and mark what you suspect.','那一枚扛住了。右键标记一下你的判断。']],
+  lostAtk:[['We’ve lost the {me} {fl}. A bigger piece, or a mine.','{fl}折了一个{me}。对面要么是大官，要么是地雷。','either'],['We’ve lost the {me} {fl}. It can’t be a mine there: something bigger is holding that square.','{fl}折了一个{me}。那里不可能有地雷，是比它大的敌军守着那一格。','bigOnly'],['No mine could be there. The {me} met something that outranks it {fl}.','那一格不可能是地雷。我们的{me}在{fl}撞上了比它大的敌军。','bigOnly'],['The {me} is gone {fl}. Nothing they have left outranks it, so that was a mine.','{fl}的{me}没了。敌军已经没有比它大的了，那是一颗地雷。','mineOnly'],['A mine {fl}! It took our {me}.','{fl}有地雷！我们的{me}被炸没了！','mineOnly'],['The {me} is gone. Mark that square: whatever’s in it bites.','{me}没了。把那一格标出来，里面的东西不好惹。'],['Attack {fl} failed. Nobody came back.','{fl}进攻失败，一个都没回来。'],['The {me} ran into something it couldn’t handle.','{me}撞上了啃不动的硬骨头。'],['That one held. Right-click it and mark what you suspect.','那一枚扛住了。右键标记一下你的判断。']],
   lostEng:[['Our Engineer is down {fl}. That was an officer, not a mine.','{fl}的工兵牺牲了。对面是军官，不是地雷。'],['Engineer lost. Whatever stands there, it’s no mine.','工兵阵亡。那一格里的绝不是地雷。'],['We lost an Engineer {fl}. Any officer can take one.','{fl}折了一个工兵，任何军官都能吃掉它。']],
-  tie:[['Both went down {fl}. Equal rank, or a Bomb.','{fl}双方同归于尽。要么同级，要么是炸弹。'],['We traded our {me} for one of theirs.','用我们的{me}换掉了对方一个。'],['Mutual losses {fl}. Hard to say what that was.','{fl}双方同归于尽，说不准对面是什么。'],['Square swept clean {fl}. No survivors.','{fl}那一格被打空了，无人生还。']],
+  tie:[['Both went down {fl}. Equal rank, or a Bomb.','{fl}双方同归于尽。要么同级，要么是炸弹。','bombMaybe'],['Both went down {fl}. Their Bombs are spent, so that was another {me}.','{fl}双方同归于尽。敌军炸弹已经用光，对面也是{me}。','bombGone'],['We traded our {me} for one of theirs.','用我们的{me}换掉了对方一个。'],['Mutual losses {fl}. Hard to say what that was.','{fl}双方同归于尽，说不准对面是什么。'],['Square swept clean {fl}. No survivors.','{fl}那一格被打空了，无人生还。']],
   bomb:[['Bomb away {fl}! It took them with it!','{fl}炸弹引爆，和对方同归于尽！'],['Our Bomb’s gone off. One more of theirs gone.','我方炸弹已引爆，敌军又少一个。'],['Boom. Hope it was worth it.','轰。但愿值得。'],['Demolition charge spent {fl}.','{fl}的炸弹已经引爆。'],['That Bomb’s spent. Use the next one wisely.','这颗炸弹用掉了，下一颗要用在刀刃上。','bombLeft'],['That was our last Bomb. Pick our fights carefully now.','这是我们最后一颗炸弹了，接下来每一仗都要掂量。','noBomb']],
   lostMarshal:[['Our Field Marshal has fallen! The enemy knows where our Flag is!','我军司令阵亡！敌人已经知道我方军旗在哪里了！'],['Marshal down! All units, fall back and guard the headquarters!','司令阵亡！各部火速回防，守住大本营！'],['We’ve lost the Marshal! Our Flag is exposed: tighten the defence!','司令牺牲，军旗暴露！收紧防线！'],['We’ve lost our Marshal! Hold the headquarters at all costs!','我军痛失司令！不惜一切代价守住大本营！']],
   theirFlag:[['Their Field Marshal is down! Their Flag is in plain sight!','敌方司令阵亡！他们的军旗暴露了！'],['Enemy Marshal eliminated! Look for the eye: that’s their Flag!','敌方司令已被消灭！看那只眼睛，那就是他们的军旗！'],['Their Flag is exposed! All units, push for their headquarters!','敌方军旗暴露！各部向其大本营推进！'],['No more hiding! Their Flag stands revealed!','他们藏不住了！军旗已经现形！'],['Their top man is gone! Now we know which headquarters to hit!','敌军头号人物没了！现在知道该攻哪个大本营了！']],
@@ -12250,7 +12250,7 @@ const JQ_RADIO={
   mineCleared:[['They’ve dug up our mine {fl}! Enemy Engineer at work!','{fl}的地雷被挖了！对面有工兵在活动！'],['Mine lost {fl}! That’s an Engineer: take it out!','{fl}丢了一颗地雷！那是工兵，干掉它！'],['Enemy Engineer in our minefield! Any officer can stop it!','敌方工兵钻进了雷区！任何军官都能收拾它！']],
   mineBomb:[['Mine and attacker both gone {fl}: that was a Bomb.','{fl}地雷和来犯者同归于尽：那是一颗炸弹。'],['They spent a Bomb on our mine. Fair trade.','他们拿一颗炸弹换了我们一颗地雷，还算公平。']],
   bombDef:[['Our Bomb {fl} went off when they hit it!','{fl}的炸弹被撞响了！'],['They walked into our Bomb! Both gone!','他们撞上了我们的炸弹，同归于尽！']],
-  tieDef:[['Our {me} took the attacker down with it.','我们的{me}和来犯者同归于尽。'],['Both gone {fl}. Equal rank, or a Bomb.','{fl}双双阵亡。要么同级，要么是炸弹。'],['Mutual destruction {fl}.','{fl}双方同归于尽。']],
+  tieDef:[['Our {me} took the attacker down with it.','我们的{me}和来犯者同归于尽。'],['Both gone {fl}. Equal rank, or a Bomb.','{fl}双双阵亡。要么同级，要么是炸弹。','bombMaybe'],['Both gone {fl}. Their Bombs are spent, so the attacker was another {me}.','{fl}双双阵亡。敌军炸弹已经用光，来的也是{me}。','bombGone'],['Mutual destruction {fl}.','{fl}双方同归于尽。']],
   deep:[['{me} here: we’re inside their rear area.','{me}报告：已深入敌军后方。'],['We’re in their back rows. Quiet. Too quiet.','已摸进敌军最后两排。太安静了，安静得反常。'],['Their headquarters is in sight.','从这里已经能望见敌军大本营。'],['Deep behind enemy lines {fl}. Awaiting orders.','已深入{fl}敌后，等待命令。']],
   dash:[['Rode the railway all the way. Ready for orders.','沿铁路一路疾驰而来，等候命令。'],['Fast run along the line {fl}.','沿{fl}铁路急行军。'],['Moved up by rail. In position.','已沿铁路机动到位。']],
   intruder:[['Enemy unit inside our rear {fl}!','敌军摸进了我方{fl}后方！'],['Contact near headquarters! Something’s coming for the Flag!','大本营附近发现敌情！有东西冲着军旗来了！'],['Infiltrator in our back rows {fl}!','{fl}有敌军渗透进我方最后两排！'],['Rear guard, alert! The enemy is inside our lines!','后方警戒！敌军已经摸进来了！']],
@@ -12268,7 +12268,9 @@ const JQ_RADIO={
   resign:[['Understood. We’re standing down. Withdraw in good order.','收到，停止战斗，有序撤退。']],
   draw:[['Ceasefire. Both sides hold their lines.','停火。双方各守阵地。'],['A hundred and twenty moves without a battle. The generals have agreed a truce.','一百二十步无交战，双方指挥官同意停火。']]};
 const JQ_RBAG={};
-function jqRCond(c,S){ const bombs=S?S.pcs.filter(x=>x.side===0&&x.t===10&&!x.dead).length:1; return !c||(c==='bombLeft'?bombs>0:c==='noBomb'?bombs===0:true); }
+// line conditions; the battle ones read S._rk, what the player can know about the square just fought over
+function jqRCond(c,S){ if(!c) return true; const bombs=S?S.pcs.filter(x=>x.side===0&&x.t===10&&!x.dead).length:1, k=(S&&S._rk)||{mine:1,big:1,bomb:1};
+  return c==='bombLeft'?bombs>0:c==='noBomb'?bombs===0:c==='either'?k.mine&&k.big:c==='bigOnly'?!k.mine:c==='mineOnly'?!k.big:c==='bombMaybe'?k.bomb:c==='bombGone'?!k.bomb:true; }
 function jqRPick(k,S){ const L=JQ_RADIO[k], n=L.length;
   for(let tries=0;tries<n*2+2;tries++){ let b=JQ_RBAG[k]; if(!b||!b.q.length){ const q=[...Array(n).keys()]; for(let i=n-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [q[i],q[j]]=[q[j],q[i]]; } if(b&&n>1&&q[q.length-1]===b.last) q.unshift(q.pop()); b=JQ_RBAG[k]={q,last:null}; } const i=b.q.pop(); b.last=i; if(jqRCond(L[i][2],S)) return i; }
   return L.findIndex(e=>jqRCond(e[2],S)); }
@@ -12287,7 +12289,10 @@ function jqRadioBlip(pri){ try{ if(!AC||SND.muted||reduce) return; const n=AC.sa
 // called after every move: pick the one thing worth saying, if anything
 function jqRadioEvent(S,info,from){ if(!S||S.over!=null||jqWinner(S)!=null||!jqAllMoves(S,1-info.att.side).length) return; const p=info.att, q=info.def, res=info.res, me=p.side===0, F=S._rf=S._rf||{deep:{},intr:{},q:{}};
   const [tr,tc]=jqRC(p.k||(q&&q.k)||from), C=[], add=(k,sp,v,pri,ch)=>C.push({k,sp,v,pri,ch:ch==null?1:ch});
-  const toK=info.to, [r2,c2]=toK?jqRC(toK):[tr,tc], newFlag=s=>S.flagShown[s]&&!(S._rfs||[false,false])[s];
+  const toK=info.to, [r2,c2]=toK?jqRC(toK):[tr,tc];
+  // what the player can know: a mine never moves and sits on its owner's back two rows; a General outranks all but a dead Marshal; Bombs are spent once both are seen
+  S._rk={mine:me&&q?(!q.moved&&r2<=1):1, big:me?(p.t<8||(p.t===8&&!S.flagShown[1])):1, bomb:S.pcs.filter(x=>x.side===1&&x.t===10&&x.dead&&x.kb).length<2};
+  const newFlag=s=>S.flagShown[s]&&!(S._rfs||[false,false])[s];
   if(newFlag(0)&&newFlag(1)) add('trade','hq',{},3); else if(newFlag(1)) add('theirFlag','hq',{},3); else if(newFlag(0)) add('lostMarshal','hq',{},3);
   if(me){ const t=p.t;
     if(!res){ if(jqHQ(r2,c2)&&r2<=5) add('stuckHq','hq',{t,c:c2},3);
