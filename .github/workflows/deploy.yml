@@ -102,6 +102,11 @@ jobs:
             if ! grep -q "showChangeLog = function" $G/character/qunxing.js; then
               sed -i 's#^window.QX = { lib, game, ui, get, ai, _status };$#&\nlib.config.new_tutorial = true;\ngame.showChangeLog = function() {};\ndocument.title = "群星议会 The Hall of Ages";#' $G/character/qunxing.js
             fi
+            # 用另一个会话做好的版本（自带规则引擎和界面），不再用无名杀
+            if [ -f _games/qx-play.html ]; then
+              cp _games/qx-play.html $G/index.html
+              sed -i "s#'qunxing-cards/qunxing-cards/'#'qxa/'#" $G/index.html
+            fi
           fi
       - name: Deploy 🚀
         if: github.event_name != 'pull_request'
