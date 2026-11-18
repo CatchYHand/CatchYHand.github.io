@@ -3778,9 +3778,9 @@
     const role = r => ROLE[r] ? ROLE[r][L] : '?';
     const seat = (g, s, viewer) => s == null ? (L ? 'no source' : '无来源') : (s === viewer ? t('you') : t('seat', { n: s + 1 }));
     const cardLabel = (c) => c ? cardName(c.name) + ' ' + SUIT[c.suit] + RANK(c.rank) : '?';
-    function logLine(g, e, viewer) { const r = logLine0(g, e, viewer); if (r && L && r[1]) r[1] = r[1].replace(/\bYou (activate|take|lose|gain|show|reveal|play|use|equip|recover|draw|discard|pass|skip|win|look|view|give|get|flip)s\b/g, 'You $1'); return r; }
-    function logLine0(g, e, viewer) {
-      const S = s => seat(g, s, viewer); const C = id => cardLabel(g.card(id)); const N = cardName;
+    function logLine(g, e, viewer, namer) { const r = logLine0(g, e, viewer, namer); if (r && L && r[1]) r[1] = r[1].replace(/\bYou (activate|take|lose|gain|show|reveal|play|use|equip|recover|draw|discard|pass|skip|win|look|view|give|get|flip)s\b/g, 'You $1'); return r; }
+    function logLine0(g, e, viewer, namer) {   // namer：桌面出牌文字里用武将名
+      const S = s => namer && s != null && s !== viewer ? namer(s) : seat(g, s, viewer);; const C = id => cardLabel(g.card(id)); const N = cardName;
       const zh = !L;
       switch (e.type) {
         case 'turn': return ['turn', zh ? `—— ${S(e.seat)}的回合 ——` : (e.seat === viewer ? '— Your Turn —' : `— ${S(e.seat)}'s Turn —`)];
@@ -5307,6 +5307,9 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
 #qx .qx-clog .qx-cline{font-size:13px;line-height:20px;color:#f6e7c2;white-space:nowrap;max-width:700px;overflow:hidden;text-overflow:ellipsis;padding:0 10px;background:linear-gradient(90deg,transparent,rgba(0,0,0,.45) 15%,rgba(0,0,0,.45) 85%,transparent);text-shadow:0 1px 2px #000;transition:opacity .4s;animation:qxcin .25s ease-out}
 #qx .qx-clog .qx-cline.qx-cold{opacity:.55}
 #qx .qx-clog .qx-cline.qx-cgone{opacity:0}
+#qx .qx-wtimer{height:5px;margin:12px 6px 0;background:rgba(0,0,0,.55);border-radius:3px;overflow:hidden;box-shadow:inset 0 0 0 1px rgba(0,0,0,.6)}
+#qx .qx-wtimer i{display:block;height:100%;background:linear-gradient(#ff5a3c,#b0180c);transform-origin:left center;animation:qxwtime 15s linear forwards}
+@keyframes qxwtime{from{transform:scaleX(1)}to{transform:scaleX(0)}}
 @keyframes qxcin{from{opacity:0;transform:translateY(6px)}}
 #qx .qx-ctr .qx-cc.qx-ccdim{opacity:1;transform:none}
 #qx .qx-ctr .qx-cc.qx-ccdim .qx-cpic{filter:brightness(.72) saturate(.85)}
@@ -6215,7 +6218,7 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
         const taken = c.loc && c.loc.zone === 'hand' ? c.loc.seat : null;
         const can = myPick && u.req.options.includes(id);
         return `<div class="qx-fcell${taken != null ? ' qx-ftaken' : ''}${can ? ' qx-fcan' : ''}" data-mk="f${id}"><div class="qx-fwrap"${can ? ` data-opt="${id}"` : ''}>${this.cardHTML(c, 'qx-wcard').replace(/ data-id="\d+"/, ` data-cid="${id}"`)}</div><span>${taken != null ? esc(this.who(taken)) : '&nbsp;'}</span></div>`; }).join('');
-      return `<div class="qx-win qx-feast" data-mk="feast"><div class="qx-mtitle"><i></i><span>${esc(this.T.cardName('feast'))}</span><i></i></div><div class="qx-msub">${esc(myPick ? t('pick_feast') : t('feastWait'))}</div><div class="qx-frow">${cards}</div></div>`;
+      return `<div class="qx-win qx-feast" data-mk="feast"><div class="qx-mtitle"><i></i><span>${esc(this.T.cardName('feast'))}</span><i></i></div><div class="qx-msub">${esc(myPick ? t('pick_feast') : t('feastWait'))}</div><div class="qx-frow">${cards}</div>${this.wTimerHTML('f' + f.ids.filter(id => { const c = g.card(id); return c && c.loc && c.loc.zone === 'hand'; }).length)}</div>`;
     }
     // 拼点：发起时就弹出；双方各放一张（背面），然后同时翻开，标出「赢 / 没赢」
     pindianHTML() {
@@ -6405,7 +6408,7 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
     }
     // 桌面中央上方的出牌文字（对照三国杀OL）：最多 3 行，新的一行在最下面，旧的变淡；每行约 5 秒后淡出，牌清走后文字仍会多留一会儿
     addCap(l, mult) {
-      if (!mult) return; const r = this.T.logLine(this.g, l, this.me); if (!r || !r[1]) return;
+      if (!mult) return; const r = this.T.logLine(this.g, l, this.me, s => this.who(s)); if (!r || !r[1]) return;
       const box = this.$('.qx-clog'); if (!box) return;
       const el = document.createElement('div'); el.className = 'qx-cline' + (r[0] ? ' qx-l-' + r[0] : ''); el.textContent = r[1];
       box.appendChild(el);
@@ -6679,6 +6682,8 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
     }
     renderWins() { const w = this.$('.qx-wins'); if (w) morph(w, this.feastHTML() + this.pindianHTML() + this.revealHTML()); const st = this.$('.qx-stage'); if (st) st.classList.toggle('qx-haswin', !!((this.feast && !this.feast.hidden) || (this.revealWin && !this.revealWin.hidden))); }
     // 雕琢等「亮出牌再挑选」：上排亮出的牌，下排凹槽；把要的牌拖（或点）到下排
+    // 窗口底部的红色倒计时条（对照三国杀OL）：只是表现，不影响结算；每换一个人选牌就重新开始
+    wTimerHTML(k) { return `<div class="qx-wtimer" data-mk="wt${k}"><i></i></div>`; }
     revealHTML() {
       const R = this.revealWin; if (!R || R.hidden) return '';
       const g = this.g, T = this.T, t = T.t, u = this.ui;
@@ -6691,7 +6696,7 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
       const row = (arr, name) => `<div class="qx-arow"><div class="qx-clab">${esc(t(name))}</div><div class="qx-aslots">${Array.from({ length: n }, (_, i) => `<div class="qx-aslot${name === 'rvTake' ? ' qx-rvdrop' : ''}">${arr[i] != null ? cardEl(arr[i]) : ''}</div>`).join('')}</div></div>`;
       const cnt = mine ? u.req.multi.count : null;
       const tip = mine ? t('rvTip', { n: cnt }) : t('rvWait', { s: this.who(R.seat) });
-      return `<div class="qx-win qx-reveal" data-mk="reveal"><div class="qx-mtitle"><i></i><span>${esc(R.title)}</span><i></i></div><div class="qx-msub">${esc(tip)}</div>${row(top, 'rvShown')}${row(picks, 'rvTake')}${mine ? `<div class="qx-mfoot"><button class="qx-dbt qx-primary" data-act="multiOk"${picks.length === cnt ? '' : ' disabled'}>${esc(t('confirm'))}</button></div>` : ''}</div>`;
+      return `<div class="qx-win qx-reveal" data-mk="reveal"><div class="qx-mtitle"><i></i><span>${esc(R.title)}</span><i></i></div><div class="qx-msub">${esc(tip)}</div>${row(top, 'rvShown')}${row(picks, 'rvTake')}${this.wTimerHTML('r')}${mine ? `<div class="qx-mfoot"><button class="qx-dbt qx-primary" data-act="multiOk"${picks.length === cnt ? '' : ' disabled'}>${esc(t('confirm'))}</button></div>` : ''}</div>`;
     }
     // FLIP：记录位置 → 重绘 → 从旧位置平滑移动到新位置
     flipWins(fn) {
