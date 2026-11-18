@@ -5290,7 +5290,7 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
 #qx .qx-phase .qx-phout{animation-duration:.2s!important}
 #qx .qx-phase .qx-phin{animation-delay:.18s!important}
 #qx .qx-ctr{transition:opacity .2s}
-#qx .qx-stage.qx-haswin .qx-ctr{opacity:0}
+#qx .qx-stage.qx-haswin .qx-ctr{opacity:1}
 /* 响应读条：60 秒走完的速度 */
 #qx .qx-think.qx-on i{animation:qxthink60 60s linear forwards}
 @keyframes qxthink60{from{transform:scaleX(1)}to{transform:scaleX(0)}}
@@ -5303,6 +5303,11 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
 #qx .qx-ctr .qx-cc{transition:left .5s ease,opacity .5s ease,transform .5s ease,filter .3s!important}
 #qx .qx-ctr .qx-cc.qx-ccdisc .qx-cpic{filter:brightness(.55) saturate(.7)}
 #qx .qx-ctr .qx-cc .qx-cpic{transition:filter .35s ease}
+#qx .qx-clog{position:absolute;left:290px;width:700px;top:196px;height:66px;z-index:41;pointer-events:none;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:1px}
+#qx .qx-clog .qx-cline{font-size:13px;line-height:20px;color:#f6e7c2;white-space:nowrap;max-width:700px;overflow:hidden;text-overflow:ellipsis;padding:0 10px;background:linear-gradient(90deg,transparent,rgba(0,0,0,.45) 15%,rgba(0,0,0,.45) 85%,transparent);text-shadow:0 1px 2px #000;transition:opacity .4s;animation:qxcin .25s ease-out}
+#qx .qx-clog .qx-cline.qx-cold{opacity:.55}
+#qx .qx-clog .qx-cline.qx-cgone{opacity:0}
+@keyframes qxcin{from{opacity:0;transform:translateY(6px)}}
 #qx .qx-ctr .qx-cc.qx-ccdim{opacity:1;transform:none}
 #qx .qx-ctr .qx-cc.qx-ccdim .qx-cpic{filter:brightness(.72) saturate(.85)}
 #qx .qx-ctr .qx-cc.qx-ccspent{opacity:1;transform:none}
@@ -5467,6 +5472,7 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
   function morph(el, html) { const t = document.createElement(el.tagName === 'svg' ? 'div' : el.tagName); t.innerHTML = html; morphChildren(el, t); }
   function esc(s) { return String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
   const sleep = ms => new Promise(r => setTimeout(r, ms));
+  const CAP_TYPES = new Set(['use', 'play', 'discard', 'discardOf', 'skill', 'judge', 'recast', 'retouch', 'vetoed', 'nullified', 'show']);
 
   class Table {
     constructor(host, opts) {
@@ -5508,6 +5514,7 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
           <div class="qx-tipbox"></div>
           <div class="qx-dash"></div>
           <svg class="qx-lines" width="1280" height="760" viewBox="0 0 1280 760"></svg>
+          <div class="qx-clog"></div>
           <div class="qx-wins"></div>
           <div class="qx-fx"></div>
         </div></div>
@@ -5537,7 +5544,7 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
 
     // ── 开局 ──
     newGame(rep) {
-      const tok = ++this.token; this.hideSet = null; this.phSet = false; this.fading = null; this.dimmed = null; this.aimed = null; this.lastVetoOf = null;
+      const tok = ++this.token; this.hideSet = null; this.phSet = false; this.fading = null; this.dimmed = null; this.caps = []; { const cl = this.$('.qx-clog'); if (cl) cl.innerHTML = ''; } this.aimed = null; this.lastVetoOf = null;
       if (rep) { this.settings.n = rep.n; this.settings.level = rep.level; this.settings.role = rep.role || 'random'; }
       this.replay = rep ? { answers: rep.answers.slice(), i: 0 } : null;
       const n = this.settings.n;
@@ -6396,6 +6403,18 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
       if (mult && this.centerT) { const wait = Math.max(300, 500 * mult) - (Date.now() - this.centerT); if (wait > 0) await sleep(wait); }
       this.retire(gone.map(e => e.id), mult);
     }
+    // 桌面中央上方的出牌文字（对照三国杀OL）：最多 3 行，新的一行在最下面，旧的变淡；每行约 5 秒后淡出，牌清走后文字仍会多留一会儿
+    addCap(l, mult) {
+      if (!mult) return; const r = this.T.logLine(this.g, l, this.me); if (!r || !r[1]) return;
+      const box = this.$('.qx-clog'); if (!box) return;
+      const el = document.createElement('div'); el.className = 'qx-cline' + (r[0] ? ' qx-l-' + r[0] : ''); el.textContent = r[1];
+      box.appendChild(el);
+      const live = [...box.querySelectorAll('.qx-cline:not(.qx-cgone)')];
+      live.forEach((e, i) => e.classList.toggle('qx-cold', i < live.length - 1));
+      live.slice(0, Math.max(0, live.length - 3)).forEach(e => this.capGone(e));
+      const tok = this.token; setTimeout(() => { if (tok === this.token) this.capGone(el); }, 5000);
+    }
+    capGone(el) { if (!el.isConnected || el.classList.contains('qx-cgone')) return; el.classList.add('qx-cgone'); setTimeout(() => el.remove(), 450); }
     // 结算完的牌：先暗下去，停 2 秒左右再淡出；不阻塞后面的结算
     retire(ids, mult) {
       this.dimmed = this.dimmed || new Set();
@@ -6553,6 +6572,7 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
       for (const l of logs) {
         const ty = l.type; for (const bb of beats) if (!bb.ty) bb.ty = prevTy; prevTy = ty;
         if (ty === 'vetoWindow') vetoOf = l.of;
+        if (CAP_TYPES.has(ty)) beats.push(() => { this.addCap(l, mult); });
         if (ty === 'use' || ty === 'play') {
           const mv = byIds(l.ids);
           let tg = ty === 'use' ? (l.targets || []).filter(s => s !== l.seat) : [];
@@ -6853,13 +6873,14 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
         const x0 = from.x + from.w / 2 - CW / 2, y0 = from.y + from.h / 2 - CH / 2;
         const dx = n > 1 ? -spread + 2 * spread * i / (n - 1) : 0;
         const x1 = to.x + to.w / 2 - CW / 2 + dx, y1 = to.y + to.h / 2 - CH / 2;
-        const fly = Math.max(480, 800 * mult), fade = Math.max(260, 500 * mult);
+        const fly = Math.max(220, 340 * mult), hold = Math.max(450, 800 * mult), fade = Math.max(200, 380 * mult), T0 = fly + hold + fade;
         const a = el.animate([
           { transform: `translate(${x0}px,${y0}px)`, opacity: 0 },
-          { transform: `translate(${x0 + (x1 - x0) * .08}px,${y0 + (y1 - y0) * .08}px)`, opacity: 1, offset: .06 },
-          { transform: `translate(${x1}px,${y1}px)`, opacity: 1, offset: fly / (fly + fade) },
+          { transform: `translate(${x0 + (x1 - x0) * .1}px,${y0 + (y1 - y0) * .1}px)`, opacity: .9, offset: fly * .15 / T0 },
+          { transform: `translate(${x1}px,${y1}px)`, opacity: 1, offset: fly / T0 },
+          { transform: `translate(${x1}px,${y1}px)`, opacity: 1, offset: (fly + hold) / T0 },
           { transform: `translate(${x1}px,${y1}px)`, opacity: 0 }
-        ], { duration: fly + fade, delay: i * 50, easing: 'ease-out', fill: 'both' });
+        ], { duration: T0, delay: i * 50, easing: 'ease-out', fill: 'both' });
         setTimeout(() => { this.dispSet(mv.id, mv.k1); res(); }, fly + i * 50);   // 落位即可继续，淡出在后台完成
         const done = () => { el.remove(); }; a.onfinish = done; a.oncancel = () => { el.remove(); res(); };
       })));
