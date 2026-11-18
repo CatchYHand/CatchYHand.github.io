@@ -106,6 +106,7 @@ jobs:
             if [ -f _games/qx-play.html ]; then
               cp _games/qx-play.html $G/index.html
               sed -i "s#'qunxing-cards/qunxing-cards/'#'qxa/'#" $G/index.html
+              mkdir -p $G/image/qx && cp $G/qxa/identity/back-game.webp $G/image/qx/back-game.jpg
             fi
           fi
       - name: Deploy 🚀
