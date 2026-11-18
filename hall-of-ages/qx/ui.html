@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="zh"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>群星议会 The Hall of Ages</title>
+<style>html,body{margin:0;background:#14120e;min-height:100%}</style></head>
+<body><div id="qx-host"></div>
+<script src="qx-carddata.js"></script>
+<script src="qx-engine.js"></script>
+<script src="qx-cards.js"></script>
+<script src="qx-heroes.js"></script>
+<script src="qx-text.js"></script>
+<script src="qx-ask.js"></script>
+<script src="qx-ui.js"></script>
+<script src="qx-bridge.js"></script>
+<script>
+(function boot(){ const nn = parent.QX_NN; if (!nn) return setTimeout(boot, 50);
+  let lang = 'zh'; try { lang = localStorage.getItem('qx-ui-lang') || 'zh'; } catch (e) {}
+  window.qxTable = QXBridge.start(nn, document.getElementById('qx-host'), { assetBase: '../qxa/', lang });
+  parent.qxTable = window.qxTable;
+})();
+</script></body></html>

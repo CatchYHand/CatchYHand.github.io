@@ -2740,8 +2740,14 @@ function installTheme(lib2, game2, ui2, get2, _status2) {
 }
 window.QX = { lib, game, ui, get, ai, _status };
 lib.config.new_tutorial = true;
-game.showChangeLog = function() {};
+game.showChangeLog = function() {
+};
 document.title = "群星议会 The Hall of Ages";
+try {
+  const mc = lib.config.mode_config.identity = lib.config.mode_config.identity || {};
+  Object.assign(mc, { choice_zhu: 8, choice_zhong: 5, choice_fan: 5, choice_nei: 5, free_choose: false, change_choice: false });
+} catch (e) {
+}
 const characters = {
   "qx_alexander": {
     "sex": "male",
@@ -3717,6 +3723,17 @@ const IDENT_TR = { "zhu": "执", "zhong": "护", "fan": "焚", "nei": "伏", "zh
 lib.arenaReady.push(() => {
   Object.assign(lib.translate, CARD_TR, GROUP_TR, IDENT_TR);
   installTheme(lib, game, ui, get, _status);
+  if (!document.getElementById("qx-frame")) {
+    const st = document.createElement("style");
+    st.textContent = "#window{opacity:0!important;pointer-events:none!important}#qx-frame{position:fixed;inset:0;width:100%;height:100%;border:0;z-index:100000;background:#14120e}.qx-credit{display:none!important}";
+    document.head.appendChild(st);
+    window.QX_NN = { lib, game, ui, get, ai, _status, doc: document };
+    const fr = document.createElement("iframe");
+    fr.id = "qx-frame";
+    fr.src = "qx/ui.html";
+    fr.allow = "fullscreen; autoplay";
+    document.body.appendChild(fr);
+  }
 });
 Object.assign(lib.translate, CARD_TR, GROUP_TR, IDENT_TR);
 {

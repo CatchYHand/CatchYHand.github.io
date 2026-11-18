@@ -987,6 +987,7 @@ class Library {
           name: "显示开始界面",
           intro: "游戏开始前进入模式选择画面",
           init: "off",
+          // 群星议会：只有一个模式，不显示开始界面
           item: {
             off: "关闭",
             init: "首次启动",

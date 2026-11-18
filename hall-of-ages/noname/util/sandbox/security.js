@@ -1,6 +1,6 @@
 const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./sandbox.js","./initRealms.js","./error.js"])))=>i.map(i=>d[i]);
 import { __vitePreload } from "../../../_virtual/preload-helper.js";
-import { c as cryptoJsExports } from "../../../_virtual/index3.js";
+import { c as cryptoJsExports } from "../../../_virtual/index4.js";
 const SANDBOX_FORCED = false;
 const SANDBOX_AUTOTEST = false;
 const SANDBOX_AUTOTEST_NODELAY = false;
