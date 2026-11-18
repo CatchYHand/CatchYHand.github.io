@@ -98,6 +98,7 @@ jobs:
             # 小修补（下次重新打包时已包含，这里会自动跳过）
             G=_site/hall-of-ages
             sed -i 's#<title>无名杀</title>#<title>群星议会 The Hall of Ages</title>#' $G/index.html
+            sed -i 's/init: "init",/init: "off",/' $G/noname/library/index.js
             if ! grep -q "showChangeLog = function" $G/character/qunxing.js; then
               sed -i 's#^window.QX = { lib, game, ui, get, ai, _status };$#&\nlib.config.new_tutorial = true;\ngame.showChangeLog = function() {};\ndocument.title = "群星议会 The Hall of Ages";#' $G/character/qunxing.js
             fi
