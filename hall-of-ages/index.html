@@ -5302,6 +5302,9 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
 /* 参照无名杀：中央的牌在新牌加入时平滑地重新排开；弃置的牌变暗 */
 #qx .qx-ctr .qx-cc{transition:left .5s ease,opacity .5s ease,transform .5s ease,filter .3s!important}
 #qx .qx-ctr .qx-cc.qx-ccdisc .qx-cpic{filter:brightness(.55) saturate(.7)}
+#qx .qx-ctr .qx-cc .qx-cpic{transition:filter .35s ease}
+#qx .qx-ctr .qx-cc.qx-ccspent{opacity:1;transform:none}
+#qx .qx-ctr .qx-cc.qx-ccspent .qx-cpic{filter:brightness(.45) saturate(.6)}
 /* v8：装备条——左侧数值与盾牌同框居中；数字用等高（lining）字形，所有内容上下居中 */
 #qx .qx-ebar{align-items:center}
 #qx .qx-ebar .qx-eic,#qx .qx-eic.qx-eval{width:24px;height:24px;flex:none;display:inline-flex;align-items:center;justify-content:center;line-height:1}
@@ -5532,7 +5535,7 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
 
     // ── 开局 ──
     newGame(rep) {
-      const tok = ++this.token; this.hideSet = null; this.phSet = false; this.fading = null; this.aimed = null; this.lastVetoOf = null;
+      const tok = ++this.token; this.hideSet = null; this.phSet = false; this.fading = null; this.dimmed = null; this.aimed = null; this.lastVetoOf = null;
       if (rep) { this.settings.n = rep.n; this.settings.level = rep.level; this.settings.role = rep.role || 'random'; }
       this.replay = rep ? { answers: rep.answers.slice(), i: 0 } : null;
       const n = this.settings.n;
@@ -6172,11 +6175,11 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
       const n = list.length; if (!n) return '';
       const cw = 100; const step = n > 1 ? Math.min(cw + 8, (640 - cw) / (n - 1)) : 0;
       const x0 = this.bw() / 2 - (cw + step * (n - 1)) / 2;
-      const live = list.filter(e => !(this.fading && this.fading.has(e.id))); const maxLi = live.length ? Math.max(...live.map(e => e.li || 0)) : -1;
+      const D0 = this.dimmed || new Set(); const live = list.filter(e => !(this.fading && this.fading.has(e.id)) && !D0.has(e.id)); const maxLi = live.length ? Math.max(...live.map(e => e.li || 0)) : -1;
       return list.map((e, i) => {
         const c = g.card(e.id); if (!c) return '';
         const tag = e.as && e.as !== c.name ? `<div class="qx-astag">${esc(T.t('asCard', { c: T.cardName(e.as) }))}</div>` : '';
-        const st = (this.fading && this.fading.has(c.id) ? ' qx-ccfade' : n > 1 ? (e.li === maxLi && e.kind !== 'discard' ? ' qx-cchi' : ' qx-ccdim') : '') + (e.kind === 'discard' ? ' qx-ccdisc' : '');
+        const st = this.fading && this.fading.has(c.id) ? ' qx-ccfade' : D0.has(c.id) ? ' qx-ccspent' : live.length > 1 ? (e.li === maxLi ? ' qx-cchi' : ' qx-ccdim') : '';
         return `<div class="qx-cc${st}" data-cid="${c.id}" style="left:${Math.round(x0 + i * step)}px;z-index:${i + 1}${this.hideSet && this.hideSet.has(c.id) ? ';visibility:hidden' : ''}">${this.cardHTML(c, 'qx-cpic').replace(/ data-id="\d+"/, '')}${tag}<div class="qx-ccap">${esc(e.cap || '')}</div></div>`;
       }).join('');
     }
@@ -6388,8 +6391,16 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
       const gone = (this.center || []).filter(e => (upto == null || (e.li || 0) < upto) && (all || e.kind !== 'discard'));
       if (!gone.length) return;
       if (mult && this.centerT) { const wait = Math.max(300, 500 * mult) - (Date.now() - this.centerT); if (wait > 0) await sleep(wait); }
-      if (all && mult) { const w = Math.max(0, ...gone.filter(e => e.kind === 'discard' && e.at).map(e => e.at + 1000 - Date.now())); if (w > 0) await sleep(w); }
-      await this.fadeIds(gone.map(e => e.id), mult);
+      this.retire(gone.map(e => e.id), mult);
+    }
+    // 结算完的牌：先暗下去，停 2 秒左右再淡出；不阻塞后面的结算
+    retire(ids, mult) {
+      this.dimmed = this.dimmed || new Set();
+      ids = ids.filter(id => !this.dimmed.has(id) && !(this.fading && this.fading.has(id))); if (!ids.length) return;
+      if (!mult) { this.fadeIds(ids, 0); return; }
+      ids.forEach(id => this.dimmed.add(id));
+      const ctr = this.$('.qx-ctr'); if (ctr) morph(ctr, this.centerHTML());
+      const tok = this.token; setTimeout(() => { if (tok === this.token) this.fadeIds(ids, mult); }, Math.max(1500, 2000 * Math.min(1, mult)));
     }
     // ── 显示层（参照无名杀：界面状态跟着动画走，而不是一结算就跳到最终状态）──
     // 一步动画期间，手牌数 / 装备条 / 天兆标记 / 横置 / 翻面 / 酒 都按「动画进行到哪」显示：牌飞走时才离开原处，落地时才出现在新处
@@ -6429,14 +6440,14 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
     discardTimer(ids, mult) {
       const now = Date.now(); for (const e of this.center || []) if (ids.includes(e.id)) e.at = now;
       if (!mult) return this.fadeIds(ids, 0);
-      const tok = this.token; setTimeout(() => { if (tok === this.token) this.fadeIds(ids, mult); }, 1000);
+      const tok = this.token; setTimeout(() => { if (tok === this.token) this.retire(ids, mult); }, Math.max(300, 500 * mult));
     }
     async fadeIds(ids, mult) {
       ids = new Set([].concat(ids).filter(id => (this.center || []).some(e => e.id === id))); if (!ids.size) return;
       this.fading = this.fading || new Set();
       const ctr = this.$('.qx-ctr');
       if (mult) { ids.forEach(id => this.fading.add(id)); if (ctr) morph(ctr, this.centerHTML()); await sleep(500); }
-      ids.forEach(id => this.fading.delete(id));
+      ids.forEach(id => { this.fading.delete(id); if (this.dimmed) this.dimmed.delete(id); });
       this.center = (this.center || []).filter(e => !ids.has(e.id)); this.centerIds = new Set(this.center.map(e => e.id)); this.centerN = this.center.length;
       if (!this.center.length && this.aimed && this.aimed.size) this.setAimed(null, false);
       if (ctr) morph(ctr, this.centerHTML());
@@ -6546,7 +6557,7 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
           const glow = l.card === 'veto' ? [] : tg.slice();
           const isEq = D[l.card] && D[l.card].type === 'equip' && ty === 'use';
           beats.push(async () => {
-            if (isEq) { for (const m of mv) await this.equipFly(m, mult); return; }
+            if (isEq) { const ids = [...new Set(mv.map(m => m.id))]; for (const id of ids) await this.equipFly(mv.filter(m => m.id === id), mult); return; }
             tg.forEach(s => this.drawLine(this.seatPt(l.seat), this.seatPt(s), mult));
             if (glow.length) this.setAimed(glow, true);
             await this.flyMany(mv, mult); this.stampFx(l.seat, l.card, mult);
@@ -6572,7 +6583,8 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
           else beats.push(() => this.giveFly(mv, mult));
         }
         else if (ty === 'discard' || ty === 'discardOf') { const ids = [].concat(ty === 'discard' ? l.cards : [l.card]); const mv = byIds(ids); beats.push(async () => { await this.flyMany(mv, mult); this.discardTimer(ids, mult); }); }
-        else if (['equip', 'recast', 'retouch'].includes(ty)) { const mv = byIds(ty === 'retouch' ? l.card : l.id); if (mv.length) beats.push(() => this.flyMany(mv, mult)); }
+        else if (ty === 'equip') { const mv = byIds(l.id); if (mv.length) beats.push(() => mv.every(m => m.k0 === 'center') ? this.equipFly(mv, mult) : this.flyMany(mv, mult)); }
+        else if (['recast', 'retouch'].includes(ty)) { const mv = byIds(ty === 'retouch' ? l.card : l.id); if (mv.length) beats.push(() => this.flyMany(mv, mult)); }
         else if (ty === 'pindianStart') beats.push(async () => { this.pindian = { a: l.a, b: l.b, setA: false, setB: false }; this.renderWins(); await sleep(Math.max(200, 350 * mult)); });
         else if (ty === 'pindianSet') beats.push(async () => { const pd = this.pindian; if (!pd) return; if (l.seat === pd.a) pd.setA = true; else pd.setB = true; this.renderWins(); await sleep(Math.max(150, 250 * mult)); });
         else if (ty === 'pindian') {
@@ -6733,7 +6745,7 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
       return Promise.all(jobs);
     }
     centerSlot() { const list = this.center || []; return { x: this.bw() / 2 - 50, y: 276, w: 100, h: 152 }; }
-    fly(mv, delay, mult) {
+    fly(mv, delay, mult, prevGhost) {
       return new Promise(res => {
         const fx = this.$('.qx-fx'); const c = this.g.card(mv.id); if (!c) return res();
         const CW = 100, CH = 152;
@@ -6769,7 +6781,7 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
         const s0 = mv.fromBar ? 0.4 : 1;
         const s1 = toBar ? 0.4 : 1;
         const fadeEnd = !mv.keep && (toBar || !(toEl || mv.toRect));
-        fx.appendChild(el);
+        fx.appendChild(el); if (prevGhost) prevGhost.remove();
         const dur = Math.max(420, (slideIn ? 640 : 560) * mult);
         const a = el.animate([
           { transform: `translate(${cx0 - CW / 2}px,${cy0 - CH / 2}px) scale(${s0})`, opacity: (fromDeck && !slideIn) || mv.fromSeat ? 0 : slideIn ? 0.15 : 1 },
@@ -6802,17 +6814,23 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
       })());
       await Promise.all(jobs);
     }
-    // 装备：先到桌面中央展示，再横插进装备栏
-    async equipFly(mv, mult) {
-      const bar = mv.el; mv.toRect = this.centerSlot(); mv.keep = true;
-      await this.fly(mv, 0, mult);
-      await sleep(Math.max(250, 420 * mult));
-      if (mv.ghost) { const gh = mv.ghost; gh.animate([{ opacity: 1 }, { opacity: 0, transform: gh.style.transform }], { duration: 220, fill: 'both' }).onfinish = () => gh.remove(); }
-      this.dispSet(mv.id, mv.k1, true);
-      const barNow = this.cardEl(mv.id);
-      if (barNow) { barNow.style.visibility = ''; barNow.classList.remove('qx-slidein'); void barNow.offsetWidth; barNow.classList.add('qx-slidein'); }
-      if (0 && bar) { const b2 = this.unHide(mv.id, bar); b2.classList.remove('qx-slidein'); void b2.offsetWidth; b2.classList.add('qx-slidein'); } if (0 && bar) { bar.style.visibility = ''; bar.classList.remove('qx-slidein'); void bar.offsetWidth; bar.classList.add('qx-slidein'); }
-      await sleep(Math.max(250, 420 * mult));
+    // 装备：同一张牌一气呵成——从手里飞到桌面中央停一下，再直接缩小飞进装备栏（中途不消失、不重复出现）
+    async equipFly(mvs, mult) {
+      mvs = [].concat(mvs); if (!mvs.length) return;
+      const fin = mvs.find(m => /^e:/.test(m.k1));
+      const first = mvs[0]; const C = this.centerSlot();
+      if (first.k0 !== 'center') {
+        const leg = Object.assign({}, first, { k1: 'center', toRect: C, keep: true, el: null });
+        await this.fly(leg, 0, mult);
+        if (!fin) { if (leg.ghost) leg.ghost.remove(); this.dispSet(first.id, first.k1, true); return; }
+        await sleep(Math.max(300, 600 * mult));
+        this.hideSet = this.hideSet || new Set(); this.hideSet.add(fin.id); this.dispSet(fin.id, fin.k1, true);   // 装备栏先画出（隐藏），取真实位置
+        const bar = this.cardEl(fin.id); if (bar) bar.style.visibility = 'hidden';
+        await this.fly(Object.assign(fin, { from: C, el: bar, fromBar: false, fromSeat: false }), 0, mult, leg.ghost);
+      } else if (fin) {
+        await this.fly(Object.assign(fin, { from: C, fromBar: false, fromSeat: false }), 0, mult);
+      }
+      await sleep(Math.max(150, 250 * mult));
     }
 
     // 别人摸牌（参照无名杀 $draw）：每张牌从牌堆（桌面中央）单独飞出，相隔 50ms，落点左右散开（每张 20px，最多 ±80px），飞行 0.8 秒后淡出
