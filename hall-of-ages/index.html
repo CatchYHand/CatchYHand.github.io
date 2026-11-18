@@ -6425,7 +6425,7 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
       if (!mult) { this.fadeIds(ids, 0); return; }
       ids.forEach(id => this.dimmed.add(id));
       const ctr = this.$('.qx-ctr'); if (ctr) morph(ctr, this.centerHTML());
-      const tok = this.token; setTimeout(() => { if (tok === this.token) this.fadeIds(ids, mult); }, Math.max(1500, 2000 * Math.min(1, mult)));
+      const tok = this.token; setTimeout(() => { if (tok === this.token) this.fadeIds(ids, mult); }, Math.max(800, 1000 * Math.min(1, mult)));
     }
     // ── 显示层（参照无名杀：界面状态跟着动画走，而不是一结算就跳到最终状态）──
     // 一步动画期间，手牌数 / 装备条 / 天兆标记 / 横置 / 翻面 / 酒 都按「动画进行到哪」显示：牌飞走时才离开原处，落地时才出现在新处
@@ -6465,7 +6465,7 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
     discardTimer(ids, mult) {
       const now = Date.now(); for (const e of this.center || []) if (ids.includes(e.id)) e.at = now;
       if (!mult) return this.fadeIds(ids, 0);
-      const tok = this.token; setTimeout(() => { if (tok === this.token) this.retire(ids, mult); }, Math.max(900, 1500 * Math.min(1, mult)));
+      const tok = this.token; setTimeout(() => { if (tok === this.token) this.retire(ids, mult); }, Math.max(300, 450 * mult));
     }
     async fadeIds(ids, mult) {
       ids = new Set([].concat(ids).filter(id => (this.center || []).some(e => e.id === id))); if (!ids.size) return;
