@@ -107,7 +107,7 @@ jobs:
               cp _games/qx-play.html $G/index.html
               sed -i "s#'qunxing-cards/qunxing-cards/'#'qxa/'#" $G/index.html
               mkdir -p $G/image/qx && cp $G/qxa/identity/back-game.webp $G/image/qx/back-game.jpg
-              if [ -d _games/seatart ]; then cp _games/seatart/*.webp $G/qxa/seatgen/art/; fi
+              if [ -d _games/seatart ]; then chmod -R u+w $G/qxa/seatgen/art && cp -f _games/seatart/*.webp $G/qxa/seatgen/art/; fi
             fi
           fi
       - name: Deploy 🚀
