@@ -408,6 +408,7 @@
 })(typeof self !== 'undefined' ? self : this, function () {
   'use strict';
 
+  const OPT_CANCEL = { optCancel: true };   // 可选技能在第一个选择里取消
   // ───────────────────────── 基础常量 ─────────────────────────
   const SUITS = ['spade', 'heart', 'club', 'diamond'];
   const SUIT_COLOR = { spade: 'black', club: 'black', heart: 'red', diamond: 'red', none: 'none' };
@@ -491,7 +492,11 @@
     }
 
     // ── 工具 ──
-    log(type, data) { const e = Object.assign({ type }, data || {}); this.logs.push(e); if (this.onLog) this.onLog(e, this); }
+    log(type, data) {
+      // 可选技能的「发动」记录先挂起：确认发动后若在第一个选择里点了取消，就当作没发动；一旦真正产生效果（任何其他记录）就先把它记上
+      const oc = this._optCtx; if (oc) { if (oc.pending && type !== 'skill') { const pe = oc.pending; oc.pending = null; this.logs.push(pe); if (this.onLog) this.onLog(pe, this); } if (type !== 'skill') oc.first = false; }
+      const e = Object.assign({ type }, data || {}); this.logs.push(e); if (this.onLog) this.onLog(e, this);
+    }
     shuffle(arr) { for (let i = arr.length - 1; i > 0; i--) { const j = Math.floor(this.rand() * (i + 1)); [arr[i], arr[j]] = [arr[j], arr[i]]; } return arr; }
     pick(arr) { return arr[Math.floor(this.rand() * arr.length)]; }
     get alive() { return this.players.filter(p => !p.dead); }
@@ -673,7 +678,15 @@
     // ── 观看身份（只对观看者可见）──
     learnRole(p, t) { p.knownRoles = p.knownRoles || {}; p.knownRoles[t.seat] = t.role; this.log('viewRole', { seat: p.seat, target: t.seat, private: true }); }
     // ── 询问 ──
-    *ask(p, req) { req.player = p; const ans = yield req; return ans; }
+    *ask(p, req) {
+      req.player = p;
+      // 可选技能确认发动后的第一个选择（选牌 / 选目标 / 选项）：允许取消 = 反悔不发动
+      const oc = this._optCtx; let back = false;
+      if (oc && oc.first && p === oc.owner && ['chooseCards', 'chooseTargets', 'chooseOption'].includes(req.kind)) { oc.first = false; if (!req.optional) { req.optional = true; req.backOut = true; back = true; } }
+      const ans = yield req;
+      if (back && (ans == null || (Array.isArray(ans) && !ans.length))) throw OPT_CANCEL;
+      return ans;
+    }
     *confirm(p, skill, extra) { if (p.dead) return false; const a = yield* this.ask(p, Object.assign({ kind: 'confirm', skill }, extra || {})); return !!a; }
     *chooseOption(p, options, reason, extra) {
       if (options.length === 1) return 0;
@@ -763,8 +776,13 @@
             const ok = yield* this.confirm(owner, inst.id, { event, data: this.describe(data) });
             if (!ok) continue;
           }
-          if (!t.silent) this.log('skill', { seat: owner.seat, skill: inst.id, event });
-          yield* t.on(this, owner, data, inst);
+          if (!optional) { if (!t.silent) this.log('skill', { seat: owner.seat, skill: inst.id, event }); yield* t.on(this, owner, data, inst); }
+          else {
+            const prev = this._optCtx; const oc = this._optCtx = { owner, first: true, pending: t.silent ? null : { type: 'skill', seat: owner.seat, skill: inst.id, event } };
+            try { yield* t.on(this, owner, data, inst); }
+            catch (e) { if (e !== OPT_CANCEL) throw e; this._optCtx = prev; continue; }   // 反悔：这次不算发动
+            finally { if (this._optCtx === oc) { const pe = oc.pending; this._optCtx = prev; if (pe) { const { type: ty0, ...rest } = pe; this.log(ty0, rest); } } }
+          }
           if (data.stopTrigger) return data;
         }
       }
@@ -3614,7 +3632,7 @@
     viewAsPick: ['【{k}】：选择 {n} 张牌当【{c}】使用或打出。', '{k}: choose {n} card(s) to use as {c}.'],
     viewAsPick0: ['【{k}】：选择 {n} 张牌。', '{k}: choose {n} card(s).'],
     playBtn: ['出牌', 'Play'], pickN: ['选择 {n} 张牌', 'Choose {n} cards'], arrangeTip: ['拖动调整顺序；拖到下面一行即放到牌堆底（单击可在两行之间切换）', 'Drag to reorder; drag into the lower row to put a card on the bottom (click to switch rows)'],
-    deckTop: ['牌堆顶', 'Deck Top'], deckBottom: ['牌堆底', 'Deck Bottom'], pdWait: ['等待出牌', 'Waiting'], pdWin: ['赢', 'Won'], pdNoWin: ['没赢', 'Did Not Win'],
+    deckTop: ['牌堆顶', 'Deck Top'], deckBottom: ['牌堆底', 'Deck Bottom'], pdWait: ['等待出牌', 'Waiting'], pdWin: ['赢', 'Won'], pickedTag: ['已选', 'Chosen'], pdNoWin: ['没赢', 'Did Not Win'],
         rvShown: ['亮出', 'Shown'], rvTake: ['获得', 'Take'], rvTip: ['把要获得的牌拖到下面一排（每种花色各一张，共 {n} 张）', 'Drag the cards you take into the lower row (one of each suit, {n} in all)'], rvWait: ['{s} 正在挑选', '{s} is choosing'],
     waitVetoAll: ['等待其他角色使用【{c}】', 'Waiting for others to use {c}...'], asCard: ['{c}', '{c}'],
     feastWait: ['每名角色依次选择一张', 'Each character takes one card in turn'], pindianTitle: ['拼点', 'Contest'],
@@ -5460,6 +5478,13 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
 #qx .qx-win{left:var(--qx-cx,620px)}
 #qx .qx-clog{left:calc(var(--qx-cx,640px) - 350px)}
 #qx .qx-fsx{display:none}
+/* 目标嵌套：自己在选人时，先前的红框暂时变成很淡的红边，候选是绿框，选中的是金框 + 「已选」标签 */
+#qx.qx-choosing .qx-st.qx-tgt .qx-por,#qx.qx-choosing .qx-dpor.qx-tgt .qx-por{animation:none;box-shadow:0 0 0 1px rgba(255,90,60,.45)}
+#qx.qx-choosing .qx-st.qx-sel .qx-por,#qx.qx-choosing .qx-dpor.qx-sel .qx-por{box-shadow:0 0 0 2px #7fd08f,0 0 14px 2px rgba(127,208,143,.65)}
+#qx.qx-choosing .qx-st.qx-picked .qx-por,#qx.qx-choosing .qx-dpor.qx-picked .qx-por{box-shadow:0 0 0 4px #f6d873,0 0 24px 6px rgba(246,216,115,.95)}
+#qx .qx-pkb{position:absolute;left:50%;top:42%;transform:translate(-50%,-50%);z-index:6;padding:3px 14px;border-radius:4px;background:linear-gradient(#f6d873,#c9a03a);color:#2a1a06;font:900 18px/1.2 "Ma Shan Zheng","Noto Serif SC",serif;letter-spacing:2px;box-shadow:0 0 0 2px #2a1a06,0 4px 12px rgba(0,0,0,.7);pointer-events:none;white-space:nowrap;animation:qxpdst .3s cubic-bezier(.2,1.6,.4,1) both}
+#qx .qx-pkb i{font-style:normal;margin-right:6px;padding:0 6px;border-radius:50%;background:#2a1a06;color:#f6d873}
+#qx .qx-fit{transition:none!important}
 /* 拼点结果：印章直接盖在牌上 */
 #qx .qx-pdslot{position:relative}
 #qx .qx-pdstamp{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%) rotate(-14deg);padding:2px 12px;border:3px double currentColor;border-radius:6px;font:900 24px/1.2 "Ma Shan Zheng","Noto Serif SC",serif;letter-spacing:2px;white-space:nowrap;background:rgba(20,12,6,.55);text-shadow:0 1px 3px #000;pointer-events:none;animation:qxpdst .38s cubic-bezier(.2,1.6,.4,1) both}
@@ -5469,15 +5494,15 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
 @keyframes qxpdst{from{opacity:0;transform:translate(-50%,-50%) rotate(-14deg) scale(2.2)}}
 /* 其他角色的阶段标签：短词（出牌 / 判定……），和武将牌左边框对齐，做成带底色的小旗 */
 #qx .qx-st .qx-phase.qx-phase2{left:0;transform:none;width:auto;height:24px}
-#qx .qx-st .qx-phl.qx-phtag{position:relative;display:inline-block;left:0;right:auto;transform:none;padding:0 12px 0 9px;height:22px;border-radius:2px 11px 11px 2px;font:400 17px/22px "Ma Shan Zheng","Cinzel","Noto Serif SC",serif;letter-spacing:1px;color:#fff6dc;-webkit-text-stroke:0;text-shadow:0 1px 2px rgba(0,0,0,.7);border:1px solid rgba(255,220,150,.55);box-shadow:0 2px 6px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,255,255,.25)}
-#qx.qx-l-en .qx-st .qx-phl.qx-phtag{font:700 12px/22px "Cinzel",Georgia,serif;letter-spacing:1px}
-#qx .qx-st .qx-phtag.qx-phc-play{background:linear-gradient(90deg,#c23a22,#8e1d10)}
-#qx .qx-st .qx-phtag.qx-phc-judge{background:linear-gradient(90deg,#8a4cc4,#5a2a8c)}
-#qx .qx-st .qx-phtag.qx-phc-draw{background:linear-gradient(90deg,#2f7fc8,#1b4f8a)}
-#qx .qx-st .qx-phtag.qx-phc-discard{background:linear-gradient(90deg,#2e9a52,#1a6634)}
-#qx .qx-st .qx-phtag.qx-phc-prepare,#qx .qx-st .qx-phtag.qx-phc-finish,#qx .qx-st .qx-phtag.qx-phc-start{background:linear-gradient(90deg,#8a7350,#5c4a30)}
-#qx .qx-st .qx-phtag.qx-phin{animation:qxphin3 .34s ease-out both}
-#qx .qx-st .qx-phtag.qx-phout{position:absolute;left:0;top:0;animation:qxphout3 .3s ease-in both}
+#qx .qx-st .qx-phl.qx-phtag,#qx .qx-dash>.qx-phase .qx-phl.qx-phtag{position:relative;display:inline-block;left:0;right:auto;transform:none;padding:0 12px 0 9px;height:22px;border-radius:2px 11px 11px 2px;font:400 17px/22px "Ma Shan Zheng","Cinzel","Noto Serif SC",serif;letter-spacing:1px;color:#fff6dc;-webkit-text-stroke:0;text-shadow:0 1px 2px rgba(0,0,0,.7);border:1px solid rgba(255,220,150,.55);box-shadow:0 2px 6px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,255,255,.25)}
+#qx.qx-l-en .qx-st .qx-phl.qx-phtag,#qx.qx-l-en .qx-dash>.qx-phase .qx-phl.qx-phtag{font:700 12px/22px "Cinzel",Georgia,serif;letter-spacing:1px}
+#qx .qx-st .qx-phtag.qx-phc-play,#qx .qx-dash .qx-phtag.qx-phc-play{background:linear-gradient(90deg,#c23a22,#8e1d10)}
+#qx .qx-st .qx-phtag.qx-phc-judge,#qx .qx-dash .qx-phtag.qx-phc-judge{background:linear-gradient(90deg,#8a4cc4,#5a2a8c)}
+#qx .qx-st .qx-phtag.qx-phc-draw,#qx .qx-dash .qx-phtag.qx-phc-draw{background:linear-gradient(90deg,#2f7fc8,#1b4f8a)}
+#qx .qx-st .qx-phtag.qx-phc-discard,#qx .qx-dash .qx-phtag.qx-phc-discard{background:linear-gradient(90deg,#2e9a52,#1a6634)}
+#qx .qx-st .qx-phtag.qx-phc-prepare,#qx .qx-st .qx-phtag.qx-phc-finish,#qx .qx-st .qx-phtag.qx-phc-start,#qx .qx-dash .qx-phtag.qx-phc-prepare,#qx .qx-dash .qx-phtag.qx-phc-finish,#qx .qx-dash .qx-phtag.qx-phc-start{background:linear-gradient(90deg,#8a7350,#5c4a30)}
+#qx .qx-st .qx-phtag.qx-phin,#qx .qx-dash .qx-phtag.qx-phin{animation:qxphin3 .34s ease-out both}
+#qx .qx-st .qx-phtag.qx-phout,#qx .qx-dash .qx-phtag.qx-phout{position:absolute;left:0;top:0;animation:qxphout3 .3s ease-in both}
 #qx.qx-full{padding:0;background:#17130d}
 #qx.qx-full .qx-top{display:none}
 #qx.qx-full .qx-stage{border:none;border-radius:0}
@@ -6120,7 +6145,7 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
     // 阶段标签：由动画节拍驱动（每个阶段都会出现一次），切换时新标签从左侧滑入、旧标签淡出
     phaseNow(seat) { const g = this.g; if (this.phCur && (this.phSet || Object.keys(this.phCur).length)) return this.phCur[seat] || null; return g.current && g.current.seat === seat && !g.over && g.phase ? g.phase : null; }
     curShown() { const g = this.g; if (g.over) return null; if (this.phCur) { for (const k in this.phCur) if (this.phCur[k]) return +k; if (this.phSet || Object.keys(this.phCur).length) return null; } return g.current ? g.current.seat : null; }
-    phSpan(ph, cls, seat) { const other = seat != null && seat !== this.me; return `<span class="qx-phl qx-phc-${ph} ${cls}${other ? ' qx-phtag' : ''}">${esc(other ? this.T.phase(ph) : this.T.phaseLabel(ph))}</span>`; }
+    phSpan(ph, cls, seat) { const other = seat != null && seat !== this.me; return `<span class="qx-phl qx-phc-${ph} ${cls} qx-phtag">${esc(other ? this.T.phase(ph) : this.T.phaseLabel(ph))}</span>`; }
     phaseHTML(p) { const cur = this.phaseNow(p.seat); return `<div class="qx-phase${p.seat !== this.me ? ' qx-phase2' : ''}" data-mk="ph${p.seat}">${cur ? this.phSpan(cur, 'qx-phnow', p.seat) : ''}</div>`; }
     setPhaseShown(seat, ph) {
       this.phCur = this.phCur || {}; this.phSet = true;
@@ -6169,9 +6194,11 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
       const tgt = this.targeting();
       if (u && this.seatSelectable(p)) cls.push('qx-sel'); else if (tgt && !p.dead) cls.push('qx-dim');
       if (u && u.targets.includes(p)) cls.push('qx-picked');
+      const pkI = u ? u.targets.indexOf(p) : -1;
       const tilt = ((p.seat * 37) % 9 - 4) || 3; const out = side === 'l' ? 'translate(-6px,0)' : side === 'r' ? 'translate(6px,0)' : 'translate(0,-6px)';
       return `<div class="${cls.join(' ')}" data-seat="${p.seat}" style="left:${x}px;top:${y}px;width:${w}px;--die:${out} rotate(${tilt}deg)">
         ${this.seatCardHTML(p, w, true)}
+        ${pkI >= 0 ? `<div class="qx-pkb">${u.targets.length > 1 ? `<i>${pkI + 1}</i>` : ''}${esc(this.T.t('pickedTag'))}</div>` : ''}
         ${(() => { const t0 = !p.dead && this.thinkBars && this.thinkBars[p.seat]; return `<div class="qx-think${t0 ? ' qx-on' : ''}" style="top:${h + 2}px;width:${w}px"><i${t0 ? ` style="animation-delay:-${Date.now() - t0}ms"` : ''}></i></div>`; })()}
         <div class="qx-sfoot" style="top:${h + 6}px;width:${w}px">${this.phaseHTML(p)}${side ? '' : `<div class="qx-omks">${this.omensHTML(p)}</div>`}</div>
         ${side ? `<div class="qx-omks qx-omv qx-om-${side}" style="${side === 'l' ? `left:${w + 4}px` : 'left:-38px'};top:0;bottom:auto;height:${h}px">${this.omensHTML(p)}</div>` : ''}
@@ -6191,10 +6218,9 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
     fitNames() {
       for (const box of this.root.querySelectorAll('.qx-sbn,.qx-ename')) {
         const sp = box.querySelector('.qx-fit'); if (!sp) continue;
-        sp.style.transform = '';
-        const W = box.clientWidth; if (!W) continue;
-        sp.style.marginLeft = '';
-        if (sp.offsetWidth > W) { sp.style.transform = `scaleX(${Math.max(0.55, W / sp.offsetWidth).toFixed(3)})`; }
+        const W = box.clientWidth; if (!W) continue;   // offsetWidth 不受 transform 影响，不必先清掉再量（先清再设会让文字每次重绘都跳一下）
+        const want = sp.offsetWidth > W ? `scaleX(${Math.max(0.55, W / sp.offsetWidth).toFixed(3)})` : '';
+        if (sp.style.transform !== want) sp.style.transform = want;
       }
     }
     // ── 悬停说明：跟随鼠标，淡入淡出 ──
@@ -6241,7 +6267,7 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
       return list.map((e, i) => {
         const c = g.card(e.id); if (!c) return '';
         const tag = e.as && e.as !== c.name ? `<div class="qx-astag">${esc(T.t('asCard', { c: T.cardName(e.as) }))}</div>` : '';
-        const st = this.fading && this.fading.has(c.id) ? ' qx-ccfade' : D0.has(c.id) ? ' qx-ccspent' : live.length > 1 ? (e.li === maxLi ? ' qx-cchi' : ' qx-ccdim') : '';
+        const st = this.fading && this.fading.has(c.id) ? ' qx-ccfade' : D0.has(c.id) ? ' qx-ccspent' : e.judge === 'open' ? ' qx-cchi' : live.length > 1 ? (e.li === maxLi ? ' qx-cchi' : ' qx-ccdim') : '';   // 天意牌在判定结果出来前一直亮着
         const eq = e.kind === 'equip'; const hid = eq ? e.hold : this.hideSet && this.hideSet.has(c.id);
         return `<div class="qx-cc${st}" ${eq ? `data-mk="g${c.id}" data-gid` : 'data-cid'}="${c.id}" style="left:${Math.round(x0 + i * step)}px;z-index:${i + 1}${hid ? ';visibility:hidden' : ''}">${this.cardHTML(c, 'qx-cpic').replace(/ data-id="\d+"/, '')}${tag}<div class="qx-ccap">${esc(e.cap || '')}</div></div>`;
       }).join('');
@@ -6328,6 +6354,7 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
         <div class="qx-dsk">${skHTML}</div>
         <div class="qx-dpor${this.isDeadShown(me) ? ' qx-sdead' : ''}${this.dSt(me, 'dying') ? ' qx-sdying' : ''}${this.dSt(me, 'faceDown') ? ' qx-sflip' : ''}${meSel}${mePicked}${dimMe}" data-seat="${me.seat}">
           ${this.seatCardHTML(me, this.seatW(), false)}
+          ${mePicked ? `<div class="qx-pkb">${esc(this.T.t('pickedTag'))}</div>` : ''}
         </div>`);
       this.applyAimed();
     }
@@ -6401,7 +6428,7 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
     }
     seatPt(seat) {
       if (seat === this.me) {   // 连线和自己有关时，从手牌区的中心发出 / 接收
-        const hd = this.$('.qx-dhand'); if (hd) { const r = this.rel(hd); const W = Math.max(r.w, 100); return { x: r.x + W / 2, y: r.y + r.h / 2 }; }
+        const da = this.$('.qx-dash'); if (da) { const r = this.rel(da); return { x: Math.round(this.bw() / 2), y: r.y + r.h / 2 }; }
         const pe = this.$('.qx-dpor'); if (pe) { const r = this.rel(pe); return { x: r.x + r.w / 2, y: r.y + r.h / 2 }; } return { x: 600, y: 650 };
       }
       const el = this.$(`.qx-st[data-seat="${seat}"] .qx-por`); if (!el) return { x: 600, y: 650 };
@@ -6420,6 +6447,7 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
         if (this.revealWin && this.revealWin.ids.includes(id)) return;
         const old = this.center.find(e => e.id === id);
         if (old) { if (cap) old.cap = cap; if (as) old.as = as; return; }
+        if (this.dimmed) this.dimmed.delete(id); if (this.fading) this.fading.delete(id);   // 重新上桌的牌是新的一张记录，不能继承上一次的「已变暗」状态
         this.center.push({ id, cap, as, li, kind: kind || null, t: Date.now() });
       };
       for (const l of logs) { li++;
@@ -6427,7 +6455,7 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
         else if (l.type === 'play' && l.ids) for (const id of l.ids) add(id, who(l.seat), l.card !== g.card(id).name ? l.card : null);
         else if (l.type === 'discard' && l.cards) for (const id of l.cards) add(id, t('cap_discard', { s: who(l.seat) }), null, 'discard');
         else if (l.type === 'discardOf') add(l.card, t('cap_discardOf', { s: who(l.seat) }), null, 'discard');
-        else if (l.type === 'judge' || l.type === 'judgeResult') add(l.card, t('cap_judge', { s: who(l.seat) }));
+        else if (l.type === 'judge' || l.type === 'judgeResult') { add(l.card, t('cap_judge', { s: who(l.seat) })); const je = this.center.find(e => e.id === l.card); if (je && je.judge == null) je.judge = 'open'; }
         else if (l.type === 'pindian') { this.pdHold = new Set([l.ca, l.cb]); }
         else if (l.type === 'recast') add(l.id, t('cap_recast', { s: who(l.seat) }));
         else if (l.type === 'move' && l.ids) {
@@ -6458,6 +6486,7 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
     }
     applyAimed() {
       const A = this.aimed || new Set();
+      this.root.classList.toggle('qx-choosing', !!(this.ui && this.targeting && this.targeting()));   // 我正在选目标：别人的红色「被指定」光效暂时退到后面，结束后自动恢复
       this.root.querySelectorAll('.qx-st').forEach(e => e.classList.toggle('qx-tgt', A.has(+e.dataset.seat)));
       const dp = this.$('.qx-dpor'); if (dp) dp.classList.toggle('qx-tgt', A.has(this.me));
     }
@@ -6491,6 +6520,9 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
         const D0 = this.dimmed || new Set(), F0 = this.fading || new Set();
         const stale = (this.center || []).filter(e => e.t && now - e.t > 6000 && !proc.has(e.id) && !D0.has(e.id) && !F0.has(e.id) && !(this.hideSet && this.hideSet.has(e.id)) && !e.hold).map(e => e.id);
         if (stale.length) this.retire(stale, mult || 1);
+        this.dimAt = this.dimAt || new Map(); for (const id of D0) if (!this.dimAt.has(id)) this.dimAt.set(id, now); for (const id of [...this.dimAt.keys()]) if (!D0.has(id)) this.dimAt.delete(id);
+        const darkTooLong = [...this.dimAt.entries()].filter(([id, t0]) => now - t0 > 3500 && !F0.has(id)).map(([id]) => id);
+        if (darkTooLong.length) { darkTooLong.forEach(id => this.dimAt.delete(id)); this.fadeIds(darkTooLong, mult || 1); }
         setTimeout(tick, 1000);
       };
       setTimeout(tick, 1000);
@@ -6498,7 +6530,7 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
     // 结算完的牌：先暗下去，停 2 秒左右再淡出；不阻塞后面的结算
     retire(ids, mult) {
       this.dimmed = this.dimmed || new Set();
-      ids = ids.filter(id => !this.dimmed.has(id) && !(this.fading && this.fading.has(id))); if (!ids.length) return;
+      ids = ids.filter(id => !this.dimmed.has(id) && !(this.fading && this.fading.has(id)) && !(this.center || []).some(e => e.id === id && e.judge === 'open' && this.g.processing && this.g.processing.some(c => c.id === id))); if (!ids.length) return;
       if (!mult) { this.fadeIds(ids, 0); return; }
       ids.forEach(id => this.dimmed.add(id));
       const ctr = this.$('.qx-ctr'); if (ctr) morph(ctr, this.centerHTML());
@@ -6561,7 +6593,8 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
       const tok = this.token; setTimeout(() => { if (tok === this.token) this.retire(ids, mult); }, Math.max(300, 450 * mult));
     }
     async fadeIds(ids, mult) {
-      ids = new Set([].concat(ids).filter(id => (this.center || []).some(e => e.id === id))); if (!ids.size) return;
+      const asked = [].concat(ids); asked.forEach(id => { if (this.dimmed) this.dimmed.delete(id); });   // 不管这张牌还在不在桌上，都要把「变暗」状态清掉，否则下次上桌会一直暗着
+      ids = new Set(asked.filter(id => (this.center || []).some(e => e.id === id))); if (!ids.size) return;
       this.fading = this.fading || new Set();
       const ctr = this.$('.qx-ctr');
       if (mult) { ids.forEach(id => this.fading.add(id)); if (ctr) morph(ctr, this.centerHTML()); await sleep(500); }
@@ -6676,7 +6709,7 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
           const glow = l.card === 'veto' ? [] : tg.slice();
           const isEq = D[l.card] && ['equip', 'omen'].includes(D[l.card].type) && ty === 'use' && mv.some(m => /^(e|j):/.test(m.k1));
           beats.push(async () => {
-            if (isEq) { const ids = [...new Set(mv.map(m => m.id))]; for (const id of ids) await this.equipFly(mv.filter(m => m.id === id), mult); return; }
+            if (isEq) { tg.forEach(s => this.drawLine(this.seatPt(l.seat), this.seatPt(s), mult)); const ids = [...new Set(mv.map(m => m.id))]; for (const id of ids) await this.equipFly(mv.filter(m => m.id === id), mult); return; }
             tg.forEach(s => this.drawLine(this.seatPt(l.seat), this.seatPt(s), mult));
             if (glow.length) this.setAimed(glow, true);
             await this.flyMany(mv, mult); this.stampFx(l.seat, l.card, mult);
@@ -6738,7 +6771,7 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
         else if (ty === 'move') { const f = async () => { const mv = moves.filter(m => m.logRef === l && !claimed.has(m)); mv.forEach(m => claimed.add(m)); if (mv.length) await this.flyMany(mv, mult); this.landedDiscards(l.ids || [], mult); }; f.isMove = true; beats.push(f); }
         else if (ty === 'tableClear') { const at = base + logs.indexOf(l) + 1; beats.push(async () => { this.setAimed(null, false); await this.clearCenter(mult, at); if (this.shownCards) { this.shownCards = null; this.renderTable(); this.renderMe(); } }); }   // 展示的牌只在这次结算期间显示
         else if (ty === 'judgeClear') beats.push(() => this.retire(l.cards || [], mult));
-        else if (ty === 'turn') { const at = base + logs.indexOf(l) + 1; beats.push(async () => { this.setAimed(null, false); await this.clearCenter(mult, at, true); this.shownCards = null; this.setPhaseShown(null, null); }); }
+        else if (ty === 'turn') { const at = base + logs.indexOf(l) + 1; beats.push(async () => { this.setAimed(null, false); await this.clearCenter(mult, at, true); { const old = (this.center || []).filter(e => (e.li || 0) < at).map(e => e.id); if (old.length) this.fadeIds(old, mult); } this.shownCards = null; /* 一名角色的回合结束：桌面上属于这一回合的牌强制清空 */ this.setPhaseShown(null, null); }); }
         else if (ty === 'damage' || ty === 'loseHp') { const seat = l.to != null ? l.to : l.seat; beats.push(() => this.hitFx(seat, '−' + l.n, ty === 'damage' ? (l.nature || 'normal') : 'lose', mult, l.hp, ty === 'damage' ? l.from : null)); }
         else if (ty === 'recover') beats.push(() => { if (l.hp > 0) this.stSet(l.seat, 'dying', false); return this.hitFx(l.seat, '+' + l.n, 'heal', mult, l.hp); });
         else if (ty === 'hpSet' || ty === 'maxHp') beats.push(async () => { this.setHpShown(l.seat, g.p(l.seat).hp); });
@@ -6857,6 +6890,7 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
       return null;
     }
     judgeMark(id, ok) {
+      { const je = (this.center || []).find(e => e.id === id); if (je) { je.judge = 'done'; const ctr = this.$('.qx-ctr'); if (ctr) morph(ctr, this.centerHTML()); } }   // 判定结果揭晓：天意牌这时才允许变暗
       const el = this.$(`.qx-ctr [data-cid="${id}"]`); if (!el) return;
       const m = document.createElement('div'); m.className = 'qx-jmark ' + (ok ? 'qx-jok' : 'qx-jno'); m.textContent = ok ? '✓' : '✗';
       el.appendChild(m);
@@ -7204,10 +7238,10 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
         else if (r === 'lectureGive' || r === 'proofGive') text = T.prompt(r, { t: this.who(req.to) });
         else if (r === 'defianceDiscard' || r === 'vengeanceDiscard') text = T.prompt(r, { n: req.min });
         else text = T.prompt(r, this.pvars(req)) || t('chooseCards', { min: req.min, max: req.max });
-        btns = btn('ok', t('confirm'), this.canConfirm(), 'qx-primary') + (req.min === 0 ? btn('cancel', t('cancel')) : '');
+        btns = btn('ok', t('confirm'), this.canConfirm(), 'qx-primary') + (req.min === 0 || req.optional ? btn('cancel', t('cancel')) : '');
       } else if (k === 'chooseTargets') {
         text = T.prompt(req.reason, this.pvars(req)) || t('targets', { min: req.min, max: req.max });
-        btns = btn('ok', t('confirm'), this.canConfirm(), 'qx-primary');
+        btns = btn('ok', t('confirm'), this.canConfirm(), 'qx-primary') + (req.optional ? btn('cancel', t('cancel')) : '');
       } else if (k === 'confirm') {
         if (D[req.skill]) { text = t('confirmEquip', { c: T.cardName(req.skill) }); btns = btn('yes', t('confirm'), true, 'qx-primary') + btn('no', t('cancel')); }
         else { text = t('askSkill', { k: T.skillName(req.skill) }); btns = btn('yes', t('yes'), true, 'qx-primary') + btn('no', t('no')); }
