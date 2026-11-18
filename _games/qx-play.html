@@ -5303,6 +5303,8 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
 #qx .qx-ctr .qx-cc{transition:left .5s ease,opacity .5s ease,transform .5s ease,filter .3s!important}
 #qx .qx-ctr .qx-cc.qx-ccdisc .qx-cpic{filter:brightness(.55) saturate(.7)}
 #qx .qx-ctr .qx-cc .qx-cpic{transition:filter .35s ease}
+#qx .qx-ctr .qx-cc.qx-ccdim{opacity:1;transform:none}
+#qx .qx-ctr .qx-cc.qx-ccdim .qx-cpic{filter:brightness(.72) saturate(.85)}
 #qx .qx-ctr .qx-cc.qx-ccspent{opacity:1;transform:none}
 #qx .qx-ctr .qx-cc.qx-ccspent .qx-cpic{filter:brightness(.45) saturate(.6)}
 /* v8：装备条——左侧数值与盾牌同框居中；数字用等高（lining）字形，所有内容上下居中 */
@@ -6180,7 +6182,8 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
         const c = g.card(e.id); if (!c) return '';
         const tag = e.as && e.as !== c.name ? `<div class="qx-astag">${esc(T.t('asCard', { c: T.cardName(e.as) }))}</div>` : '';
         const st = this.fading && this.fading.has(c.id) ? ' qx-ccfade' : D0.has(c.id) ? ' qx-ccspent' : live.length > 1 ? (e.li === maxLi ? ' qx-cchi' : ' qx-ccdim') : '';
-        return `<div class="qx-cc${st}" data-cid="${c.id}" style="left:${Math.round(x0 + i * step)}px;z-index:${i + 1}${this.hideSet && this.hideSet.has(c.id) ? ';visibility:hidden' : ''}">${this.cardHTML(c, 'qx-cpic').replace(/ data-id="\d+"/, '')}${tag}<div class="qx-ccap">${esc(e.cap || '')}</div></div>`;
+        const eq = e.kind === 'equip'; const hid = eq ? e.hold : this.hideSet && this.hideSet.has(c.id);
+        return `<div class="qx-cc${st}" ${eq ? 'data-gid' : 'data-cid'}="${c.id}" style="left:${Math.round(x0 + i * step)}px;z-index:${i + 1}${hid ? ';visibility:hidden' : ''}">${this.cardHTML(c, 'qx-cpic').replace(/ data-id="\d+"/, '')}${tag}<div class="qx-ccap">${esc(e.cap || '')}</div></div>`;
       }).join('');
     }
     renderTable() {
@@ -6355,7 +6358,7 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
         this.center.push({ id, cap, as, li, kind: kind || null });
       };
       for (const l of logs) { li++;
-        if (l.type === 'use' && l.ids) for (const id of l.ids) add(id, who(l.seat), l.card !== g.card(id).name ? l.card : null);
+        if (l.type === 'use' && l.ids) for (const id of l.ids) add(id, who(l.seat), l.card !== g.card(id).name ? l.card : null, (D[l.card] || {}).type === 'equip' && !l.virtual ? 'equip' : null);
         else if (l.type === 'play' && l.ids) for (const id of l.ids) add(id, who(l.seat), l.card !== g.card(id).name ? l.card : null);
         else if (l.type === 'discard' && l.cards) for (const id of l.cards) add(id, t('cap_discard', { s: who(l.seat) }), null, 'discard');
         else if (l.type === 'discardOf') add(l.card, t('cap_discardOf', { s: who(l.seat) }), null, 'discard');
@@ -6366,10 +6369,10 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
       }
       for (const c of g.processing || []) if (!c.arranging && c.omenJudging == null && !this.center.find(e => e.id === c.id) && !(this.pdHold && this.pdHold.has(c.id)) && !(this.revealWin && this.revealWin.ids.includes(c.id)) && !(this.feast && this.feast.ids.includes(c.id))) add(c.id, '');
       if (this.center.length !== this.centerN) this.centerT = Date.now(); 
-      this.center = this.center.filter(e => { const c = g.card(e.id); return c && c.loc && (c.loc.zone === 'process' || c.loc.zone === 'discard'); });
+      this.center = this.center.filter(e => { const c = g.card(e.id); return c && c.loc && (c.loc.zone === 'process' || c.loc.zone === 'discard' || (e.kind === 'equip' && c.loc.zone === 'equip')); });
       while (this.center.length > 10) this.center.shift();
       this.centerN = this.center.length;
-      this.centerIds = new Set(this.center.map(e => e.id));
+      this.centerIds = new Set(this.center.filter(e => e.kind !== 'equip').map(e => e.id));
     }
     snapLocs() { const m = new Map(); for (const id in this.g.cards) m.set(+id, this.locKey(this.g.cards[id])); return m; }
     hpOf(p) { return this.hpShown && this.hpShown[p.seat] != null ? this.hpShown[p.seat] : p.hp; }
@@ -6440,7 +6443,7 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
     discardTimer(ids, mult) {
       const now = Date.now(); for (const e of this.center || []) if (ids.includes(e.id)) e.at = now;
       if (!mult) return this.fadeIds(ids, 0);
-      const tok = this.token; setTimeout(() => { if (tok === this.token) this.retire(ids, mult); }, Math.max(300, 500 * mult));
+      const tok = this.token; setTimeout(() => { if (tok === this.token) this.retire(ids, mult); }, Math.max(900, 1500 * Math.min(1, mult)));
     }
     async fadeIds(ids, mult) {
       ids = new Set([].concat(ids).filter(id => (this.center || []).some(e => e.id === id))); if (!ids.size) return;
@@ -6448,7 +6451,7 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
       const ctr = this.$('.qx-ctr');
       if (mult) { ids.forEach(id => this.fading.add(id)); if (ctr) morph(ctr, this.centerHTML()); await sleep(500); }
       ids.forEach(id => { this.fading.delete(id); if (this.dimmed) this.dimmed.delete(id); });
-      this.center = (this.center || []).filter(e => !ids.has(e.id)); this.centerIds = new Set(this.center.map(e => e.id)); this.centerN = this.center.length;
+      this.center = (this.center || []).filter(e => !ids.has(e.id)); this.centerIds = new Set(this.center.filter(e => e.kind !== 'equip').map(e => e.id)); this.centerN = this.center.length;
       if (!this.center.length && this.aimed && this.aimed.size) this.setAimed(null, false);
       if (ctr) morph(ctr, this.centerHTML());
       if (this.shownCards && !this.center.length) { this.shownCards = null; this.renderTable(); this.renderMe(); }
@@ -6526,7 +6529,7 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
       this.render();
       this.shownHpLast = {}; for (const p of g.players) this.shownHpLast[p.seat] = p.hp;
       this.groupDone = !(g.processing && g.processing.some(c => !c.arranging)) && !this.feast;
-      if (!mult) { this.disp = null; this.stShown = null; this.recordLast(); const pr = new Set((g.processing || []).map(c => c.id)); this.center = (this.center || []).filter(e => pr.has(e.id)); this.centerIds = new Set(this.center.map(e => e.id)); const ctr = this.$('.qx-ctr'); if (ctr) morph(ctr, this.centerHTML()); }
+      if (!mult) { this.disp = null; this.stShown = null; this.recordLast(); const pr = new Set((g.processing || []).map(c => c.id)); this.center = (this.center || []).filter(e => pr.has(e.id)); this.centerIds = new Set(this.center.filter(e => e.kind !== 'equip').map(e => e.id)); const ctr = this.$('.qx-ctr'); if (ctr) morph(ctr, this.centerHTML()); }
       if (!mult || tok !== this.token) { this.hpShown = null; this.deadHold = null; this.phCur = {}; this.phSet = false; this.closeFeastIfDone(); this.closeRevealIfDone(); if (!mult) return; this.render(); return; }
       this.hideSet = new Set();
       for (const mv of moves) {
@@ -6619,7 +6622,7 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
         else if (ty === 'drunk') beats.push(() => { this.stSet(l.seat, 'drunk', true); return sleep(Math.max(120, 250 * mult)); });
         else if (ty === 'move') { const f = () => { const mv = moves.filter(m => m.logRef === l && !claimed.has(m)); mv.forEach(m => claimed.add(m)); return mv.length ? this.flyMany(mv, mult) : null; }; f.isMove = true; beats.push(f); }
         else if (ty === 'tableClear') { const at = base + logs.indexOf(l) + 1; beats.push(async () => { await this.clearCenter(mult, at); if (this.shownCards) { this.shownCards = null; this.renderTable(); this.renderMe(); } }); }   // 展示的牌只在这次结算期间显示
-        else if (ty === 'judgeClear') beats.push(() => this.fadeIds(l.cards || [], mult));
+        else if (ty === 'judgeClear') beats.push(() => this.retire(l.cards || [], mult));
         else if (ty === 'turn') { const at = base + logs.indexOf(l) + 1; beats.push(async () => { await this.clearCenter(mult, at, true); this.shownCards = null; this.setPhaseShown(null, null); }); }
         else if (ty === 'damage' || ty === 'loseHp') { const seat = l.to != null ? l.to : l.seat; beats.push(() => this.hitFx(seat, '−' + l.n, ty === 'damage' ? (l.nature || 'normal') : 'lose', mult, l.hp, ty === 'damage' ? l.from : null)); }
         else if (ty === 'recover') beats.push(() => { if (l.hp > 0) this.stSet(l.seat, 'dying', false); return this.hitFx(l.seat, '+' + l.n, 'heal', mult, l.hp); });
@@ -6814,23 +6817,27 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
       })());
       await Promise.all(jobs);
     }
-    // 装备：同一张牌一气呵成——从手里飞到桌面中央停一下，再直接缩小飞进装备栏（中途不消失、不重复出现）
+    // 装备（对照三国杀OL）：牌从手里（别人的从武将牌）飞到桌面中央，和其他打出的牌一样留在中央（之后统一变暗、淡出）；
+    // 落到中央的同一刻，装备栏亮出这件装备。全程只有一张牌在动，不消失、不重复出现
     async equipFly(mvs, mult) {
       mvs = [].concat(mvs); if (!mvs.length) return;
-      const fin = mvs.find(m => /^e:/.test(m.k1));
-      const first = mvs[0]; const C = this.centerSlot();
-      if (first.k0 !== 'center') {
-        const leg = Object.assign({}, first, { k1: 'center', toRect: C, keep: true, el: null });
-        await this.fly(leg, 0, mult);
-        if (!fin) { if (leg.ghost) leg.ghost.remove(); this.dispSet(first.id, first.k1, true); return; }
-        await sleep(Math.max(300, 600 * mult));
-        this.hideSet = this.hideSet || new Set(); this.hideSet.add(fin.id); this.dispSet(fin.id, fin.k1, true);   // 装备栏先画出（隐藏），取真实位置
-        const bar = this.cardEl(fin.id); if (bar) bar.style.visibility = 'hidden';
-        await this.fly(Object.assign(fin, { from: C, el: bar, fromBar: false, fromSeat: false }), 0, mult, leg.ghost);
-      } else if (fin) {
-        await this.fly(Object.assign(fin, { from: C, fromBar: false, fromSeat: false }), 0, mult);
-      }
-      await sleep(Math.max(150, 250 * mult));
+      const id = mvs[0].id; const fin = mvs.find(m => /^e:/.test(m.k1)); const first = mvs[0];
+      const ent = (this.center || []).find(e => e.id === id && e.kind === 'equip');
+      const ctr = this.$('.qx-ctr');
+      const showSlot = () => {
+        if (!fin) return;
+        this.hideSet = this.hideSet || new Set(); this.hideSet.delete(id); this.dispSet(id, fin.k1, true);
+        const bar = this.cardEl(id); if (bar) { bar.style.visibility = ''; bar.classList.remove('qx-appear'); void bar.offsetWidth; bar.classList.add('qx-appear'); }
+      };
+      if (first.k0 === 'center') { showSlot(); await sleep(Math.max(200, 350 * mult)); return; }
+      if (ent) { ent.hold = true; if (ctr) morph(ctr, this.centerHTML()); }
+      const gEl = ctr && ctr.querySelector(`[data-gid="${id}"]`);
+      const leg = Object.assign({}, first, { k1: 'center', el: null, toRect: gEl ? this.rel(gEl) : this.centerSlot(), keep: true });
+      await this.fly(leg, 0, mult);
+      if (ent) { ent.hold = false; if (ctr) morph(ctr, this.centerHTML()); }
+      if (leg.ghost) leg.ghost.remove();
+      showSlot();
+      await sleep(Math.max(250, 450 * mult));
     }
 
     // 别人摸牌（参照无名杀 $draw）：每张牌从牌堆（桌面中央）单独飞出，相隔 50ms，落点左右散开（每张 20px，最多 ±80px），飞行 0.8 秒后淡出
