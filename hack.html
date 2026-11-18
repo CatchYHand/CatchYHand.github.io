@@ -2360,6 +2360,7 @@ html[lang=en] .wl-story p,.wl-story:lang(en) p{text-indent:0}
 /* lobby cover */
 .gl-art.cov{padding:0;background:#0d2a1e}
 .gl-art.cov::after{inset:.6rem;z-index:2}
+#qxhost{position:fixed;inset:0;z-index:2147483000;background:#0d1220}#qxhost iframe{position:absolute;inset:0;width:100%;height:100%;border:0}#qxhost .qxh-back{position:absolute;left:50%;top:10px;transform:translateX(-50%);padding:.35rem .9rem;border-radius:6px;border:1px solid rgba(222,180,100,.6);background:rgba(20,16,12,.8);color:#f3e2bd;font:600 13px/1.2 system-ui,sans-serif;cursor:pointer}#qxhost .qxh-back:hover{background:rgba(60,44,24,.9)}
 .gl-cov{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:52% 40%;transition:transform .6s cubic-bezier(.2,.8,.2,1)}
 .gl-card:hover .gl-cov{transform:scale(1.05)}
 /* welcome: banner art, story set left */
@@ -5039,6 +5040,7 @@ html:not([lang=zh]) .gt-choose .gc-lb b{font-family:'Newsreader','Noto Serif SC'
 .jq-end2.l .ph .shd{background:radial-gradient(120% 90% at 50% 30%,transparent 50%,rgba(20,10,6,.5))!important}
 .jqw .wl-ban img{object-position:50% 40%!important}
 .gl-art.jq .gl-cov{object-position:50% 50%}
+.gl-art.qx .gl-cov{object-position:50% 45%}
 
 .jq-end2 .ph .shd{position:absolute;inset:0;background:linear-gradient(180deg,transparent 60%,rgba(30,20,8,.35))!important}
 
@@ -10246,6 +10248,11 @@ function ensure(){ if(root) return; root=document.createElement('div'); root.id=
   addEventListener('resize',()=>{ if(open&&scr==='table'){ sizeVars(); fitRing(); layoutHand(); layoutFans(); glFrame(); glSize(); glDigits(); fitRes(); if(M&&placeHi.last!=null) placeHi(placeHi.last); if(tut) try{ tutUI(); }catch(e){} requestAnimationFrame(()=>{ glFrame(); if(M&&placeHi.last!=null) placeHi(placeHi.last); }); } }); }
 function holdBgm(on){ try{ if(on){ bgmHeld=[TR.bgm,TR.decode].filter(t=>t&&t.playing); bgmHeld.forEach(t=>t.pause(1)); }
   else { bgmHeld.forEach(t=>t.play(1.4)); bgmHeld=[]; } }catch(e){} }
+/* ---------- The Hall of Ages: runs in its own full-screen frame ---------- */
+function qxOpen(){ if(document.getElementById('qxhost')) return;
+  const h=document.createElement('div'); h.id='qxhost';
+  h.innerHTML=`<iframe src="hall-of-ages/index.html" allow="fullscreen; autoplay" title="${T('The Hall of Ages','群星议会')}"></iframe><button class="qxh-back" title="${T('All Games','游戏列表')}">${T('All Games','游戏列表')}</button>`;
+  h.querySelector('.qxh-back').onclick=()=>h.remove(); document.body.appendChild(h); }
 function openRoom(){ ensure(); open=true; scr='lobby'; preload(); render(); requestAnimationFrame(()=>root.classList.add('on')); snd('pop'); holdBgm(true); bgm(4); }
 function closeRoom(){ if(!root||!open) return; if(paused) resumeGame(true); clearTimeout(timer); open=false; root.classList.remove('on'); jingleStop(); try{ stormEnd(true); }catch(e){} bgm(null); Object.values(BGM.tr||{}).forEach(t=>{ try{ t.pause(.8); }catch(e){} }); holdBgm(false); rdClosedHook&&rdClosedHook(); }
 function keyFlash(k,dn){ const m={' ':'pass','Enter':'play','h':'hint','H':'hint','s':'sort','S':'sort'}[k]; if(!m) return; const b=$g('[data-a='+m+']'); b&&b.classList.toggle('dn',dn); }
@@ -10278,10 +10285,10 @@ function render(){ if(!root) return; if(scr==='lobby') lobby(); else if(scr==='j
 function lobby(){ root.className='on lobby'; const games=[
    {k:'guandan',t:T('Leap the Dragon Gate','跃龙门'),s:T('Every carp in the Yellow River dreams of the gate at the top of the falls. The one that leaps it is struck by heaven’s fire and rises as a dragon.','黄河里的每一尾鲤鱼，都梦想着瀑布顶上的那道龙门。跃过去的那一尾，天火烧尾，化身为龙。'),tag:T('Card game','牌戏'),live:1},
    {k:'junqi',t:T('Vanguard','兵锋'),s:T('A cipher telegram from headquarters: the enemy has massed across the valley, every unit hidden. Read them first, and take their Flag.','总指挥部急电：敌军已在山谷对岸集结，兵力部署一概不明。谁先摸清对方虚实，谁就能夺下对方的军旗。'),tag:T('Board game','棋戏'),live:1,art:'jq'},
-   {k:'soon2',t:T('Coming Soon','敬请期待'),s:T('Another table is being laid.','又一张牌桌正在布置。')}];
+   {k:'qunxing',t:T('The Hall of Ages','群星议会'),s:T('In the Hall of Ages, the great figures of history sit at one council table. Whoever holds the Quill of History writes the next age, and not everyone at the table wants it written. Chinese interface for now.','万代之厅里，历史上的群星围坐在同一张议事桌前。执掌历史之笔的人书写下一个时代，而桌边并非人人都愿意让它这样写下去。'),tag:T('Card game','牌戏'),live:1,art:'qx'}];
   const art=[[14,0],[2,1],[17],[14,3]].map(([r,s],i)=>`<span class="f${i+1}">${cardHTML({id:-1,r,s:r>=16?4:s})}</span>`).join('');
-  paint(head(T('pick a table','选一张牌桌'))+`<main class="gr-lobby"><div class="gl-hd"><h2>${T('The Game Room','游艺厅')}</h2><p>${T('A few tables, set up and waiting. Every game here is built from scratch and plays right in the page.','几张桌子已经摆好，等人入座。这里的每个游戏都是从零做起，点开就能玩。')}</p></div><div class="gl-grid">${games.map(g=>`<button class="gl-card${g.live?'':' off'}" ${g.live?`data-a="game" data-g="${g.k}"`:'disabled'}>
-     <div class="gl-art${g.live?' cov':''}${g.art?' '+g.art:''}">${g.art==='jq'?jqCover():g.live?`<img class="gl-cov" src="${GIMG('gd-cover')}" alt="">`:`<div class="gl-soon">?</div>`}</div>
+  paint(head(T('pick a table','选一张牌桌'))+`<main class="gr-lobby"><div class="gl-hd"><h2>${T('The Game Room','游艺厅')}</h2><p>${T('A few tables, set up and waiting. Every game here plays right in the page.','几张桌子已经摆好，等人入座。这里的每个游戏点开就能玩。')}</p></div><div class="gl-grid">${games.map(g=>`<button class="gl-card${g.live?'':' off'}" ${g.live?`data-a="game" data-g="${g.k}"`:'disabled'}>
+     <div class="gl-art${g.live?' cov':''}${g.art?' '+g.art:''}">${g.art==='jq'?jqCover():g.art==='qx'?`<img class="gl-cov" src="hall-of-ages/image/qx/back-game.jpg" alt="">`:g.live?`<img class="gl-cov" src="${GIMG('gd-cover')}" alt="">`:`<div class="gl-soon">?</div>`}</div>
      <div class="gl-tx">${g.tag?`<small>${g.tag}</small>`:''}<b>${g.t}</b><p>${g.s}</p>${g.live?`<span class="gl-go"><span>${T('Play','开始游戏')}</span><i><svg viewBox="0 0 24 24"><path d="M8 5.5v13l10.5-6.5z"/></svg></i></span>`:''}</div></button>`).join('')}</div>
 <p class="gl-note"><i aria-hidden="true">!</i><span>${T('Every game setting on this page is fictional and the artwork was made with GPT. Any resemblance to real people, units or events is purely coincidental.','本页所有游戏设定均为虚构，美术由 GPT 生成；如与现实中的人物、部队或事件雷同，纯属巧合。')}</span></p>
 </main>`); }
@@ -11465,7 +11472,7 @@ function onDown(e){ const tag=e.target.closest('#gtHand .gt-tag,#gtHand .gc-bd')
   const up=()=>{ removeEventListener('pointermove',mv); removeEventListener('pointerup',up); drag=null; };
   addEventListener('pointermove',mv); addEventListener('pointerup',up); }
 function onClick(e){ const a=e.target.closest('[data-a]'); if(scr==='junqi'&&!a){ jqClick(e); return; } if(!a) return; const k=a.dataset.a; if(['rules','tut','restart','leave','close','game','tn','tx'].includes(k)) snd('btn');
-  if(k==='close') closeRoom(); else if(k==='leave'){ if(scr==='junqi') jqLeave(); else askLeave(); } else if(k==='game'){ if(a.dataset.g==='junqi') jqOpen(); else startGame(false); }
+  if(k==='close') closeRoom(); else if(k==='leave'){ if(scr==='junqi') jqLeave(); else askLeave(); } else if(k==='game'){ if(a.dataset.g==='junqi') jqOpen(); else if(a.dataset.g==='qunxing') qxOpen(); else startGame(false); }
   else if(k==='play') doPlay(); else if(k==='pass') doPass(); else if(k==='hint') doHint(); else if(k==='sort') doSort(); else if(k==='cc'){ snd('btn'); ccToggle(); }
   else if(k==='devwin'||k==='devdraw'||k==='devlose') jqDevEnd(k);
   else if(k==='rules'){ if(scr==='junqi') jqRules(); else rules(); } else if(k==='tut'&&scr==='junqi'){ const inGame=JQ&&!JQ.tut&&(JQ.phase==='play'||JQ.phase==='toss'), inTut=JQ&&JQ.tut; confirmPop(T('Start the tutorial?','开始教程？'),inGame?T('The game in progress will be abandoned and cannot be resumed.','当前对局会被放弃，无法恢复。'):inTut?T('The tutorial will start again from the beginning.','教学会从头重新开始。'):JQ&&(JQ.phase==='over'||JQ.phase==='replay')?T('This finished game and its replay will be closed.','这局已结束的对局和复盘会被关闭。'):T('Your current deployment will be cleared.','当前的布阵会被清空。'),T('Start tutorial','开始教程'),()=>{ jqStopReplay(); jqTutStart(); }); } else if(k==='tut') confirmPop(T('Start the tutorial?','开始教程？'),T('The current game will be abandoned and a practice hand will be dealt.','当前对局会被放弃，改为发一局练习牌。'),T('Start tutorial','开始教程'),()=>startTut());
