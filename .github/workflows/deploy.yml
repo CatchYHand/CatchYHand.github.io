@@ -88,6 +88,14 @@ jobs:
         run: |
           npm install -g purgecss
           purgecss -c purgecss.config.js
+      - name: Add The Hall of Ages 🃏
+        run: |
+          if ls _games/hall-of-ages.zip.part* >/dev/null 2>&1; then
+            cat _games/hall-of-ages.zip.part* > /tmp/hall-of-ages.zip
+            mkdir -p _site/hall-of-ages
+            unzip -q -o /tmp/hall-of-ages.zip -d _site/hall-of-ages
+            touch _site/.nojekyll
+          fi
       - name: Deploy 🚀
         if: github.event_name != 'pull_request'
         uses: JamesIves/github-pages-deploy-action@v4
