@@ -1326,7 +1326,7 @@
       if (sd.skip) { this.log('skipPhase', { seat: p.seat, phase: ph }); }
       else if (ph === 'judge') yield* this.judgePhase(p);
       else if (ph === 'draw') yield* this.drawPhase(p);
-      else if (ph === 'play') yield* this.playPhase(p);
+      else if (ph === 'play') { yield* this.playPhase(p); if (p.turnState.drunk) { p.turnState.drunk = false; this.log('drunk', { seat: p.seat, off: true }); } }   // 酒的效果在出牌阶段结束时失效
       else if (ph === 'discard') yield* this.discardPhase(p);
       if (!p.dead) yield* this.trigger('phaseEnd', { player: p, phase: ph });
     }
@@ -2886,7 +2886,8 @@
     name: ['诡辩', 'SOPHIST'], type: 'normal',
     desc: ['当你成为杀的目标时，你可以弃置一张牌，将此杀转移给你攻击范围内的另一名角色（不能是使用者）。', "When you become a Strike's target, you may discard a card to redirect it to another character within your attack range (not its user)."],
     triggers: { targeted: {
-      can: (g, o, d) => d.target === o && isStrike(d.use.card) && o.cardCount > 0 && g.alive.some(t => t !== o && t !== d.use.from && !d.use.targets.includes(t) && g.inAttackRange(o, t)),
+      can: (g, o, d) => d.target === o && d.use.targets.includes(o) && !d.use.nullified.has(o) && isStrike(d.use.card) && o.cardCount > 0 &&   // 目标已被改走、或这张杀已对你无效时不能发动
+        g.alive.some(t => t !== o && t !== d.use.from && !d.use.targets.includes(t) && g.inAttackRange(o, t)),
       *on(g, o, d) {
         const cands = g.alive.filter(t => t !== o && t !== d.use.from && !d.use.targets.includes(t) && g.inAttackRange(o, t) && g.targetAllowed(d.use.from, t, d.use.card));
         if (!cands.length) return;
@@ -3632,7 +3633,7 @@
     viewAsPick: ['【{k}】：选择 {n} 张牌当【{c}】使用或打出。', '{k}: choose {n} card(s) to use as {c}.'],
     viewAsPick0: ['【{k}】：选择 {n} 张牌。', '{k}: choose {n} card(s).'],
     playBtn: ['出牌', 'Play'], pickN: ['选择 {n} 张牌', 'Choose {n} cards'], arrangeTip: ['拖动调整顺序；拖到下面一行即放到牌堆底（单击可在两行之间切换）', 'Drag to reorder; drag into the lower row to put a card on the bottom (click to switch rows)'],
-    deckTop: ['牌堆顶', 'Deck Top'], deckBottom: ['牌堆底', 'Deck Bottom'], pdWait: ['等待出牌', 'Waiting'], pdWin: ['赢', 'Won'], pickedTag: ['已选', 'Chosen'], pdNoWin: ['没赢', 'Did Not Win'],
+    deckTop: ['牌堆顶', 'Deck Top'], deckBottom: ['牌堆底', 'Deck Bottom'], pdWait: ['等待出牌', 'Waiting'], pdWin: ['赢', 'Won'], pickedTag: ['已选', 'Chosen'], schemeTip: ['点击或拖动牌可以交换两张牌的位置，确定后分给两侧的角色', 'Click or drag a card to swap the two, then confirm to deal them.'], schemeWait: ['正在分牌……', 'Dealing the cards...'], pdNoWin: ['没赢', 'Did Not Win'],
         rvShown: ['亮出', 'Shown'], rvTake: ['获得', 'Take'], rvTip: ['把要获得的牌拖到下面一排（每种花色各一张，共 {n} 张）', 'Drag the cards you take into the lower row (one of each suit, {n} in all)'], rvWait: ['{s} 正在挑选', '{s} is choosing'],
     waitVetoAll: ['等待其他角色使用【{c}】', 'Waiting for others to use {c}...'], asCard: ['{c}', '{c}'],
     feastWait: ['每名角色依次选择一张', 'Each character takes one card in turn'], pindianTitle: ['拼点', 'Contest'],
@@ -5485,6 +5486,28 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
 #qx .qx-pkb{position:absolute;left:50%;top:42%;transform:translate(-50%,-50%);z-index:6;padding:3px 14px;border-radius:4px;background:linear-gradient(#f6d873,#c9a03a);color:#2a1a06;font:900 18px/1.2 "Ma Shan Zheng","Noto Serif SC",serif;letter-spacing:2px;box-shadow:0 0 0 2px #2a1a06,0 4px 12px rgba(0,0,0,.7);pointer-events:none;white-space:nowrap;animation:qxpdst .3s cubic-bezier(.2,1.6,.4,1) both}
 #qx .qx-pkb i{font-style:normal;margin-right:6px;padding:0 6px;border-radius:50%;background:#2a1a06;color:#f6d873}
 #qx .qx-fit{transition:none!important}
+#qx .qx-scheme{min-width:640px}
+#qx .qx-schrow{display:flex;align-items:center;justify-content:center;gap:18px;margin-top:10px}
+#qx .qx-schside{display:flex;align-items:center;gap:12px}
+#qx .qx-schart{position:relative;width:110px;height:170px;border-radius:8px;overflow:hidden;box-shadow:0 0 0 2px #8a6a30,0 6px 16px rgba(0,0,0,.7)}
+#qx .qx-schart img{width:100%;height:100%;object-fit:cover;display:block}
+#qx .qx-schnm{position:absolute;left:0;right:0;bottom:0;padding:3px 0;text-align:center;font:700 13px/1.2 "Noto Serif SC","Cinzel",serif;color:#f3e4bf;background:linear-gradient(transparent,rgba(0,0,0,.85))}
+#qx .qx-schslot{width:104px;height:156px;border:1px dashed #8a7442;border-radius:7px;display:flex;align-items:center;justify-content:center;background:rgba(240,208,128,.05)}
+#qx .qx-schvs{font:700 28px/1 Georgia,serif;color:#c9a03a;text-shadow:0 1px 3px #000}
+/* 英文用清楚的衬线体（毛笔字体只给中文用） */
+#qx.qx-l-en .qx-pkb{font:700 14px/1.3 "Cinzel",Georgia,"Times New Roman",serif;letter-spacing:1px}
+#qx.qx-l-en .qx-pdstamp{font:700 17px/1.3 "Cinzel",Georgia,"Times New Roman",serif;letter-spacing:1px}
+#qx.qx-l-en .qx-pdsl{font-size:14px}
+/* 回合开始：武将牌上的玻璃反光 */
+#qx .qx-shinebox{position:absolute;inset:0;overflow:hidden;border-radius:inherit;pointer-events:none;z-index:7}
+#qx .qx-shine{position:absolute;left:-30%;right:-30%;top:0;height:100%;pointer-events:none;z-index:7;background:linear-gradient(180deg,rgba(255,255,255,0) 30%,rgba(255,255,255,.12) 42%,rgba(255,250,225,.75) 50%,rgba(255,255,255,.12) 58%,rgba(255,255,255,0) 70%);mix-blend-mode:screen}
+/* 判定的勾 / 叉：一笔画出 */
+#qx .qx-jsvg{position:absolute;left:50%;top:50%;width:96px;height:96px;transform:translate(-50%,-50%);z-index:5;pointer-events:none;overflow:visible;filter:drop-shadow(0 0 3px #000) drop-shadow(0 2px 4px rgba(0,0,0,.8))}
+#qx .qx-jsvg path{fill:none;stroke-width:11;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:120;stroke-dashoffset:120}
+#qx .qx-jok path{stroke:#5ce26a}#qx .qx-jno path{stroke:#ff4a3a}
+#qx .qx-jsvg .qx-js1{animation:qxjdraw .38s ease-out forwards}
+#qx .qx-jsvg .qx-js2{animation:qxjdraw .3s ease-out .32s forwards}
+@keyframes qxjdraw{to{stroke-dashoffset:0}}
 /* 拼点结果：印章直接盖在牌上 */
 #qx .qx-pdslot{position:relative}
 #qx .qx-pdstamp{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%) rotate(-14deg);padding:2px 12px;border:3px double currentColor;border-radius:6px;font:900 24px/1.2 "Ma Shan Zheng","Noto Serif SC",serif;letter-spacing:2px;white-space:nowrap;background:rgba(20,12,6,.55);text-shadow:0 1px 3px #000;pointer-events:none;animation:qxpdst .38s cubic-bezier(.2,1.6,.4,1) both}
@@ -5627,7 +5650,7 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
       this.recs = this.recs || []; this.rec = { seed, n, level: this.settings.level, role: this.settings.role, me: meSeat, lang: this.lang, speed: this.settings.speed, started: new Date().toISOString(), answers: [], notes: [] }; if (!rep) this.recs.push(this.rec); this.recT0 = Date.now();
       this.g = new E.Game({ players: n, seed, roles: arr, fixedRoles: true, selectHeroes: true });
       this.me = meSeat; this.ui = null; this.logIdx = 0;
-      this.animIdx = 0; this.phMem = {}; this.phCur = {}; this.marks = {}; this.handOrder = []; this.vetoBars = false; this.thinkBars = null; this.revealWin = null; this.groupDone = false; this.lastPh = null;
+      this.animIdx = 0; this.phMem = {}; this.phCur = {}; this.marks = {}; this.handOrder = []; this.vetoBars = false; this.thinkBars = null; this.revealWin = null; this.schemeWin = null; this.groupDone = false; this.lastPh = null;
       this.closePeek(); this.closeBadgeMenu(); this.closeZoom(); this.pindian = null; this.pdHold = null; this.feast = null; this.shownCards = null; this.centerT = 0; this.locs = null; this.center = []; this.centerIds = new Set(); this.hpPrev = null; this.stepNo = 0; this.thinking = null;
       const fx = this.$('.qx-fx'); if (fx) fx.innerHTML = ''; const ls = this.$('.qx-lines'); if (ls) ls.innerHTML = '';
       this.agents = {}; for (let s = 0; s < n; s++) this.agents[s] = new AI.SmartAgent(seed + s * 7919, this.settings.level);
@@ -5676,7 +5699,8 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
       while (!r.done) {
         if (tok !== this.token) return;
         const req = r.value;
-        try { await this.step(tok); } catch (e) { console.error('[qx] step error', e && e.stack || e); this.disp = null; this.stShown = null; this.hideSet = null; try { this.render(); } catch (e2) {} }
+        this.inStep = true; try { await this.step(tok); } catch (e) { console.error('[qx] step error', e && e.stack || e); this.disp = null; this.stShown = null; this.hideSet = null; try { this.render(); } catch (e2) {} }
+        this.inStep = false;
         if (tok !== this.token) return;
         let ans;
         if (req.player.seat === this.me) {
@@ -5702,6 +5726,7 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
         const k = req.kind;
         if (k === 'pick' && req.reason === 'feast' && this.feast) { this.render(); return; }
         if (k === 'pick' && req.multi && this.revealWin && req.reason === this.revealWin.pickReason) { this.ui.btn = []; this.render(); return; }
+        if (k === 'chooseTargets' && req.reason === 'schemeAssign' && this.schemeWin) { this.schemeWin.hidden = false; this.render(); return; }
         if (k === 'chooseCard' || k === 'pick' || k === 'chooseOption' || k === 'chooseSkillOrder' || k === 'chooseHero' || k === 'arrange') this.openChoiceModal();
         this.render();
       });
@@ -5850,6 +5875,8 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
       const u = this.ui; const k = u.req.kind; const ids = () => u.sel.map(c => c.id);
       if (act === 'yes') return this.answer(true);
       if (act === 'skip') return this.answer(null);
+      if (act === 'schemeSwap' && this.schemeWin) { const S = this.schemeWin; this.flipWins(() => { S.swap = !S.swap; this.renderWins(); }); return; }
+      if (act === 'schemeOk' && this.schemeWin) { const S = this.schemeWin; return this.answer([S.swap ? S.seats[1] : S.seats[0]]); }   // 左边槽里的牌给左边的角色
       if (act === 'arrangeOk') return this.answer({ top: (u.arr ? u.arr.top : u.req.options).slice(), bottom: u.arr ? u.arr.bottom.slice() : [] });
       if (act === 'csOk' || act === 'multiOk') { if (this.revealWin && u.req.reason === this.revealWin.pickReason) this.revealWin.picks = (u.btn || []).slice(); const a = QXAsk.confirm(this); if (a !== undefined) this.answer(a); return; }
       if (act === 'no') return this.answer(false);
@@ -6145,7 +6172,7 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
     // 阶段标签：由动画节拍驱动（每个阶段都会出现一次），切换时新标签从左侧滑入、旧标签淡出
     phaseNow(seat) { const g = this.g; if (this.phCur && (this.phSet || Object.keys(this.phCur).length)) return this.phCur[seat] || null; return g.current && g.current.seat === seat && !g.over && g.phase ? g.phase : null; }
     curShown() { const g = this.g; if (g.over) return null; if (this.phCur) { for (const k in this.phCur) if (this.phCur[k]) return +k; if (this.phSet || Object.keys(this.phCur).length) return null; } return g.current ? g.current.seat : null; }
-    phSpan(ph, cls, seat) { const other = seat != null && seat !== this.me; return `<span class="qx-phl qx-phc-${ph} ${cls} qx-phtag">${esc(other ? this.T.phase(ph) : this.T.phaseLabel(ph))}</span>`; }
+    phSpan(ph, cls, seat) { const other = seat != null && seat !== this.me; return `<span class="qx-phl qx-phc-${ph} ${cls} qx-phtag" data-mk="pl${ph}">${esc(other ? this.T.phase(ph) : this.T.phaseLabel(ph))}</span>`; }
     phaseHTML(p) { const cur = this.phaseNow(p.seat); return `<div class="qx-phase${p.seat !== this.me ? ' qx-phase2' : ''}" data-mk="ph${p.seat}">${cur ? this.phSpan(cur, 'qx-phnow', p.seat) : ''}</div>`; }
     setPhaseShown(seat, ph) {
       this.phCur = this.phCur || {}; this.phSet = true;
@@ -6260,16 +6287,19 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
     hideTip() { const box = this.$('.qx-tipbox'); if (box) box.classList.remove('qx-on'); }
     centerHTML() {
       const g = this.g, T = this.T; const list = this.center || [];
-      const n = list.length; if (!n) return '';
+      if (!list.length) return '';
+      // 还没「到场」的牌（飞行尚未开始）不占位置：先按已到场的牌排开，等它真正飞过来时整排再平滑让位
+      const lay = list.filter(e => !e.pend); const n = lay.length; const slotOf = new Map(lay.map((e, i) => [e, i]));
       const cw = 100; const step = n > 1 ? Math.min(cw + 8, (640 - cw) / (n - 1)) : 0;
-      const x0 = this.bw() / 2 - (cw + step * (n - 1)) / 2;
+      const x0 = this.bw() / 2 - (cw + step * (Math.max(1, n) - 1)) / 2;
       const D0 = this.dimmed || new Set(); const live = list.filter(e => !(this.fading && this.fading.has(e.id)) && !D0.has(e.id)); const maxLi = live.length ? Math.max(...live.map(e => e.li || 0)) : -1;
       return list.map((e, i) => {
         const c = g.card(e.id); if (!c) return '';
         const tag = e.as && e.as !== c.name ? `<div class="qx-astag">${esc(T.t('asCard', { c: T.cardName(e.as) }))}</div>` : '';
         const st = this.fading && this.fading.has(c.id) ? ' qx-ccfade' : D0.has(c.id) ? ' qx-ccspent' : e.judge === 'open' ? ' qx-cchi' : live.length > 1 ? (e.li === maxLi ? ' qx-cchi' : ' qx-ccdim') : '';   // 天意牌在判定结果出来前一直亮着
-        const eq = e.kind === 'equip'; const hid = eq ? e.hold : this.hideSet && this.hideSet.has(c.id);
-        return `<div class="qx-cc${st}" ${eq ? `data-mk="g${c.id}" data-gid` : 'data-cid'}="${c.id}" style="left:${Math.round(x0 + i * step)}px;z-index:${i + 1}${hid ? ';visibility:hidden' : ''}">${this.cardHTML(c, 'qx-cpic').replace(/ data-id="\d+"/, '')}${tag}<div class="qx-ccap">${esc(e.cap || '')}</div></div>`;
+        const eq = e.kind === 'equip'; const hid = e.pend || (eq ? e.hold : this.hideSet && this.hideSet.has(c.id));
+        const jm = e.verdict ? `<svg class="qx-jsvg qx-j${e.verdict}" viewBox="0 0 100 100">${e.verdict === 'ok' ? '<path class="qx-js1" d="M18 54 L41 76 L84 24"/>' : '<path class="qx-js1" d="M78 22 L22 78"/><path class="qx-js2" d="M22 22 L78 78"/>'}</svg>` : '';
+        return `<div class="qx-cc${st}" ${eq ? `data-mk="g${c.id}" data-gid` : 'data-cid'}="${c.id}" style="left:${Math.round(slotOf.has(e) ? x0 + slotOf.get(e) * step : this.bw() / 2 - cw / 2)}px;z-index:${i + 1}${hid ? ';visibility:hidden' : ''}">${this.cardHTML(c, 'qx-cpic').replace(/ data-id="\d+"/, '')}${tag}${jm}<div class="qx-ccap">${esc(e.cap || '')}</div></div>`;
       }).join('');
     }
     renderTable() {
@@ -6445,10 +6475,12 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
         if (id == null) return; const c = g.card(id); if (!c) return;
         if (this.feast && this.feast.ids.includes(id)) return;
         if (this.revealWin && this.revealWin.ids.includes(id)) return;
+        if (this.schemeWin && this.schemeWin.cards.includes(id)) return;
         const old = this.center.find(e => e.id === id);
         if (old) { if (cap) old.cap = cap; if (as) old.as = as; return; }
+        const pend = !!this.animMult() && !!this.stepping;
         if (this.dimmed) this.dimmed.delete(id); if (this.fading) this.fading.delete(id);   // 重新上桌的牌是新的一张记录，不能继承上一次的「已变暗」状态
-        this.center.push({ id, cap, as, li, kind: kind || null, t: Date.now() });
+        this.center.push({ id, cap, as, li, kind: kind || null, t: Date.now(), pend, hold: pend && kind === 'equip' });
       };
       for (const l of logs) { li++;
         if (l.type === 'use' && l.ids) for (const id of l.ids) add(id, who(l.seat), l.card !== g.card(id).name ? l.card : null, ['equip', 'omen'].includes((D[l.card] || {}).type) && !l.virtual ? 'equip' : null);
@@ -6518,14 +6550,26 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
         const mult = this.animMult(); const now = Date.now(); const g = this.g;
         const proc = new Set((g && g.processing || []).map(c => c.id));
         const D0 = this.dimmed || new Set(), F0 = this.fading || new Set();
+        for (const e of this.center || []) if ((e.pend || e.hold) && e.t && now - e.t > 4000) { e.pend = false; e.hold = false; }
         const stale = (this.center || []).filter(e => e.t && now - e.t > 6000 && !proc.has(e.id) && !D0.has(e.id) && !F0.has(e.id) && !(this.hideSet && this.hideSet.has(e.id)) && !e.hold).map(e => e.id);
         if (stale.length) this.retire(stale, mult || 1);
+        // 红框保险：没有任何结算在进行（处理区空、桌上没有亮着的牌）超过 2 秒，就把「被指定」红框收掉
+        const liveC = (this.center || []).some(e => !D0.has(e.id) && !F0.has(e.id));
+        if (this.aimed && this.aimed.size && !proc.size && !liveC && !this.ui && !this.thinking && !this.inStep) { this.aimIdle = (this.aimIdle || 0) + 1; if (this.aimIdle >= 2) { this.aimIdle = 0; this.setAimed(null, false); } } else this.aimIdle = 0;
         this.dimAt = this.dimAt || new Map(); for (const id of D0) if (!this.dimAt.has(id)) this.dimAt.set(id, now); for (const id of [...this.dimAt.keys()]) if (!D0.has(id)) this.dimAt.delete(id);
         const darkTooLong = [...this.dimAt.entries()].filter(([id, t0]) => now - t0 > 3500 && !F0.has(id)).map(([id]) => id);
         if (darkTooLong.length) { darkTooLong.forEach(id => this.dimAt.delete(id)); this.fadeIds(darkTooLong, mult || 1); }
         setTimeout(tick, 1000);
       };
       setTimeout(tick, 1000);
+    }
+    // 强制退场（回合结束时）：不管什么状态，先变暗，1 秒后淡出
+    forceRetire(ids, mult) {
+      if (!mult) { this.fadeIds(ids, 0); return; }
+      this.dimmed = this.dimmed || new Set(); ids.forEach(id => this.dimmed.add(id));
+      for (const e of this.center || []) if (ids.includes(e.id)) { e.pend = false; e.hold = false; if (e.judge === 'open') e.judge = 'done'; }
+      const ctr = this.$('.qx-ctr'); if (ctr) morph(ctr, this.centerHTML());
+      const tok = this.token; setTimeout(() => { if (tok === this.token) this.fadeIds(ids, mult); }, Math.max(600, 1000 * Math.min(1, mult)));
     }
     // 结算完的牌：先暗下去，停 2 秒左右再淡出；不阻塞后面的结算
     retire(ids, mult) {
@@ -6616,6 +6660,9 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
       
       const feastLog = logs.find(l => l.type === 'reveal' && l.reason === 'feast');
       if (feastLog) this.feast = { ids: feastLog.cards.slice(), hidden: !!mult };   // 窗口在亮牌那一刻才出现，不提前
+      const scLog = logs.find(l => l.type === 'reveal' && l.reason === 'scheme');
+      if (scLog) { const sk = logs.slice().reverse().find(l => l.type === 'skill' && l.skill === 'scheme' && l.targets && l.targets.length === 2) || g.logs.slice().reverse().find(l => l.type === 'skill' && l.skill === 'scheme' && l.targets && l.targets.length === 2);
+        if (sk) this.schemeWin = { cards: scLog.cards.slice(), seats: sk.targets.slice(), swap: false, gone: [], hidden: !!mult }; }
       const rvLog = logs.find(l => l.type === 'reveal' && l.reason === 'chisel');
       if (rvLog) this.revealWin = { ids: rvLog.cards.slice(), slots: rvLog.cards.length, picks: [], pickReason: 'chiselPick', title: this.T.skillName('chisel'), seat: g.current ? g.current.seat : this.me, hidden: !!mult };
       const st = this.$('.qx-stage');
@@ -6628,7 +6675,7 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
       if (mult) { oldAnchor('h:' + this.me); for (let s = 0; s < g.n; s++) if (s !== this.me) oldAnchor('h:' + s); }
       const prevHp = {}; for (const p of g.players) prevHp[p.seat] = this.shownHpLast && this.shownHpLast[p.seat] != null ? this.shownHpLast[p.seat] : p.hp;
       const base = (this.animIdx || 0) - logs.length;
-      this.updateCenter(logs, base, prevLocs);
+      this.stepping = true; try { this.updateCenter(logs, base, prevLocs); } finally { this.stepping = false; }
       const newLocs = this.snapLocs();
       // 逐跳生成飞牌：按引擎 move 日志的先后，每张牌从「当前显示的位置」飞到这次移动的去处（一张牌在一步里可能移动多次）
       const moves = [];
@@ -6722,6 +6769,17 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
           if (prev && prev.draws) prev.draws.push(...mv);
           else { const f = async () => { await this.flyMany(f.draws, mult); await sleep(Math.max(150, 300 * mult)); }; f.draws = mv.slice(); beats.push(f); }   // 摸到的牌落定后稍停，再进入下一阶段
         }
+        else if (ty === 'gain' && this.schemeWin && moves.some(m => this.schemeWin.cards.includes(m.id) && m.k1 === 'h:' + l.seat && !claimed.has(m))) {
+          const SW = this.schemeWin; const mv = claim(m => SW.cards.includes(m.id) && m.k1 === 'h:' + l.seat);
+          beats.push(async () => {
+            // 窗口里的摆放要和实际分配一致：不一致就先把两张牌交换位置
+            for (const m of mv) { const shown = SW.swap ? [SW.cards[1], SW.cards[0]] : SW.cards; const want = SW.seats[0] === l.seat ? 0 : 1; if (shown.indexOf(m.id) !== want && !SW.gone.length) { this.flipWins(() => { SW.swap = !SW.swap; this.renderWins(); }); await sleep(Math.max(300, 520 * mult)); } }
+            await sleep(Math.max(150, 300 * mult));
+            for (const m of mv) { const el = this.$(`.qx-scheme [data-rv="${m.id}"]`); if (el) m.from = this.rel(el); SW.gone.push(m.id); }
+            this.renderWins(); await this.flyMany(mv, mult);
+            if (SW.gone.length >= 2) { await sleep(Math.max(150, 250 * mult)); const w = this.$('.qx-scheme'); if (w) { w.classList.add('qx-wfade'); await sleep(260); } this.schemeWin = null; this.renderWins(); }
+          });
+        }
         else if (ty === 'gain') {
           const mv = claim(m => m.k1 === 'h:' + l.seat && m.k0 !== 'deck', l.n); if (!mv.length) continue;
           const R = this.revealWin;
@@ -6753,8 +6811,8 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
         else if (ty === 'reveal') {
           const mv = byIds(l.cards);
           // 五谷 / 雕琢等专用窗口：牌直接出现在窗口里（窗口自带出现动画），桌面上不再飞牌，窗口一出来就能选
-          const inWin = (this.feast && l.cards.every(id => this.feast.ids.includes(id))) || (this.revealWin && l.cards.every(id => this.revealWin.ids.includes(id)));
-          if (inWin) { mv.forEach(m => { if (this.disp) this.disp.set(m.id, 'win'); }); beats.push(async () => { if (this.feast) this.feast.hidden = false; if (this.revealWin) this.revealWin.hidden = false; this.renderWins(); this.renderTable(); await sleep(Math.max(200, 350 * mult)); }); }
+          const inWin = (this.feast && l.cards.every(id => this.feast.ids.includes(id))) || (this.revealWin && l.cards.every(id => this.revealWin.ids.includes(id))) || (this.schemeWin && l.cards.every(id => this.schemeWin.cards.includes(id)));
+          if (inWin) { mv.forEach(m => { if (this.disp) this.disp.set(m.id, 'win'); }); beats.push(async () => { if (this.feast) this.feast.hidden = false; if (this.revealWin) this.revealWin.hidden = false; if (this.schemeWin) this.schemeWin.hidden = false; this.renderWins(); this.renderTable(); await sleep(Math.max(200, 350 * mult)); }); }
           else beats.push(() => this.flyMany(mv, mult));
         }
         else if (ty === 'judge') { const mv = byIds(l.card); beats.push(async () => { await this.flyMany(mv, mult); await sleep(1000 * mult); }); }   // 无名杀：亮出判定牌后停 2 个单位时长
@@ -6767,11 +6825,11 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
         else if (ty === 'phase') { const at = base + logs.indexOf(l) + 1; beats.push(async () => { if (!(g.processing && g.processing.length && this.center.some(e => g.processing.some(c => c.id === e.id) && e.li < at))) await this.clearCenter(mult, at); this.setPhaseShown(l.seat, l.phase); await sleep(Math.max(320, 520 * mult)); }); }
         else if (ty === 'chain') beats.push(() => { this.stSet(l.seat, 'chained', !!l.on); return sleep(Math.max(120, 220 * mult)); });
         else if (ty === 'flip') beats.push(() => { this.stSet(l.seat, 'faceDown', !!l.faceDown); return sleep(Math.max(150, 300 * mult)); });
-        else if (ty === 'drunk') beats.push(() => { this.stSet(l.seat, 'drunk', true); return sleep(Math.max(120, 250 * mult)); });
+        else if (ty === 'drunk') beats.push(() => { this.stSet(l.seat, 'drunk', !l.off); return sleep(Math.max(120, 250 * mult)); });
         else if (ty === 'move') { const f = async () => { const mv = moves.filter(m => m.logRef === l && !claimed.has(m)); mv.forEach(m => claimed.add(m)); if (mv.length) await this.flyMany(mv, mult); this.landedDiscards(l.ids || [], mult); }; f.isMove = true; beats.push(f); }
         else if (ty === 'tableClear') { const at = base + logs.indexOf(l) + 1; beats.push(async () => { this.setAimed(null, false); await this.clearCenter(mult, at); if (this.shownCards) { this.shownCards = null; this.renderTable(); this.renderMe(); } }); }   // 展示的牌只在这次结算期间显示
         else if (ty === 'judgeClear') beats.push(() => this.retire(l.cards || [], mult));
-        else if (ty === 'turn') { const at = base + logs.indexOf(l) + 1; beats.push(async () => { this.setAimed(null, false); await this.clearCenter(mult, at, true); { const old = (this.center || []).filter(e => (e.li || 0) < at).map(e => e.id); if (old.length) this.fadeIds(old, mult); } this.shownCards = null; /* 一名角色的回合结束：桌面上属于这一回合的牌强制清空 */ this.setPhaseShown(null, null); }); }
+        else if (ty === 'turn') { const at = base + logs.indexOf(l) + 1; if (l.seat !== this.me) beats.push(() => this.turnShine(l.seat, mult)); beats.push(async () => { this.setAimed(null, false); await this.clearCenter(mult, at, true); { const old = (this.center || []).filter(e => (e.li || 0) < at).map(e => e.id); if (old.length) this.forceRetire(old, mult); } this.shownCards = null; /* 一名角色的回合结束：桌面上属于这一回合的牌强制清空 */ this.setPhaseShown(null, null); }); }
         else if (ty === 'damage' || ty === 'loseHp') { const seat = l.to != null ? l.to : l.seat; beats.push(() => this.hitFx(seat, '−' + l.n, ty === 'damage' ? (l.nature || 'normal') : 'lose', mult, l.hp, ty === 'damage' ? l.from : null)); }
         else if (ty === 'recover') beats.push(() => { if (l.hp > 0) this.stSet(l.seat, 'dying', false); return this.hitFx(l.seat, '+' + l.n, 'heal', mult, l.hp); });
         else if (ty === 'hpSet' || ty === 'maxHp') beats.push(async () => { this.setHpShown(l.seat, g.p(l.seat).hp); });
@@ -6784,7 +6842,7 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
               if (s2 != null && s2 !== l.seat) hit.add(s2); }
             tg = [...hit].slice(0, 4);
           }
-          beats.push(() => { tg.forEach(s => this.drawLine(this.seatPt(l.seat), this.seatPt(s), mult)); return this.skillFx(l.seat, l.skill, mult); });
+          beats.push(() => { if (l.active && tg.length) this.setAimed(tg, true); /* 主动技能的目标框保持到这次结算结束（例如交完牌之后） */ tg.forEach(s => this.drawLine(this.seatPt(l.seat), this.seatPt(s), mult)); return this.skillFx(l.seat, l.skill, mult); });
         }
         else if (ty === 'aim') beats.push(async () => { const tg = (l.targets || []).filter(s => s !== l.seat); if (tg.length) this.setAimed(tg, true); tg.forEach(s => this.drawLine(this.seatPt(l.seat), this.seatPt(s), mult)); if (tg.length) await sleep(Math.max(200, 380 * mult)); });
         else if (ty === 'show') beats.push(async () => { this.shownCards = this.shownCards || {}; this.shownCards[l.seat] = l.card; this.shownExpire(l.seat, l.card, mult); this.renderTable(); this.renderMe(); await sleep(Math.max(500, 900 * mult)); });
@@ -6800,6 +6858,7 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
       if (tok !== this.token) return;
       const cur = g.current && !g.over && g.phase ? g.current.seat : null; this.setPhaseShown(cur, cur != null ? g.phase : null);
       if (this.feast) this.feast.hidden = false; if (this.revealWin) this.revealWin.hidden = false;
+      for (const e of this.center || []) { e.pend = false; e.hold = false; }   // 这一步结束：所有牌都已到场
       this.disp = null; this.stShown = null; this.recordLast(); this.render();
       for (const mv of moves) if (mv.el) this.unHide(mv.id, mv.el);
       this.hideSet = null;
@@ -6815,7 +6874,18 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
       if (mult) { await sleep(Math.max(200, 600 * mult)); const w = this.$('.qx-feast'); if (w) { w.classList.add('qx-wfade'); await sleep(300); } }
       this.feast = null; this.renderWins();
     }
-    renderWins() { const w = this.$('.qx-wins'); if (w) morph(w, this.feastHTML() + this.pindianHTML() + this.revealHTML()); const st = this.$('.qx-stage'); if (st) st.classList.toggle('qx-haswin', !!((this.feast && !this.feast.hidden) || (this.revealWin && !this.revealWin.hidden))); }
+    renderWins() { const w = this.$('.qx-wins'); if (w) morph(w, this.feastHTML() + this.pindianHTML() + this.revealHTML() + this.schemeHTML()); const st = this.$('.qx-stage'); if (st) st.classList.toggle('qx-haswin', !!((this.feast && !this.feast.hidden) || (this.revealWin && !this.revealWin.hidden) || (this.schemeWin && !this.schemeWin.hidden))); }
+    // 权术：独立窗口，左右两侧是两名角色的立绘，中间各一个牌槽，两边对称；自己发动时可拖动 / 点击交换两张牌，确定后分牌
+    schemeHTML() {
+      const S = this.schemeWin; if (!S || S.hidden) return '';
+      const g = this.g, t = this.T.t; const u = this.ui; const mine = !!(u && u.req.kind === 'chooseTargets' && u.req.reason === 'schemeAssign');
+      const shown = S.swap ? [S.cards[1], S.cards[0]] : S.cards;
+      const side = i => { const p = g.p(S.seats[i]); const id = shown[i]; const c = g.card(id); const has = c && !S.gone.includes(id);
+        const art = `<div class="qx-schart"><img src="${p.hero ? this.seatArtSrc(p.hero) : this.backSrc('game')}" alt="" draggable="false"><div class="qx-schnm">${esc(this.who(p.seat))}</div></div>`;
+        const slot = `<div class="qx-schslot" data-schslot="${i}">${has ? `<div class="qx-rvc${mine ? ' qx-rvcan' : ''}" data-rv="${id}">${this.cardHTML(c, 'qx-wcard').replace(/ data-id="\d+"/, ` data-cid="${id}"`)}</div>` : ''}</div>`;
+        return `<div class="qx-schside qx-sch${i ? 'r' : 'l'}">${i ? slot + art : art + slot}</div>`; };
+      return `<div class="qx-win qx-scheme" data-mk="scheme"><div class="qx-mtitle"><i></i><span>${esc(this.T.skillName('scheme'))}</span><i></i></div><div class="qx-msub">${esc(mine ? t('schemeTip') : t('schemeWait'))}</div><div class="qx-schrow">${side(0)}<div class="qx-schvs">⇄</div>${side(1)}</div>${mine ? `<div class="qx-mfoot"><button class="qx-dbt qx-primary" data-act="schemeOk">${esc(t('confirm'))}</button></div>` : ''}</div>`;
+    }
     // 雕琢等「亮出牌再挑选」：上排亮出的牌，下排凹槽；把要的牌拖（或点）到下排
     // 窗口底部的红色倒计时条（对照三国杀OL）：只是表现，不影响结算；每换一个人选牌就重新开始
     wTimerHTML(k) { return `<div class="qx-wtimer" data-mk="wt${k}"><i></i></div>`; }
@@ -6854,6 +6924,13 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
       });
       const end = e => {
         if (!d) return; const was = d; d = null;
+        if (was.el.closest('.qx-scheme')) {   // 权术窗口：点一下或拖到另一个槽，都是交换两张牌
+          if (was.ghost) { was.ghost.remove(); was.el.style.opacity = ''; }
+          const tgt = was.on ? document.elementFromPoint(e.clientX, e.clientY) : null; const slot = tgt && tgt.closest('.qx-schslot');
+          const from = was.el.closest('.qx-schslot');
+          if ((!was.on || (slot && slot !== from)) && this.schemeWin) { const S = this.schemeWin; this.flipWins(() => { S.swap = !S.swap; this.renderWins(); }); }
+          return;
+        }
         if (!was.on) { this.rvJust = true; setTimeout(() => { this.rvJust = false; }, 30); this.rvToggle(was.id); return; }
         const gr = was.ghost.getBoundingClientRect(); was.ghost.remove(); was.el.style.opacity = '';
         const u = this.ui; const inTake = u && u.btn && u.btn.includes(was.id);
@@ -6891,9 +6968,7 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
     }
     judgeMark(id, ok) {
       { const je = (this.center || []).find(e => e.id === id); if (je) { je.judge = 'done'; const ctr = this.$('.qx-ctr'); if (ctr) morph(ctr, this.centerHTML()); } }   // 判定结果揭晓：天意牌这时才允许变暗
-      const el = this.$(`.qx-ctr [data-cid="${id}"]`); if (!el) return;
-      const m = document.createElement('div'); m.className = 'qx-jmark ' + (ok ? 'qx-jok' : 'qx-jno'); m.textContent = ok ? '✓' : '✗';
-      el.appendChild(m);
+      const je2 = (this.center || []).find(e => e.id === id); if (je2) { je2.verdict = ok ? 'ok' : 'no'; const ctr = this.$('.qx-ctr'); if (ctr) morph(ctr, this.centerHTML()); }
     }
     // 一组牌同时飞行；从别人手里出 / 进别人手里的牌以牌背飞，摸牌以一叠牌背飞
     flyMany(mvs, mult, speed) {
@@ -6917,6 +6992,7 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
         if (delay) setTimeout(() => this.dispSet(mv.id, 'air'), delay); else this.dispSet(mv.id, 'air');
         const el = document.createElement('div'); el.className = 'qx-fly';
         const face = !mv.back && (this.keyVisible(mv.k1) || this.keyVisible(mv.k0) || mv.fromBar);
+        { const pe = (this.center || []).find(e => e.id === mv.id && e.pend); if (pe && mv.k1 === 'center') { pe.pend = false; const ctr = this.$('.qx-ctr'); if (ctr) morph(ctr, this.centerHTML()); } }
         const toEl = mv.toRect ? null : (mv.el && !mv.el.isConnected ? (this.cardEl(mv.id) || mv.el) : mv.el);
         const toBar = toEl && (toEl.classList.contains('qx-ebar') || toEl.classList.contains('qx-sbar') || toEl.classList.contains('qx-omk'));
         let from = mv.from || this.anchorRect(mv.k0);
@@ -7010,7 +7086,7 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
         const bar = this.cardEl(id); if (bar) { bar.style.visibility = ''; bar.classList.remove('qx-appear'); void bar.offsetWidth; bar.classList.add('qx-appear'); }
       };
       if (first.k0 === 'center') { showSlot(); await sleep(Math.max(200, 350 * mult)); return; }
-      if (ent) { ent.hold = true; if (ctr) morph(ctr, this.centerHTML()); }
+      if (ent) { ent.hold = true; ent.pend = false; if (ctr) morph(ctr, this.centerHTML()); }
       const gEl = ctr && ctr.querySelector(`[data-gid="${id}"]`);
       const leg = Object.assign({}, first, { k1: 'center', el: null, toRect: gEl ? this.rel(gEl) : this.centerSlot(), track: gEl || null, keep: true });
       await this.fly(leg, 0, mult);
@@ -7018,6 +7094,7 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
       if (leg.ghost) leg.ghost.remove();
       showSlot();
       await sleep(Math.max(250, 450 * mult));
+      if (ent) this.retire([id], mult);   // 一张装上就暗下去，下一张再亮出来
     }
 
     // 别人摸牌（参照无名杀 $draw）：每张牌从牌堆（桌面中央）单独飞出，相隔 50ms，落点左右散开（每张 20px，最多 ±80px），飞行 0.8 秒后淡出
@@ -7148,6 +7225,13 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
       a.onfinish = () => f.remove();
       return sleep(Math.max(300, 700 * mult));
     }
+    // 其他角色回合开始：武将牌上一道玻璃反光的光棱自下而上扫过，结束后才进入他的回合
+    turnShine(seat, mult) {
+      if (!mult) return null; const por = this.porEl(seat); if (!por) return null;
+      const box = document.createElement('div'); box.className = 'qx-shinebox'; const el = document.createElement('div'); el.className = 'qx-shine'; box.appendChild(el); por.appendChild(box);
+      const d = Math.max(450, 700 * Math.min(1, mult));
+      return new Promise(res => { let done = false; const f = () => { if (done) return; done = true; box.remove(); res(); }; const a = el.animate([{ transform: 'translateY(115%) skewY(-18deg)', opacity: 0 }, { opacity: 1, offset: .15 }, { opacity: 1, offset: .8 }, { transform: 'translateY(-115%) skewY(-18deg)', opacity: 0 }], { duration: d, easing: 'cubic-bezier(.3,.1,.3,1)' }); a.onfinish = f; a.oncancel = f; setTimeout(f, d + 300); });
+    }
     deathFx(seat, mult) {
       if (this.deadHold) this.deadHold.delete(seat);
       const p = this.g.p(seat); const root = seat === this.me ? this.$('.qx-dpor') : this.$(`.qx-st[data-seat="${seat}"]`);
@@ -7186,7 +7270,6 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
     showThink(req, ms) {
       const seat = req.player.seat;
       this.setThinkBars([seat]);
-      const p = this.$('.qx-prompt'); if (p) p.innerHTML = `<div class="qx-ptxt qx-pwait">${esc(this.waitText(req))}</div>`;
     }
     pvars(req) {
       const g = this.g; const ts = req.to != null ? req.to : req.target != null ? req.target : req.pindianWith != null ? req.pindianWith : req.judgeSeat;
@@ -7239,6 +7322,8 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
         else if (r === 'defianceDiscard' || r === 'vengeanceDiscard') text = T.prompt(r, { n: req.min });
         else text = T.prompt(r, this.pvars(req)) || t('chooseCards', { min: req.min, max: req.max });
         btns = btn('ok', t('confirm'), this.canConfirm(), 'qx-primary') + (req.min === 0 || req.optional ? btn('cancel', t('cancel')) : '');
+      } else if (k === 'chooseTargets' && req.reason === 'schemeAssign' && this.schemeWin) {
+        text = ''; btns = '';   // 权术在独立窗口里操作，下方不再重复提示
       } else if (k === 'chooseTargets') {
         text = T.prompt(req.reason, this.pvars(req)) || t('targets', { min: req.min, max: req.max });
         btns = btn('ok', t('confirm'), this.canConfirm(), 'qx-primary') + (req.optional ? btn('cancel', t('cancel')) : '');
