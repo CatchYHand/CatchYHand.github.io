@@ -2739,6 +2739,9 @@ function installTheme(lib2, game2, ui2, get2, _status2) {
   setInterval(tag, 500);
 }
 window.QX = { lib, game, ui, get, ai, _status };
+lib.config.new_tutorial = true;
+game.showChangeLog = function() {};
+document.title = "群星议会 The Hall of Ages";
 const characters = {
   "qx_alexander": {
     "sex": "male",
