@@ -1989,7 +1989,7 @@
   H.leonidas = { faction: 'classical', hp: 4, gender: 'male', skills: ['narrows', 'defiance'], name: ['列奥尼达', 'Leonidas'], title: ['斯巴达王', 'The Spartan King'], rating: 7 };
   S.narrows = {
     name: ['隘口', 'NARROWS'], type: 'locked', locked: true,
-    desc: ['锁定技，当你受到伤害后，直到本回合结束，所有其他角色使用的杀和谋略牌对你无效。当你即将对其他角色造成伤害时，将该伤害值调整为目标角色当前体力值的一半（向下取整）。', 'Compulsory skill. After you take damage, other characters\' Strikes and Stratagems have no effect on you until the end of the turn. When you are about to deal damage to another character, that damage becomes half of their current health (rounded down).'],
+    desc: ['锁定技，当你受到伤害后，直到本回合结束，所有其他角色使用的杀和谋略牌对你无效。当你即将对其他角色造成伤害时，将该伤害值调整为目标角色当前体力值的一半（向下取整，至少为 1）。', 'Compulsory skill. After you take damage, other characters\' Strikes and Stratagems have no effect on you until the end of the turn. When you are about to deal damage to another character, that damage becomes half of their current health (rounded down, at least 1).'],
     triggers: {
       damaged: { can: (g, o, d) => d.to === o && !o.dead, *on(g, o) { o.marks.narrows = g.turnSeq || 0; } },
       effectBefore: {
@@ -1997,8 +1997,8 @@
         can: (g, o, d) => d.target === o && o.marks.narrows === (g.turnSeq || 0) && d.use.from !== o && (isStrike(d.use.card) || (E.CARD_DEFS[d.use.card.name] || {}).type === 'stratagem'),
         *on(g, o, d) { d.cancel = true; g.log('skill', { seat: o.seat, skill: 'narrows' }); },
       },
-      // 你造成的伤害：调整为目标当前体力值的一半（向下取整），为 0 则不造成伤害
-      damageCausing: { silent: true, can: (g, o, d) => d.from === o && d.to !== o && !d.to.dead, *on(g, o, d) { d.amount = Math.floor(Math.max(0, d.to.hp) / 2); g.log('skill', { seat: o.seat, skill: 'narrows', targets: [d.to.seat] }); } },
+      // 你造成的伤害：调整为目标当前体力值的一半（向下取整），至少为 1
+      damageCausing: { silent: true, can: (g, o, d) => d.from === o && d.to !== o && !d.to.dead, *on(g, o, d) { d.amount = Math.max(1, Math.floor(Math.max(0, d.to.hp) / 2)); g.log('skill', { seat: o.seat, skill: 'narrows', targets: [d.to.seat] }); } },
     },
   };
   S.defiance = {
