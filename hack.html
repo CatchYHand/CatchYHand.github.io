@@ -10256,7 +10256,7 @@ function holdBgm(on){ try{ if(on){ bgmHeld=[TR.bgm,TR.decode].filter(t=>t&&t.pla
 function qxOpen(){ if(document.getElementById('qxhost')) return;
   const h=document.createElement('div'); h.id='qxhost';
   h.innerHTML=`<iframe src="hall-of-ages/index.html" allow="fullscreen; autoplay" title="${T('The Hall of Ages','群星议会')}"></iframe><button class="qxh-back" title="${T('All Games','游戏列表')}">${T('All Games','游戏列表')}</button>`;
-  h.querySelector('.qxh-back').onclick=()=>h.remove(); document.body.appendChild(h); }
+  h.querySelector('.qxh-back').onclick=()=>{ h.remove(); bgm(4); }; document.body.appendChild(h); bgm(7); }
 function openRoom(){ ensure(); open=true; scr='lobby'; preload(); render(); requestAnimationFrame(()=>root.classList.add('on')); snd('pop'); holdBgm(true); bgm(4); }
 function closeRoom(){ if(!root||!open) return; if(paused) resumeGame(true); clearTimeout(timer); open=false; root.classList.remove('on'); jingleStop(); try{ stormEnd(true); }catch(e){} bgm(null); Object.values(BGM.tr||{}).forEach(t=>{ try{ t.pause(.8); }catch(e){} }); holdBgm(false); rdClosedHook&&rdClosedHook(); }
 function keyFlash(k,dn){ const m={' ':'pass','Enter':'play','h':'hint','H':'hint','s':'sort','S':'sort'}[k]; if(!m) return; const b=$g('[data-a='+m+']'); b&&b.classList.toggle('dn',dn); }
@@ -11409,11 +11409,11 @@ function sirenAlert(s,n){ const fx=$g('.gt-fx'); if(!fx||reduce) return; const R
   const side=s===1?'right':s===3?'left':s===2?'top':'bottom'; const fl=fxEl('sir-edge '+side,'',0,0); setTimeout(()=>fl.remove(),2000); }
 
 const XICO='<svg class="xi" viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 6.5l11 11M17.5 6.5l-11 11"/></svg>';
-/* ---------- music: game-room theme (4) in the lobby; Army Chess menu and tutorial theme (6), battle theme (5) once the fight starts; Guandan's menu theme (1) on its welcome, rules, tutorial and before the deal; play theme (2) after the deal; tense theme (3) after the first warning ---------- */
+/* ---------- music: game-room theme (4) in the lobby; The Hall of Ages theme (7) while that game is open; Army Chess menu and tutorial theme (6), battle theme (5) once the fight starts; Guandan's menu theme (1) on its welcome, rules, tutorial and before the deal; play theme (2) after the deal; tense theme (3) after the first warning ---------- */
 let gdBus=null, BGM={cur:null,k:null,tr:{}};
 function bgmTrack(k){ if(BGM.tr[k]) return BGM.tr[k]; if(typeof Track==='undefined'||!AC) return null;
   if(!gdBus){ gdBus=AC.createGain(); gdBus.gain.value=1; gdBus.connect(musicBus||AC.destination); }
-  const t=new Track(VOX_URL('gd-bgm'+k),k===4?0:k===6?1.5:3); t.dest=gdBus; if(k===4) t.trim=function(){ this.ls=0; this.le=this.buf.duration; if(this.pos==null) this.pos=0; }; t.schedule=function(){ const c=this.cur, endAt=c.at+(this.le-c.offset), nextAt=endAt+this.gap, lead=Math.max(0,(nextAt-AC.currentTime-1)*1000); this.timer=setTimeout(()=>{ if(!this.playing) return; this.cur=this.seg(Math.max(AC.currentTime+.05,nextAt),this.ls,0); this.schedule(); },lead); }; const seg=t.seg.bind(t); t.seg=(at,off,fade)=>{ const sg=seg(at,off,fade); return sg; }; return BGM.tr[k]=t; }
+  const t=new Track(VOX_URL(k===7?'qx-bgm':'gd-bgm'+k),k===4?0:k===6||k===7?1.5:3); t.dest=gdBus; if(k===4) t.trim=function(){ this.ls=0; this.le=this.buf.duration; if(this.pos==null) this.pos=0; }; t.schedule=function(){ const c=this.cur, endAt=c.at+(this.le-c.offset), nextAt=endAt+this.gap, lead=Math.max(0,(nextAt-AC.currentTime-1)*1000); this.timer=setTimeout(()=>{ if(!this.playing) return; this.cur=this.seg(Math.max(AC.currentTime+.05,nextAt),this.ls,0); this.schedule(); },lead); }; const seg=t.seg.bind(t); t.seg=(at,off,fade)=>{ const sg=seg(at,off,fade); return sg; }; return BGM.tr[k]=t; }
 // end of the match: a victory or defeat piece plays once, then after two seconds the lobby theme comes back and loops
 let JING={src:null,timer:0,buf:{}};
 // every stop bumps a generation number, so a jingle still loading, or a 'bring the theme back' timer, from an older ending can never start later
@@ -13842,7 +13842,7 @@ let AC=null, musicBus=null, sfxBus=null;
 const LOOP_XF=1.8, SWITCH_XF=1.4;
 // every piece of music on the site plays at one loudness: each file gets the gain that brings it to the shared target
 // (measured in LUFS: -16 for the site and battle music, -17.5 for lobbies, menus and deployment, -15 for the end pieces)
-const MUSIC_DB={'bgm':-3.8,'star':-3.8,'decode':-5.5,'gd-bgm1':-1.6,'gd-bgm2':-1.1,'gd-bgm3':-1.1,'gd-bgm4':.9,'gd-bgm5':2.5,'gd-bgm6':1.1,'jq-deploy':-3.3,'jq-mood-a':3.4,'jq-mood-d':3.2,'jq-win':4.1,'jq-lose':2.9,'jq-draw':-2.2,'gd-win':.2,'gd-lose':.2};
+const MUSIC_DB={'bgm':-3.8,'star':-3.8,'decode':-5.5,'gd-bgm1':-1.6,'gd-bgm2':-1.1,'gd-bgm3':-1.1,'gd-bgm4':.9,'gd-bgm5':2.5,'gd-bgm6':1.1,'qx-bgm':.8,'jq-deploy':-3.3,'jq-mood-a':3.4,'jq-mood-d':3.2,'jq-win':4.1,'jq-lose':2.9,'jq-draw':-2.2,'gd-win':.2,'gd-lose':.2};
 const musicGain=u=>{ const k=String(u||'').split('/').pop().replace(/\.\w+$/,''); return Math.pow(10,(MUSIC_DB[k]||0)/20); };
 class Track{
   constructor(url,gap){ this.url=url; this.gap=gap||0; this.buf=null; this.pos=null; this.playing=false; this.cur=null; this.next=null; this.timer=null; this.loading=null; }
