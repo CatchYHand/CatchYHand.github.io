@@ -6491,10 +6491,10 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
       const zrun = new Map(prevLocs || []);   // 逐条日志推算每张牌当时在哪（用来知道被弃置的牌原来在谁的装备区 / 判定区 / 手里）
       const g = this.g, T = this.T, t = T.t; this.center = this.center || []; let li = base || 0;
       const who = s => this.who(s);
-      const add = (id, cap, as, kind) => {
+      const add = (id, cap, as, kind, force) => {
         if (id == null) return; const c = g.card(id); if (!c) return;
         if (this.feast && this.feast.ids.includes(id)) return;
-        if (this.revealWin && this.revealWin.ids.includes(id)) return;
+        if (!force && this.revealWin && this.revealWin.ids.includes(id)) return;
         if (this.schemeWin && this.schemeWin.cards.includes(id)) return;
         const old = this.center.find(e => e.id === id);
         if (old) { if (cap) old.cap = cap; if (as) old.as = as; return; }
@@ -6515,6 +6515,8 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
             const k0 = zrun.get(id); const m0 = /^(h|e|j):(\d+)$/.exec(k0 || '');
             // 从手里 / 装备区 / 判定区直接进弃牌堆的牌（被顶掉的装备、判定完或被拆的天兆、阵亡时弃置的所有牌……）：先放到桌面中央，再变暗、淡出
             if (l.to === 'discard' && m0 && !this.center.some(e => e.id === id)) add(id, t('cap_discard', { s: who(+m0[2]) }), null, 'discard');
+            // 雕琢等亮牌窗口里没被拿走的牌：从窗口落到桌面上，再变暗、淡出
+            if (l.to === 'discard' && this.revealWin && this.revealWin.ids.includes(id) && !this.center.some(e => e.id === id)) add(id, t('cap_discard', { s: who(this.revealWin.seat) }), null, 'discard', true);
             if (l.reason === 'omenJudge') continue;   // 判定期间天兆仍算在判定区，结束后从判定区上桌
             zrun.set(id, l.to === 'hand' ? 'h:' + l.seat : l.to === 'equip' ? 'e:' + l.seat : l.to === 'judge' ? 'j:' + l.seat : l.to === 'process' ? 'center' : l.to === 'discard' ? 'pile' : 'deck');
           }
@@ -6721,6 +6723,7 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
         if (l.reason === 'omenJudge') continue;               // 判定时天兆标记留在原处，只亮出判定牌
         for (const id of l.ids) {
           const k0 = run.get(id); const k1 = keyOf(l, id);
+          if (k0 === 'center' && k1 === 'center' && l.to === 'discard' && this.revealWin && this.revealWin.ids.includes(id)) { mkMove(id, 'win', 'center', l, !hopped.has(id)); hopped.add(id); run.set(id, k1); continue; }
           if (k0 == null || k0 === 'none' || k0 === k1) { run.set(id, k1); continue; }
           if ((k0 === 'pile' || k0 === 'deck') && (k1 === 'deck' || k1 === 'pile')) { run.set(id, k1); continue; }
           if (k0 === 'center' && k1 === 'pile') { run.set(id, k1); continue; }
@@ -6761,7 +6764,7 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
         mv.el = el && !handOther ? el : null;
         if (mv.el) { mv.el.style.visibility = 'hidden'; this.hideSet.add(mv.id); }
       }
-      const claimed = new Set();
+      const claimed = new Set(); const rvDone = new Set();
       const claim = (pred, max) => { const out = []; for (const mv of moves) { if (claimed.has(mv) || !pred(mv)) continue; if (max != null && out.length >= max) break; claimed.add(mv); out.push(mv); } return out; };
       const byIds = ids => { const s = new Set([].concat(ids || []).filter(x => x != null)); return claim(mv => s.has(mv.id)); };
       const beats = []; let vetoOf = this.lastVetoOf || null; let prevTy = ''; let lastDisc = null;
@@ -6805,13 +6808,24 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
         else if (ty === 'gain') {
           const mv = claim(m => m.k1 === 'h:' + l.seat && m.k0 !== 'deck', l.n); if (!mv.length) continue;
           const R = this.revealWin;
-          if (R && mv.some(m => R.ids.includes(m.id))) beats.push(async () => {
-            if (l.seat !== this.me || !R.picks.length) { for (const m of mv) { if (!R.picks.includes(m.id)) { R.picks.push(m.id); this.flipWins(() => this.renderWins()); await sleep(Math.max(300, 480 * mult)); } } }
-            await sleep(Math.max(200, 400 * mult));
-            for (const m of mv) { const el = this.$(`.qx-reveal [data-cid="${m.id}"]`); if (el) m.from = this.rel(el); }
-            R.ids = R.ids.filter(id => !mv.some(m => m.id === id)); R.picks = []; this.renderWins();
-            await this.flyMany(mv, mult);
-          });
+          if (R && mv.some(m => R.ids.includes(m.id))) {
+            // 同一次结算里，窗口剩下的牌进弃牌堆：和拿牌同时开始（窗口淡出、选中的牌飞进手里、其余的牌落到桌上）
+            const li = logs.indexOf(l); const dl = logs.find((x, j) => j > li && x.type === 'move' && x.to === 'discard' && x.ids && x.ids.length && x.ids.every(id => R.ids.includes(id)));
+            const dmv = dl ? claim(m => m.logRef === dl) : []; if (dl) rvDone.add(dl);
+            beats.push(async () => {
+              if (l.seat !== this.me || !R.picks.length) { for (const m of mv) { if (!R.picks.includes(m.id)) { R.picks.push(m.id); this.flipWins(() => this.renderWins()); await sleep(Math.max(300, 480 * mult)); } } }
+              await sleep(Math.max(200, 400 * mult));
+              const all = mv.concat(dmv);
+              for (const m of all) { const el = this.$(`.qx-reveal [data-cid="${m.id}"]`); if (el) { m.from = this.rel(el); el.style.visibility = 'hidden'; } }
+              const leftIn = R.ids.filter(id => !all.some(m => m.id === id));
+              const w = this.$('.qx-reveal'); const closing = !leftIn.length && !!w;
+              if (closing) w.classList.add('qx-wfade'); else { R.ids = leftIn; R.picks = []; this.renderWins(); }
+              const fl = this.flyMany(all, mult);
+              if (closing) { await sleep(260); if (this.revealWin === R) { this.revealWin = null; this.renderWins(); } }
+              await fl;
+              if (dmv.length) this.landedDiscards(dmv.map(m => m.id), mult);
+            });
+          }
           else beats.push(() => this.giveFly(mv, mult));
         }
         else if ((ty === 'discard' || ty === 'discardOf') && lastDisc && lastDisc.ty === ty && lastDisc.i === logs.indexOf(l) - 1 && lastDisc.seat === l.seat && lastDisc.by === l.by) { const ids = [].concat(ty === 'discard' ? l.cards : [l.card]); lastDisc.ids.push(...ids); lastDisc.mv.push(...byIds(ids)); lastDisc.i++; }   // 同一次弃置的多张牌：合成一拍，同时飞出
@@ -6853,6 +6867,7 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
         else if (ty === 'chain') beats.push(() => { this.stSet(l.seat, 'chained', !!l.on); return sleep(Math.max(120, 220 * mult)); });
         else if (ty === 'flip') beats.push(() => { this.stSet(l.seat, 'faceDown', !!l.faceDown); return sleep(Math.max(150, 300 * mult)); });
         else if (ty === 'drunk') beats.push(() => { this.stSet(l.seat, 'drunk', !l.off); return sleep(Math.max(120, 250 * mult)); });
+        else if (ty === 'move' && rvDone.has(l)) continue;
         else if (ty === 'move') { const f = async () => { const mv = moves.filter(m => m.logRef === l && !claimed.has(m)); mv.forEach(m => claimed.add(m)); if (mv.length) await this.flyMany(mv, mult); this.landedDiscards(l.ids || [], mult); }; f.isMove = true; beats.push(f); }
         else if (ty === 'tableClear') { const at = base + logs.indexOf(l) + 1; beats.push(async () => { this.setAimed(null, false); await this.clearCenter(mult, at); if (this.shownCards) { this.shownCards = null; this.renderTable(); this.renderMe(); } }); }   // 展示的牌只在这次结算期间显示
         else if (ty === 'judgeClear') beats.push(() => this.retire(l.cards || [], mult));
@@ -6894,6 +6909,7 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
       this.roleHold = null;
       this.disp = null; this.stShown = null; this.recordLast(); this.render();
       for (const mv of moves) if (mv.el) this.unHide(mv.id, mv.el);
+      if (this.hideSet) for (const id of [...this.hideSet]) this.unHide(id);   // 这一步结束：任何还被藏着的牌都必须显示出来
       this.hideSet = null;
       this.hpShown = null; this.deadHold = null;
       for (const p of g.players) this.setHpShown(p.seat, p.hp, true);
@@ -7091,7 +7107,7 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
         function done() {
           landed();
           if (mv.keep) { mv.ghost = el; } else el.remove();
-          if (toEl) { const te = self.unHide(mv.id, toEl); if (toBar) { te.classList.remove('qx-appear'); void te.offsetWidth; te.classList.add('qx-appear'); } }
+          if (toEl || toMyHand) { const te = self.unHide(mv.id, toEl); if (toBar && te) { te.classList.remove('qx-appear'); void te.offsetWidth; te.classList.add('qx-appear'); } }
           res();
         }
         a.onfinish = done; a.oncancel = done;
