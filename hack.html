@@ -5044,7 +5044,7 @@ html:not([lang=zh]) .gt-choose .gc-lb b{font-family:'Newsreader','Noto Serif SC'
 .jq-end2.l .ph .shd{background:radial-gradient(120% 90% at 50% 30%,transparent 50%,rgba(20,10,6,.5))!important}
 .jqw .wl-ban img{object-position:50% 40%!important}
 .gl-art.glc-jq .gl-cov{object-position:50% 50%}
-.gl-art.glc-qx .gl-cov{object-position:50% 45%}
+.gl-art.glc-qx .gl-cov{object-position:50% 40%}
 
 .jq-end2 .ph .shd{position:absolute;inset:0;background:linear-gradient(180deg,transparent 60%,rgba(30,20,8,.35))!important}
 
@@ -10293,7 +10293,7 @@ function lobby(){ root.className='on lobby'; const games=[
    {k:'qunxing',t:T('The Hall of Ages','群星议会'),s:T('History’s greatest names share one council table. The Chancellor holds the Quill of History, and not everyone seated wants it kept.','古往今来的群星围坐在同一张议事桌前。执笔者握着历史之笔，而桌边并非人人都愿意让他一直握下去。'),tag:T('Board game','桌游'),live:1,art:'qx'}];
   const art=[[14,0],[2,1],[17],[14,3]].map(([r,s],i)=>`<span class="f${i+1}">${cardHTML({id:-1,r,s:r>=16?4:s})}</span>`).join('');
   paint(head(T('pick a table','选一张牌桌'))+`<main class="gr-lobby"><div class="gl-hd"><h2>${T('The Game Room','游艺厅')}</h2><p>${T('A few tables, set up and waiting. Every game here plays right in the page.','几张桌子已经摆好，等人入座。这里的每个游戏点开就能玩。')}</p></div><div class="gl-grid">${games.map(g=>`<button class="gl-card${g.live?'':' off'}" ${g.live?`data-a="game" data-g="${g.k}"`:'disabled'}>
-     <div class="gl-art${g.live?' cov':''}${g.art?' glc-'+g.art:''}">${g.art==='jq'?jqCover():g.art==='qx'?`<img class="gl-cov" src="hall-of-ages/image/qx/back-game.jpg" alt="">`:g.live?`<img class="gl-cov" src="${GIMG('gd-cover')}" alt="">`:`<div class="gl-soon">?</div>`}</div>
+     <div class="gl-art${g.live?' cov':''}${g.art?' glc-'+g.art:''}">${g.art==='jq'?jqCover():g.art==='qx'?`<img class="gl-cov" src="${GIMG('qx-cover')}" alt="">`:g.live?`<img class="gl-cov" src="${GIMG('gd-cover')}" alt="">`:`<div class="gl-soon">?</div>`}</div>
      <div class="gl-tx">${g.tag?`<small>${g.tag}</small>`:''}<b>${g.t}</b><p>${g.s}</p>${g.live?`<span class="gl-go"><span>${T('Play','开始游戏')}</span><i><svg viewBox="0 0 24 24"><path d="M8 5.5v13l10.5-6.5z"/></svg></i></span>`:''}</div></button>`).join('')}</div>
 <p class="gl-note"><i aria-hidden="true">!</i><span>${T('Every game setting on this page is fictional and the artwork was made with GPT. Any resemblance to real people, units or events is purely coincidental.','本页所有游戏设定均为虚构，美术由 GPT 生成；如与现实中的人物、部队或事件雷同，纯属巧合。')}</span></p>
 </main>`); }
@@ -12498,7 +12498,7 @@ function jqMoodEval(S){ if(!S||S.tut||S.phase!=='play'||S.over!=null||!AC||jqWin
 /* ---------- Army Chess: welcome screen and the guided tutorial ---------- */
 function jqWelcome(){ $$g('.gr-pop').forEach(n=>n.remove()); const p=document.createElement('div'); p.className='gr-pop lock wel jqw';
   const opt=(k,ic,t,d)=>`<button class="wl-o wl-${k}" data-w="${k}"><i class="wl-ic">${ic}</i><b>${t}</b><small>${d}</small></button>`;
-  p.innerHTML=`<div class="gr-dlg wl"><div class="wl-ban"><img src="${GIMG('jq-cover')}" alt=""><button class="wl-back" data-w="back" title="${T('Back to all games','返回游戏列表')}"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg><span>${T('All Games','游戏列表')}</span></button></div><div class="wl-body">
+  p.innerHTML=`<div class="gr-dlg wl"><div class="wl-ban"><img src="${GIMG('jq-front')}" alt=""><button class="wl-back" data-w="back" title="${T('Back to all games','返回游戏列表')}"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg><span>${T('All Games','游戏列表')}</span></button></div><div class="wl-body">
     <small class="wl-k">${T('GENERAL HEADQUARTERS · TOP SECRET','总指挥部 · 绝密')}</small><h3>${T('Vanguard','兵锋')}</h3>
     <div class="wl-story${zh()?' zh':''}"><p>${T('0300 hours. A coded signal has just come off the line: the enemy has finished massing on the far side of the valley. Air reconnaissance counts twenty-five units, but under the camouflage nets nobody can tell a field marshal from a crate of mines.','凌晨三点，一份密电刚刚译出：敌军已在山谷对岸集结完毕。空中侦察数出了二十五支部队，可伪装网下面哪里是司令、哪里是雷场，谁也分辨不清。')}</p><p>${T('Our own twenty-five are waiting at the railheads for your orders. Where the mines go, where the bombs lie in wait, which engineer runs the line behind their front at dawn: General Headquarters leaves all of it to you.','我军的二十五支部队已在各个车站待命。地雷埋在哪里，炸弹伏在何处，又派哪一名工兵在拂晓时分顺着铁路摸到敌后，总指挥部全权交给你决定。')}</p><p class="wl-you">${T('Commander, deploy with care, read the enemy before they read you, and bring back their Flag.','总司令，请周密部署，先于敌人看穿虚实，夺回对方的军旗。')}</p></div>
     
@@ -12862,7 +12862,7 @@ function jqRules(back){ $$g('.jq-rules').forEach(n=>n.remove()); const o=documen
   requestAnimationFrame(()=>requestAnimationFrame(lead)); new ResizeObserver(lead).observe(o.querySelector('.jr-map'));
   o.addEventListener('click',e=>{ const a=e.target.closest('[data-jr]'); if(a){ e.preventDefault(); o.querySelector('#jr-'+a.dataset.jr).scrollIntoView({behavior:'smooth',block:'start'}); } }); }
 
-function jqCover(){ return `<img class="gl-cov" src="${GIMG('jq-cover')}" alt="">`; }
+function jqCover(){ return `<img class="gl-cov" src="${GIMG('jq-front')}" alt="">`; }
 
 /* ---------- leaving the tab pauses the table ---------- */
 function pauseGame(){ if(paused||!open||scr!=='table'||!H||!root) return; paused=true;
