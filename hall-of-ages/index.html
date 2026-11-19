@@ -651,9 +651,9 @@
       if (!a.hand.length || !b.hand.length || a.dead || b.dead) return null;
       this.log('pindianStart', { a: a.seat, b: b.seat, reason });
       const [ca] = yield* this.chooseOwnCards(a, 1, 1, 'h', 'pindian', null, { pindianWith: b.seat, initiator: true, why: reason });
-      this.log('pindianSet', { seat: a.seat });
+      this.log('pindianSet', { seat: a.seat, card: ca.id });
       const [cb] = yield* this.chooseOwnCards(b, 1, 1, 'h', 'pindian', null, { pindianWith: a.seat, initiator: false, why: reason });
-      this.log('pindianSet', { seat: b.seat });
+      this.log('pindianSet', { seat: b.seat, card: cb.id });
       yield* this.moveCards({ cards: [ca, cb], to: 'process', reason: 'pindian' });
       const win = ca.rank > cb.rank;
       this.log('pindian', { a: a.seat, b: b.seat, ca: ca.id, cb: cb.id, win });
@@ -5660,7 +5660,7 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
       this.g = new E.Game({ players: n, seed, roles: arr, fixedRoles: true, selectHeroes: true });
       this.me = meSeat; this.ui = null; this.logIdx = 0;
       this.animIdx = 0; this.phMem = {}; this.phCur = {}; this.marks = {}; this.handOrder = []; this.vetoBars = false; this.thinkBars = null; this.revealWin = null; this.schemeWin = null; this.roleHold = null; this.groupDone = false; this.lastPh = null;
-      this.closePeek(); this.closeBadgeMenu(); this.closeZoom(); this.pindian = null; this.pdHold = null; this.feast = null; this.shownCards = null; this.centerT = 0; this.locs = null; this.center = []; this.centerIds = new Set(); this.hpPrev = null; this.stepNo = 0; this.thinking = null;
+      this.closePeek(); this.closeBadgeMenu(); this.closeZoom(); this.pindian = null; this.pdHold = null; this.pdOut = null; this.feast = null; this.shownCards = null; this.centerT = 0; this.locs = null; this.center = []; this.centerIds = new Set(); this.hpPrev = null; this.stepNo = 0; this.thinking = null;
       const fx = this.$('.qx-fx'); if (fx) fx.innerHTML = ''; const ls = this.$('.qx-lines'); if (ls) ls.innerHTML = '';
       this.agents = {}; for (let s = 0; s < n; s++) this.agents[s] = new AI.SmartAgent(seed + s * 7919, this.settings.level);
       this.$('.qx-log').innerHTML = '';
@@ -6363,6 +6363,7 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
       // 动画进行中：手里显示的是「动画进行到这一刻」应该在手里的牌（要飞走的牌飞之前还在手里，要飞进来的牌落地后才出现）
       let cards = me.hand;
       if (this.disp) { const k = 'h:' + this.me; cards = []; for (const [id, v] of this.disp) if (v === k) { const c = this.g.card(id); if (c) cards.push(c); } }
+      if (this.pdOut && this.pdOut.size) cards = cards.filter(c => !this.pdOut.has(c.id));   // 已经扣进拼点窗口的牌不再显示在手里
       this.handOrder = (this.handOrder || []).filter(id => cards.some(c => c.id === id) || me.hand.some(c => c.id === id));
       for (const c of cards) if (!this.handOrder.includes(c.id)) this.handOrder.push(c.id);
       return this.handOrder.filter(id => cards.some(c => c.id === id)).map(id => cards.find(c => c.id === id));
@@ -6526,7 +6527,7 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
       for (const c of g.processing || []) if (!c.arranging && c.omenJudging == null && !this.center.find(e => e.id === c.id) && !(this.pdHold && this.pdHold.has(c.id)) && !(this.revealWin && this.revealWin.ids.includes(c.id)) && !(this.feast && this.feast.ids.includes(c.id))) add(c.id, '');
       if (this.center.length !== this.centerN) this.centerT = Date.now(); 
       this.center = this.center.filter(e => { const c = g.card(e.id); return c && c.loc && (c.loc.zone === 'process' || c.loc.zone === 'discard' || (e.kind === 'equip' && (c.loc.zone === 'equip' || c.loc.zone === 'judge'))); });
-      while (this.center.length > 10) this.center.shift();
+      while (this.center.length > 10) { const i = this.center.findIndex(e => (e.li || 0) <= (base || 0)); if (i < 0) break; this.center.splice(i, 1); }   // 只挤掉之前的牌；这一步上桌的牌全部留在桌上（排得更密）
       this.centerN = this.center.length;
       this.centerIds = new Set(this.center.filter(e => e.kind !== 'equip').map(e => e.id));
     }
@@ -6833,7 +6834,22 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
         else if (ty === 'equip') { const mv = byIds(l.id); if (mv.length) beats.push(() => mv.every(m => m.k0 === 'center') ? this.equipFly(mv, mult) : this.flyMany(mv, mult)); }
         else if (['recast', 'retouch'].includes(ty)) { const mv = byIds(ty === 'retouch' ? l.card : l.id); if (mv.length) beats.push(() => this.flyMany(mv, mult)); }
         else if (ty === 'pindianStart') beats.push(async () => { this.pindian = { a: l.a, b: l.b, setA: false, setB: false }; this.renderWins(); await sleep(Math.max(200, 350 * mult)); });
-        else if (ty === 'pindianSet') beats.push(async () => { const pd = this.pindian; if (!pd) return; if (l.seat === pd.a) pd.setA = true; else pd.setB = true; this.renderWins(); await sleep(Math.max(150, 250 * mult)); });
+        else if (ty === 'pindianSet') beats.push(async () => {
+          const pd = this.pindian; if (!pd) return;
+          // 拼点牌扣出：牌背朝上从出牌者（我：手里那张牌的位置；别人：他的武将牌）飞进拼点窗口里他那一格
+          const slot = this.$(`.qx-pindian [data-mk="pd${l.seat}"] .qx-pdslot`);
+          if (l.card != null && slot && this.g.card(l.card)) {
+            const mine = l.seat === this.me; const hel = mine ? this.$(`.qx-dash .qx-dhand [data-id="${l.card}"]`) : null;
+            const from = hel ? this.rel(hel) : this.anchorRect('h:' + l.seat);
+            const mv = { id: l.card, k0: 'h:' + l.seat, k1: 'pdslot', from, toRect: this.rel(slot), back: true, keep: true, fromSeat: !mine };
+            this.pdOut = this.pdOut || new Set(); this.pdOut.add(l.card);
+            await this.fly(mv, 0, mult);
+            if (mine) this.renderMe();
+            if (l.seat === pd.a) pd.setA = true; else pd.setB = true; this.renderWins();
+            if (mv.ghost) mv.ghost.remove();
+          } else { if (l.seat === pd.a) pd.setA = true; else pd.setB = true; this.renderWins(); }
+          await sleep(Math.max(150, 250 * mult));
+        });
         else if (ty === 'pindian') {
           const mv = claim(m => (m.id === l.ca || m.id === l.cb) && m.k1 === 'center');
           beats.push(async () => {
@@ -6842,7 +6858,7 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
             pd.revealed = true; this.renderWins(); await sleep(Math.max(350, 600 * mult));
             pd.done = true; this.renderWins(); await sleep(Math.max(700, 1300 * mult));
             const w = this.$('.qx-pindian'); if (w) { w.classList.add('qx-wfade'); await sleep(260); }
-            this.pindian = null; this.pdHold = null; this.renderWins();
+            this.pindian = null; this.pdHold = null; this.pdOut = null; this.renderWins();
             // 拼点牌放到桌面上，变暗；之后被谁拿走就从桌面上飞过去
             for (const id of [l.ca, l.cb]) if (!this.center.some(e => e.id === id)) this.center.push({ id, cap: this.T.t('cap_pindian', { s: this.who(id === l.ca ? l.a : l.b) }), li: base + logs.indexOf(l) + 1, kind: 'pd', t: Date.now() });
             this.centerIds = new Set(this.center.filter(e => e.kind !== 'equip').map(e => e.id)); const ctr = this.$('.qx-ctr'); if (ctr) morph(ctr, this.centerHTML());
@@ -7034,6 +7050,8 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
     }
     centerSlot() { const list = this.center || []; return { x: this.bw() / 2 - 50, y: 276, w: 100, h: 152 }; }
     fly(mv, delay, mult, prevGhost) {
+      // 依次飞进我手里的牌（连摸几张、起始手牌）：等轮到这张时再起飞，这样每张都先在手里占好位置，全部从右侧平移进来，动画完全一样
+      if (delay && mv.k1 === 'h:' + this.me && !mv.keep && !mv.toRect && !!this.disp) return new Promise(res => setTimeout(() => this.fly(mv, 0, mult, prevGhost).then(res), delay));
       return new Promise(res => {
         const fx = this.$('.qx-fx'); const c = this.g.card(mv.id); if (!c) return res();
         const CW = 100, CH = 152;
