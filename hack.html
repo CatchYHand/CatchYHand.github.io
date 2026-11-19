@@ -3286,6 +3286,10 @@ html:not([lang=zh]) .gt-choose .gc-lb b{font-family:'Newsreader','Noto Serif SC'
 .gl-card:hover .gl-go i{transform:translateX(3px)}
 .wl-ban img{object-position:55% 4%!important}
 .gl-go{align-self:flex-start!important;width:max-content!important}
+/* every game card is the same size: same cover box, same description height, Play buttons on one line */
+.gl-card>.gl-art{flex:none;height:13rem}
+.gl-card>.gl-tx{flex:1 1 auto}
+.gl-card>.gl-tx p{flex:1 1 auto;min-height:calc(1.55em * 3)}
 .ra-pl{min-height:5.4cqw;display:block}
 /* ===== tutorial: big panels and quizzes inside the spirit's bubble ===== */
 .gr-tut.tpanel::before{content:"";position:absolute;inset:0;background:rgba(3,5,8,.55);pointer-events:none;z-index:1}
@@ -4084,8 +4088,8 @@ html:not([lang=zh]) .gt-choose .gc-lb b{font-family:'Newsreader','Noto Serif SC'
 .jq-end small{display:block;margin-top:.5rem;opacity:.7}
 .jq-end.out{opacity:0;transition:opacity .6s;pointer-events:none}
 /* lobby cover */
-.gl-art.jq{background:radial-gradient(80% 90% at 50% 40%,#2a1d12,#100c08)}
-.gl-art.jq svg{position:absolute;inset:0;width:100%;height:100%}
+.gl-art.glc-jq{background:radial-gradient(80% 90% at 50% 40%,#2a1d12,#100c08)}
+.gl-art.glc-jq svg{position:absolute;inset:0;width:100%;height:100%}
 /* ===== rules ===== */
 .jq-rules .gr-dlg.jr{width:min(72rem,96vw);height:min(52rem,92vh);max-height:none;padding:0!important;display:grid;grid-template-columns:14rem 1fr;overflow:hidden;background:radial-gradient(120% 70% at 70% 0,#2a2114,#121009 55%,#0b0a07)!important}
 .jr-x{position:absolute;right:.9rem;top:.8rem;z-index:3;width:2.3rem;height:2.3rem;border-radius:50%;border:1px solid rgba(226,188,98,.45);background:rgba(0,0,0,.45);color:#f2e3bd;font:400 1.4rem/1 var(--f-body);cursor:pointer}
@@ -5039,8 +5043,8 @@ html:not([lang=zh]) .gt-choose .gc-lb b{font-family:'Newsreader','Noto Serif SC'
 .jq-end2 .ph img,.jq-end2.l .ph img{object-position:50% 50%!important;filter:none!important}
 .jq-end2.l .ph .shd{background:radial-gradient(120% 90% at 50% 30%,transparent 50%,rgba(20,10,6,.5))!important}
 .jqw .wl-ban img{object-position:50% 40%!important}
-.gl-art.jq .gl-cov{object-position:50% 50%}
-.gl-art.qx .gl-cov{object-position:50% 45%}
+.gl-art.glc-jq .gl-cov{object-position:50% 50%}
+.gl-art.glc-qx .gl-cov{object-position:50% 45%}
 
 .jq-end2 .ph .shd{position:absolute;inset:0;background:linear-gradient(180deg,transparent 60%,rgba(30,20,8,.35))!important}
 
@@ -10279,16 +10283,17 @@ function ctrlHTML(){ const b=(k,lab,cls)=>`<button class="gr-btn2 ${cls||''}" da
    `<div class="gr-grp sys">${b('vol',T('Volume','音量'),'io')}${b('fs',T('Full screen','全屏'),'io')}</div><button class="gr-btn2 cls" data-a="close" title="${T('Close','关闭')}">${icon('close')}<span>${T('Close','关闭')}</span><kbd>ESC</kbd></button>`; }
 function paint(html){ const keep=$$g(':scope>.gr-pop,:scope>.jq-cd,:scope>.jq-phase'); root.innerHTML=html; keep.forEach(n=>root.appendChild(n)); fsSync(); }
 // the full-screen button shows "enter" or "exit" to match the current state
-function fsSync(){ if(!root) return; const on=!!(document.fullscreenElement||document.webkitFullscreenElement); root.querySelectorAll('[data-a="fs"]').forEach(b=>{ b.innerHTML=`<svg class="gi" viewBox="0 0 24 24" aria-hidden="true">${on?'<path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5"/>':ICO.fs}</svg>`; const t=on?T('Exit full screen','退出全屏'):T('Full screen','全屏'); b.title=t; b.setAttribute('aria-label',t); b.classList.toggle('on',on); }); }
-document.addEventListener('fullscreenchange',()=>fsSync()); document.addEventListener('webkitfullscreenchange',()=>fsSync());
+const FSD=(()=>{ try{ if(window.top!==window&&window.top.document) return window.top.document; }catch(e){} return document; })(); // the page that owns full screen: the top page of this site
+function fsSync(){ if(!root) return; const on=!!(FSD.fullscreenElement||FSD.webkitFullscreenElement); root.querySelectorAll('[data-a="fs"]').forEach(b=>{ b.innerHTML=`<svg class="gi" viewBox="0 0 24 24" aria-hidden="true">${on?'<path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5"/>':ICO.fs}</svg>`; const t=on?T('Exit full screen','退出全屏'):T('Full screen','全屏'); b.title=t; b.setAttribute('aria-label',t); b.classList.toggle('on',on); }); }
+FSD.addEventListener('fullscreenchange',()=>fsSync()); FSD.addEventListener('webkitfullscreenchange',()=>fsSync());
 function render(){ if(!root) return; if(scr==='lobby') lobby(); else if(scr==='junqi') jqRender(); else buildTable(); }
 function lobby(){ root.className='on lobby'; const games=[
    {k:'guandan',t:T('Leap the Dragon Gate','跃龙门'),s:T('Every carp in the Yellow River dreams of the gate at the top of the falls. The one that leaps it is struck by heaven’s fire and rises as a dragon.','黄河里的每一尾鲤鱼，都梦想着瀑布顶上的那道龙门。跃过去的那一尾，天火烧尾，化身为龙。'),tag:T('Card game','牌戏'),live:1},
-   {k:'junqi',t:T('Vanguard','兵锋'),s:T('A cipher telegram from headquarters: the enemy has massed across the valley, every unit hidden. Read them first, and take their Flag.','总指挥部急电：敌军已在山谷对岸集结，兵力部署一概不明。谁先摸清对方虚实，谁就能夺下对方的军旗。'),tag:T('Board game','棋戏'),live:1,art:'jq'},
-   {k:'qunxing',t:T('The Hall of Ages','群星议会'),s:T('In the Hall of Ages, the great figures of history sit at one council table. Whoever holds the Quill of History writes the next age, and not everyone at the table wants it written. Chinese interface for now.','万代之厅里，历史上的群星围坐在同一张议事桌前。执掌历史之笔的人书写下一个时代，而桌边并非人人都愿意让它这样写下去。'),tag:T('Card game','牌戏'),live:1,art:'qx'}];
+   {k:'junqi',t:T('Vanguard','兵锋'),s:T('A cipher telegram from headquarters: the enemy has massed across the valley, every unit hidden. Read them first, and take their Flag.','总指挥部急电：敌军已在山谷对岸集结，兵力部署一概不明。谁先摸清对方虚实，谁就能夺下对方的军旗。'),tag:T('Chess game','棋戏'),live:1,art:'jq'},
+   {k:'qunxing',t:T('The Hall of Ages','群星议会'),s:T('History’s greatest names share one council table. The Chancellor holds the Quill of History, and not everyone seated wants it kept.','古往今来的群星围坐在同一张议事桌前。执笔者握着历史之笔，而桌边并非人人都愿意让他一直握下去。'),tag:T('Board game','桌游'),live:1,art:'qx'}];
   const art=[[14,0],[2,1],[17],[14,3]].map(([r,s],i)=>`<span class="f${i+1}">${cardHTML({id:-1,r,s:r>=16?4:s})}</span>`).join('');
   paint(head(T('pick a table','选一张牌桌'))+`<main class="gr-lobby"><div class="gl-hd"><h2>${T('The Game Room','游艺厅')}</h2><p>${T('A few tables, set up and waiting. Every game here plays right in the page.','几张桌子已经摆好，等人入座。这里的每个游戏点开就能玩。')}</p></div><div class="gl-grid">${games.map(g=>`<button class="gl-card${g.live?'':' off'}" ${g.live?`data-a="game" data-g="${g.k}"`:'disabled'}>
-     <div class="gl-art${g.live?' cov':''}${g.art?' '+g.art:''}">${g.art==='jq'?jqCover():g.art==='qx'?`<img class="gl-cov" src="hall-of-ages/image/qx/back-game.jpg" alt="">`:g.live?`<img class="gl-cov" src="${GIMG('gd-cover')}" alt="">`:`<div class="gl-soon">?</div>`}</div>
+     <div class="gl-art${g.live?' cov':''}${g.art?' glc-'+g.art:''}">${g.art==='jq'?jqCover():g.art==='qx'?`<img class="gl-cov" src="hall-of-ages/image/qx/back-game.jpg" alt="">`:g.live?`<img class="gl-cov" src="${GIMG('gd-cover')}" alt="">`:`<div class="gl-soon">?</div>`}</div>
      <div class="gl-tx">${g.tag?`<small>${g.tag}</small>`:''}<b>${g.t}</b><p>${g.s}</p>${g.live?`<span class="gl-go"><span>${T('Play','开始游戏')}</span><i><svg viewBox="0 0 24 24"><path d="M8 5.5v13l10.5-6.5z"/></svg></i></span>`:''}</div></button>`).join('')}</div>
 <p class="gl-note"><i aria-hidden="true">!</i><span>${T('Every game setting on this page is fictional and the artwork was made with GPT. Any resemblance to real people, units or events is purely coincidental.','本页所有游戏设定均为虚构，美术由 GPT 生成；如与现实中的人物、部队或事件雷同，纯属巧合。')}</span></p>
 </main>`); }
@@ -11483,7 +11488,7 @@ function onClick(e){ const a=e.target.closest('[data-a]'); if(scr==='junqi'&&!a)
   else if(k==='tn'){ if(!(tut&&tut.quizLock)) tutNext(); } else if(k==='tq'){ tutAnswer(a); } else if(k==='tx') confirmPop(T('Leave the tutorial?','退出教程？'),T('You can replay it any time from the Tutorial button.','之后随时可以点“教程”重新开始。'),T('Leave','退出教程'),()=>{ endTut(); startGame(true); });
   else if(k==='trules'){ rules(()=>{}); } else if(k==='treplay'){ if(tut&&tut.cur&&tut.cur.demo&&!tut.demoBusy) tutDemo(tut.cur.demo); }
   else if(k==='retok') confirmReturn(); else if(k==='tribok') confirmTrib(); }
-function toggleFs(){ try{ if(document.fullscreenElement) document.exitFullscreen(); else (document.documentElement.requestFullscreen||document.documentElement.webkitRequestFullscreen).call(document.documentElement); }catch(e){} }
+function toggleFs(){ try{ const d=FSD, el=d.documentElement; if(d.fullscreenElement||d.webkitFullscreenElement) (d.exitFullscreen||d.webkitExitFullscreen).call(d); else { const r=(el.requestFullscreen||el.webkitRequestFullscreen).call(el); if(r&&r.catch) r.catch(()=>{}); } }catch(e){} }
 function volPop(btn){ let p=$g('.gr-vol'); if(p){ p.remove(); return; } p=document.createElement('div'); p.className='gr-vol';
   const row=(k,lab,v)=>`<label><span>${lab}</span><input type="range" min="0" max="100" value="${Math.round(v*100)}" data-v="${k}"><b>${Math.round(v*100)}</b></label>`;
   p.innerHTML=`<div class="gr-vol-h">${T('Volume','音量')}</div>${row('music',T('Music','背景音乐'),SND.music)}${row('sfx',T('Effects','音效'),SND.sfx)}${row('voice',T('Voices','人物语音'),VOL.voice)}<button class="gr-vol-m" data-mute>${SND.muted?T('Unmute','取消静音'):T('Mute all','全部静音')}</button>`;
