@@ -629,13 +629,13 @@
       if (n <= 0 || p.dead) return [];
       const cs = this.takeTop(n);
       yield* this.moveCards({ cards: cs, to: 'hand', toPlayer: p, reason: reason || 'draw' });
-      this.log('draw', { seat: p.seat, n });
+      this.log('draw', { seat: p.seat, n, reason: reason || 'draw' });
       return cs;
     }
     *gainCards(p, cards, reason, from) {
       if (!cards.length || p.dead) return;
       yield* this.moveCards({ cards, to: 'hand', toPlayer: p, reason: reason || 'gain', by: from ? from.seat : null });
-      this.log('gain', { seat: p.seat, n: cards.length, from: from ? from.seat : null });
+      this.log('gain', { seat: p.seat, n: cards.length, from: from ? from.seat : null, reason: reason || 'gain' });
     }
     *discard(p, cards, reason) {
       if (!cards.length) return;
@@ -2478,7 +2478,7 @@
     desc: ['出牌阶段限一次，你可以令一名其他角色观看你的手牌，然后你选择一项：1. 观看其手牌，并可以弃置其中一张黑色牌；2. 观看其身份。', 'Once per Play phase, let another character see your hand, then choose: view their hand and you may discard one black card from it; or view their role.'],
     active: {
       cards: { min: 0, max: 0 }, targets: { min: 1, max: 1, filter: (g, p, t) => t !== p },
-      can: (g, p) => !p.phaseState.domesday,
+      can: (g, p) => !p.phaseState.domesday && p.hand.length > 0,   // 自己没有手牌时不能发动
       valid: (g, p, cards, targets) => targets.length === 1 && targets[0] !== p,
       *use(g, p, cards, targets) {
         p.phaseState.domesday = true; const t = targets[0];
@@ -2719,7 +2719,7 @@
         can: (g, o, d) => d.from === o && d.to !== o && d.use && d.use.from === o && (isStrike(d.use.card) || d.use.card.name === 'duel') && g.current && !g.current.turnState.resurgence1,
         *on(g, o, d) { g.current.turnState.resurgence1 = true; yield* g.loseHp(d.to, d.amount, 'resurgence'); if (d.to.dead) d.prevented = true; },
       },
-      cardUsed: { silent: true, can: (g, o, d) => d.use.from === o && (isStrike(d.use.card) || d.use.card.name === 'duel') && d.use.targets.length > 1 && g.current, *on(g, o) { g.current.turnState.resurgence2 = true; } },
+      cardUsed: { optional: false, silent: true, can: (g, o, d) => d.use.from === o && (isStrike(d.use.card) || d.use.card.name === 'duel') && d.use.targets.length > 1 && g.current, /* 只是记录「额外目标」已用过，不该再问玩家 */ *on(g, o) { g.current.turnState.resurgence2 = true; } },
     },
     mods: { maxTargets: (g, o, v, p, card) => (p === o && (isStrike(card) || card.name === 'duel') && g.current && !g.current.turnState.resurgence2) ? v + 1 : v },
     ai: { confirm: (g, me, req, A) => A.threat(g, me, g.p(req.data.to)) > 0 },
@@ -2734,7 +2734,7 @@
       can: (g, o, d) => d.player === o && d.req.pattern.includes('parry') && !d.result && d.req.reason !== 'escort' && medievalOthers(g, o).length > 0,
       *on(g, o, d) {
         for (const q of medievalOthers(g, o)) {
-          const r = yield* g.askRespond(q, { pattern: ['parry'], mode: 'play', reason: 'escort', source: o.seat });
+          const atk = d.req.source != null ? d.req.source : (d.req.use && d.req.use.from ? d.req.use.from.seat : null); const r = yield* g.askRespond(q, { pattern: ['parry'], mode: 'play', reason: 'escort', source: atk, lord: o.seat });   /* source = 真正出杀的人（枪阵等「获得对方的牌」以它为准），lord = 被保护的主公 */
           if (r) { d.result = V('parry', [], { viaSkill: 'escort' }); return; }
         }
       },
@@ -3302,7 +3302,7 @@
       phaseEnd: { can: (g, o, d) => d.phase === 'play' && d.player !== o && !d.player.dead && d.player.hand.length >= o.hand.length && d.player.cardCount > 0, *on(g, o, d) { yield* founderTake(g, o, d.player); } },
     },
   };
-  function* founderTake(g, o, t) { const [c] = yield* g.chooseOwnCards(t, 1, 1, 'he', 'founderGive', null, { skill: 'founder', to: o.seat }); if (c) yield* g.gainCards(o, [c], 'founder', t); }
+  function* founderTake(g, o, t) { g.log('aim', { seat: o.seat, targets: [t.seat] }); const [c] = yield* g.chooseOwnCards(t, 1, 1, 'he', 'founderGive', null, { skill: 'founder', to: o.seat }); if (c) yield* g.gainCards(o, [c], 'founder', t); g.log('aimEnd', { seat: o.seat, targets: [t.seat] }); }
   S.andes = {
     name: ['越岭', 'ANDES'], type: 'locked', locked: true,
     desc: ['锁定技，你使用的杀无视目标的护甲。若目标军备区里的牌不少于你，你的杀对其造成的伤害 +1。', "Locked. Your Strikes ignore armor. If the target has at least as many arsenal cards as you, your Strike deals +1 damage to them."],
@@ -3640,7 +3640,7 @@
     markRole: ['点击标记身份（仅自己可见）', 'Click to mark a role (only you see it)'], unmark: ['取消标记', 'Clear Mark'],
     slot_weapon: ['武器', 'Weapon'], slot_armor: ['防具', 'Armor'], slot_minus: ['−1 坐骑', '−1 Mount'], slot_plus: ['+1 坐骑', '+1 Mount'],
     cap_use: ['{s}使用', '{s} used'], cap_useOn: ['{s}对{t}', '{s} → {t}'], cap_play: ['{s}打出', '{s} played'],
-    cap_discard: ['{s}弃置', '{s} discarded'], cap_discardOf: ['{s}被弃置', 'Discarded from {s}'], cap_judge: ['{s}的天意牌', '{s}\'s Fate card'],
+    cap_discard: ['{s}弃置', '{s} discarded'], cap_pindian: ['{s}的拼点牌', "{s}'s contest card"], cap_discardOf: ['{s}被弃置', 'Discarded from {s}'], cap_judge: ['{s}的天意牌', '{s}\'s Fate card'],
     cap_pindian: ['{s}拼点', '{s} contest'], cap_recast: ['{s}重铸', '{s} recast'], cap_reveal: ['亮出', 'Revealed'], cap_retouch: ['{s}改判', '{s} retouched'],
     gameOver: ['对局结束', 'Game Over'], winners: ['{w}获胜', 'Winner: {w}'], draw: ['平局', 'Draw'], again: ['再来一局', 'Play Again'],
     youWin: ['你赢了！', 'You Win!'], youLose: ['你输了', 'You Lose'],
@@ -4309,7 +4309,7 @@ class SmartAgent {
           return true;
         }
         case 'duel': { const r = rel(g, me, g.p(req.source)); return !(r > 0.3 && me.hp > 1); }
-        case 'rally': case 'escort': return rel(g, me, g.p(req.source)) > 0.3;
+        case 'rally': case 'escort': return rel(g, me, g.p(req.lord != null ? req.lord : req.source)) > 0.3;
         case 'save': {
           const T = g.p(req.target); if (T === me) return true;
           if (T.role === 'chancellor' && T.roleShown && me.role === 'keeper') return true;
@@ -5512,6 +5512,7 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
 #qx .qx-jsvg{position:absolute;left:50%;top:50%;width:96px;height:96px;transform:translate(-50%,-50%);z-index:5;pointer-events:none;overflow:visible;filter:drop-shadow(0 0 3px #000) drop-shadow(0 2px 4px rgba(0,0,0,.8))}
 #qx .qx-jsvg path{fill:none;stroke-width:11;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:120;stroke-dashoffset:120}
 #qx .qx-jok path{stroke:#5ce26a}#qx .qx-jno path{stroke:#ff4a3a}
+#qx .qx-ctr .qx-cc.qx-ccspent .qx-jsvg,#qx .qx-ctr .qx-cc.qx-ccfade .qx-jsvg{filter:brightness(.45) saturate(.6) drop-shadow(0 0 3px #000);transition:filter .35s}
 #qx .qx-jsvg .qx-js1{animation:qxjdraw .38s ease-out forwards}
 #qx .qx-jsvg .qx-js2{animation:qxjdraw .3s ease-out .32s forwards}
 @keyframes qxjdraw{to{stroke-dashoffset:0}}
@@ -5658,7 +5659,7 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
       this.recs = this.recs || []; this.rec = { seed, n, level: this.settings.level, role: this.settings.role, me: meSeat, lang: this.lang, speed: this.settings.speed, started: new Date().toISOString(), answers: [], notes: [] }; if (!rep) this.recs.push(this.rec); this.recT0 = Date.now();
       this.g = new E.Game({ players: n, seed, roles: arr, fixedRoles: true, selectHeroes: true });
       this.me = meSeat; this.ui = null; this.logIdx = 0;
-      this.animIdx = 0; this.phMem = {}; this.phCur = {}; this.marks = {}; this.handOrder = []; this.vetoBars = false; this.thinkBars = null; this.revealWin = null; this.schemeWin = null; this.groupDone = false; this.lastPh = null;
+      this.animIdx = 0; this.phMem = {}; this.phCur = {}; this.marks = {}; this.handOrder = []; this.vetoBars = false; this.thinkBars = null; this.revealWin = null; this.schemeWin = null; this.roleHold = null; this.groupDone = false; this.lastPh = null;
       this.closePeek(); this.closeBadgeMenu(); this.closeZoom(); this.pindian = null; this.pdHold = null; this.feast = null; this.shownCards = null; this.centerT = 0; this.locs = null; this.center = []; this.centerIds = new Set(); this.hpPrev = null; this.stepNo = 0; this.thinking = null;
       const fx = this.$('.qx-fx'); if (fx) fx.innerHTML = ''; const ls = this.$('.qx-lines'); if (ls) ls.innerHTML = '';
       this.agents = {}; for (let s = 0; s < n; s++) this.agents[s] = new AI.SmartAgent(seed + s * 7919, this.settings.level);
@@ -5946,7 +5947,7 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
     chip(c, omen) { return this.cardHTML(c, 'qx-tiny', omen ? { as: c.omenAs || c.name } : null); }
     identityHTML(p, size) {
       const g = this.g, me = g.p(this.me);
-      const face = p.seat === this.me || p.roleShown || p.dead || g.over || (me.knownRoles && me.knownRoles[p.seat]);
+      const face = p.seat === this.me || p.roleShown || p.dead || g.over || (me.knownRoles && me.knownRoles[p.seat] && !(this.roleHold && this.roleHold.has(p.seat)));
       const cls = size === 'big' ? ' qx-idbig' : size === 'sm' ? ' qx-idsm' : '';
       const title = face ? this.T.role(p.role) : this.T.t('unknownRole');
       return `<div class="qx-idc${cls}" ${face ? `data-zoomid="${p.role}"` : 'data-zoomid="back"'}><img src="${face ? this.idSrc(p.role) : this.backSrc('identity')}" alt="${esc(title)}" draggable="false"></div>`;
@@ -6024,7 +6025,7 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
     }
     roleHTML(p, reveal) {
       const me = this.g.p(this.me);
-      const show = reveal || p.roleShown || p.seat === this.me || this.g.over || (me.knownRoles && me.knownRoles[p.seat]);
+      const show = reveal || p.roleShown || p.seat === this.me || this.g.over || (me.knownRoles && me.knownRoles[p.seat] && !(this.roleHold && this.roleHold.has(p.seat)));
       return show ? `<span class="qx-role qx-r-${p.role}">${this.T.role(p.role)}</span>` : `<span class="qx-role qx-r-unknown">${this.T.t('unknownRole')}</span>`;
     }
     tags(p) {
@@ -6132,7 +6133,7 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
     seatArtSrc(key) { const h = E.HEROES[key] || {}; return h.seatArt ? this.asset(h.seatArt) : this.asset(`seatgen/art/${key}.webp`); }
     roleVisible(p) {
       const g = this.g, me = g.p(this.me);
-      return p.seat === this.me || p.role === 'chancellor' || p.roleShown || this.isDeadShown(p) || (g.over && !this.deadHold) || !!(me.knownRoles && me.knownRoles[p.seat]);
+      return p.seat === this.me || p.role === 'chancellor' || p.roleShown || this.isDeadShown(p) || (g.over && !this.deadHold) || !!(me.knownRoles && me.knownRoles[p.seat] && !(this.roleHold && this.roleHold.has(p.seat)));
     }
     badgeHTML(p) {
       const real = this.roleVisible(p);
@@ -6324,7 +6325,7 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
       html += `<div class="qx-prompt" data-mk="prompt" style="left:${Math.round(cx - 330)}px">${txt ? `<div class="qx-ptxt${u ? '' : ' qx-pwait'}">${esc(txt)}</div>` : ''}${u ? `<div class="qx-pbtns">${this.buttonsHTML()}</div>` : ''}</div>`;
       const me = g.p(this.me);
       html += `<div class="qx-myomks" data-mk="myomk">${this.omensHTML(me, true)}</div>`;
-      const bd = this.$('.qx-board'); morph(bd, html); bd.style.width = this.bw() + 'px'; this.applyAimed();
+      const bd = this.$('.qx-board'); morph(bd, html); bd.style.width = this.bw() + 'px'; this.applyAimed(); this.reHide();
       this.$('.qx-side').classList.toggle('qx-hide', !this.logOpen);
       const lt = this.$('.qx-logtab'); if (lt) lt.classList.toggle('qx-on', !!this.logOpen);
     }
@@ -6355,9 +6356,12 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
 
     // ── 自己的操作区 ──
     orderedHand(me) {
-      this.handOrder = (this.handOrder || []).filter(id => me.hand.some(c => c.id === id));
-      for (const c of me.hand) if (!this.handOrder.includes(c.id)) this.handOrder.push(c.id);
-      return this.handOrder.map(id => me.hand.find(c => c.id === id));
+      // 动画进行中：手里显示的是「动画进行到这一刻」应该在手里的牌（要飞走的牌飞之前还在手里，要飞进来的牌落地后才出现）
+      let cards = me.hand;
+      if (this.disp) { const k = 'h:' + this.me; cards = []; for (const [id, v] of this.disp) if (v === k) { const c = this.g.card(id); if (c) cards.push(c); } }
+      this.handOrder = (this.handOrder || []).filter(id => cards.some(c => c.id === id) || me.hand.some(c => c.id === id));
+      for (const c of cards) if (!this.handOrder.includes(c.id)) this.handOrder.push(c.id);
+      return this.handOrder.filter(id => cards.some(c => c.id === id)).map(id => cards.find(c => c.id === id));
     }
     handLayout(n) { const W = 740 + Math.max(0, (this.LW || 1280) - 1280), cw = 100; const step = n > 1 ? Math.min(cw + 4, (W - cw) / (n - 1)) : 0; return { cw, step }; }
     renderMe() {
@@ -6398,7 +6402,7 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
           ${this.seatCardHTML(me, this.seatW(), false)}
           ${mePicked ? `<div class="qx-pkb">${esc(this.T.t('pickedTag'))}</div>` : ''}
         </div>`);
-      this.applyAimed();
+      this.applyAimed(); this.reHide();
     }
     // 拖拽整理手牌（任何时候都可以）
     bindHandDrag() {
@@ -6507,6 +6511,7 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
             const k0 = zrun.get(id); const m0 = /^(h|e|j):(\d+)$/.exec(k0 || '');
             // 从手里 / 装备区 / 判定区直接进弃牌堆的牌（被顶掉的装备、判定完或被拆的天兆、阵亡时弃置的所有牌……）：先放到桌面中央，再变暗、淡出
             if (l.to === 'discard' && m0 && !this.center.some(e => e.id === id)) add(id, t('cap_discard', { s: who(+m0[2]) }), null, 'discard');
+            if (l.reason === 'omenJudge') continue;   // 判定期间天兆仍算在判定区，结束后从判定区上桌
             zrun.set(id, l.to === 'hand' ? 'h:' + l.seat : l.to === 'equip' ? 'e:' + l.seat : l.to === 'judge' ? 'j:' + l.seat : l.to === 'process' ? 'center' : l.to === 'discard' ? 'pile' : 'deck');
           }
         }
@@ -6672,6 +6677,7 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
       
       const feastLog = logs.find(l => l.type === 'reveal' && l.reason === 'feast');
       if (feastLog) this.feast = { ids: feastLog.cards.slice(), hidden: !!mult };   // 窗口在亮牌那一刻才出现，不提前
+      if (mult) for (const l of logs) if (l.type === 'viewRole' && l.seat === this.me) { this.roleHold = this.roleHold || new Set(); this.roleHold.add(l.target); }   // 看身份：动画播完前身份标签不变
       const scLog = logs.find(l => l.type === 'reveal' && l.reason === 'scheme');
       if (scLog) { const sk = logs.slice().reverse().find(l => l.type === 'skill' && l.skill === 'scheme' && l.targets && l.targets.length === 2) || g.logs.slice().reverse().find(l => l.type === 'skill' && l.skill === 'scheme' && l.targets && l.targets.length === 2);
         if (sk) this.schemeWin = { cards: scLog.cards.slice(), seats: sk.targets.slice(), swap: false, gone: [], hidden: !!mult }; }
@@ -6754,7 +6760,7 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
       const claimed = new Set();
       const claim = (pred, max) => { const out = []; for (const mv of moves) { if (claimed.has(mv) || !pred(mv)) continue; if (max != null && out.length >= max) break; claimed.add(mv); out.push(mv); } return out; };
       const byIds = ids => { const s = new Set([].concat(ids || []).filter(x => x != null)); return claim(mv => s.has(mv.id)); };
-      const beats = []; let vetoOf = this.lastVetoOf || null; let prevTy = '';
+      const beats = []; let vetoOf = this.lastVetoOf || null; let prevTy = ''; let lastDisc = null;
       // 没有被具体事件（使用 / 弃置 / 获得……）认领的牌，在它实际移动（move 日志）的那一刻再飞，保证动画顺序与结算顺序一致
       const omenHit = new Set(logs.filter(l => l.type === 'omenHit').map(l => l.seat));
       for (const l of logs) {
@@ -6804,13 +6810,14 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
           });
           else beats.push(() => this.giveFly(mv, mult));
         }
-        else if (ty === 'discard' || ty === 'discardOf') { const ids = [].concat(ty === 'discard' ? l.cards : [l.card]); const mv = byIds(ids); beats.push(async () => { await this.flyMany(mv, mult); if (!this.linkToUse(ids, mult)) this.discardTimer(ids, mult); }); }
+        else if ((ty === 'discard' || ty === 'discardOf') && lastDisc && lastDisc.ty === ty && lastDisc.i === logs.indexOf(l) - 1 && lastDisc.seat === l.seat && lastDisc.by === l.by) { const ids = [].concat(ty === 'discard' ? l.cards : [l.card]); lastDisc.ids.push(...ids); lastDisc.mv.push(...byIds(ids)); lastDisc.i++; }   // 同一次弃置的多张牌：合成一拍，同时飞出
+        else if (ty === 'discard' || ty === 'discardOf') { const ids = [].concat(ty === 'discard' ? l.cards : [l.card]); const mv = byIds(ids); lastDisc = { ty, i: logs.indexOf(l), seat: l.seat, by: l.by, ids, mv }; beats.push(async () => { await this.flyMany(mv, mult); if (!this.linkToUse(ids, mult)) this.discardTimer(ids, mult); }); }
         else if (ty === 'equip') { const mv = byIds(l.id); if (mv.length) beats.push(() => mv.every(m => m.k0 === 'center') ? this.equipFly(mv, mult) : this.flyMany(mv, mult)); }
         else if (['recast', 'retouch'].includes(ty)) { const mv = byIds(ty === 'retouch' ? l.card : l.id); if (mv.length) beats.push(() => this.flyMany(mv, mult)); }
         else if (ty === 'pindianStart') beats.push(async () => { this.pindian = { a: l.a, b: l.b, setA: false, setB: false }; this.renderWins(); await sleep(Math.max(200, 350 * mult)); });
         else if (ty === 'pindianSet') beats.push(async () => { const pd = this.pindian; if (!pd) return; if (l.seat === pd.a) pd.setA = true; else pd.setB = true; this.renderWins(); await sleep(Math.max(150, 250 * mult)); });
         else if (ty === 'pindian') {
-          const mv = byIds([l.ca, l.cb]);
+          const mv = claim(m => (m.id === l.ca || m.id === l.cb) && m.k1 === 'center');
           beats.push(async () => {
             const pd = this.pindian || (this.pindian = { a: l.a, b: l.b }); pd.setA = pd.setB = true; pd.ca = l.ca; pd.cb = l.cb; this.renderWins();
             for (const m of mv) this.dispSet(m.id, m.k1);   // 牌已经扣在拼点槽里了，不再从手里飞一次
@@ -6818,6 +6825,10 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
             pd.done = true; this.renderWins(); await sleep(Math.max(700, 1300 * mult));
             const w = this.$('.qx-pindian'); if (w) { w.classList.add('qx-wfade'); await sleep(260); }
             this.pindian = null; this.pdHold = null; this.renderWins();
+            // 拼点牌放到桌面上，变暗；之后被谁拿走就从桌面上飞过去
+            for (const id of [l.ca, l.cb]) if (!this.center.some(e => e.id === id)) this.center.push({ id, cap: this.T.t('cap_pindian', { s: this.who(id === l.ca ? l.a : l.b) }), li: base + logs.indexOf(l) + 1, kind: 'pd', t: Date.now() });
+            this.centerIds = new Set(this.center.filter(e => e.kind !== 'equip').map(e => e.id)); const ctr = this.$('.qx-ctr'); if (ctr) morph(ctr, this.centerHTML());
+            await sleep(Math.max(200, 300 * mult)); this.retire([l.ca, l.cb], mult);
           });
         }
         else if (ty === 'reveal') {
@@ -6834,14 +6845,14 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
         }
         else if (ty === 'vetoWindow') beats.push(() => this.vetoWindowFx(mult, l));
         else if (ty === 'damoclesMove') { const mv = claim(m => m.k1 === 'j:' + l.to); for (const m of mv) { m.omenMove = true; if (!(m.from && m.from.w < 80)) { const fe = this.$(`.qx-st[data-seat="${l.from}"] .qx-por`) || this.$('.qx-dpor .qx-por'); const r = fe ? this.rel(fe) : { x: 600, y: 300, w: 0, h: 0 }; m.from = { x: r.x + r.w / 2 - 17, y: r.y + r.h - 40, w: 34, h: 34 }; } } beats.push(() => this.flyMany(mv, mult)); }
-        else if (ty === 'phase') { const at = base + logs.indexOf(l) + 1; beats.push(async () => { if (!(g.processing && g.processing.length && this.center.some(e => g.processing.some(c => c.id === e.id) && e.li < at))) await this.clearCenter(mult, at); this.setPhaseShown(l.seat, l.phase); await sleep(Math.max(320, 520 * mult)); }); }
+        else if (ty === 'phase') { const at = base + logs.indexOf(l) + 1; beats.push(async () => { if (l.phase === 'prepare' && l.seat !== this.me) this.turnShine(l.seat, mult); if (!(g.processing && g.processing.length && this.center.some(e => g.processing.some(c => c.id === e.id) && e.li < at))) await this.clearCenter(mult, at); this.setPhaseShown(l.seat, l.phase); await sleep(Math.max(320, 520 * mult)); }); }
         else if (ty === 'chain') beats.push(() => { this.stSet(l.seat, 'chained', !!l.on); return sleep(Math.max(120, 220 * mult)); });
         else if (ty === 'flip') beats.push(() => { this.stSet(l.seat, 'faceDown', !!l.faceDown); return sleep(Math.max(150, 300 * mult)); });
         else if (ty === 'drunk') beats.push(() => { this.stSet(l.seat, 'drunk', !l.off); return sleep(Math.max(120, 250 * mult)); });
         else if (ty === 'move') { const f = async () => { const mv = moves.filter(m => m.logRef === l && !claimed.has(m)); mv.forEach(m => claimed.add(m)); if (mv.length) await this.flyMany(mv, mult); this.landedDiscards(l.ids || [], mult); }; f.isMove = true; beats.push(f); }
         else if (ty === 'tableClear') { const at = base + logs.indexOf(l) + 1; beats.push(async () => { this.setAimed(null, false); await this.clearCenter(mult, at); if (this.shownCards) { this.shownCards = null; this.renderTable(); this.renderMe(); } }); }   // 展示的牌只在这次结算期间显示
         else if (ty === 'judgeClear') beats.push(() => this.retire(l.cards || [], mult));
-        else if (ty === 'turn') { const at = base + logs.indexOf(l) + 1; if (l.seat !== this.me) beats.push(() => this.turnShine(l.seat, mult)); beats.push(async () => { this.setAimed(null, false); await this.clearCenter(mult, at, true); { const old = (this.center || []).filter(e => (e.li || 0) < at).map(e => e.id); if (old.length) this.forceRetire(old, mult); } this.shownCards = null; /* 一名角色的回合结束：桌面上属于这一回合的牌强制清空 */ this.setPhaseShown(null, null); }); }
+        else if (ty === 'turn') { const at = base + logs.indexOf(l) + 1; beats.push(async () => { this.setAimed(null, false); await this.clearCenter(mult, at, true); { const old = (this.center || []).filter(e => (e.li || 0) < at).map(e => e.id); if (old.length) this.forceRetire(old, mult); } this.shownCards = null; /* 一名角色的回合结束：桌面上属于这一回合的牌强制清空 */ this.setPhaseShown(null, null); }); }
         else if (ty === 'damage' || ty === 'loseHp') { const seat = l.to != null ? l.to : l.seat; beats.push(() => this.hitFx(seat, '−' + l.n, ty === 'damage' ? (l.nature || 'normal') : 'lose', mult, l.hp, ty === 'damage' ? l.from : null)); }
         else if (ty === 'recover') beats.push(() => { if (l.hp > 0) this.stSet(l.seat, 'dying', false); return this.hitFx(l.seat, '+' + l.n, 'heal', mult, l.hp); });
         else if (ty === 'hpSet' || ty === 'maxHp') beats.push(async () => { this.setHpShown(l.seat, g.p(l.seat).hp); });
@@ -6850,12 +6861,17 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
           if (!tg.length && !l.active) {   // 触发技没写目标：看紧接着受影响的角色（摸牌 / 受伤 / 回复 / 被拿牌……），连线和效果同时出现，不会先出效果再出线
             const i0 = logs.indexOf(l); const hit = new Set();
             for (let j = i0 + 1; j < logs.length; j++) { const x = logs[j]; if (['skill', 'use', 'play', 'turn', 'phase', 'tableClear', 'aim'].includes(x.type)) break;
-              const s2 = x.type === 'damage' ? x.to : ['draw', 'recover', 'loseHp'].includes(x.type) ? x.seat : x.type === 'gain' && x.from != null ? x.from : x.type === 'discardOf' ? x.seat : null;
+              const s2 = x.type === 'damage' && x.from === l.seat && !x.card ? x.to : x.type === 'draw' && x.reason === l.skill ? x.seat : x.type === 'gain' && x.reason === l.skill && x.from != null ? x.from : x.type === 'discardOf' && x.by === l.seat ? x.seat : null;   // 只连这个技能自己造成的效果（开局摸牌之类不算）
               if (s2 != null && s2 !== l.seat) hit.add(s2); }
             tg = [...hit].slice(0, 4);
           }
           beats.push(() => { if (l.active && tg.length) this.setAimed(tg, true); /* 主动技能的目标框保持到这次结算结束（例如交完牌之后） */ tg.forEach(s => this.drawLine(this.seatPt(l.seat), this.seatPt(s), mult)); return this.skillFx(l.seat, l.skill, mult); });
         }
+        else if (ty === 'viewRole' && l.seat === this.me) beats.push(async () => {   // 观看身份：身份牌在桌面中央渐显，然后像拿牌一样飞到那名角色的武将牌上消失，身份标签随之更新
+          const role = g.p(l.target).role; if (mult) await this.introCard(this.idSrc(role, true), null, l.target, 0, this.token);
+          if (this.roleHold) this.roleHold.delete(l.target); this.renderTable();
+        });
+        else if (ty === 'aimEnd') beats.push(() => { this.setAimed((l.targets || []), false); });
         else if (ty === 'aim') beats.push(async () => { const tg = (l.targets || []).filter(s => s !== l.seat); if (tg.length) this.setAimed(tg, true); tg.forEach(s => this.drawLine(this.seatPt(l.seat), this.seatPt(s), mult)); if (tg.length) await sleep(Math.max(200, 380 * mult)); });
         else if (ty === 'show') beats.push(async () => { this.shownCards = this.shownCards || {}; this.shownCards[l.seat] = l.card; this.shownExpire(l.seat, l.card, mult); this.renderTable(); this.renderMe(); await sleep(Math.max(500, 900 * mult)); });
         else if (ty === 'dying') beats.push(() => { this.stSet(l.seat, 'dying', true); return sleep(500 * mult); });
@@ -6871,6 +6887,7 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
       const cur = g.current && !g.over && g.phase ? g.current.seat : null; this.setPhaseShown(cur, cur != null ? g.phase : null);
       if (this.feast) this.feast.hidden = false; if (this.revealWin) this.revealWin.hidden = false;
       for (const e of this.center || []) { e.pend = false; e.hold = false; }   // 这一步结束：所有牌都已到场
+      this.roleHold = null;
       this.disp = null; this.stShown = null; this.recordLast(); this.render();
       for (const mv of moves) if (mv.el) this.unHide(mv.id, mv.el);
       this.hideSet = null;
@@ -7001,9 +7018,15 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
         const fx = this.$('.qx-fx'); const c = this.g.card(mv.id); if (!c) return res();
         const CW = 100, CH = 152;
         const landed = () => { if (!mv.keep) this.dispSet(mv.id, mv.k1); };
-        if (delay) setTimeout(() => this.dispSet(mv.id, 'air'), delay); else this.dispSet(mv.id, 'air');
+        // 飞进我手里的牌：先在手里留出（隐藏的）位置，牌飞到那个位置再显示；其余的牌飞走时立刻从原处消失
+        const toMyHand = mv.k1 === 'h:' + this.me && !mv.keep && !mv.toRect && !!this.disp;
+        const goAir = () => { if (toMyHand) { this.hideSet = this.hideSet || new Set(); this.hideSet.add(mv.id); this.dispSet(mv.id, mv.k1, true); } else this.dispSet(mv.id, 'air'); };
+        if (delay) setTimeout(goAir, delay); else goAir();
+        if (toMyHand && !delay) mv.el = this.$(`.qx-dash .qx-dhand [data-id="${mv.id}"]`) || mv.el;
         const el = document.createElement('div'); el.className = 'qx-fly';
         const face = !mv.back && (this.keyVisible(mv.k1) || this.keyVisible(mv.k0) || mv.fromBar);
+        let leaveDim = false;
+        if (mv.k0 === 'center' && mv.k1 !== 'center' && mv.k1 !== 'pile') { const ce = (this.center || []).find(e => e.id === mv.id); if (ce) { const ctr = this.$('.qx-ctr'); const ce2 = ctr && ctr.querySelector(`[data-cid="${mv.id}"]`); if (ce2) mv.from = this.rel(ce2); leaveDim = !!(this.dimmed && this.dimmed.has(mv.id)); this.center = this.center.filter(e => e !== ce); this.centerIds = new Set(this.center.filter(e => e.kind !== 'equip').map(e => e.id)); if (this.dimmed) this.dimmed.delete(mv.id); if (ctr) morph(ctr, this.centerHTML()); } }
         { const pe = (this.center || []).find(e => e.id === mv.id && e.pend); if (pe && mv.k1 === 'center') { pe.pend = false; const ctr = this.$('.qx-ctr'); if (ctr) morph(ctr, this.centerHTML()); } }
         const toEl = mv.toRect ? null : (mv.el && !mv.el.isConnected ? (this.cardEl(mv.id) || mv.el) : mv.el);
         const toBar = toEl && (toEl.classList.contains('qx-ebar') || toEl.classList.contains('qx-sbar') || toEl.classList.contains('qx-omk'));
@@ -7034,12 +7057,13 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
         const s1 = toBar ? 0.4 : 1;
         const fadeEnd = !mv.keep && (toBar || !(toEl || mv.toRect));
         fx.appendChild(el); if (prevGhost) prevGhost.remove();
+        if (leaveDim) el.animate([{ filter: 'brightness(.45) saturate(.6)' }, { filter: 'brightness(.45) saturate(.6)', offset: .5 }, { filter: 'none' }], { duration: Math.max(420, 600 * mult), fill: 'both' });   // 从桌上拿回手里：到手时由暗变亮
         const dur = Math.max(420, (slideIn ? 640 : 560) * mult);
         // 飞向桌面中央某张牌的位置时，中央那一排可能正在重新排开（前面的牌淡出、别的牌加入）：每一帧都去读目标的当前位置，落点永远和它重合，不会落下后再瞬移
-        const self = this; const trackEl = mv.track || (toEl && toEl.closest && toEl.closest('.qx-ctr') ? toEl : null);
+        const self = this; const trackEl = mv.track || (toEl && toEl.closest && toEl.closest('.qx-ctr, .qx-dhand') ? toEl : null) || (toMyHand ? { isConnected: false } : null);
         if (trackEl && !(typeof document !== 'undefined' && document.hidden)) {
           const o0 = (fromDeck && !slideIn) || mv.fromSeat ? 0 : slideIn ? 0.15 : 1;
-          const findT = () => { const e = trackEl.isConnected ? trackEl : this.$(`.qx-ctr [data-cid="${mv.id}"], .qx-ctr [data-gid="${mv.id}"]`); return e ? this.rel(e) : to; };
+          const findT = () => { const e = trackEl.isConnected ? trackEl : this.$(`.qx-ctr [data-cid="${mv.id}"], .qx-ctr [data-gid="${mv.id}"], .qx-dash .qx-dhand [data-id="${mv.id}"]`); return e ? this.rel(e) : to; };
           let fin = false; const t0 = performance.now() + delay;
           el.style.transform = `translate(${cx0 - CW / 2}px,${cy0 - CH / 2}px) scale(${s0})`; el.style.opacity = o0;
           const finish = () => { if (fin) return; fin = true; clearTimeout(guard); done(); };
@@ -7367,7 +7391,7 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
       if (r === 'duel') return t('r_duel', { s: this.who(req.source) });
       if (r === 'invasion') return t('r_invasion');
       if (r === 'arrowstorm') return t('r_arrowstorm');
-      if (r === 'rally' || r === 'escort') return T.prompt(r, { t: this.who(req.source) });
+      if (r === 'rally' || r === 'escort') return T.prompt(r, { t: this.who(req.lord != null ? req.lord : req.source) });
       if (r === 'save') return req.target === this.me ? t('r_saveSelf') : t('r_save', { t: this.who(req.target) });
       if (r === 'veto') {
         const v = req.vetoOf || {};
