@@ -3633,7 +3633,7 @@
     viewAsPick: ['【{k}】：选择 {n} 张牌当【{c}】使用或打出。', '{k}: choose {n} card(s) to use as {c}.'],
     viewAsPick0: ['【{k}】：选择 {n} 张牌。', '{k}: choose {n} card(s).'],
     playBtn: ['出牌', 'Play'], pickN: ['选择 {n} 张牌', 'Choose {n} cards'], arrangeTip: ['拖动调整顺序；拖到下面一行即放到牌堆底（单击可在两行之间切换）', 'Drag to reorder; drag into the lower row to put a card on the bottom (click to switch rows)'],
-    deckTop: ['牌堆顶', 'Deck Top'], deckBottom: ['牌堆底', 'Deck Bottom'], pdWait: ['等待出牌', 'Waiting'], pdWin: ['赢', 'Won'], pickedTag: ['已选', 'Chosen'], schemeTip: ['点击或拖动牌可以交换两张牌的位置，确定后分给两侧的角色', 'Click or drag a card to swap the two, then confirm to deal them.'], schemeWait: ['正在分牌……', 'Dealing the cards...'], pdNoWin: ['没赢', 'Did Not Win'],
+    deckTop: ['牌堆顶', 'Deck Top'], deckBottom: ['牌堆底', 'Deck Bottom'], pdWait: ['等待出牌', 'Waiting'], pdWin: ['赢', 'Won'], pickedTag: ['已选', 'Chosen'], ascTip: ['选择这张牌当作什么牌使用（暗着的此刻不能使用）', 'Choose what to use this card as (dimmed ones cannot be used now).'], schemeTip: ['点击或拖动牌可以交换两张牌的位置，确定后分给两侧的角色', 'Click or drag a card to swap the two, then confirm to deal them.'], schemeWait: ['正在分牌……', 'Dealing the cards...'], pdNoWin: ['没赢', 'Did Not Win'],
         rvShown: ['亮出', 'Shown'], rvTake: ['获得', 'Take'], rvTip: ['把要获得的牌拖到下面一排（每种花色各一张，共 {n} 张）', 'Drag the cards you take into the lower row (one of each suit, {n} in all)'], rvWait: ['{s} 正在挑选', '{s} is choosing'],
     waitVetoAll: ['等待其他角色使用【{c}】', 'Waiting for others to use {c}...'], asCard: ['{c}', '{c}'],
     feastWait: ['每名角色依次选择一张', 'Each character takes one card in turn'], pindianTitle: ['拼点', 'Contest'],
@@ -5486,6 +5486,13 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
 #qx .qx-pkb{position:absolute;left:50%;top:42%;transform:translate(-50%,-50%);z-index:6;padding:3px 14px;border-radius:4px;background:linear-gradient(#f6d873,#c9a03a);color:#2a1a06;font:900 18px/1.2 "Ma Shan Zheng","Noto Serif SC",serif;letter-spacing:2px;box-shadow:0 0 0 2px #2a1a06,0 4px 12px rgba(0,0,0,.7);pointer-events:none;white-space:nowrap;animation:qxpdst .3s cubic-bezier(.2,1.6,.4,1) both}
 #qx .qx-pkb i{font-style:normal;margin-right:6px;padding:0 6px;border-radius:50%;background:#2a1a06;color:#f6d873}
 #qx .qx-fit{transition:none!important}
+#qx .qx-box.qx-ascbox{min-height:0!important;height:auto!important}
+#qx .qx-ascrow{display:flex;gap:14px;justify-content:center;margin:12px 0 4px}
+#qx .qx-ascc{cursor:pointer;border-radius:7px;transition:transform .15s,box-shadow .15s}
+#qx .qx-ascc:hover{transform:translateY(-4px)}
+#qx .qx-ascc.qx-ascon{transform:translateY(-8px);box-shadow:0 0 0 3px #f6d873,0 0 16px #f6d873}
+#qx .qx-ascc.qx-ascoff{cursor:default;filter:brightness(.4) grayscale(.6)}
+#qx .qx-ascc.qx-ascoff:hover{transform:none}
 #qx .qx-scheme{min-width:640px}
 #qx .qx-schrow{display:flex;align-items:center;justify-content:center;gap:18px;margin-top:10px}
 #qx .qx-schside{display:flex;align-items:center;gap:12px}
@@ -5500,7 +5507,7 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
 #qx.qx-l-en .qx-pdsl{font-size:14px}
 /* 回合开始：武将牌上的玻璃反光 */
 #qx .qx-shinebox{position:absolute;inset:0;overflow:hidden;border-radius:inherit;pointer-events:none;z-index:7}
-#qx .qx-shine{position:absolute;left:-30%;right:-30%;top:0;height:100%;pointer-events:none;z-index:7;background:linear-gradient(180deg,rgba(255,255,255,0) 30%,rgba(255,255,255,.12) 42%,rgba(255,250,225,.75) 50%,rgba(255,255,255,.12) 58%,rgba(255,255,255,0) 70%);mix-blend-mode:screen}
+#qx .qx-shine{position:absolute;left:-30%;right:-30%;top:0;height:100%;pointer-events:none;z-index:7;background:linear-gradient(180deg,rgba(255,255,255,0) 24%,rgba(255,255,255,.22) 38%,rgba(255,253,238,.98) 49%,rgba(255,255,255,1) 50%,rgba(255,253,238,.98) 51%,rgba(255,255,255,.22) 62%,rgba(255,255,255,0) 76%);mix-blend-mode:screen;filter:blur(1px) brightness(1.25)}
 /* 判定的勾 / 叉：一笔画出 */
 #qx .qx-jsvg{position:absolute;left:50%;top:50%;width:96px;height:96px;transform:translate(-50%,-50%);z-index:5;pointer-events:none;overflow:visible;filter:drop-shadow(0 0 3px #000) drop-shadow(0 2px 4px rgba(0,0,0,.8))}
 #qx .qx-jsvg path{fill:none;stroke-width:11;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:120;stroke-dashoffset:120}
@@ -5524,8 +5531,9 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
 #qx .qx-st .qx-phtag.qx-phc-draw,#qx .qx-dash .qx-phtag.qx-phc-draw{background:linear-gradient(90deg,#2f7fc8,#1b4f8a)}
 #qx .qx-st .qx-phtag.qx-phc-discard,#qx .qx-dash .qx-phtag.qx-phc-discard{background:linear-gradient(90deg,#2e9a52,#1a6634)}
 #qx .qx-st .qx-phtag.qx-phc-prepare,#qx .qx-st .qx-phtag.qx-phc-finish,#qx .qx-st .qx-phtag.qx-phc-start,#qx .qx-dash .qx-phtag.qx-phc-prepare,#qx .qx-dash .qx-phtag.qx-phc-finish,#qx .qx-dash .qx-phtag.qx-phc-start{background:linear-gradient(90deg,#8a7350,#5c4a30)}
-#qx .qx-st .qx-phtag.qx-phin,#qx .qx-dash .qx-phtag.qx-phin{animation:qxphin3 .34s ease-out both}
-#qx .qx-st .qx-phtag.qx-phout,#qx .qx-dash .qx-phtag.qx-phout{position:absolute;left:0;top:0;animation:qxphout3 .3s ease-in both}
+#qx .qx-st .qx-phtag.qx-phin,#qx .qx-dash .qx-phtag.qx-phin{animation:qxphfade .3s ease-out both}
+#qx .qx-st .qx-phl.qx-phtag.qx-phout,#qx .qx-dash>.qx-phase .qx-phl.qx-phtag.qx-phout{position:absolute;left:0;top:0;animation:qxphfade .25s ease-in reverse both}
+@keyframes qxphfade{from{opacity:0}to{opacity:1}}   /* 阶段标签原地淡入淡出，不左右移动 */
 #qx.qx-full{padding:0;background:#17130d}
 #qx.qx-full .qx-top{display:none}
 #qx.qx-full .qx-stage{border:none;border-radius:0}
@@ -5804,12 +5812,14 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
         for (const inst of g.viewAsSkills(me, ['strike', 'remedy', 'grog', 'parry', 'veto'], { phase: true })) {
           const v = inst.def.viewAs; const n = v.count || 1;
           const pool = g.cardsIn(me, v.zones || 'h').filter(c => !v.filter || v.filter(g, me, c, {}));
-          for (const asName of (v.choices || [null])) {
-            let ok = false;
-            if (n === 1) ok = pool.some(c => { const vc = g.buildCard(me, { cardIds: [c.id], skill: inst.key, asName }, null, { phase: true }); return vc && g.playable(me, vc); });
-            else if (pool.length >= n) { const vc = g.buildCard(me, { cardIds: pool.slice(0, n).map(c => c.id), skill: inst.key, asName }, null, { phase: true }); ok = !!vc && g.playable(me, vc); }
-            if (ok) out.push({ key: inst.key, id: inst.id, asName });
-          }
+          const okFor = asName => {
+            if (n === 1) return pool.some(c => { const vc = g.buildCard(me, { cardIds: [c.id], skill: inst.key, asName }, null, { phase: true }); return vc && g.playable(me, vc); });
+            if (pool.length >= n) { const vc = g.buildCard(me, { cardIds: pool.slice(0, n).map(c => c.id), skill: inst.key, asName }, null, { phase: true }); return !!vc && g.playable(me, vc); }
+            return false;
+          };
+          // 可以转化成多种牌的技能（如改革）：只显示一个按钮，选好牌后再在窗口里选当作什么牌
+          if (v.choices) { if (v.choices.some(okFor)) out.push({ key: inst.key, id: inst.id, asName: null, choices: v.choices.slice() }); }
+          else if (okFor(null)) out.push({ key: inst.key, id: inst.id, asName: null });
         }
         return out;
       }
@@ -5860,7 +5870,7 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
           if (a) { u.active = { key, option: a.opt }; u.sel = []; u.targets = []; this.render(); return; }
         }
       }
-      if (el.dataset.id) { const c = g.card(+el.dataset.id); if (c && QXAsk.clickCard(this, c)) this.render(); return; }
+      if (el.dataset.id) { const c = g.card(+el.dataset.id); if (c && QXAsk.clickCard(this, c)) { if (k === 'play' && u.skill && !u.asName && u.sel.length && this.asChoices(u.skill)) { this.openAsChoice(); return; } this.render(); } return; }
       if (el.dataset.seat != null) { const p = g.p(+el.dataset.seat); if (p && QXAsk.clickSeat(this, p)) this.render(); return; }
     }
     pressButton(raw) {
@@ -5875,6 +5885,8 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
       const u = this.ui; const k = u.req.kind; const ids = () => u.sel.map(c => c.id);
       if (act === 'yes') return this.answer(true);
       if (act === 'skip') return this.answer(null);
+      if (act.startsWith('ascpick:')) { u.ascPick = act.slice(8); this.openAsChoice(); return; }
+      if (act.startsWith('asc:')) { if (act === 'asc:') return; const nm = act.slice(4); if (nm === '-') { u.sel = []; u.targets = []; u.asName = null; QXAsk.refresh(this); this.closeModal(); this.render(); return; } u.asName = nm; u.targets = []; QXAsk.refresh(this); this.closeModal(); this.render(); return; }
       if (act === 'schemeSwap' && this.schemeWin) { const S = this.schemeWin; this.flipWins(() => { S.swap = !S.swap; this.renderWins(); }); return; }
       if (act === 'schemeOk' && this.schemeWin) { const S = this.schemeWin; return this.answer([S.swap ? S.seats[1] : S.seats[0]]); }   // 左边槽里的牌给左边的角色
       if (act === 'arrangeOk') return this.answer({ top: (u.arr ? u.arr.top : u.req.options).slice(), bottom: u.arr ? u.arr.bottom.slice() : [] });
@@ -7229,7 +7241,7 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
     turnShine(seat, mult) {
       if (!mult) return null; const por = this.porEl(seat); if (!por) return null;
       const box = document.createElement('div'); box.className = 'qx-shinebox'; const el = document.createElement('div'); el.className = 'qx-shine'; box.appendChild(el); por.appendChild(box);
-      const d = Math.max(450, 700 * Math.min(1, mult));
+      const d = Math.max(560, 840 * Math.min(1, mult));
       return new Promise(res => { let done = false; const f = () => { if (done) return; done = true; box.remove(); res(); }; const a = el.animate([{ transform: 'translateY(115%) skewY(-18deg)', opacity: 0 }, { opacity: 1, offset: .15 }, { opacity: 1, offset: .8 }, { transform: 'translateY(-115%) skewY(-18deg)', opacity: 0 }], { duration: d, easing: 'cubic-bezier(.3,.1,.3,1)' }); a.onfinish = f; a.oncancel = f; setTimeout(f, d + 300); });
     }
     deathFx(seat, mult) {
@@ -7487,6 +7499,17 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
     heroLine(p) {
       const T = this.T; if (!this.heroShown(p)) return '';
       return `<span class="qx-fac" style="background:${T.factionColor(p.faction)}"></span><span class="qx-hero">${esc(T.heroName(p.hero))}</span>`;
+    }
+    asChoices(key) { const me = this.g.p(this.me); const inst = this.g.skillList(me).find(s => s.key === key); return inst && inst.def.viewAs && inst.def.viewAs.choices || null; }
+    // 转化成哪种基本牌：独立窗口，此刻不能使用的牌暗着；选一张按确定，或取消
+    openAsChoice() {
+      const u = this.ui, g = this.g, me = g.p(this.me), T = this.T, t = T.t; const ch = this.asChoices(u.skill); if (!ch) return;
+      const ids = u.sel.map(c => c.id);
+      const ok = nm => { const vc = g.buildCard(me, { cardIds: ids, skill: u.skill, asName: nm }, null, { phase: true }); return !!vc && g.playable(me, vc); };
+      u.ascPick = u.ascPick && ok(u.ascPick) ? u.ascPick : null;
+      const cards = ch.map(nm => { const can = ok(nm); return `<div class="qx-ascc${can ? '' : ' qx-ascoff'}${u.ascPick === nm ? ' qx-ascon' : ''}"${can ? ` data-act="ascpick:${nm}"` : ''}>${this.cardHTML({ name: nm, suit: (u.sel[0] || {}).suit || 'none', rank: (u.sel[0] || {}).rank || 0 }, 'qx-mcard')}</div>`; }).join('');
+      const inst = g.skillList(me).find(s => s.key === u.skill);
+      this.showModal(`<div class="qx-box qx-ascbox"><div class="qx-mtitle"><i></i><span>${esc(T.skillName(inst ? inst.id : u.skill))}</span><i></i></div><div class="qx-msub">${esc(t('ascTip'))}</div><div class="qx-ascrow">${cards}</div><div class="qx-mfoot"><button class="qx-dbt qx-primary" data-act="asc:${u.ascPick || ''}"${u.ascPick ? '' : ' disabled'}>${esc(t('confirm'))}</button><button class="qx-dbt" data-act="asc:-">${esc(t('cancel'))}</button></div></div>`);
     }
     closeModal() { const m = this.$('.qx-modal'); if (m) { m.classList.add('qx-hidden'); m.innerHTML = ''; } }
     showGameOver() {
