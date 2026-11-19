@@ -5742,14 +5742,18 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
     }
     // ── 全屏：优先用浏览器全屏；被拦截（如嵌在框架里）时退化为铺满窗口 ──
     toggleFull() {
-      const d = document; const on = !this.isFull;
+      // 嵌在本站页面里时，全屏只有一个：整站最外层页面的全屏（与简历/游戏厅顶栏的全屏按钮是同一个状态）
+      const td = (() => { try { if (window.top !== window && window.top.document) return window.top.document; } catch (e) {} return null; })();
+      const d = td || document, fsOn = () => !!(d.fullscreenElement || d.webkitFullscreenElement); const on = !this.isFull;
       const apply = v => { this.isFull = v; this.root.classList.toggle('qx-full', v); const b = this.$('[data-act=full]'); if (b) b.textContent = this.T.t(v ? 'fullExit' : 'fullOn'); const fx = this.$('.qx-fsx'); if (fx) fx.textContent = this.T.t('fullExit'); if (this.fit() && this.g) this.render(); setTimeout(() => { if (this.fit() && this.g) this.render(); }, 150); };
-      if (!this.fsBound) { this.fsBound = true; d.addEventListener('fullscreenchange', () => { if (!d.fullscreenElement && this.isFull && this.realFs) { this.realFs = false; apply(false); } }); }
+      if (!this.fsBound) { this.fsBound = true; const h = () => { if (!fsOn() && this.isFull && this.realFs) { this.realFs = false; apply(false); } }; d.addEventListener('fullscreenchange', h); d.addEventListener('webkitfullscreenchange', h); }
       if (on) {
         apply(true);
-        if (this.host.requestFullscreen) this.host.requestFullscreen().then(() => { this.realFs = true; this.fit(); }).catch(() => { this.realFs = false; });
+        if (fsOn()) { this.realFs = 'shared'; return; } // 页面已经全屏（顶栏按的）：只铺满，退出时不动页面的全屏
+        const el = td ? d.documentElement : this.host, req = el.requestFullscreen || el.webkitRequestFullscreen;
+        if (req) { try { const r = req.call(el); this.realFs = true; if (r && r.then) r.then(() => this.fit()).catch(() => { this.realFs = false; }); } catch (e) { this.realFs = false; } }
       } else {
-        if (d.fullscreenElement && d.exitFullscreen) d.exitFullscreen().catch(() => {});
+        if (this.realFs === true && fsOn()) { try { const r = (d.exitFullscreen || d.webkitExitFullscreen).call(d); if (r && r.catch) r.catch(() => {}); } catch (e) {} }
         this.realFs = false; apply(false);
       }
     }
