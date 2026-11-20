@@ -6309,7 +6309,7 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
       const wW = this.lang === 'zh' ? 430 : 500; win.style.width = wW + 'px';
       const dash2 = this.$('.qx-dash'); const lim = (dash2 ? this.rel(dash2).y - 6 : 700) - top;
       const hH = Math.min(lim, Math.max(maxH, win.scrollHeight)); win.style.height = hH + 'px';
-      const pw = Math.round(hH * 461 / 712); por.style.width = pw + 'px'; por.style.height = hH + 'px';
+      const ph = Math.round(maxH), pw = Math.round(ph * 461 / 712); por.style.width = pw + 'px'; por.style.height = ph + 'px';   // 立绘大小所有武将一致（只由可用区域决定），只有右边窗口会随内容向下延长
       const tw = pw + 8 + wW; const x0 = Math.round((L + R) / 2 - tw / 2), y0 = Math.round(top);
       win.style.left = (pw + 8) + 'px'; el.style.width = tw + 'px'; el.style.height = hH + 'px';
       el.style.left = (sr.left + x0 * sc) + 'px'; el.style.top = (sr.top + y0 * sc) + 'px';
