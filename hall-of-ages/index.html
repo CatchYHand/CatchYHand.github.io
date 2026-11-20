@@ -5490,7 +5490,7 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
 #qx .qx-ctr .qx-cc.qx-ccdisc .qx-cpic{filter:brightness(.55) saturate(.7)}
 #qx .qx-ctr .qx-cc .qx-cpic{transition:filter .35s ease}
 #qx .qx-clog{position:absolute;left:290px;width:700px;top:224px;height:42px;z-index:41;pointer-events:none;overflow:hidden}
-#qx .qx-clog .qx-cline{position:absolute;left:50%;top:0;transition:transform .38s cubic-bezier(.25,.8,.3,1),opacity .38s ease;will-change:transform,opacity;font-size:13px;line-height:21px;color:#f6e7c2;white-space:nowrap;max-width:var(--qx-capw,700px);box-sizing:border-box;overflow:hidden;text-overflow:ellipsis;padding:0 10px;background:linear-gradient(90deg,transparent,rgba(0,0,0,.45) 15%,rgba(0,0,0,.45) 85%,transparent);text-shadow:0 1px 2px #000;animation:qxcin .25s ease-out}
+#qx .qx-clog .qx-cline{position:absolute;left:50%;top:0;transition:transform .38s cubic-bezier(.25,.8,.3,1),opacity .38s ease;will-change:transform,opacity;font-size:12.5px;line-height:18px;color:#f6e7c2;white-space:nowrap;max-width:var(--qx-capw,700px);box-sizing:border-box;overflow:hidden;text-overflow:ellipsis;padding:0 10px;background:linear-gradient(90deg,transparent,rgba(0,0,0,.45) 15%,rgba(0,0,0,.45) 85%,transparent);text-shadow:0 1px 2px #000;animation:qxcin .25s ease-out}
 #qx .qx-clog .qx-cline.qx-cold{color:#cdbf9c}
 #qx .qx-clog .qx-cline.qx-cgone{opacity:0}
 #qx .qx-wtimer{height:5px;margin:12px 6px 0;background:rgba(0,0,0,.55);border-radius:3px;overflow:hidden;box-shadow:inset 0 0 0 1px rgba(0,0,0,.6)}
@@ -5516,12 +5516,11 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
 #qx .qx-sbr{line-height:1;min-width:110px;display:inline-flex;align-items:center;justify-content:flex-end;font-family:"Times New Roman","Noto Serif","Liberation Serif",serif;font-variant-numeric:lining-nums}
 #qx .qx-sbar.qx-slidein{animation-duration:.45s}
 /* 右键大卡：跟随鼠标 */
-/* 提示文字和按钮一行，放在桌面中间那排牌的正上方；那排牌整体下移 */
-#qx .qx-stage .qx-prompt{top:310px;width:900px;height:40px;flex-direction:row;align-items:center;justify-content:center;gap:14px}
-#qx .qx-stage .qx-ptxt{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:560px;padding:5px 26px;line-height:1.4}
-#qx .qx-stage .qx-pbtns{flex:none}
-#qx .qx-stage .qx-pbtns .qx-dbt{min-width:96px;padding:6px 14px}
-#qx .qx-stage .qx-ctr{top:352px}
+/* 两行播报上移到上方武将之下；桌面中间那排牌跟着稍下移；操作提示和按钮仍在最下面（和原来一样），文字略小以腾出空间 */
+#qx .qx-stage .qx-ctr{top:302px}
+#qx .qx-stage .qx-prompt{top:476px;gap:3px}
+#qx .qx-stage .qx-ptxt{font-size:13.5px;line-height:1.3;padding:3px 16px}
+#qx .qx-stage .qx-pbtns .qx-dbt{padding:3px 14px;font-size:14px;line-height:1.6}
 #qx .qx-hvd{position:fixed;z-index:200;pointer-events:none;transform-origin:0 0;opacity:0;transition:opacity .15s ease}
 #qx .qx-hvd.qx-on{opacity:1}
 #qx .qx-hvpor{position:absolute;left:0;top:0;border-radius:8px;overflow:hidden;border:2px solid rgba(214,176,90,.85);box-shadow:0 6px 20px rgba(0,0,0,.6);background:#120e09}
@@ -6349,9 +6348,9 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
       const st = this.$('.qx-stage'); const sc = this.scale || 1; const sr = st.getBoundingClientRect(); const bw = this.bw();
       // 可用区域（舞台坐标）
       let top = 8, L = 8, R = bw - 8; const pr = this.$('.qx-prompt'); const dash = this.$('.qx-dash');
-      let bot = dash ? this.rel(dash).y - 4 : 532; top = 352;   // 提示和按钮在中间那排牌的上方：详情放在它们下面，不挡操作按钮
+      let bot = 435;   // 详情窗口的位置保持原样：上方武将之下、原来提示文字的位置之上（不随提示位置变动）
       for (const e of this.root.querySelectorAll('.qx-st .qx-por')) { const r = this.rel(e); if (!r.w) continue;
-        if (r.y + r.h < 330) { /* 上方的武将在提示行之上，不影响 */ }
+        if (r.y + r.h < 330) { if (r.x + r.w > bw * .2 && r.x < bw * .8) top = Math.max(top, r.y + r.h + 4); }
         else if (r.x + r.w < bw / 2) L = Math.max(L, r.x + r.w + 10); else R = Math.min(R, r.x - 10); }
       if (bot - top < 150) { top = Math.max(8, bot - 150); }
       const maxH = bot - top, maxW = Math.min(R - L, 720);
@@ -6361,7 +6360,7 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
       const win = el.querySelector('.qx-hvwin'), por = el.querySelector('.qx-hvpor');
       // 所有武将同一字号、同一窗口宽度；顶部按可用区域，内容多就往下延长
       const wW = this.lang === 'zh' ? 380 : 440; win.style.width = wW + 'px';
-      const lim = 752 + ((this.LH || 760) - 760) - top;   // 内容多可以一直往下延长（盖住手牌区也无妨，鼠标移开就收起）
+      const dash2 = this.$('.qx-dash'); const lim = (dash2 ? this.rel(dash2).y - 6 : 700) - top;
       const hH = Math.min(lim, Math.max(maxH, win.scrollHeight)); win.style.height = hH + 'px';
       const ph = Math.round(maxH), pw = Math.round(ph * 461 / 712); por.style.width = pw + 'px'; por.style.height = ph + 'px';   // 立绘大小所有武将一致（只由可用区域决定），只有右边窗口会随内容向下延长
       const tw = pw + 8 + wW; const x0 = Math.round((L + R) / 2 - tw / 2), y0 = Math.round(top);
@@ -6740,7 +6739,7 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
       const cx = this.bw() / 2;
       html += `<div class="qx-ctr" data-mk="ctr" style="width:${this.bw()}px">${this.centerHTML()}</div>`;
       const u = this.ui; const txt = u ? this.promptText() : '';   // 单机：不显示「某某正在思考」
-      html += `<div class="qx-prompt" data-mk="prompt" style="left:${Math.round(cx - 450)}px">${txt ? `<div class="qx-ptxt${u ? '' : ' qx-pwait'}">${esc(txt)}</div>` : ''}${u ? `<div class="qx-pbtns">${this.buttonsHTML()}</div>` : ''}</div>`;
+      html += `<div class="qx-prompt" data-mk="prompt" style="left:${Math.round(cx - 330)}px">${txt ? `<div class="qx-ptxt${u ? '' : ' qx-pwait'}">${esc(txt)}</div>` : ''}${u ? `<div class="qx-pbtns">${this.buttonsHTML()}</div>` : ''}</div>`;
       const me = g.p(this.me);
       html += `<div class="qx-myomks" data-mk="myomk">${this.omensHTML(me, true)}</div>`;
       const bd = this.$('.qx-board'); morph(bd, html); bd.style.width = this.bw() + 'px'; this.applyAimed(); this.reHide(); this.fitNames();
@@ -7029,7 +7028,7 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
     // 两行播报：新的一行从下方淡入，旧的平滑上移到上一行，再旧的上移淡出；过一会儿自然淡出
     capLine(text, kind) {
       const box = this.$('.qx-clog'); if (!box) return null; this.capPlace(box);
-      const LH = 21; const live = [...box.querySelectorAll('.qx-cline:not(.qx-cgone)')];
+      const LH = 18; const live = [...box.querySelectorAll('.qx-cline:not(.qx-cgone)')];
       const el = document.createElement('div'); el.className = 'qx-cline' + (kind ? ' qx-l-' + kind : ''); el.textContent = text;
       el.style.transform = `translate(-50%,${LH * 2}px)`; el.style.opacity = '0'; box.appendChild(el);
       void el.offsetWidth;
@@ -7068,7 +7067,7 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
     // 播报：固定在提示那一行的正上方（两行高），左右收在上方两侧武将牌之间
     capPlace(box) {
       const st = this.$('.qx-stage'); if (!st) return;
-      const LH = 21, H = LH * 2; const cx = this.bw() / 2; const top = 266, bot = top + H;
+      const LH = 18, H = LH * 2; const cx = this.bw() / 2; const top = 266, bot = top + H;
       let L = cx - 380, R = cx + 380;
       for (const e of this.root.querySelectorAll('.qx-st .qx-por, .qx-st .qx-sfoot, .qx-st .qx-omv')) {
         const r = this.rel(e); if (!r.w || r.y > bot || r.y + r.h < top) continue;
@@ -7629,7 +7628,7 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
       for (const [k, arr] of groups) jobs.push(this.flyStack(arr, k, mult));
       return Promise.all(jobs);
     }
-    centerSlot() { const list = this.center || []; return { x: this.bw() / 2 - 50, y: 366, w: 100, h: 152 }; }
+    centerSlot() { const list = this.center || []; return { x: this.bw() / 2 - 50, y: 316, w: 100, h: 152 }; }
     fly(mv, delay, mult, prevGhost) {
       // 依次飞进我手里的牌（连摸几张、起始手牌）：等轮到这张时再起飞，这样每张都先在手里占好位置，全部从右侧平移进来，动画完全一样
       if (delay && mv.k1 === 'h:' + this.me && !mv.keep && !mv.toRect && !!this.disp) return new Promise(res => setTimeout(() => this.fly(mv, 0, mult, prevGhost).then(res), delay));
