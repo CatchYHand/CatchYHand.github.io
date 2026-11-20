@@ -504,6 +504,8 @@
     card(id) { return this.cards[id]; }
     nextAlive(p) { let q = p; for (let i = 0; i < this.n; i++) { q = this.players[(q.seat + 1) % this.n]; if (!q.dead) return q; } return null; }
     // 从 start 起按座次的存活角色（start 若已死亡则从其下家起）
+    // 按行动顺序排列一组角色：从当前回合角色开始逆时针（当前回合角色自己排第一）
+    orderBySeat(list) { const ord = this.seatOrderFrom(this.current || this.players[0], true); return list.slice().sort((a, b) => ord.indexOf(a) - ord.indexOf(b)); }
     seatOrderFrom(start, includeDead) {
       const out = []; const s = start ? start.seat : 0;
       for (let i = 0; i < this.n; i++) { const q = this.players[(s + i) % this.n]; if (includeDead || !q.dead) out.push(q); }
@@ -711,6 +713,7 @@
       let sel = Array.isArray(a) ? [...new Set(a)].map(s => this.players[s]).filter(t => t && candidates.includes(t)) : [];
       if (sel.length > max) sel = sel.slice(0, max);
       if (sel.length < min) { for (const c of candidates) { if (sel.length >= min) break; if (!sel.includes(c)) sel.push(c); } }
+      if (sel.length > 1 && !(extra && extra.ordered)) sel = this.orderBySeat(sel);   // 选中的多名角色按行动顺序依次结算
       if (sel.length) this.log('aim', { seat: p.seat, targets: sel.map(t => t.seat), reason });
       return sel;
     }
@@ -1123,6 +1126,7 @@
       const d = CARD_DEFS[card.name];
       if (targets == null) targets = this.autoTargets(from, card) || [];
       const use = { id: ++this.seq, card, from, targets: targets.slice(), opts, data: {}, nullified: new Set(), noResponse: new Set(), extraDamage: 0 };
+      if (!d.orderedTargets) use.targets = this.orderBySeat(use.targets);   // 多个目标：从当前回合角色开始按行动顺序结算（官方规则集 3.0「结算的原则」）
       const real = card.subcards.filter(c => !c.virtual);
       this.log('use', { seat: from.seat, card: card.name, ids: real.map(c => c.id), targets: use.targets.map(t => t.seat), virtual: !!card.virtual, skill: card.viaSkill || null });
       if (real.length) yield* this.moveCards({ cards: real, to: 'process', by: from.seat, reason: 'use' });
@@ -1159,9 +1163,15 @@
       yield* this.trigger('cardUsing', { use });      // 使用时（如 火绳枪改火杀）
       if (!opts.response) {
         yield* this.trigger('targeting', { use });    // 指定目标时（可改目标）
+        if (!d.orderedTargets) use.targets = this.orderBySeat(use.targets);
         for (const t of use.targets.slice()) yield* this.trigger('targeted', { use, target: t }); // 成为目标时
+        // 目标可能被转移 / 增加：新目标按座次插入，不排在最前或最后（例：流离转移后，从当前回合角色起按逆时针依次结算）
+        if (!d.orderedTargets) use.targets = this.orderBySeat(use.targets);
         yield* this.trigger('targetConfirmed', { use }); // 指定目标后
-        for (const t of use.targets.slice()) yield* this.trigger('becameTarget', { use, target: t }); // 成为目标后
+        if (!use.data.aborted) for (const t of use.targets.slice()) yield* this.trigger('becameTarget', { use, target: t }); // 成为目标后
+        if (!d.orderedTargets) use.targets = this.orderBySeat(use.targets);
+        if (use.data.aborted) {}   // 结算被中止（如三皇改为视为使用杀）：这张牌不再产生任何效果
+        else {
         if (d.before) yield* d.before(this, use);
         if (d.targets === 'none' && d.effect) {
           yield* d.effect(this, use, null);
@@ -1182,6 +1192,7 @@
           }
         }
         if (d.after) yield* d.after(this, use);
+        }
       }
       yield* this.trigger('cardUsed', { use }); // 使用结算后
       yield* this.clearProcessing(real);
@@ -1570,7 +1581,8 @@
     *effect(g, use, t) { const c = yield* g.chooseCardOf(use.from, t, 'hej', 'pilfer'); if (c) yield* g.gainCards(use.from, [c], 'pilfer', t); },
   };
   // 驱虎吞狼（新效果）：令其视为对其攻击范围内你指定的另一名角色使用杀；此杀未造成伤害，则其视为对你使用杀
-  CARD_DEFS.catspaw = {
+  CARD_DEFS.catspaw = { orderedTargets: true,   // 两个目标有不同含义（持刀者、被杀者），不能按座次重排
+
     type: 'stratagem',
     targets: {
       min: 2, max: 2, extendable: false,
@@ -1836,7 +1848,8 @@
   const isStrike = c => !!c && E.family(c) === 'strike';
   const strikeBy = (o, use) => !!use && use.from === o && isStrike(use.card);
   const lost = p => p.maxHp - p.hp;
-  const others = (g, p) => g.seatOrderFrom(g.nextAlive(p) || p).filter(q => q !== p);
+  // 其他角色依次结算：从当前回合角色开始按行动顺序（自己的回合里就是从下家开始）
+  const others = (g, p) => g.seatOrderFrom(g.current && !g.current.dead && g.current !== p ? g.current : (g.nextAlive(p) || p)).filter(q => q !== p);
   const uniqueMax = (g, p) => g.alive.every(q => q === p || q.hand.length < p.hand.length);
 
   const FACTIONS = {
@@ -2659,8 +2672,8 @@
   };
   S.trade = {
     name: ['通商', 'TRADE'], type: 'locked', locked: true,
-    desc: ['锁定技，当你受到伤害时，其他角色各获得你区域内的一张牌，然后你获得其他角色区域内各一张牌。', 'Compulsory skill. When you take damage, every other character takes one card from your areas, then you take one card from each of their areas.'],
-    triggers: { damageTaking: {
+    desc: ['锁定技，当你受到伤害后，其他角色各获得你区域内的一张牌，然后你获得其他角色区域内各一张牌。', 'Compulsory skill. After you take damage, every other character takes one card from your areas, then you take one card from each of their areas.'],
+    triggers: { damaged: {
       can: (g, o, d) => d.to === o && !o.dead,
       *on(g, o) {
         for (const q of others(g, o)) { if (q.dead || !g.cardsIn(o, 'hej').length) continue; const c = yield* g.chooseCardOf(q, o, 'hej', 'tradeTake', { skill: 'trade', target: o.seat }); if (c) { delete c.omenAs; yield* g.gainCards(q, [c], 'trade', o); } }
@@ -3244,21 +3257,24 @@
   H.napoleon = { faction: 'revolution', hp: 4, gender: 'male', skills: ['austerlitz', 'returnx'], name: ['拿破仑', 'Napoleon'], title: ['法兰西皇帝', 'The Emperor'], rating: 8 };
   S.austerlitz = {
     name: ['三皇', 'AUSTERLITZ'], type: 'normal',
-    desc: ['当你于单个出牌阶段内连续使用三张类别不同的牌后，你视为对所有其他角色使用杀。', 'After you use three cards of different categories in a row within a single Play phase, you are treated as using a Strike on every other character.'],
-    triggers: { cardUsed: {
-      optional: false, silent: true,
-      can: (g, o, d) => d.use.from === o && g.current === o && g.phase === 'play' && d.use.card.viaSkill !== 'austerlitz' && !d.use.opts.response,
+    desc: ['当你使用谋略牌指定其他角色为目标后，你可以中止此牌的结算并视为对所有目标角色使用一张杀。若你未以此法造成伤害，你失去 1 点体力。', 'After you use a Stratagem targeting other characters, you may stop its resolution and instead be treated as using a Strike on all its targets. If that Strike deals no damage, lose 1 health.'],
+    triggers: { targetConfirmed: {
+      can: (g, o, d) => d.use.from === o && !o.dead && !d.use.opts.response && !d.use.data.aborted && d.use.card.name !== 'veto' && (E.CARD_DEFS[d.use.card.name] || {}).type === 'stratagem' && d.use.targets.some(t => t !== o && !t.dead),
       *on(g, o, d) {
-        const seq = o.phaseState.austerlitz = o.phaseState.austerlitz || [];
-        seq.push(CAT(d.use.card)); if (seq.length > 3) seq.shift();
-        if (seq.length === 3 && new Set(seq).size === 3 && !o.dead) {
-          o.phaseState.austerlitz = [];
-          g.log('skill', { seat: o.seat, skill: 'austerlitz' });
-          const vc = V('strike', [], { viaSkill: 'austerlitz' });
-          const ts = g.seatOrderFrom(g.nextAlive(o)).filter(t => t !== o && g.targetAllowed(o, t, vc));
-          if (ts.length) yield* g.useCard(o, vc, ts, { noCount: true, ignoreDistance: true });
-        }
+        const u = d.use; u.data.aborted = true;   // 中止这张谋略牌的结算
+        g.log('aborted', { seat: o.seat, card: u.card.name, skill: 'austerlitz' });
+        const vc = V('strike', [], { viaSkill: 'austerlitz' });
+        const ts = u.targets.filter(t => t !== o && !t.dead && g.targetAllowed(o, t, vc));
+        let dealt = 0;
+        if (ts.length) { const s = yield* g.useCard(o, vc, ts, { noCount: true, ignoreDistance: true }); dealt = (s && s.data && s.data.dealt) || 0; }
+        if (!dealt && !o.dead) yield* g.loseHp(o, 1, 'austerlitz');
       },
+    } },
+    ai: { confirm(g, me, req, A) {
+      const u = A.lastUse(g); if (!u) return false; const ts = (u.targets || []).map(s => g.p(s)).filter(t => t && t !== me);
+      if (!ts.length || me.hp <= 1) return false;
+      const en = ts.filter(t => A.threat(g, me, t) > 0.2).length, fr = ts.filter(t => A.rel(g, me, t) > 0.3).length;
+      return en > 0 && fr === 0 && (me.hp >= 3 || ts.length >= 2);
     } },
   };
   S.returnx = {
@@ -3944,6 +3960,7 @@
         case 'skill': return ['skill', zh ? `${S(e.seat)}发动【${skillName(e.skill)}】` : `${S(e.seat)} activates ${skillName(e.skill)}`];
         case 'damoclesMove': return ['', zh ? `【${N('damocles')}】移到${S(e.to)}` : `${N('damocles')} passes to ${S(e.to)}`];
         case 'omenHit': return ['', zh ? `${S(e.seat)}的【${N(e.card)}】生效` : `${N(e.card)} takes effect on ${S(e.seat)}`];
+        case 'aborted': return ['', zh ? `【${N(e.card)}】的结算被中止` : `${N(e.card)} stops resolving`];
         case 'recast': return ['', zh ? `${S(e.seat)}重铸【${N(e.card)}】` : `${S(e.seat)} recast ${N(e.card)}`];
         case 'drunk': return ['', zh ? `${S(e.seat)}喝了酒，下一张杀伤害 +1` : `${S(e.seat)} drank Grog: next Strike +1 damage`];
         case 'reshuffle': return ['', zh ? `弃牌堆洗入牌堆（${e.n} 张）` : `Discard pile reshuffled (${e.n} cards)`];
@@ -5225,7 +5242,9 @@ return { RandomAgent, SmartAgent, defaultAnswer, rel, tracker };
 #qx .qx-st-strike{color:#e8261c}#qx .qx-st-fire{color:#ff8a1c}#qx .qx-st-thunder{color:#8cc4ff}
 #qx .qx-st-parry{color:#38d05a}#qx .qx-st-remedy{color:#ff7aa0}#qx .qx-st-grog{color:#f0b040}#qx .qx-st-veto{color:#c8a8ff}
 /* 技能牌匾 */
-#qx .qx-skplq{position:absolute;left:50%;bottom:6px;z-index:12;white-space:nowrap;font-size:15px;font-weight:bold;letter-spacing:2px;color:#ffe9a8;padding:3px 14px;background:linear-gradient(#5a3a10,#2a1a06);border:2px solid #e0b850;border-radius:4px;box-shadow:0 0 12px rgba(240,200,90,.6),0 2px 6px #000;text-shadow:0 1px 2px #000;pointer-events:none}
+#qx .qx-skbn{position:absolute;z-index:14;pointer-events:none;white-space:nowrap;color:#fff;font-weight:bold;letter-spacing:.12em;line-height:1;background:rgba(6,6,8,.92);box-shadow:0 2px 8px rgba(0,0,0,.6);text-shadow:0 1px 2px #000}
+#qx .qx-skbn::before{content:'';position:absolute;right:100%;top:0;bottom:0;width:2.6em;background:linear-gradient(to bottom,transparent 0 8%,rgba(6,6,8,.8) 8% 22%,transparent 22% 30%,rgba(6,6,8,.55) 30% 48%,transparent 48% 56%,rgba(6,6,8,.7) 56% 72%,transparent 72% 80%,rgba(6,6,8,.4) 80% 92%,transparent 92%);-webkit-mask:linear-gradient(to right,transparent,#000 92%);mask:linear-gradient(to right,transparent,#000 92%)}
+#qx .qx-skbn::after{content:'';position:absolute;right:calc(100% + 2.6em);top:30%;height:12%;width:1.6em;background:linear-gradient(to right,transparent,rgba(6,6,8,.45))}
 #qx .qx-por.qx-skfx{animation:qxskfx 1s ease-out}
 /* 立绘特写 */
 #qx .qx-splash{position:absolute;top:300px;width:340px;pointer-events:none;z-index:60;text-align:center;filter:drop-shadow(0 10px 30px rgba(0,0,0,.85))}
@@ -7319,7 +7338,8 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
         const toEl = mv.toRect ? null : (mv.el && !mv.el.isConnected ? (this.cardEl(mv.id) || mv.el) : mv.el);
         const toBar = toEl && (toEl.classList.contains('qx-ebar') || toEl.classList.contains('qx-sbar') || toEl.classList.contains('qx-omk'));
         let from = mv.from || this.anchorRect(mv.k0);
-        const to = mv.toRect || (toEl ? this.rel(toEl) : this.anchorRect(mv.k1));
+        let to = mv.toRect || (toEl ? this.rel(toEl) : this.anchorRect(mv.k1));
+        if (!mv.toRect && toEl && to.w < 1 && to.h < 1) to = mv.k1 === 'center' && this.centerSlot ? Object.assign({ w: 86, h: 131 }, this.centerSlot()) : this.anchorRect(mv.k1);   // 目标元素此刻没有尺寸（还没排进去 / 被隐藏）：落到中央或对应区域，不会飞到左上角
         const slideIn = mv.k0 === 'deck' && mv.k1 === 'h:' + this.me && toEl;
         if (slideIn) { const hd = this.$('.qx-dhand'); const hr = hd ? this.rel(hd) : to; from = { x: Math.max(to.x + 300, hr.x + hr.w + 60), y: to.y, w: to.w, h: to.h }; }
         const omenMove = mv.omenMove || (/^j:/.test(mv.k0) && /^j:/.test(mv.k1));
@@ -7351,7 +7371,7 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
         const self = this; const trackEl = mv.track || (toEl && toEl.closest && toEl.closest('.qx-ctr, .qx-dhand') ? toEl : null) || (toMyHand ? { isConnected: false } : null);
         if (trackEl && !(typeof document !== 'undefined' && document.hidden)) {
           const o0 = (fromDeck && !slideIn) || mv.fromSeat ? 0 : slideIn ? 0.15 : 1;
-          const findT = () => { const e = trackEl.isConnected ? trackEl : this.$(`.qx-ctr [data-cid="${mv.id}"], .qx-ctr [data-gid="${mv.id}"], .qx-dash .qx-dhand [data-id="${mv.id}"]`); return e ? this.rel(e) : to; };
+          let lastT = to; const findT = () => { const e = trackEl.isConnected ? trackEl : this.$(`.qx-ctr [data-cid="${mv.id}"], .qx-ctr [data-gid="${mv.id}"], .qx-dash .qx-dhand [data-id="${mv.id}"]`); const r = e ? this.rel(e) : null; if (r && (r.w > 1 || r.h > 1)) lastT = r; return lastT; };   // 目标暂时没有尺寸（被重排 / 隐藏）时沿用上一次的落点，不会飞到左上角
           let fin = false; const t0 = performance.now() + delay;
           el.style.transform = `translate(${cx0 - CW / 2}px,${cy0 - CH / 2}px) scale(${s0})`; el.style.opacity = o0;
           const finish = () => { if (fin) return; fin = true; clearTimeout(guard); done(); };
@@ -7515,13 +7535,24 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
       s.animate([{ transform: 'translate(-50%,-50%) scale(2.2)', opacity: 0 }, { transform: 'translate(-50%,-50%) scale(.95)', opacity: 1, offset: .22 }, { transform: 'translate(-50%,-50%) scale(1)', opacity: 1, offset: .7 }, { transform: 'translate(-50%,-50%) scale(1.08)', opacity: 0 }], { duration: Math.max(500, 950 * mult), easing: 'ease-out', fill: 'both' }).onfinish = () => s.remove();
       void fam;
     }
-    // 技能：座位下方弹出金边牌匾；限定技、觉醒技再加立绘特写
+    // 技能：武将牌上飞入技能横幅；限定技、觉醒技再加立绘特写
     skillFx(seat, id, mult) {
       const d = E.SKILLS[id]; const name = d ? this.T.skillName(id) : this.T.cardName(id);
       const el = seat === this.me ? this.$('.qx-dpor') : this.$(`.qx-st[data-seat="${seat}"]`);
       if (el) {
-        const b = document.createElement('div'); b.className = 'qx-skplq'; b.textContent = name; const pe = this.porEl(seat); b.style.bottom = 'auto'; b.style.top = Math.max(0, (pe ? pe.offsetHeight : 200) - 40) + 'px'; el.appendChild(b);
-        b.animate([{ transform: 'translate(-50%,8px) scale(.6)', opacity: 0 }, { transform: 'translate(-50%,0) scale(1.08)', opacity: 1, offset: .15 }, { transform: 'translate(-50%,0) scale(1)', opacity: 1, offset: .8 }, { transform: 'translate(-50%,-6px) scale(1)', opacity: 0 }], { duration: Math.max(900, 1700 * mult), easing: 'ease-out', fill: 'both' }).onfinish = () => b.remove();
+        // 技能生效横幅：黑底白字，带左侧拖影；从武将牌左边渐显飞入，右端停在武将牌右边框，停 2 秒后向左飞出淡出
+        const pe = this.porEl(seat);
+        if (pe) {
+          const fx = this.$('.qx-fx'); const r = this.rel(pe);
+          fx.querySelectorAll(`.qx-skbn[data-seat="${seat}"]`).forEach(x => x.remove());   // 横幅放在不随重绘重建的特效层里
+          const W = r.w, H = r.h;
+          const fs = Math.max(12, Math.min(24, Math.round(W * .11)));
+          const b = document.createElement('div'); b.className = 'qx-skbn'; b.dataset.seat = seat; b.textContent = name;
+          b.style.cssText = `font-size:${fs}px;padding:${Math.round(fs * .32)}px ${Math.round(fs * .55)}px;left:${Math.round(r.x + W)}px;top:${Math.round(r.y + H * .2)}px`;
+          fx.appendChild(b);
+          const dx = -(W + 20), inD = 500, hold = 2000, outD = 450, tot = inD + hold + outD;
+          b.animate([{ transform: `translateX(calc(-100% + ${dx}px))`, opacity: 0 }, { transform: 'translateX(-100%)', opacity: 1, offset: inD / tot }, { transform: 'translateX(-100%)', opacity: 1, offset: (inD + hold) / tot }, { transform: `translateX(calc(-100% + ${dx}px))`, opacity: 0 }], { duration: tot, easing: 'cubic-bezier(.2,.7,.3,1)', fill: 'both' }).onfinish = () => b.remove();
+        }
         const por = this.porEl(seat); if (por) { por.classList.remove('qx-skfx'); void por.offsetWidth; por.classList.add('qx-skfx'); }
       }
       const p = this.g.p(seat);
@@ -7621,7 +7652,7 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
         } else text = t('play');
         const acts = this.activeButtons().map(b => `<button class="qx-btn${u.active && u.active.key === b.key && u.active.option === b.opt ? ' qx-on' : ''}" data-active="${b.key}|${b.opt == null ? '' : b.opt}">${esc(b.label)}</button>`).join('');
         const rc = u.sel.length === 1 && !u.skill && !u.active && D[u.sel[0].name].recastable && !u.targets.length;
-        btns = rc ? btn('recast', t('recast'), true, 'qx-primary') : btn('ok', t('playBtn'), this.canConfirm(), 'qx-primary');
+        btns = rc ? btn('recast', t('recast'), true, 'qx-primary') : btn('ok', t(u.skill || u.active ? 'confirm' : 'playBtn'), this.canConfirm(), 'qx-primary');   // 选了技能：按钮写「确定」
         if (u.skill) { const c2 = this.curCard(); if (c2 && !g.autoTargets(me, c2) && D[c2.name].targets) text = this.tgText({ c: T.cardName(c2.name), min: D[c2.name].targets.min == null ? 1 : D[c2.name].targets.min, max: g.maxTargets(me, c2) }); }
         if (u.skill || u.active) btns += btn('cancel', t('cancel'));
         btns += btn('end', t('endPlay'));
@@ -7653,7 +7684,7 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
         btns = btn('ok', t('confirm'), this.canConfirm(), 'qx-primary') + (req.optional ? btn('cancel', t('cancel')) : '');
       } else if (k === 'confirm') {
         if (D[req.skill]) { text = t('confirmEquip', { c: T.cardName(req.skill) }); btns = btn('yes', t('confirm'), true, 'qx-primary') + btn('no', t('cancel')); }
-        else { text = t('askSkill', { k: T.skillName(req.skill) }); btns = btn('yes', t('yes'), true, 'qx-primary') + btn('no', t('no')); }
+        else { text = t('askSkill', { k: T.skillName(req.skill) }); btns = btn('yes', t('confirm'), true, 'qx-primary') + btn('no', t('cancel')); }
       } else {
         text = t('option');
       }
