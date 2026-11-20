@@ -5242,9 +5242,7 @@ return { RandomAgent, SmartAgent, defaultAnswer, rel, tracker };
 #qx .qx-st-strike{color:#e8261c}#qx .qx-st-fire{color:#ff8a1c}#qx .qx-st-thunder{color:#8cc4ff}
 #qx .qx-st-parry{color:#38d05a}#qx .qx-st-remedy{color:#ff7aa0}#qx .qx-st-grog{color:#f0b040}#qx .qx-st-veto{color:#c8a8ff}
 /* 技能牌匾 */
-#qx .qx-skbn{position:absolute;z-index:14;pointer-events:none;white-space:nowrap;color:#fff;font-weight:bold;letter-spacing:.12em;line-height:1;background:rgba(6,6,8,.92);box-shadow:0 2px 8px rgba(0,0,0,.6);text-shadow:0 1px 2px #000}
-#qx .qx-skbn::before{content:'';position:absolute;right:100%;top:0;bottom:0;width:2.6em;background:linear-gradient(to bottom,transparent 0 8%,rgba(6,6,8,.8) 8% 22%,transparent 22% 30%,rgba(6,6,8,.55) 30% 48%,transparent 48% 56%,rgba(6,6,8,.7) 56% 72%,transparent 72% 80%,rgba(6,6,8,.4) 80% 92%,transparent 92%);-webkit-mask:linear-gradient(to right,transparent,#000 92%);mask:linear-gradient(to right,transparent,#000 92%)}
-#qx .qx-skbn::after{content:'';position:absolute;right:calc(100% + 2.6em);top:30%;height:12%;width:1.6em;background:linear-gradient(to right,transparent,rgba(6,6,8,.45))}
+#qx .qx-skbn{position:absolute;z-index:14;pointer-events:none;white-space:nowrap;color:#fff;font-weight:bold;letter-spacing:.12em;line-height:1;background-size:100% 100%;background-repeat:no-repeat;text-shadow:0 1px 2px #000}
 #qx .qx-por.qx-skfx{animation:qxskfx 1s ease-out}
 /* 立绘特写 */
 #qx .qx-splash{position:absolute;top:300px;width:340px;pointer-events:none;z-index:60;text-align:center;filter:drop-shadow(0 10px 30px rgba(0,0,0,.85))}
@@ -7546,18 +7544,32 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
           const fx = this.$('.qx-fx'); const r = this.rel(pe);
           fx.querySelectorAll(`.qx-skbn[data-seat="${seat}"]`).forEach(x => x.remove());   // 横幅放在不随重绘重建的特效层里
           const W = r.w, H = r.h;
-          const fs = Math.max(12, Math.min(24, Math.round(W * .11)));
+          const fs = Math.max(11, Math.min(20, Math.round(W * .09)));
           const b = document.createElement('div'); b.className = 'qx-skbn'; b.dataset.seat = seat; b.textContent = name;
-          b.style.cssText = `font-size:${fs}px;padding:${Math.round(fs * .32)}px ${Math.round(fs * .55)}px;left:${Math.round(r.x + W)}px;top:${Math.round(r.y + H * .2)}px`;
+          b.style.cssText = `background-image:${this.brushBg()};font-size:${fs}px;padding:${Math.round(fs * .42)}px ${Math.round(fs * 1.7)}px;left:${Math.round(r.x + W)}px;top:${Math.round(r.y + H * .2)}px`;
           fx.appendChild(b);
-          const dx = -(W + 20), inD = 500, hold = 2000, outD = 450, tot = inD + hold + outD;
-          b.animate([{ transform: `translateX(calc(-100% + ${dx}px))`, opacity: 0 }, { transform: 'translateX(-100%)', opacity: 1, offset: inD / tot }, { transform: 'translateX(-100%)', opacity: 1, offset: (inD + hold) / tot }, { transform: `translateX(calc(-100% + ${dx}px))`, opacity: 0 }], { duration: tot, easing: 'cubic-bezier(.2,.7,.3,1)', fill: 'both' }).onfinish = () => b.remove();
+          const dx = -(W + 20), inD = 500, hold = 2000, outD = 500, tot = inD + hold + outD;   // 飞出和飞入一样快
+          const off = `translateX(calc(-100% + ${dx}px))`, on = 'translateX(-100%)';
+          b.animate([{ transform: off, opacity: 0, easing: 'cubic-bezier(.2,.7,.3,1)' }, { transform: on, opacity: 1, offset: inD / tot }, { transform: on, opacity: 1, offset: (inD + hold) / tot, easing: 'cubic-bezier(.7,0,.8,.3)' }, { transform: off, opacity: 0 }], { duration: tot, easing: 'linear', fill: 'both' }).onfinish = () => b.remove();
         }
         const por = this.porEl(seat); if (por) { por.classList.remove('qx-skfx'); void por.offsetWidth; por.classList.add('qx-skfx'); }
       }
       const p = this.g.p(seat);
       if (d && (d.type === 'limited' || d.type === 'awaken') && p.hero) return this.splash(p.hero, name, mult);
       return sleep(Math.max(120, 300 * mult));
+    }
+    brushBg() {
+      if (this._brushBg) return this._brushBg;
+      let seed = 7; const rnd = () => (seed = (seed * 9301 + 49297) % 233280) / 233280;
+      const Wv = 400, Hv = 100, n = 14, sh = Hv / n; let rects = '';
+      for (let k = 0; k < n; k++) {
+        const edge = k === 0 || k === n - 1 ? .45 : 1;   // 上下边的笔画略短，像笔锋
+        const l = 4 + rnd() * 58 / edge * .8, r = Wv - 4 - rnd() * 58 / edge * .8;
+        const y = (k * sh - .4).toFixed(1), h = (sh + .8).toFixed(1);
+        rects += `<rect x="${l.toFixed(1)}" y="${y}" width="${(r - l).toFixed(1)}" height="${h}"/>`;
+      }
+      const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${Wv} ${Hv}" preserveAspectRatio="none"><defs><linearGradient id="g" x1="0" x2="${Wv}" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#060608" stop-opacity="0"/><stop offset=".2" stop-color="#060608" stop-opacity=".93"/><stop offset=".8" stop-color="#060608" stop-opacity=".93"/><stop offset="1" stop-color="#060608" stop-opacity="0"/></linearGradient></defs><g fill="url(#g)">${rects}</g></svg>`;
+      return (this._brushBg = `url("data:image/svg+xml,${encodeURIComponent(svg)}")`);
     }
     splash(hero, name, mult) {
       return new Promise(res => {
