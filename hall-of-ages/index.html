@@ -933,6 +933,7 @@
       this.log('judge', { seat: p.seat, reason, card: card.id });
       yield* this.trigger('judgeRetouch', j);  // 生效前：改判
       { const okf = Game.judgeOk && Game.judgeOk[reason]; this.log('judgeResult', Object.assign({ seat: p.seat, reason, card: j.card.id }, okf ? { ok: !!okf(j.card) } : {})); }
+      { const oo = this._omenOut; if (oo && oo.player === p) { this._omenOut = null; yield* oo.out(); } }   // 判定结果定了，天兆牌才离开判定区
       if (effect) yield* effect(j.card);
       yield* this.trigger('judgeDone', j);      // 生效后（如获得判定牌）
       this.log('judgeClear', { seat: p.seat, cards: j.all.map(c => c.id) });   // 每次判定结算后清掉判定牌
@@ -1368,10 +1369,11 @@
         const c = p.judgeZone[p.judgeZone.length - 1]; // 后放入的先判定
         const name = c.omenAs || c.name; const d = CARD_DEFS[name];
         c.omenJudging = p.seat;   // 界面：判定期间天兆标记仍显示在原处
-        yield* this.moveCards({ cards: [c], to: 'process', reason: 'omenJudge' });
+        // 天兆牌在判定结果定下来之前一直留在判定区（失去判定区的牌之类的时机都在结果定下之后）
+        const out = function* () { if (c.loc && c.loc.zone === 'judge') yield* this.moveCards({ cards: [c], to: 'process', reason: 'omenJudge' }); }.bind(this);
         const vetoed = yield* this.askVeto({ omen: c, target: p });
-        if (vetoed) { this.log('vetoed', { seat: p.seat, card: name }); if (d.onVetoed) yield* d.onVetoed(this, p, c); }
-        else yield* d.judgeEffect(this, p, c);
+        if (vetoed) { yield* out(); this.log('vetoed', { seat: p.seat, card: name }); if (d.onVetoed) yield* d.onVetoed(this, p, c); }
+        else { this._omenOut = { player: p, out }; yield* d.judgeEffect(this, p, c); if (this._omenOut && this._omenOut.out === out) { this._omenOut = null; yield* out(); } }
         delete c.omenJudging;
         if (c.loc && c.loc.zone === 'process') { delete c.omenAs; yield* this.toDiscard([c], 'omen'); }
         if (!this.useDepth) this.log('tableClear', { reason: 'omen' });
