@@ -2622,26 +2622,24 @@
   }
   S.freedom = {
     name: ['自由', 'FREEDOM'], type: 'normal',
-    desc: ['出牌阶段限一次，你可以失去 1 点体力或弃置一张装备牌，然后令你本出牌阶段内攻击范围变为无限，出杀的次数上限 +1，且弃牌阶段结束时，你可以令一名其他角色获得你本次的弃牌。', 'Once per Play phase, you may lose 1 health or discard an equipment card. Then for this Play phase your attack range is unlimited and you may use 1 more Strike; and at the end of your Discard phase, you may let another character take the cards you discarded in it.'],
-    active: {
-      cards: { min: 0, max: 0 }, targets: { min: 0, max: 0 },
-      can: (g, p) => !p.phaseState.freedom,
-      valid: () => true,
-      *use(g, p) {
-        p.phaseState.freedom = true;
-        const eqs = g.cardsIn(p, 'he').filter(c => (E.CARD_DEFS[c.name] || {}).type === 'equip');
-        const i = eqs.length ? yield* g.chooseOption(p, ['freedomHp', 'freedomEquip'], 'freedom', { skill: 'freedom' }) : 0;
-        if (i === 1) { const [c] = yield* g.chooseOwnCards(p, 1, 1, 'he', 'freedomEquip', c2 => (E.CARD_DEFS[c2.name] || {}).type === 'equip', { skill: 'freedom', discard: true }); if (c) yield* g.discard(p, [c], 'freedom'); }
-        else yield* g.loseHp(p, 1, 'freedom');
-        if (p.dead) return;
-        p.phaseState.freedomOn = true; p.turnState.freedomGive = true; p.turnState.freedomCards = [];
-      },
-    },
+    desc: ['回合开始阶段，你可以失去 1 点体力或弃置一张装备牌，然后令你本回合的摸牌阶段额外摸 X 张牌，本出牌阶段内攻击范围变为无限、出杀的次数上限 +X，且弃牌阶段结束时，你可以令一名其他角色获得你本次的弃牌（X 为你已损失的体力值）。', 'At the start of your turn, you may lose 1 health or discard an Equipment card. If you do, this turn you draw X extra cards in your Draw phase; during your Play phase your attack range is unlimited and you may use X more Strikes; and at the end of your Discard phase you may give the cards you discarded to another character (X = your lost health).'],
     mods: {
-      attackRange: (g, o, v, p) => (p === o && o.phaseState.freedomOn) ? 99 : v,
-      strikeLimit: (g, o, v, p) => (p === o && o.phaseState.freedomOn) ? v + 1 : v,
+      attackRange: (g, o, v, p) => (p === o && o.turnState.freedomOn && g.phase === 'play') ? 99 : v,
+      strikeLimit: (g, o, v, p) => (p === o && o.turnState.freedomOn) ? v + Math.max(0, o.maxHp - o.hp) : v,
     },
     triggers: {
+      phaseStart: {
+        can: (g, o, d) => d.player === o && d.phase === 'prepare' && !o.dead && !o.turnState.freedomOn,
+        *on(g, o) {
+          const eqs = g.cardsIn(o, 'he').filter(c => (E.CARD_DEFS[c.name] || {}).type === 'equip');
+          const i = eqs.length ? yield* g.chooseOption(o, ['freedomHp', 'freedomEquip'], 'freedom', { skill: 'freedom' }) : 0;
+          if (i === 1) { const [c] = yield* g.chooseOwnCards(o, 1, 1, 'he', 'freedomEquip', c2 => (E.CARD_DEFS[c2.name] || {}).type === 'equip', { skill: 'freedom', discard: true }); if (c) yield* g.discard(o, [c], 'freedom'); }
+          else yield* g.loseHp(o, 1, 'freedom');
+          if (o.dead) return;
+          o.turnState.freedomOn = true; o.turnState.freedomGive = true; o.turnState.freedomCards = [];
+        },
+      },
+      drawCount: { silent: true, optional: false, can: (g, o, d) => d.player === o && o.turnState.freedomOn && o.maxHp > o.hp, *on(g, o, d) { d.n += o.maxHp - o.hp; } },
       discarded: { optional: false, silent: true, can: (g, o, d) => d.player === o && d.reason === 'phaseDiscard' && o.turnState.freedomGive, *on(g, o, d) { o.turnState.freedomCards.push(...d.cards.map(c => c.id)); } },
       phaseEnd: {
         can: (g, o, d) => d.player === o && d.phase === 'discard' && o.turnState.freedomGive && (o.turnState.freedomCards || []).some(id => { const c = g.card(id); return c && c.loc && c.loc.zone === 'discard'; }) && g.alive.length > 1,
@@ -2652,15 +2650,9 @@
       },
     },
     ai: {
-      play(g, me, inst, A) {
-        if (me.phaseState.freedom) return [];
-        const strikes = me.hand.filter(c => isStrike(c)).length; const far = g.alive.some(t => t !== me && A.threat(g, me, t) > 0.3 && !g.inAttackRange(me, t));
-        const eq = g.cardsIn(me, 'he').some(c => (E.CARD_DEFS[c.name] || {}).type === 'equip');
-        if (!strikes || (!far && strikes < 2) || (!eq && me.hp <= 2)) return [];
-        return [{ score: 1.6 + strikes * 0.5, ans: { action: 'skill', skill: inst.key } }];
-      },
+      _go(g, me, A) { const strikes = me.hand.filter(c => isStrike(c)).length; const eq = g.cardsIn(me, 'he').some(c => (E.CARD_DEFS[c.name] || {}).type === 'equip'); return eq || me.hp >= 3 || (me.hp >= 2 && strikes >= 2); },
       option: (g, me) => g.cardsIn(me, 'he').some(c => (E.CARD_DEFS[c.name] || {}).type === 'equip') ? 1 : 0,
-      confirm: (g, me, req, A) => g.alive.some(q => q !== me && A.rel(g, me, q) > 0.4),
+      confirm: (g, me, req, A) => g.phase === 'prepare' ? S.freedom.ai._go(g, me, A) : g.alive.some(q => q !== me && A.rel(g, me, q) > 0.4),
       targets: (g, me, req, A) => { const c = req.options.map(s => g.p(s)).sort((a, b) => A.rel(g, me, b) - A.rel(g, me, a)); return [c[0].seat]; },
     },
   };
@@ -2986,7 +2978,7 @@
   H.shakespeare = { faction: 'renaissance', hp: 3, gender: 'male', skills: ['soliloquy', 'tragedy'], name: ['莎士比亚', 'Shakespeare'], title: ['埃文河诗人', 'The Bard'], rating: 7 };
   S.soliloquy = {
     name: ['独白', 'SOLILOQUY'], type: 'locked', locked: true,
-    desc: ['锁定技，当你于非濒死状态下使用基本牌或非延时类锦囊牌仅指定一名目标时，该牌额外结算一次。', 'Compulsory skill. When you are not dying and use a basic card or a non-delayed Stratagem that targets exactly one character, it resolves one more time.'],
+    desc: ['锁定技，当你于非濒死状态下使用基本牌或谋略牌仅指定一名目标时，该牌额外结算一次。', 'Compulsory skill. When you are not dying and use a Basic card or a Stratagem that targets exactly one character, it resolves one more time.'],
     triggers: {
       targetConfirmed: {
         can: (g, o, d) => { const u = d.use; if (u.from !== o || o.dead || o.dying || u.opts.response || u.data.aborted) return false; const t = (E.CARD_DEFS[u.card.name] || {}).type; return (t === 'basic' || t === 'stratagem') && u.targets.length === 1; },
@@ -5546,8 +5538,8 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
 #qx i.qx-hvused{background:#555!important}
 #qx .qx-hvsk p{margin:0 0 2px;text-align:justify}
 #qx .qx-hvpq{position:relative;flex:none;background-size:100% 100%;background-repeat:no-repeat}
-#qx .qx-hvpq>span{position:absolute;display:flex;align-items:center;justify-content:center;white-space:nowrap;line-height:1;color:#3a2410;font-weight:bold;font-size:12px;letter-spacing:.14em;padding-left:.14em;text-shadow:0 1px 0 rgba(255,240,210,.55);font-family:"Noto Serif SC","Songti SC",serif}
-#qx.qx-l-en .qx-hvpq>span{font-family:Cinzel,Georgia,serif;font-weight:700;font-size:11px;letter-spacing:.06em;padding-left:.06em;padding-top:.12em}
+#qx .qx-hvpq>span{position:absolute;display:flex;align-items:center;justify-content:center;white-space:nowrap;line-height:1;color:#3a2410;font-weight:bold;font-size:12px;letter-spacing:.14em;padding-left:.14em;text-shadow:0 1px 0 rgba(255,240,210,.55);font-family:"Noto Serif SC","Songti SC",serif;transform:translateY(-.11em)}   /* 中文字形视觉重心偏下，略上移才在牌匾正中 */
+#qx.qx-l-en .qx-hvpq>span{transform:none;font-family:Cinzel,Georgia,serif;font-weight:700;font-size:11px;letter-spacing:.06em;padding-left:.06em;padding-top:.12em}
 #qx .qx-mkpkin{display:flex;flex-direction:column;align-items:center;gap:2px;padding:7px 14px;border-radius:8px;background:linear-gradient(#2e2416,#1a140c);border:1px solid #b08a3c;box-shadow:0 6px 18px rgba(0,0,0,.6);color:#f2e6c8;font-size:12px;white-space:nowrap}
 #qx .qx-mkpkin b{font-size:14px;color:#fff1cc;letter-spacing:.06em}
 #qx .qx-mk-limited span{color:#ff9a8a}#qx .qx-mk-awaken span{color:#9cc0ff}#qx .qx-mkdone span{color:#bdb3a0}
@@ -5782,6 +5774,8 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
 #qx .qx-skic{position:absolute;top:calc(50% + var(--skpy,0px));left:calc(var(--skcap) + 1px);width:20px;height:20px;margin-top:-10px;background:var(--skc);-webkit-mask:var(--skico) center/contain no-repeat;mask:var(--skico) center/contain no-repeat}
 #qx .qx-skn{position:absolute;top:var(--skpy,0px);bottom:calc(-1 * var(--skpy,0px));left:calc(var(--skcap) + 23px);right:calc(var(--skcap) + 1px);display:flex;align-items:center;justify-content:center;white-space:nowrap;overflow:visible;color:var(--skc);font:900 15px/1 'Noto Serif SC','Songti SC',serif;letter-spacing:2px}
 #qx .qx-skbl{display:inline-block;width:0;height:0;vertical-align:baseline}
+#qx .qx-sktx{padding-left:2px}   /* 字间距会加在最后一个字后面，左边补同样的量才左右对称 */
+#qx.qx-l-en .qx-sktx{padding-left:.4px}
 #qx.qx-l-en .qx-skn{font:700 11.5px/1 'Cinzel',Georgia,serif;letter-spacing:.4px}
 #qx .qx-sksvg{position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none}
 #qx .qx-sksvg rect{fill:none;stroke-linecap:round}
@@ -6388,7 +6382,7 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
       const win = el.querySelector('.qx-hvwin'), por = el.querySelector('.qx-hvpor');
       // 所有武将同一字号、同一窗口宽度；顶部按可用区域，内容多就往下延长
       const wW = this.lang === 'zh' ? 380 : 440; win.style.width = wW + 'px';
-      const dash2 = this.$('.qx-dash'); const lim = (dash2 ? this.rel(dash2).y - 6 : 700) - top;
+      const lim = 752 + ((this.LH || 760) - 760) - top;   // 技能多时窗口可以一直往下延长，不受手牌区分界线限制
       const hH = Math.min(lim, Math.max(maxH, win.scrollHeight)); win.style.height = hH + 'px';
       const ph = Math.round(maxH), pw = Math.round(ph * 461 / 712); por.style.width = pw + 'px'; por.style.height = ph + 'px';   // 立绘大小所有武将一致（只由可用区域决定），只有右边窗口会随内容向下延长
       const tw = pw + 8 + wW; const x0 = Math.round((L + R) / 2 - tw / 2), y0 = Math.round(top);
@@ -6877,7 +6871,7 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
       const cv = this._skcv, Z = 4;
       for (const n of els) {
         n.style.transform = '';
-        const cs = getComputedStyle(n); const font = `${cs.fontStyle} ${cs.fontWeight} ${parseFloat(cs.fontSize) * Z}px ${cs.fontFamily}`; cv.letterSpacing = '0px'; const txt = n.textContent; const k = font + '|' + txt;
+        const cs = getComputedStyle(n); const font = `${cs.fontStyle} ${cs.fontWeight} ${parseFloat(cs.fontSize) * Z}px ${cs.fontFamily}`; cv.letterSpacing = '0px'; const raw = n.textContent; const txt = /[\u3400-\u9fff]/.test(raw) ? raw : 'HXIE'; const k = font + '|' + txt;   // 英文按大写字母的字身居中（Q 的尾巴、逗号等不算），中文按实际墨迹
         // 字形墨迹相对基线的上下范围：把字画到画布上逐行扫出来（和页面用的是同一个字体）
         let ink = this._skink.get(k);
         if (!ink) {
@@ -7641,7 +7635,7 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
       const press = (a, b, c) => t => t < .14 ? a + (b - a) * Math.sin(Math.PI / 2 * t / .14) : t > .55 ? c + (b - c) * Math.pow(1 - (t - .55) / .45, 1.6) : b - (b - a) * .15 * Math.sin(Math.PI * (t - .14) / .41);
       const strokes = v === 'ok'
         ? [[[[14, 52], [26, 58], [38, 74]], [[38, 74], [56, 42], [88, 16]]]]
-        : [[[[22, 20], [46, 46], [80, 82]]], [[[80, 18], [54, 50], [20, 82]]]];
+        : [[[[33, 17], [52, 44], [80, 84]]], [[[67, 15], [48, 44], [20, 83]]]];   // 叉：上半短、下半长，交点在偏上的位置，整体居中
       const wfn = v === 'ok' ? [t => t < .3 ? 5.2 + 1.6 * Math.sin(Math.PI / 2 * t / .3) : press(6.8, 6.4, .5)((t - .3) / .7 * .9 + .1)] : [press(5.6, 6.4, .5), press(5.2, 6, .5)];
       const id = 'qxbm' + v + uid;
       const body = strokes.map((sg, k) => `<mask id="${id}m${k}" maskUnits="userSpaceOnUse" x="-10" y="-10" width="120" height="120"><path class="qx-js${k + 1}" d="${center(sg)}" pathLength="100" fill="none" stroke="#fff" stroke-width="24" stroke-linecap="round" stroke-linejoin="round"/></mask>`).join('');
