@@ -2527,7 +2527,7 @@
   };
   S.domesday = {
     name: ['清册', 'DOMESDAY'], type: 'normal',
-    desc: ['出牌阶段限一次，你可以与一名有手牌的其他角色拼点：若你赢，则你对其造成 X 点伤害（X 为其体力值的一半，向上取整）；若你没赢，则你观看其身份。', 'Once per Play phase, you may contest a character who has cards in hand: if you win, deal X damage to them (X = half their health, rounded up); otherwise, view their role.'],
+    desc: ['出牌阶段限一次，你可以与一名有手牌的其他角色拼点：若你赢，则你对其造成 X 点伤害（X 为其体力值的一半，向上取整）；若你没赢，则你观看其身份，然后你受到其对你造成的 1 点伤害。', 'Once per Play phase, you may contest another character who has cards in hand: if you win, deal X damage to them (X = half their health, rounded up); otherwise, view their role, then they deal 1 damage to you.'],
     active: {
       cards: { min: 0, max: 0 }, targets: { min: 1, max: 1, filter: (g, p, t) => t !== p && t.hand.length > 0 },
       can: (g, p) => !p.phaseState.domesday && p.hand.length > 0 && g.alive.some(t => t !== p && t.hand.length > 0),   // 拼点需要双方都有手牌
@@ -2538,7 +2538,7 @@
         yield* g.clearProcessing([r.ca, r.cb]);
         if (p.dead || t.dead) return;
         if (r.win) yield* g.damage({ from: p, to: t, amount: Math.ceil(Math.max(0, t.hp) / 2) });
-        else if (!(t.roleShown || (p.knownRoles && p.knownRoles[t.seat]))) g.learnRole(p, t);
+        else { if (!(t.roleShown || (p.knownRoles && p.knownRoles[t.seat]))) g.learnRole(p, t); if (!p.dead) yield* g.damage({ from: t, to: p, amount: 1 }); }
       },
     },
     ai: {
@@ -2546,7 +2546,8 @@
         if (me.phaseState.domesday || !me.hand.length) return [];
         const hi = Math.max(...me.hand.map(c => c.rank || 0)); let best = null, bv = 0;
         for (const t of g.alive) { if (t === me || !t.hand.length) continue; const thr = A.threat(g, me, t); const unknown = !t.roleShown && !(me.knownRoles && me.knownRoles[t.seat]) && Math.abs(A.rel(g, me, t)) < 0.4;
-          const v = (thr > 0.2 ? thr * Math.ceil(t.hp / 2) * (hi >= 10 ? 1.4 : hi >= 7 ? 0.8 : 0.4) : 0) + (unknown ? 0.8 : 0) - (A.rel(g, me, t) > 0.4 ? 3 : 0);
+          const lose = hi >= 12 ? 0.15 : hi >= 10 ? 0.35 : hi >= 7 ? 0.55 : 0.8;   // 没赢要挨 1 点伤害
+          const v = (thr > 0.2 ? thr * Math.ceil(t.hp / 2) * (hi >= 10 ? 1.4 : hi >= 7 ? 0.8 : 0.4) : 0) + (unknown ? 0.8 : 0) - (A.rel(g, me, t) > 0.4 ? 3 : 0) - lose * (me.hp <= 1 ? 3 : me.hp <= 2 ? 1.2 : 0.6);
           if (v > bv) { bv = v; best = t; } }
         return best && bv > 0.7 ? [{ score: bv, ans: { action: 'skill', skill: inst.key, targets: [best.seat] } }] : [];
       },
@@ -3777,7 +3778,7 @@
     slot_weapon: ['武器', 'Weapon'], slot_armor: ['防具', 'Armor'], slot_minus: ['−1 坐骑', '−1 Mount'], slot_plus: ['+1 坐骑', '+1 Mount'],
     cap_use: ['{s}使用', '{s} used'], cap_useOn: ['{s}对{t}', '{s} → {t}'], cap_play: ['{s}打出', '{s} played'],
     cap_discard: ['{s}弃置', '{s} discarded'], cap_pindian: ['{s}的拼点牌', "{s}'s contest card"], cap_discardOf: ['{s}被弃置', 'Discarded from {s}'], cap_judge: ['{s}的天意牌', '{s}\'s Fate card'],
-    cap_pindian: ['{s}拼点', '{s} contest'], cap_recast: ['{s}重铸', '{s} recast'], cap_reveal: ['亮出', 'Revealed'], cap_retouch: ['{s}改判', '{s} retouched'],
+    cap_pindian: ['{s}拼点', '{s} contest'], cap_recast: ['{s}重铸', '{s} recast'], cap_show: ['{s}展示', '{s} showed'], cap_reveal: ['亮出', 'Revealed'], cap_retouch: ['{s}改判', '{s} retouched'],
     gameOver: ['对局结束', 'Game Over'], winners: ['{w}获胜', 'Winner: {w}'], draw: ['平局', 'Draw'], again: ['再来一局', 'Play Again'],
     youWin: ['你赢了！', 'You Win!'], youLose: ['你输了', 'You Lose'],
     note: ['右键（手机上长按）任意一张牌可查看大图；点击「规则书」查看完整规则。', 'Right-click (or long-press on a phone) any card to see it full size. Open the Rulebook for the full rules.'],
@@ -4921,7 +4922,13 @@ return { RandomAgent, SmartAgent, defaultAnswer, rel, tracker };
 #qx .qx-rs{position:absolute;left:10.5%;top:2.5%;width:24.5%;height:10.3%;display:flex;align-items:center;justify-content:center;border-radius:2cqw;pointer-events:none}
 #qx .qx-rs b{font:700 15.5cqw/1 Georgia,"Times New Roman","Noto Serif SC",serif;color:#1b1714;white-space:nowrap;letter-spacing:-.03em}
 #qx .qx-rs b.qx-rsred{color:#a8141b}
-#qx .qx-rs-basic{background:#eed9b6;box-shadow:0 0 1.5cqw 1cqw #eed9b6}
+#qx .qx-rs-basic,#qx .qx-rs-stratagem,#qx .qx-rs-omen,#qx .qx-rs-arsenal{background:none!important;box-shadow:none!important}
+#qx .qx-rsc{position:absolute;display:block;pointer-events:none;background-repeat:no-repeat;-webkit-mask-image:linear-gradient(90deg,transparent,#000 var(--fx),#000 calc(100% - var(--fx)),transparent),linear-gradient(180deg,transparent,#000 var(--fy),#000 calc(100% - var(--fy)),transparent);-webkit-mask-composite:source-in;mask-image:linear-gradient(90deg,transparent,#000 var(--fx),#000 calc(100% - var(--fx)),transparent),linear-gradient(180deg,transparent,#000 var(--fy),#000 calc(100% - var(--fy)),transparent);mask-composite:intersect}
+#qx .qx-lrs2{position:absolute;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.2cqw;pointer-events:none;border-radius:1.1cqw;background:radial-gradient(ellipse at 50% 42%,color-mix(in srgb,var(--lc) 82%,#fff) 0%,var(--lc) 58%,color-mix(in srgb,var(--lc) 82%,#5a3a10) 100%);box-shadow:inset 0 0 .9cqw rgba(90,60,20,.45)}
+#qx .qx-lrs2 b{font:700 6.4cqw/1 "Noto Serif","Noto Serif SC",Georgia,"Times New Roman",serif;color:#1b1714;letter-spacing:0;text-shadow:0 .15cqw 0 rgba(255,250,235,.6)}
+#qx .qx-lrs2 b.qx-lr2{font-size:5.4cqw;letter-spacing:-.05em}
+#qx .qx-lrs2 i{font:400 5.6cqw/1 "DejaVu Sans","Segoe UI Symbol","Noto Sans Symbols2",sans-serif;font-style:normal;color:#1b1714}
+#qx .qx-lrs2.qx-lred b,#qx .qx-lrs2.qx-lred i{color:#b0141c}
 #qx .qx-rs-stratagem{background:#bcd2ea;box-shadow:0 0 1.5cqw 1cqw #bcd2ea}
 #qx .qx-rs-omen{background:#dcc3df;box-shadow:0 0 1.5cqw 1cqw #dcc3df}
 #qx .qx-rs-arsenal{background:#c8c5c2;box-shadow:0 0 1.5cqw 1cqw #c8c5c2}
@@ -5197,6 +5204,19 @@ return { RandomAgent, SmartAgent, defaultAnswer, rel, tracker };
 /* 装备技能选中：右滑 + 两道顺时针流光 */
 #qx .qx-deq .qx-ebar{overflow:hidden;isolation:isolate}
 #qx .qx-deq .qx-ebar>*{position:relative;z-index:2}
+/* 装备滑槽：凹进去的槽、上下两道细铜轨、右端铜挡块；装备条嵌在槽里，从左边滑进来 */
+#qx .qx-deq{gap:6px}
+#qx .qx-egv{position:relative;height:41px;flex:none;border-radius:6px;background:linear-gradient(180deg,#080604 0%,#16100a 45%,#0e0a06 100%);box-shadow:inset 0 3px 5px rgba(0,0,0,.9),inset 0 -1px 0 rgba(255,214,150,.07),0 0 0 1px #2c2013,0 0 0 2px rgba(150,112,52,.55),0 1px 0 2px rgba(0,0,0,.5);clip-path:inset(-6px -40px -6px -3px round 7px)}
+#qx .qx-egv::before{content:'';position:absolute;left:8px;right:16px;top:5px;bottom:5px;border-top:1px solid rgba(214,170,90,.2);border-bottom:1px solid rgba(214,170,90,.2);pointer-events:none}
+#qx .qx-egv::after{content:'';position:absolute;right:4px;top:50%;width:5px;height:23px;margin-top:-11.5px;border-radius:2px;background:linear-gradient(90deg,#6e5020,#e0bd6e 45%,#8a6a2e);box-shadow:0 0 3px rgba(0,0,0,.8),inset 0 0 1px rgba(255,240,200,.6);pointer-events:none}
+#qx .qx-deq .qx-egv>.qx-ebar{position:absolute;left:3px;right:11px;top:3px;bottom:3px;height:auto;padding:0 8px 0 7px;border-radius:4px;border:1px solid #b58a3e;background:linear-gradient(180deg,#4b3c27 0%,#2d2317 52%,#1d160e 100%);box-shadow:inset 0 1px 0 rgba(255,224,160,.28),inset 0 0 0 1px rgba(0,0,0,.45),0 2px 4px rgba(0,0,0,.7);animation:qxeqslide .5s cubic-bezier(.2,.8,.3,1)}
+#qx .qx-deq .qx-egv>.qx-ebar.qx-appear{animation:qxeqslide .5s cubic-bezier(.2,.8,.3,1)}
+@keyframes qxeqslide{from{translate:-110% 0;opacity:.4}to{translate:0 0;opacity:1}}
+#qx .qx-deq .qx-ebar .qx-eart{position:absolute;left:0;top:0;bottom:0;width:70px;z-index:1;background-repeat:no-repeat;background-size:112px 168px;background-position:-21px -78px;-webkit-mask-image:linear-gradient(90deg,#000 35%,transparent);mask-image:linear-gradient(90deg,#000 35%,transparent);opacity:.95;border-radius:3px 0 0 3px;pointer-events:none}
+#qx .qx-deq .qx-ebar .qx-eic,#qx .qx-deq .qx-ebar .qx-eval{text-shadow:0 1px 2px #000,0 0 4px #000}
+#qx .qx-deq .qx-ebar .qx-eic svg{filter:drop-shadow(0 1px 1px #000)}
+#qx .qx-deq .qx-ebar .qx-ename{text-shadow:0 1px 2px #000}
+#qx .qx-dsep{display:none}
 #qx .qx-ebar.qx-eqcan{border-color:#c9a8ff;box-shadow:0 0 8px rgba(185,150,255,.55);cursor:pointer}
 #qx .qx-ebar.qx-eqon{transform:translateX(16px);border-color:transparent;cursor:pointer;box-shadow:0 0 14px rgba(255,214,120,.55)}
 #qx .qx-ebar.qx-eqon::before{content:"";position:absolute;left:50%;top:50%;width:260px;height:260px;margin:-130px 0 0 -130px;background:conic-gradient(from 0deg,transparent 0deg 120deg,rgba(255,236,170,.15) 150deg,#fff6c8 176deg,transparent 180deg 300deg,rgba(255,236,170,.15) 330deg,#fff6c8 356deg,transparent 360deg);animation:qxspin 1.8s linear infinite;z-index:0}
@@ -5354,9 +5374,14 @@ return { RandomAgent, SmartAgent, defaultAnswer, rel, tracker };
 #qx .qx-dead.qx-dnew .qx-dplq{animation:qxdp .6s .5s ease-out both}
 /* 自己的操作区：立绘顶到右侧 */
 #qx .qx-dside,#qx .qx-dj,#qx .qx-dbtn{display:none}
-#qx .qx-dhand{left:224px;top:52px}
+#qx .qx-dhand{left:244px;top:52px}   /* 左边留出装备条发动时向右平移的空间（一直留着，没装备也从这里开始放牌） */
 #qx .qx-hslot.qx-dragging{transition:none;cursor:grabbing}
-#qx .qx-hslot{transition:left .18s ease}
+#qx .qx-hslot{transition:left .18s ease,translate .22s cubic-bezier(.25,.8,.35,1)}
+#qx .qx-dhand.qx-spread .qx-hslot:hover{z-index:auto!important}
+#qx .qx-dhand.qx-spread .qx-hslot.qx-hov{z-index:60!important}
+#qx .qx-dhand.qx-spread .qx-hslot .qx-pic.qx-sel:hover{transform:none}
+#qx .qx-dhand.qx-spread .qx-hslot.qx-hov .qx-pic.qx-sel{transform:translateY(-8px)}
+#qx .qx-dhand.qx-spread .qx-hslot.qx-hov .qx-pic.qx-picked{transform:translateY(-28px)}
 #qx .qx-think.qx-indet i{animation:qxind 1.6s linear infinite}
 @keyframes qxind{from{transform:scaleX(1)}to{transform:scaleX(0)}}
 #qx .qx-dsk{left:992px;top:16px;width:112px}
@@ -5592,13 +5617,13 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
 #qx .qx-cnone{color:#6a5a40;font-size:20px;padding:0 10px}
 #qx .qx-box.qx-optbox{position:relative;width:min(92vw,440px);min-height:0;max-height:none;overflow:visible;padding:20px 24px 18px;border-radius:12px;border:2px solid #b08a3c;background:radial-gradient(ellipse at 50% -10%,#4a3820 0%,#2a2013 55%,#18120b 100%);box-shadow:0 0 0 4px #1a1209,0 0 0 5px #6b5328,0 20px 60px rgba(0,0,0,.85);animation:qxoptin .24s cubic-bezier(.2,.8,.3,1)}
 #qx .qx-box.qx-optbox::before{content:'';position:absolute;inset:6px;border:1px solid rgba(214,176,90,.28);border-radius:8px;pointer-events:none}
-#qx .qx-box.qx-uwin{min-height:0;max-height:none;overflow:visible;padding:20px 26px 20px;border-radius:12px;background:radial-gradient(ellipse at 50% -10%,#4a3820 0%,#2a2013 55%,#18120b 100%);box-shadow:0 0 0 4px #1a1209,0 0 0 5px #6b5328,0 20px 60px rgba(0,0,0,.85);animation:qxoptin .24s cubic-bezier(.2,.8,.3,1)}
+#qx .qx-box.qx-uwin{min-height:0;max-height:calc(100vh - 28px);overflow:visible;padding:20px 26px 20px;border-radius:12px;background:radial-gradient(ellipse at 50% -10%,#4a3820 0%,#2a2013 55%,#18120b 100%);box-shadow:0 0 0 4px #1a1209,0 0 0 5px #6b5328,0 20px 60px rgba(0,0,0,.85);animation:qxoptin .24s cubic-bezier(.2,.8,.3,1)}
 #qx .qx-box.qx-uwin::before{content:'';position:absolute;inset:6px;border:1px solid rgba(214,176,90,.28);border-radius:8px;pointer-events:none}
 #qx .qx-uwin .qx-opthd span{white-space:normal;max-width:80%}
 #qx .qx-uwin .qx-optsub{max-width:640px;margin-left:auto;margin-right:auto;font-size:14px}
 #qx .qx-uwtip{margin-top:4px;text-align:center;color:#a8987a;font-size:12px;line-height:1.45}
 #qx .qx-uwin .qx-optdiv{margin:10px 0 12px}
-#qx .qx-uwin .qx-mbody{max-height:calc(92vh - 170px);overflow:auto}
+#qx .qx-uwin .qx-mbody{min-height:0;overflow:auto}
 #qx .qx-uwin .qx-mfoot{margin-top:14px}
 @keyframes qxoptin{from{opacity:0;transform:translateY(10px) scale(.95)}to{opacity:1;transform:none}}
 #qx .qx-optcn{position:absolute;width:10px;height:10px;background:linear-gradient(135deg,#fff0c0,#c99a3c);transform:rotate(45deg);box-shadow:0 0 4px rgba(255,210,120,.6)}
@@ -5645,7 +5670,10 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
 #qx .qx-frow{max-width:680px;gap:12px}
 #qx .qx-fcell{min-height:0}
 #qx .qx-fcell>span{font:bold 14px Georgia,serif;color:#f0dca0;min-height:18px}
-#qx .qx-fwrap{border-radius:6px;transition:transform .12s,box-shadow .12s}
+#qx .qx-fwrap{position:relative;border-radius:6px;transition:transform .12s,box-shadow .12s}
+#qx .qx-ftag{position:absolute;left:7px;right:7px;bottom:15px;height:20px;display:flex;align-items:center;justify-content:center;box-sizing:border-box;padding:0 3px;white-space:nowrap;overflow:hidden;font-family:'Noto Serif SC','Songti SC',serif;font-weight:700;letter-spacing:0;line-height:1;color:#fff3c8;background:rgba(70,24,8,.94);border:1px solid #e0a040;border-radius:3px;box-shadow:0 2px 6px rgba(0,0,0,.6);pointer-events:none;animation:qxftag .25s ease-out}
+#qx.qx-l-en .qx-ftag{font-family:Cinzel,Georgia,serif}
+@keyframes qxftag{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
 #qx .qx-fcell.qx-fcan .qx-fwrap{cursor:pointer;box-shadow:0 0 0 2px #7fd08f,0 0 12px #7fd08f}
 #qx .qx-fcell.qx-fcan .qx-fwrap:hover{transform:translateY(-6px)}
 #qx .qx-fcell.qx-fcan .qx-pic{box-shadow:none}
@@ -5716,6 +5744,10 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
 #qx .qx-win{left:var(--qx-cx,620px)}
 
 #qx .qx-fsx{display:none}
+#qx .qx-wins > .qx-win,#qx .qx-modal .qx-box{cursor:grab}
+#qx .qx-wins > .qx-win{box-sizing:border-box}
+#qx .qx-wins > .qx-win.qx-wdrag,#qx .qx-modal .qx-box.qx-wdrag{cursor:grabbing;transition:none}
+#qx .qx-wins > .qx-win button,#qx .qx-modal .qx-box button{cursor:pointer}
 /* 目标嵌套：自己在选人时，先前的红框暂时变成很淡的红边，候选是绿框，选中的是金框 + 「已选」标签 */
 #qx.qx-choosing .qx-st.qx-tgt .qx-por,#qx.qx-choosing .qx-dpor.qx-tgt .qx-por{animation:none;box-shadow:0 0 0 1px rgba(255,90,60,.45)}
 #qx.qx-choosing .qx-st.qx-sel .qx-por,#qx.qx-choosing .qx-dpor.qx-sel .qx-por{box-shadow:0 0 0 2px #7fd08f,0 0 14px 2px rgba(127,208,143,.65)}
@@ -5879,6 +5911,9 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
   function esc(s) { return String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
   const sleep = ms => new Promise(r => setTimeout(r, ms));
   // 屏幕中间的小字播报：只播技能 / 装备技能发动、技能生效、判定牌结果与是否生效、展示牌；出牌、弃牌等其他操作都不播
+  // 牌图左上角印着的占位点数花色：小牌记录字的范围和取样偏移（用同一张图里旁边的空白纹理盖住），大牌记录小方框内部范围和底色
+  const RS_SMALL = {"aegis":[66,26,161,90,147],"arion":[66,26,173,90,139],"arquebus":[66,26,169,90,143],"arrowstorm":[67,34,181,98,136],"babieca":[66,26,165,90,147],"berserker":[66,26,161,90,147],"blockade":[66,34,192,98,132],"bucephalus":[66,26,161,90,147],"catspaw":[66,34,170,98,138],"chainshot":[66,34,158,98,140],"copenhagen":[66,26,173,90,139],"damocles":[66,34,176,98,122],"duel":[66,34,176,98,138],"excalibur":[66,26,163,90,147],"feast":[66,34,166,98,142],"gatling":[66,26,180,90,138],"gemini":[66,26,162,90,148],"greekfire":[66,34,166,98,142],"grog":[66,26,163,90,185],"invasion":[66,34,161,98,141],"linothorax":[66,26,161,90,147],"longbow":[66,26,166,90,146],"lotus":[66,34,167,98,115],"marengo":[66,26,184,90,134],"misericorde":[66,26,176,90,138],"nemean":[66,26,180,90,138],"parry":[66,26,154,90,94],"pegasus":[66,26,166,90,146],"pilfer":[66,34,158,98,140],"ram":[66,26,154,90,152],"remedy":[66,26,166,90,178],"respite":[67,34,181,98,134],"sabotage":[66,34,162,98,142],"sarissa":[66,26,167,90,145],"sleipnir":[66,26,180,90,138],"strike":[66,26,161,90,187],"testudo":[66,26,165,90,147],"trident":[66,26,159,90,147],"veto":[66,34,154,98,140],"windfall":[66,34,166,98,142],"winter":[66,26,161,90,147]};
+  const RS_LARGE = {"aegis":[47,53,140,148,"#eac591"],"arion":[46,54,140,149,"#e9c291"],"arquebus":[47,53,140,149,"#e2be90"],"arrowstorm":[47,53,141,149,"#e2c195"],"babieca":[46,53,140,149,"#e9c593"],"berserker":[47,53,140,149,"#e1c092"],"blockade":[47,53,141,149,"#e4c395"],"bucephalus":[47,53,140,149,"#e8c492"],"catspaw":[47,53,141,149,"#e1c296"],"chainshot":[47,53,141,149,"#e2c397"],"copenhagen":[46,54,140,149,"#e9c291"],"damocles":[47,53,141,149,"#e4c396"],"duel":[47,53,141,149,"#e1c195"],"excalibur":[47,53,140,149,"#e1bf91"],"feast":[47,53,141,149,"#e3c196"],"gatling":[47,53,140,149,"#e1bf91"],"gemini":[47,53,140,149,"#e1c091"],"greekfire":[47,53,141,149,"#e2c296"],"grog":[36,55,124,159,"#e9ca8f"],"invasion":[47,53,141,149,"#e2c397"],"linothorax":[47,53,140,148,"#ebc591"],"longbow":[47,53,140,149,"#e3bf92"],"lotus":[47,53,141,149,"#e5c395"],"marengo":[47,53,140,149,"#e9c291"],"misericorde":[47,53,140,149,"#e1bf90"],"nemean":[47,53,140,148,"#ebc591"],"parry":[36,55,124,159,"#eaca8f"],"pegasus":[46,53,140,149,"#e9c392"],"pilfer":[47,53,141,149,"#e2c195"],"ram":[47,53,140,149,"#e3bf91"],"remedy":[36,55,124,159,"#ebca8f"],"respite":[47,53,141,149,"#e2c195"],"sabotage":[47,53,141,149,"#e1c296"],"sarissa":[47,53,140,149,"#e1bf91"],"sleipnir":[46,53,140,149,"#e8c392"],"strike":[36,55,124,159,"#eacc92"],"testudo":[47,53,140,148,"#ebc591"],"trident":[47,53,140,149,"#e3be91"],"veto":[47,53,141,149,"#e2c397"],"windfall":[47,53,141,149,"#e3c297"],"winter":[47,53,140,149,"#e1c091"]};
   const CAP_TYPES = new Set(['use', 'play', 'discard', 'discardOf', 'skill', 'judge', 'judgeResult', 'recast', 'retouch', 'vetoed', 'nullified', 'aborted', 'show']);   // 动画节拍照旧
   const CAP_SHOW = new Set(['skill', 'judgeResult', 'retouch', 'nullified', 'aborted', 'show']);   // 真正显示出来的只有这些
 
@@ -5941,7 +5976,7 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
       if (!this.resizeBound && typeof window !== 'undefined') { this.resizeBound = true; window.addEventListener('resize', () => { if (this.fit() && this.g) this.render(); }); }
       this.root.addEventListener('click', e => this.onClick(e));
       document.addEventListener('pointerdown', e => { if (this.logOpen && !e.target.closest('.qx-logdd') && !e.target.closest('[data-act="log"]')) { this.logOpen = false; this.render(); } });
-      this.bindHandDrag(); this.bindArrangeDrag(); this.bindRevealDrag();
+      this.bindHandDrag(); this.bindHandSpread(); this.bindWinDrag(); this.bindArrangeDrag(); this.bindRevealDrag();
       // 右键（手机长按）：在鼠标处弹出大卡，跟随鼠标；离开该区域或左键单击即消失
       const SEL = '[data-zoom],[data-zoomid],[data-zoomhero],[data-skmk]';
       this.root.addEventListener('contextmenu', e => { const el = e.target.closest(SEL); if (!el) return; e.preventDefault(); this.openPeek(el, e.clientX, e.clientY); });
@@ -6297,7 +6332,22 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
       if (!c || !c.rank || !c.suit || c.suit === 'none') return '';
       const red = c.suit === 'heart' || c.suit === 'diamond';
       const rk = this.T.rank(c.rank);
-      return `<span class="qx-rs qx-rs-${this.catOf(name)}${red ? ' qx-rsr' : ''}"><b class="qx-rk${rk.length > 1 ? ' qx-rk2' : ''}">${rk}</b><i class="qx-su">${this.T.suit(c.suit)}</i></span>`;
+      return `${this.rsClean(name)}<span class="qx-rs qx-rs-${this.catOf(name)}${red ? ' qx-rsr' : ''}"><b class="qx-rk${rk.length > 1 ? ' qx-rk2' : ''}">${rk}</b><i class="qx-su">${this.T.suit(c.suit)}</i></span>`;
+    }
+    // 盖掉小牌图上印的占位点数：取同一张图里旁边空白处的纹理（只是挪位置，不画新东西），上下两段分别取样避开花边
+    rsClean(name) {
+      const m = RS_SMALL[this.artKey(name)]; if (!m) return '';
+      const [x0, y0, x1, y1, dx] = m; const W = 512, H = 768, F = 3, YS = 46, DYT = 16; const src = this.asset(`small/${this.artKey(name)}-zh.webp`);   // 取样一律用中文版的图：底纹完全一样，而中文的类别字短，旁边空白更宽
+      const lay = (ex0, ey0, ex1, ey1, sx, sy) => { const w = ex1 - ex0, h = ey1 - ey0; const f = n => +n.toFixed(3);
+        return `<i class="qx-rsc" style="left:${f(ex0 / W * 100)}%;top:${f(ey0 / H * 100)}%;width:${f(w / W * 100)}%;height:${f(h / H * 100)}%;background-image:url(${src});background-size:${f(W / w * 100)}% ${f(H / h * 100)}%;background-position:${f(sx / (W - w) * 100)}% ${f(sy / (H - h) * 100)}%;--fx:${f(F / w * 100)}%;--fy:${f(F / h * 100)}%"></i>`; };
+      return lay(x0 - F, YS - 4 - F, x1 + F, y1 + F, x0 - F + dx, YS - 4 - F) + lay(x0 - F, y0 - F, x1 + F, YS + 2 + F, x0 - F + dx, y0 - F + DYT);
+    }
+    // 大牌左上角：盖住印好的小方框内部，换成上下排列的点数和花色（不再挤在一起）
+    lrsHTML(name, suit, rank) {
+      if (!rank || !suit || suit === 'none') return '';
+      const m = RS_LARGE[this.artKey(name)]; const red = suit === 'heart' || suit === 'diamond'; const rk = this.T.rank(rank);
+      const [l, t, r, b, col] = m || [46, 54, 140, 149, '#efe0bf']; const f = n => +n.toFixed(3);
+      return `<span class="qx-lrs2${red ? ' qx-lred' : ''}" style="left:${f((l - 1) / 750 * 100)}%;top:${f((t - 1) / 1140 * 100)}%;width:${f((r - l + 2) / 750 * 100)}%;height:${f((b - t + 2) / 1140 * 100)}%;--lc:${col}"><b class="${rk.length > 1 ? 'qx-lr2' : ''}">${rk}</b><i>${this.T.suit(suit)}</i></span>`;
     }
     // c：实体牌；opts.as：按此牌名显示（天兆区的 omenAs）
     cardHTML(c, cls, opts) {
@@ -6326,7 +6376,7 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
       else {
         const [name, suit, rank] = spec.split('|'); const r = +rank;
         const red = suit === 'heart' || suit === 'diamond';
-        const lrs = r && suit && suit !== 'none' ? `<span class="qx-lrs${red ? ' qx-lred' : ''}"><span class="qx-lr">${this.T.rank(r)}</span><span class="qx-ls">${this.T.suit(suit)}</span></span>` : '';
+        const lrs = this.lrsHTML(name, suit, r); void red;
         inner = `<div class="qx-zoomcard"><img src="${this.largeSrc(name)}" alt="${esc(this.T.cardName(name))}">${lrs}${this.natBadge(name)}</div>`;
       }
       const z = document.createElement('div'); z.className = 'qx-zoom'; z.innerHTML = inner;
@@ -6357,7 +6407,7 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
       } else {
         const [name, suit, rank] = el.dataset.zoom.split('|'); const rv = +rank;
         const red = suit === 'heart' || suit === 'diamond';
-        const lrs = rv && suit && suit !== 'none' ? `<span class="qx-lrs${red ? ' qx-lred' : ''}"><span class="qx-lr">${T.rank(rv)}</span><span class="qx-ls">${T.suit(suit)}</span></span>` : '';
+        const lrs = this.lrsHTML(name, suit, rv); void red;
         inner = `<div class="qx-pkcard"><img src="${this.largeSrc(name)}" alt="">${lrs}${this.natBadge(name)}</div>`;
       }
       const pk = document.createElement('div'); pk.className = 'qx-peek' + (hero ? ' qx-pkh' : ''); pk.innerHTML = inner;
@@ -6511,7 +6561,7 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
         if (u.req.kind === 'confirm' && u.req.skill === c.name) cls += ' qx-eqask';
       }
       const tip = `${T.cardName(c.name)} ${T.suit(c.suit)}${T.rank(c.rank)}${d.range ? ' · ' + T.t('range', { n: d.range }) : num && slot !== 'weapon' ? ' · ' + num : ''}`;
-      return `<div class="qx-ebar${mini ? ' qx-ebm' : ''} qx-es-${slot}${cls}" ${attr} data-tipcard="${c.id}" data-zoom="${c.name}|${c.suit || ''}|${c.rank || 0}">${slot === 'armor' || !num ? `<i class="qx-eic">${icon}</i>` : `<i class="qx-eic qx-eval">${num}</i>`}<span class="qx-ename">${this.fitSpan('e' + (mini ? 'm' : ''), this.eqName(c.name))}</span>${rs}</div>`;
+      return `<div class="qx-ebar${mini ? ' qx-ebm' : ''} qx-es-${slot}${cls}" ${attr} data-tipcard="${c.id}" data-zoom="${c.name}|${c.suit || ''}|${c.rank || 0}">${mini ? '' : `<i class="qx-eart" style="background-image:url(${this.smallSrc(c.name)})"></i>`}${slot === 'armor' || !num ? `<i class="qx-eic">${icon}</i>` : `<i class="qx-eic qx-eval">${num}</i>`}<span class="qx-ename">${this.fitSpan('e' + (mini ? 'm' : ''), this.eqName(c.name))}</span>${rs}</div>`;
     }
     gemsHTML(p, vertical) {
       const prev = this.hpPrev && this.hpPrev[p.seat] != null ? this.hpPrev[p.seat] : p.hp;
@@ -6781,9 +6831,9 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
         const c = g.card(e.id); if (!c) return '';
         const tag = e.as && e.as !== c.name ? `<div class="qx-astag">${esc(T.t('asCard', { c: T.cardName(e.as) }))}</div>` : '';
         const st = this.fading && this.fading.has(c.id) ? ' qx-ccfade' : D0.has(c.id) ? ' qx-ccspent' : e.judge === 'open' ? ' qx-cchi' : live.length > 1 ? (e.li === maxLi ? ' qx-cchi' : ' qx-ccdim') : '';   // 天意牌在判定结果出来前一直亮着
-        const eq = e.kind === 'equip'; const hid = e.pend || (eq ? e.hold : this.hideSet && this.hideSet.has(c.id));
+        const eq = e.kind === 'equip', sh = e.kind === 'show'; const hid = e.pend || (eq || sh ? e.hold : this.hideSet && this.hideSet.has(c.id));
         const jm = e.verdict ? this.brushMark(e.verdict, e.id) : '';
-        return `<div class="qx-cc${st}" ${eq ? `data-mk="g${c.id}" data-gid` : 'data-cid'}="${c.id}" style="left:${Math.round(slotOf.has(e) ? x0 + slotOf.get(e) * step : this.bw() / 2 - cw / 2)}px;z-index:${i + 1}${hid ? ';visibility:hidden' : ''}">${this.cardHTML(c, 'qx-cpic').replace(/ data-id="\d+"/, '')}${tag}${jm}<div class="qx-ccap">${esc(e.cap || '')}</div></div>`;
+        return `<div class="qx-cc${st}" ${eq ? `data-mk="g${c.id}" data-gid` : sh ? `data-mk="s${c.id}" data-sid` : 'data-cid'}="${c.id}" style="left:${Math.round(slotOf.has(e) ? x0 + slotOf.get(e) * step : this.bw() / 2 - cw / 2)}px;z-index:${i + 1}${hid ? ';visibility:hidden' : ''}">${this.cardHTML(c, 'qx-cpic').replace(/ data-id="\d+"/, '')}${tag}${jm}<div class="qx-ccap">${esc(e.cap || '')}</div></div>`;
       }).join('');
     }
     renderTable() {
@@ -6807,8 +6857,18 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
       const cards = f.ids.map(id => { const c = g.card(id); if (!c) return '';
         const taken = c.loc && c.loc.zone === 'hand' ? c.loc.seat : null;
         const can = myPick && u.req.options.includes(id);
-        return `<div class="qx-fcell${taken != null ? ' qx-ftaken' : ''}${can ? ' qx-fcan' : ''}" data-mk="f${id}"><div class="qx-fwrap"${can ? ` data-opt="${id}"` : ''}>${this.cardHTML(c, 'qx-wcard').replace(/ data-id="\d+"/, ` data-cid="${id}"`)}</div><span>${taken != null ? esc(this.who(taken)) : '&nbsp;'}</span></div>`; }).join('');
+        // 拿走这张牌的人：写在牌面下部的小框里（框的大小、字号固定，最长的名字也放得下），窗口尺寸不因此变化
+        return `<div class="qx-fcell${taken != null ? ' qx-ftaken' : ''}${can ? ' qx-fcan' : ''}" data-mk="f${id}"><div class="qx-fwrap"${can ? ` data-opt="${id}"` : ''}>${this.cardHTML(c, 'qx-wcard').replace(/ data-id="\d+"/, ` data-cid="${id}"`)}${taken != null ? `<div class="qx-ftag" style="font-size:${this.feastTagFs()}px">${esc(this.who(taken))}</div>` : ''}</div></div>`; }).join('');
       return `<div class="qx-win qx-feast" data-mk="feast"><div class="qx-mtitle"><i></i><span>${esc(this.T.cardName('feast'))}</span><i></i></div><div class="qx-msub">${esc(myPick ? t('pick_feast') : t('feastWait'))}</div><div class="qx-frow">${cards}</div>${this.wTimerHTML('f' + f.ids.filter(id => { const c = g.card(id); return c && c.loc && c.loc.zone === 'hand'; }).length)}</div>`;
+    }
+    // 五谷丰登名字框的字号：按当前语言里最长的名字（所有武将名和「你」）算一次，保证都装得下
+    feastTagFs() {
+      const lang = this.T.lang || (this.root.classList.contains('qx-l-en') ? 'en' : 'zh'); this._ftfs = this._ftfs || {};
+      if (this._ftfs[lang]) return this._ftfs[lang];
+      const cv = document.createElement('canvas').getContext('2d'); const fam = lang === 'en' ? 'Cinzel, Georgia, serif' : '"Noto Serif SC", "Songti SC", serif';
+      cv.font = `700 13px ${fam}`; const names = Object.keys(E.HEROES).map(k => this.T.heroName(k)).concat([this.T.t('you')]);
+      const w = Math.max(...names.map(n => cv.measureText(n).width + (lang === 'en' ? n.length * 0.3 : n.length * 1)));
+      const fs = Math.max(8, Math.min(13, Math.floor(13 * 78 / w * 4) / 4)); if (document.fonts && document.fonts.status === 'loaded') this._ftfs[lang] = fs; return fs;
     }
     // 拼点：发起时就弹出；双方各放一张（背面），然后同时翻开，标出「赢 / 没赢」
     pindianHTML() {
@@ -6835,13 +6895,14 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
       for (const c of cards) if (!this.handOrder.includes(c.id)) this.handOrder.push(c.id);
       return this.handOrder.filter(id => cards.some(c => c.id === id)).map(id => cards.find(c => c.id === id));
     }
-    handLayout(n) { const W = 740 - 58 + Math.max(0, (this.LW || 1280) - 1280), cw = 100; const step = n > 1 ? Math.min(cw + 4, (W - cw) / (n - 1)) : 0; return { cw, step }; }
+    handLayout(n) { const W = 740 - 58 - 20 + Math.max(0, (this.LW || 1280) - 1280), cw = 100; const step = n > 1 ? Math.min(cw + 4, (W - cw) / (n - 1)) : 0; return { cw, step }; }
     renderMe() {
       const g = this.g, T = this.T, t = T.t, me = g.p(this.me), u = this.ui;
       const dash = this.$('.qx-dash');
       dash.classList.toggle('qx-cur', this.curShown() === me.seat);
       dash.classList.toggle('qx-myturn', !!u);
-      const slots = ['weapon', 'armor', 'minus', 'plus'].map(s => this.dEquip(me, s) ? this.ebarHTML(this.dEquip(me, s), s, false, me.seat) : `<div class="qx-ebar qx-eempty qx-es-${s}"><i class="qx-eic">${this.seatIcon(s === 'weapon' ? 'weapon' : s === 'armor' ? 'armor' : 'horse')}</i><span class="qx-ename">${esc(t('slot_' + s))}</span></div>`).join('');
+      // 装备区：四条滑槽，空着时什么字都不写；装上的装备条从左边滑进对应的槽
+      const slots = ['weapon', 'armor', 'minus', 'plus'].map(s => `<div class="qx-egv qx-egv-${s}">${this.dEquip(me, s) ? this.ebarHTML(this.dEquip(me, s), s, false, me.seat) : ''}</div>`).join('');
       const hand = this.orderedHand(me); const n = hand.length; const { cw, step } = this.handLayout(n);
       const sel = !!(u && this.view() && this.view().selecting);
       const handHTML = hand.map((c, i) => {
@@ -6893,7 +6954,28 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
           ${this.seatCardHTML(me, 160, false)}
           ${mePicked ? `<div class="qx-pkb">${esc(this.T.t('pickedTag'))}</div>` : ''}
         </div>`);
-      this.applyAimed(); this.reHide(); this.skAlign(); this.fitNames(); this.syncSnakes();
+      this.applyAimed(); this.reHide(); this.skAlign(); this.fitNames(); this.syncSnakes(); this.handSpread();
+    }
+    // 手牌挤得很密时：鼠标所在的牌浮到最上面，左右两边的牌分别往两侧让开，给它留出位置。
+    // 指向哪张牌按「没让开时」的位置算（不随让位变化），所以不会来回跳
+    bindHandSpread() {
+      const root = this.root;
+      root.addEventListener('pointermove', e => {
+        const h = e.target.closest && e.target.closest('.qx-dash .qx-dhand'); if (!h || this.dragging) { if (this.hHov != null && !(e.target.closest && e.target.closest('.qx-dash .qx-dhand'))) { this.hHov = null; this.handSpread(); } return; }
+        const n = h.children.length; const { cw, step } = this.handLayout(n); if (!n) return;
+        const r = h.getBoundingClientRect(); const zs = r.width / (h.offsetWidth || r.width) || 1; const x = (e.clientX - r.left) / zs;
+        let i = step > 0 ? Math.floor(x / step) : 0; if (x >= (n - 1) * step) i = n - 1; i = Math.max(0, Math.min(n - 1, i));
+        const id = +h.children[i].dataset.hid; if (id !== this.hHov) { this.hHov = id; this.handSpread(); }
+      });
+      root.addEventListener('pointerleave', () => { if (this.hHov != null) { this.hHov = null; this.handSpread(); } });
+      root.addEventListener('pointerout', e => { const h = this.$('.qx-dhand'); if (h && this.hHov != null && !h.contains(e.relatedTarget)) { this.hHov = null; this.handSpread(); } });
+    }
+    handSpread() {
+      const h = this.$('.qx-dash .qx-dhand'); if (!h) return; const els = [...h.children]; const n = els.length; const { cw, step } = this.handLayout(n);
+      const tight = n > 1 && step < cw - 4; h.classList.toggle('qx-spread', tight);
+      const i = this.hHov == null ? -1 : els.findIndex(el => +el.dataset.hid === this.hHov);
+      const room = tight && i >= 0 ? Math.min(cw - step + 8, 70) : 0;   // 需要让出的总宽度，左右各一半
+      els.forEach((el, j) => { el.classList.toggle('qx-hov', j === i && tight); el.style.translate = !room || j === i ? '' : (j < i ? `${-room / 2}px 0` : `${room / 2}px 0`); });
     }
     // 技能名上下居中：按字形真实的墨迹（而不是字体行框）对齐到框内底板的正中间，中英文、不同字体都一样
     skAlign() {
@@ -7014,7 +7096,7 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
         if (old) { if (cap) old.cap = cap; if (as) old.as = as; return; }
         const pend = !!this.animMult() && !!this.stepping;
         if (this.dimmed) this.dimmed.delete(id); if (this.fading) this.fading.delete(id);   // 重新上桌的牌是新的一张记录，不能继承上一次的「已变暗」状态
-        this.center.push({ id, cap, as, li, kind: kind || null, t: Date.now(), pend, hold: pend && kind === 'equip' });
+        this.center.push({ id, cap, as, li, kind: kind || null, t: Date.now(), pend, hold: pend && (kind === 'equip' || kind === 'show') });
       };
       for (const l of logs) { li++;
         if (l.type === 'use' && l.ids) for (const id of l.ids) add(id, who(l.seat), l.card !== g.card(id).name ? l.card : null, ['equip', 'omen'].includes((D[l.card] || {}).type) && !l.virtual ? 'equip' : null);
@@ -7036,13 +7118,14 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
           }
         }
         else if (l.type === 'retouch') add(l.card, t('cap_retouch', { s: who(l.seat) }));
+        else if (l.type === 'show' && l.card != null) add(l.card, t('cap_show', { s: who(l.seat) }), null, 'show');   // 展示：只是把牌亮到桌面中间给大家看，牌还在原处
       }
       for (const c of g.processing || []) if (!c.arranging && c.omenJudging == null && !this.center.find(e => e.id === c.id) && !(this.pdHold && this.pdHold.has(c.id)) && !(this.revealWin && this.revealWin.ids.includes(c.id)) && !(this.feast && this.feast.ids.includes(c.id))) add(c.id, '');
       if (this.center.length !== this.centerN) this.centerT = Date.now(); 
-      this.center = this.center.filter(e => { const c = g.card(e.id); return c && c.loc && (c.loc.zone === 'process' || c.loc.zone === 'discard' || (e.kind === 'equip' && (c.loc.zone === 'equip' || c.loc.zone === 'judge')) || (this.stepping && this.animMult() && !e.ghost)); });   // 这一步里被拿走的牌（如洗牌后又被摸走）先留在桌上，飞走时再离开
+      this.center = this.center.filter(e => { const c = g.card(e.id); return c && c.loc && (c.loc.zone === 'process' || c.loc.zone === 'discard' || (e.kind === 'equip' && (c.loc.zone === 'equip' || c.loc.zone === 'judge')) || e.kind === 'show' || (this.stepping && this.animMult() && !e.ghost)); });   // 这一步里被拿走的牌（如洗牌后又被摸走）先留在桌上，飞走时再离开
       if (this.center.length > 10) { const old = this.center.filter(e => (e.li || 0) <= (base || 0)).slice(0, this.center.length - 10).map(e => e.id); if (old.length) this.retire(old, this.animMult()); }   // 桌上太多：之前的牌先变暗再离场（不会一下子消失）；这一步上桌的牌全部留在桌上
       this.centerN = this.center.length;
-      this.centerIds = new Set(this.center.filter(e => e.kind !== 'equip').map(e => e.id));
+      this.centerIds = new Set(this.center.filter(e => e.kind !== 'equip' && e.kind !== 'show').map(e => e.id));
     }
     snapLocs() { const m = new Map(); for (const id in this.g.cards) m.set(+id, this.locKey(this.g.cards[id])); return m; }
     hpOf(p) { return this.hpShown && this.hpShown[p.seat] != null ? this.hpShown[p.seat] : p.hp; }
@@ -7234,7 +7317,7 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
       const ctr = this.$('.qx-ctr');
       if (mult) { ids.forEach(id => this.fading.add(id)); if (ctr) morph(ctr, this.centerHTML()); await sleep(500); }
       ids.forEach(id => { this.fading.delete(id); if (this.dimmed) this.dimmed.delete(id); });
-      this.center = (this.center || []).filter(e => !ids.has(e.id)); this.centerIds = new Set(this.center.filter(e => e.kind !== 'equip').map(e => e.id)); this.centerN = this.center.length;
+      this.center = (this.center || []).filter(e => !ids.has(e.id)); this.centerIds = new Set(this.center.filter(e => e.kind !== 'equip' && e.kind !== 'show').map(e => e.id)); this.centerN = this.center.length;
       if (!this.center.length && this.groupDone && this.aimed && this.aimed.size) this.setAimed(null, false);
       if (ctr) morph(ctr, this.centerHTML());
       if (this.shownCards && !this.center.length) { this.shownCards = null; this.renderTable(); this.renderMe(); }
@@ -7319,7 +7402,7 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
       this.render();
       this.shownHpLast = {}; for (const p of g.players) this.shownHpLast[p.seat] = p.hp;
       this.groupDone = !(g.processing && g.processing.some(c => !c.arranging)) && !this.feast;
-      if (!mult) { this.disp = null; this.stShown = null; this.recordLast(); const pr = new Set((g.processing || []).map(c => c.id)); this.center = (this.center || []).filter(e => pr.has(e.id)); this.centerIds = new Set(this.center.filter(e => e.kind !== 'equip').map(e => e.id)); const ctr = this.$('.qx-ctr'); if (ctr) morph(ctr, this.centerHTML()); }
+      if (!mult) { this.disp = null; this.stShown = null; this.recordLast(); const pr = new Set((g.processing || []).map(c => c.id)); this.center = (this.center || []).filter(e => pr.has(e.id)); this.centerIds = new Set(this.center.filter(e => e.kind !== 'equip' && e.kind !== 'show').map(e => e.id)); const ctr = this.$('.qx-ctr'); if (ctr) morph(ctr, this.centerHTML()); }
       if (!mult || tok !== this.token) { this.hpShown = null; this.deadHold = null; this.phCur = {}; this.phSet = false; this.closeFeastIfDone(); this.closeRevealIfDone(); if (!mult) return; this.render(); return; }
       this.hideSet = new Set();
       for (const mv of moves) {
@@ -7453,7 +7536,7 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
             this.pindian = null; this.pdHold = null; this.pdOut = null; this.renderWins();
             // 拼点牌放到桌面上，变暗；之后被谁拿走就从桌面上飞过去
             for (const id of [l.ca, l.cb]) if (!this.center.some(e => e.id === id)) this.center.push({ id, cap: this.T.t('cap_pindian', { s: this.who(id === l.ca ? l.a : l.b) }), li: base + logs.indexOf(l) + 1, kind: 'pd', t: Date.now() });
-            this.centerIds = new Set(this.center.filter(e => e.kind !== 'equip').map(e => e.id)); const ctr = this.$('.qx-ctr'); if (ctr) morph(ctr, this.centerHTML());
+            this.centerIds = new Set(this.center.filter(e => e.kind !== 'equip' && e.kind !== 'show').map(e => e.id)); const ctr = this.$('.qx-ctr'); if (ctr) morph(ctr, this.centerHTML());
             if (this.locs) for (const id of [l.ca, l.cb]) this.locs.set(id, this.locKey(g.card(id)));   // 这两张牌现在显示在桌上：下一步从这里算起
             await sleep(Math.max(200, 300 * mult)); this.retire([l.ca, l.cb], mult);
           });
@@ -7503,7 +7586,16 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
         });
         else if (ty === 'aimEnd') beats.push(() => { this.setAimed((l.targets || []), false); });
         else if (ty === 'aim') beats.push(async () => { const tg = (l.targets || []).filter(s => s !== l.seat); if (tg.length) this.setAimed(tg, true); tg.forEach(s => this.drawLine(this.seatPt(l.seat), this.seatPt(s), mult)); if (tg.length) await sleep(Math.max(200, 380 * mult)); });
-        else if (ty === 'show') beats.push(async () => { this.shownCards = this.shownCards || {}; this.shownCards[l.seat] = l.card; this.shownExpire(l.seat, l.card, mult); this.renderTable(); this.renderMe(); await sleep(Math.max(500, 900 * mult)); });
+        else if (ty === 'show') beats.push(async () => {
+          // 展示：像出牌一样飞到桌面中间（下面写「某某展示」），只是动画，牌本身还在原处、不进弃牌堆
+          const ctr = this.$('.qx-ctr'); const ent = (this.center || []).find(e => e.id === l.card && e.kind === 'show');
+          if (!ent || !mult) { if (ent) { ent.pend = false; ent.hold = false; if (ctr) morph(ctr, this.centerHTML()); } return; }
+          ent.pend = false; if (ctr) morph(ctr, this.centerHTML());
+          const toEl = ctr && ctr.querySelector(`[data-sid="${l.card}"]`); const hc = l.seat === this.me ? this.$(`.qx-dash .qx-dhand [data-id="${l.card}"]`) : null;
+          await this.fly({ id: l.card, k0: 'h:' + l.seat, k1: 'center', copyOnly: true, forceFace: true, el: toEl, from: hc ? this.rel(hc) : undefined }, 0, mult);
+          ent.hold = false; if (ctr) morph(ctr, this.centerHTML());
+          await sleep(Math.max(300, 500 * mult));
+        });
         else if (ty === 'dying') beats.push(() => { this.stSet(l.seat, 'dying', true); return sleep(500 * mult); });
         else if (ty === 'death') beats.push(() => this.deathFx(l.seat, mult));
       }
@@ -7518,7 +7610,7 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
       if (this.feast) this.feast.hidden = false; if (this.revealWin) this.revealWin.hidden = false;
       for (const e of this.center || []) { e.pend = false; e.hold = false; }   // 这一步结束：所有牌都已到场
       this.roleHold = null; this.skMarkHold = null;
-      { const left = (this.center || []).filter(e => { const c = g.card(e.id); return !(c && c.loc && (c.loc.zone === 'process' || c.loc.zone === 'discard' || (e.kind === 'equip' && (c.loc.zone === 'equip' || c.loc.zone === 'judge')))); }).map(e => e.id); if (left.length) this.retire(left, mult); }   // 没飞走却已不在弃牌堆的牌：变暗再离场
+      { const left = (this.center || []).filter(e => { const c = g.card(e.id); return !(c && c.loc && (c.loc.zone === 'process' || c.loc.zone === 'discard' || (e.kind === 'equip' && (c.loc.zone === 'equip' || c.loc.zone === 'judge')) || e.kind === 'show')); }).map(e => e.id); if (left.length) this.retire(left, mult); }   // 没飞走却已不在弃牌堆的牌：变暗再离场
       if (this.skHot) { const hot = this.skHot; setTimeout(() => { if (this.skHot === hot && !(this.ui && this.ui.req && this.ui.req.skill === hot) && !this.inStep) { this.skHot = null; this.renderMe(); } }, 60); }
       this.disp = null; this.stShown = null; this.recordLast(); this.render();
       for (const mv of moves) if (mv.el) this.unHide(mv.id, mv.el);
@@ -7544,17 +7636,44 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
     // 窗口一出来就定好位置和大小（之后内容变化也不再缩放），保证下沿不压到提示文字和操作按钮。
     // 用 CSS 的 scale 属性而不是 transform，避免和窗口的出场动画打架（之前就是动画结束后又缩一下）
     fitWin(w) {
+      // 窗口一出来就放在牌桌正中，并锁定尺寸（之后内容变少也不缩小、不跳位）；玩家拖动过的位置一直保留到窗口关闭
       const key = w.dataset.mk || w.className; this._winFit = this._winFit || {};
       let f = this._winFit[key];
       if (!f || !w.isConnected || f.el !== w) {
-        w.style.top = ''; w.style.scale = '';
-        const pr = this.$('.qx-prompt'); const lim = pr ? this.rel(pr).y - 6 : 470;
-        const cy0 = w.offsetTop, h = w.offsetHeight;   // 布局尺寸，不受动画变换影响（窗口以中心定位）
-        let sc = 1; if (h > lim - 12) sc = Math.max(.6, (lim - 12) / h);
-        const cy = Math.min(cy0, lim - h * sc / 2); const top = Math.max(6 + h * sc / 2, cy);
-        f = this._winFit[key] = { el: w, top, sc };
+        w.style.top = ''; w.style.scale = ''; w.style.minHeight = ''; w.style.minWidth = ''; w.style.translate = '';
+        const box = this.$('.qx-wins'); const H = box ? box.clientHeight : 760;
+        const h = w.offsetHeight; const sc = h > H - 28 ? Math.max(.6, (H - 28) / h) : 1;
+        f = this._winFit[key] = { el: w, top: Math.round(H / 2), sc, mh: h, mw: w.offsetWidth, dx: 0, dy: 0 };
       }
       w.style.top = f.top + 'px'; w.style.scale = f.sc === 1 ? '' : f.sc.toFixed(3);
+      w.style.minHeight = f.mh + 'px'; w.style.minWidth = f.mw + 'px';
+      f.mh = Math.max(f.mh, w.offsetHeight); f.mw = Math.max(f.mw, w.offsetWidth); w.style.minHeight = f.mh + 'px'; w.style.minWidth = f.mw + 'px';
+      w.style.translate = (f.dx || f.dy) ? `${f.dx}px ${f.dy}px` : '';
+    }
+    // 拖动窗口：按住窗口里不是牌、不是按钮的地方拖（牌桌上的拼点 / 五谷丰登 / 雕琢等窗口，以及弹出的选牌窗口）
+    bindWinDrag() {
+      const root = this.root; let d = null;
+      const NO = 'button,select,input,a,[data-cid],[data-rv],[data-opt],[data-arr],[data-mul],[data-hero],[data-fpick],[data-zoomhero],.qx-pic,.qx-mback,.qx-aslot,.qx-optc,.qx-fcell,.qx-pdslot,.qx-schslot';
+      root.addEventListener('pointerdown', e => {
+        if (e.button !== 0) return; const w = e.target.closest('.qx-wins > .qx-win, .qx-modal .qx-box'); if (!w || e.target.closest(NO)) return;
+        const isWin = w.classList.contains('qx-win'); let st;
+        if (isWin) { const k = w.dataset.mk || w.className; st = this._winFit && this._winFit[k]; if (!st) return; }
+        else { st = this._modalOff = this._modalOff || { dx: 0, dy: 0 }; }
+        const host = isWin ? this.$('.qx-wins') : root; const hr = host.getBoundingClientRect(); const zs = (hr.width / (host.offsetWidth || hr.width)) || 1;
+        d = { w, st, x0: e.clientX, y0: e.clientY, dx0: st.dx, dy0: st.dy, zs, isWin }; w.classList.add('qx-wdrag'); e.preventDefault();
+      });
+      root.addEventListener('pointermove', e => {
+        if (!d) return; const r = d.w.getBoundingClientRect();
+        let dx = d.dx0 + (e.clientX - d.x0) / d.zs, dy = d.dy0 + (e.clientY - d.y0) / d.zs;
+        // 不许整个拖出屏幕：窗口至少留 60px 在可视范围里
+        const vw = window.innerWidth, vh = window.innerHeight, mx = (r.width - 60) / d.zs, my = (r.height - 40) / d.zs;
+        const cx = r.left + (dx - d.st.dx) * d.zs, cy = r.top + (dy - d.st.dy) * d.zs;
+        if (cx > vw - 60) dx -= (cx - (vw - 60)) / d.zs; if (cx + r.width < 60) dx += (60 - cx - r.width) / d.zs;
+        if (cy < 0) dy -= cy / d.zs; if (cy > vh - 40) dy -= (cy - (vh - 40)) / d.zs;
+        d.st.dx = Math.round(dx); d.st.dy = Math.round(dy); d.w.style.translate = `${d.st.dx}px ${d.st.dy}px`; void mx; void my;
+      });
+      const end = () => { if (!d) return; d.w.classList.remove('qx-wdrag'); d = null; };
+      root.addEventListener('pointerup', end); root.addEventListener('pointercancel', end);
     }
     // 权术：独立窗口，左右两侧是两名角色的立绘，中间各一个牌槽，两边对称；自己发动时可拖动 / 点击交换两张牌，确定后分牌
     schemeHTML() {
@@ -7701,16 +7820,16 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
       return new Promise(res => {
         const fx = this.$('.qx-fx'); const c = this.g.card(mv.id); if (!c) return res();
         const CW = 100, CH = 152;
-        const landed = () => { if (!mv.keep) this.dispSet(mv.id, mv.k1); };
+        const landed = () => { if (!mv.keep && !mv.copyOnly) this.dispSet(mv.id, mv.k1); };   // copyOnly：只是一张影子（如展示），真牌不动
         // 飞进我手里的牌：先在手里留出（隐藏的）位置，牌飞到那个位置再显示；其余的牌飞走时立刻从原处消失
         const toMyHand = mv.k1 === 'h:' + this.me && !mv.keep && !mv.toRect && !!this.disp;
-        const goAir = () => { if (toMyHand) { this.hideSet = this.hideSet || new Set(); this.hideSet.add(mv.id); this.dispSet(mv.id, mv.k1, true); } else this.dispSet(mv.id, 'air'); };
+        const goAir = () => { if (mv.copyOnly) return; if (toMyHand) { this.hideSet = this.hideSet || new Set(); this.hideSet.add(mv.id); this.dispSet(mv.id, mv.k1, true); } else this.dispSet(mv.id, 'air'); };
         if (delay) setTimeout(goAir, delay); else goAir();
         if (toMyHand && !delay) mv.el = this.$(`.qx-dash .qx-dhand [data-id="${mv.id}"]`) || mv.el;
         const el = document.createElement('div'); el.className = 'qx-fly';
         const face = mv.forceFace || (!mv.back && (this.keyVisible(mv.k1) || this.keyVisible(mv.k0) || mv.fromBar));
         let leaveDim = false;
-        if (mv.k0 === 'center' && mv.k1 !== 'center' && mv.k1 !== 'pile') { const ce = (this.center || []).find(e => e.id === mv.id); if (ce) { const ctr = this.$('.qx-ctr'); const ce2 = ctr && ctr.querySelector(`[data-cid="${mv.id}"]`); if (ce2) mv.from = this.rel(ce2); leaveDim = !!(this.dimmed && this.dimmed.has(mv.id)); this.center = this.center.filter(e => e !== ce); this.centerIds = new Set(this.center.filter(e => e.kind !== 'equip').map(e => e.id)); if (this.dimmed) this.dimmed.delete(mv.id); if (ctr) morph(ctr, this.centerHTML()); } }
+        if (mv.k0 === 'center' && mv.k1 !== 'center' && mv.k1 !== 'pile') { const ce = (this.center || []).find(e => e.id === mv.id); if (ce) { const ctr = this.$('.qx-ctr'); const ce2 = ctr && ctr.querySelector(`[data-cid="${mv.id}"]`); if (ce2) mv.from = this.rel(ce2); leaveDim = !!(this.dimmed && this.dimmed.has(mv.id)); this.center = this.center.filter(e => e !== ce); this.centerIds = new Set(this.center.filter(e => e.kind !== 'equip' && e.kind !== 'show').map(e => e.id)); if (this.dimmed) this.dimmed.delete(mv.id); if (ctr) morph(ctr, this.centerHTML()); } }
         { const pe = (this.center || []).find(e => e.id === mv.id && e.pend); if (pe && mv.k1 === 'center') { pe.pend = false; const ctr = this.$('.qx-ctr'); if (ctr) morph(ctr, this.centerHTML()); } }
         const toEl = mv.toRect ? null : (mv.el && !mv.el.isConnected ? (this.cardEl(mv.id) || mv.el) : mv.el);
         const toBar = toEl && (toEl.classList.contains('qx-ebar') || toEl.classList.contains('qx-sbar') || toEl.classList.contains('qx-omk'));
@@ -8124,8 +8243,9 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
     // ── 弹窗 ──
     showModal(html) {
       const m = this.$('.qx-modal');
-      if (m.classList.contains('qx-hidden') || !m.firstElementChild) { m.innerHTML = html; m.classList.remove('qx-hidden'); }
+      if (m.classList.contains('qx-hidden') || !m.firstElementChild) { this._modalOff = { dx: 0, dy: 0 }; m.innerHTML = html; m.classList.remove('qx-hidden'); }
       else morph(m, html);
+      const b = m.querySelector('.qx-box'); const o = this._modalOff; if (b && o && (o.dx || o.dy)) b.style.translate = `${o.dx}px ${o.dy}px`;
     }
     openChoiceModal() {
       const u = this.ui, T = this.T, t = T.t, g = this.g, req = u.req, k = req.kind;
