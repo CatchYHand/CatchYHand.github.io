@@ -1022,7 +1022,8 @@
     // effect: { use, target } 或 { veto: card, from, target: effect }。返回 true 表示被抵消。
     *askVeto(effect) {
       // 自己使用的单目标锦囊不问自己（多目标仍会问）
-      const selfSingle = effect.use && effect.use.from && effect.use.targets && effect.use.targets.length === 1 ? effect.use.from : null;
+      // 自己打出的无懈可击也不问自己（不能自己抵消自己的无懈）
+      const selfSingle = effect.veto ? effect.from : (effect.use && effect.use.from && effect.use.targets && effect.use.targets.length === 1 ? effect.use.from : null);
       // 参照无名杀：没有人能出无懈可击时不开无懈窗口，直接结算
       const can = this.seatOrderFrom(this.current || this.players[0]).filter(q => q !== selfSingle && !q.dead && this.canProduce(q, ['veto'], { reason: 'veto' }));
       if (!can.length) return false;
@@ -1180,7 +1181,7 @@
         } else {
           // 额外结算（如独白）：同一张牌对目标再完整结算一次
           for (let pass = 0; pass <= (use.data.extraResolve || 0); pass++) {
-          if (pass > 0) { if (this.over || use.from.dead) break; use.nullified = new Set(); this.log('resolveAgain', { seat: use.from.seat, card: card.name }); }
+          if (pass > 0) { if (this.over || use.from.dead) break; use.nullified = new Set(); this.log('resolveAgain', { seat: use.from.seat, card: card.name, targets: use.targets.filter(t => !t.dead).map(t => t.seat) }); }
           for (const t of use.targets.slice()) {
             if (this.over) break;
             if (t.dead && !d.allowDeadTarget) continue;
@@ -5587,6 +5588,14 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
 #qx .qx-cnone{color:#6a5a40;font-size:20px;padding:0 10px}
 #qx .qx-box.qx-optbox{position:relative;width:min(92vw,440px);min-height:0;max-height:none;overflow:visible;padding:20px 24px 18px;border-radius:12px;border:2px solid #b08a3c;background:radial-gradient(ellipse at 50% -10%,#4a3820 0%,#2a2013 55%,#18120b 100%);box-shadow:0 0 0 4px #1a1209,0 0 0 5px #6b5328,0 20px 60px rgba(0,0,0,.85);animation:qxoptin .24s cubic-bezier(.2,.8,.3,1)}
 #qx .qx-box.qx-optbox::before{content:'';position:absolute;inset:6px;border:1px solid rgba(214,176,90,.28);border-radius:8px;pointer-events:none}
+#qx .qx-box.qx-uwin{min-height:0;max-height:none;overflow:visible;padding:20px 26px 20px;border-radius:12px;background:radial-gradient(ellipse at 50% -10%,#4a3820 0%,#2a2013 55%,#18120b 100%);box-shadow:0 0 0 4px #1a1209,0 0 0 5px #6b5328,0 20px 60px rgba(0,0,0,.85);animation:qxoptin .24s cubic-bezier(.2,.8,.3,1)}
+#qx .qx-box.qx-uwin::before{content:'';position:absolute;inset:6px;border:1px solid rgba(214,176,90,.28);border-radius:8px;pointer-events:none}
+#qx .qx-uwin .qx-opthd span{white-space:normal;max-width:80%}
+#qx .qx-uwin .qx-optsub{max-width:640px;margin-left:auto;margin-right:auto;font-size:14px}
+#qx .qx-uwtip{margin-top:4px;text-align:center;color:#a8987a;font-size:12px;line-height:1.45}
+#qx .qx-uwin .qx-optdiv{margin:10px 0 12px}
+#qx .qx-uwin .qx-mbody{max-height:calc(92vh - 170px);overflow:auto}
+#qx .qx-uwin .qx-mfoot{margin-top:14px}
 @keyframes qxoptin{from{opacity:0;transform:translateY(10px) scale(.95)}to{opacity:1;transform:none}}
 #qx .qx-optcn{position:absolute;width:10px;height:10px;background:linear-gradient(135deg,#fff0c0,#c99a3c);transform:rotate(45deg);box-shadow:0 0 4px rgba(255,210,120,.6)}
 #qx .qx-optcn1{left:-6px;top:-6px}#qx .qx-optcn2{right:-6px;top:-6px}#qx .qx-optcn3{left:-6px;bottom:-6px}#qx .qx-optcn4{right:-6px;bottom:-6px}
@@ -6842,12 +6851,13 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
         const btns = [];
         const short = lab => { const m = /[·:：]\s*(.+)$/.exec(lab); return m ? m[1] : lab; };
         const myActs = acts.filter(a => a.key === s.key);
+        // 锁定技里「可以」的部分（如仍动的转化、可选的询问）：此刻能操作就亮，不能操作才暗
         // 有几个选项的技能（如讲学）也只有一个按钮，写武将本身的技能名；点了再弹窗选项
-        if (myActs.length && myActs[0].opt != null) btns.push(skBtn(s, d, T.skillName(s.id), d.type !== 'locked', !!(u.active && u.active.key === s.key), `data-actopts="${s.key}"`, tip));
-        else for (const b of myActs) btns.push(skBtn(s, d, T.skillName(s.id), d.type !== 'locked', !!(u.active && u.active.key === b.key && u.active.option === b.opt), `data-active="${b.key}|${b.opt == null ? '' : b.opt}"`, tip));
-        for (const v of vas.filter(a => a.key === s.key)) btns.push(skBtn(s, d, T.skillName(s.id) + (v.asName ? '·' + T.cardName(v.asName) : ''), d.type !== 'locked', u.skill === v.key && (u.asName || null) === v.asName, `data-skill="${v.key}|${v.asName || ''}"`, tip));
+        if (myActs.length && myActs[0].opt != null) btns.push(skBtn(s, d, T.skillName(s.id), true, !!(u.active && u.active.key === s.key), `data-actopts="${s.key}"`, tip));
+        else for (const b of myActs) btns.push(skBtn(s, d, T.skillName(s.id), true, !!(u.active && u.active.key === b.key && u.active.option === b.opt), `data-active="${b.key}|${b.opt == null ? '' : b.opt}"`, tip));
+        for (const v of vas.filter(a => a.key === s.key)) btns.push(skBtn(s, d, T.skillName(s.id) + (v.asName ? '·' + T.cardName(v.asName) : ''), true, u.skill === v.key && (u.asName || null) === v.asName, `data-skill="${v.key}|${v.asName || ''}"`, tip));
         const hot = this.skHot === s.id || (asked && u.req.kind !== 'confirm');
-        if (!btns.length) btns.push(skBtn(s, d, T.skillName(s.id), d.type !== 'locked' && (asked || flash || hot), hot && d.type !== 'locked', null, tip, used, flash));
+        if (!btns.length) btns.push(skBtn(s, d, T.skillName(s.id), d.type !== 'locked' ? (asked || flash || hot) : asked, hot && (d.type !== 'locked' || asked), null, tip, used, flash));
         return btns.join('');
       }).join('');
       const phase = this.phaseHTML(me);
@@ -7329,6 +7339,10 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
             await this.flyMany(mv, mult); this.stampFx(l.seat, l.card, mult);
             await sleep(500 * mult);   // 无名杀：用牌后停 1 个单位时长（每个目标的 0.5 单位在各自结算时才发生）
           });
+        } else if (ty === 'resolveAgain') {
+          // 额外结算一次（如【独白】）：第二次结算开始时，目标指示线重新连一次
+          const tg = (l.targets || []).filter(s => s !== l.seat);
+          beats.push(async () => { tg.forEach(s => this.drawLine(this.seatPt(l.seat), this.seatPt(s), mult)); if (tg.length) this.setAimed(tg, true); await sleep(500 * mult); });
         } else if (ty === 'draw') {
           const mv = claim(m => m.k0 === 'deck' && m.k1 === 'h:' + l.seat, l.n);
           let bi = beats.length - 1; while (bi >= 0 && (beats[bi].isMove || beats[bi].isCapF)) bi--;
@@ -7635,7 +7649,7 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
       const press = (a, b, c) => t => t < .14 ? a + (b - a) * Math.sin(Math.PI / 2 * t / .14) : t > .55 ? c + (b - c) * Math.pow(1 - (t - .55) / .45, 1.6) : b - (b - a) * .15 * Math.sin(Math.PI * (t - .14) / .41);
       const strokes = v === 'ok'
         ? [[[[14, 52], [26, 58], [38, 74]], [[38, 74], [56, 42], [88, 16]]]]
-        : [[[[33, 17], [52, 44], [80, 84]]], [[[67, 15], [48, 44], [20, 83]]]];   // 叉：上半短、下半长，交点在偏上的位置，整体居中
+        : [[[[25, 18], [51, 44], [89, 84]]], [[[75, 16], [49, 44], [11, 83]]]];   // 叉：上半短、下半长，交点在偏上的位置，整体居中
       const wfn = v === 'ok' ? [t => t < .3 ? 5.2 + 1.6 * Math.sin(Math.PI / 2 * t / .3) : press(6.8, 6.4, .5)((t - .3) / .7 * .9 + .1)] : [press(5.6, 6.4, .5), press(5.2, 6, .5)];
       const id = 'qxbm' + v + uid;
       const body = strokes.map((sg, k) => `<mask id="${id}m${k}" maskUnits="userSpaceOnUse" x="-10" y="-10" width="120" height="120"><path class="qx-js${k + 1}" d="${center(sg)}" pathLength="100" fill="none" stroke="#fff" stroke-width="24" stroke-linecap="round" stroke-linejoin="round"/></mask>`).join('');
@@ -8163,7 +8177,16 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
         const me = g.p(this.me);
         body = `<div class="qx-mopts">${req.options.map(key => { const s = g.skillList(me).find(x => x.key === key); return `<button class="qx-mopt" data-opt="${key}">${esc(s && s.src === 'equip' ? T.cardName(s.id) : T.skillName(s ? s.id : key))}</button>`; }).join('')}</div>`;
       }
-      this.showModal(`<div class="qx-box ${cls}"><div class="qx-mtitle"><i></i><span>${esc(title)}</span><i></i></div>${sub ? `<div class="qx-msub">${esc(sub)}</div>` : ''}<div class="qx-mbody">${body}</div>${foot ? `<div class="qx-mfoot">${foot}</div>` : ''}</div>`);
+      // 统一窗口格式：技能名居中、两侧饰线；下面是说明（「名称：说明」形式的提示自动拆开）；再下面是内容和按钮
+      let desc = '', tip = sub;
+      const m2 = /^\s*([^：:\n]{1,28}?)\s*[：:]\s*([\s\S]+)$/.exec(title || '');
+      if (m2 && !/[，,。.!?？]/.test(m2[1])) { title = m2[1]; desc = m2[2]; }
+      if (!desc && tip) { desc = tip; tip = ""; }
+      if (desc) desc = desc.charAt(0).toUpperCase() + desc.slice(1);
+      this.showModal(this.uniWinHTML(title, desc, tip, body, foot, cls));
+    }
+    uniWinHTML(title, desc, tip, body, foot, cls) {
+      return `<div class="qx-box qx-uwin ${cls || ''}"><i class="qx-optcn qx-optcn1"></i><i class="qx-optcn qx-optcn2"></i><i class="qx-optcn qx-optcn3"></i><i class="qx-optcn qx-optcn4"></i><div class="qx-opthd"><i></i><span>${esc(title)}</span><i></i></div>${desc ? `<div class="qx-optsub">${esc(desc)}</div>` : ''}${tip ? `<div class="qx-uwtip">${esc(tip)}</div>` : ''}<div class="qx-optdiv"><i></i><b></b><i></i></div><div class="qx-mbody">${body}</div>${foot ? `<div class="qx-mfoot">${foot}</div>` : ''}</div>`;
     }
     // 观星：拖动排序 / 拖到下面一行即放到牌堆底；单击在两行之间切换
     bindArrangeDrag() {
