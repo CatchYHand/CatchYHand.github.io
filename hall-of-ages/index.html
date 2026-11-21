@@ -1370,7 +1370,7 @@
         const name = c.omenAs || c.name; const d = CARD_DEFS[name];
         c.omenJudging = p.seat;   // 界面：判定期间天兆标记仍显示在原处
         // 天兆牌在判定结果定下来之前一直留在判定区（失去判定区的牌之类的时机都在结果定下之后）
-        const out = function* () { if (c.loc && c.loc.zone === 'judge') yield* this.moveCards({ cards: [c], to: 'process', reason: 'omenJudge' }); }.bind(this);
+        const out = function* () { delete c.omenJudging; if (c.loc && c.loc.zone === 'judge') yield* this.moveCards({ cards: [c], to: 'process', reason: 'omenJudge' }); }.bind(this);
         const vetoed = yield* this.askVeto({ omen: c, target: p });
         if (vetoed) { yield* out(); this.log('vetoed', { seat: p.seat, card: name }); if (d.onVetoed) yield* d.onVetoed(this, p, c); }
         else { this._omenOut = { player: p, out }; yield* d.judgeEffect(this, p, c); if (this._omenOut && this._omenOut.out === out) { this._omenOut = null; yield* out(); } }
@@ -3387,7 +3387,7 @@
   };
   S.address = {
     name: ['演说', 'ADDRESS'], type: 'normal',
-    desc: ['出牌阶段限一次，你可以令两名角色拼点：没赢的一方，你弃置其两张牌；若拼点赢的角色不是你，你摸两张牌。', 'Once per Play phase, make two characters contest: you discard two cards of whoever did not win. If the winner is not you, draw 2.'],
+    desc: ['出牌阶段限一次，你可以令两名角色拼点：没赢的角色（若点数相同则为双方），你各弃置其两张牌；若拼点赢的角色不是你，你摸两张牌。', 'Once per Play phase, make two characters contest: you discard two cards from each character who did not win (both, on a tie). If the winner is not you, draw 2.'],
     active: {
       cards: { min: 0, max: 0 }, targets: { min: 2, max: 2, filter: (g, p, t) => t.hand.length > 0 },
       can: (g, p) => !p.phaseState.address && g.alive.filter(t => t.hand.length > 0).length >= 2,
@@ -3396,8 +3396,11 @@
         p.phaseState.address = true; const [a, b] = targets;
         const r = yield* g.pindian(a, b, 'address'); if (!r) return;
         yield* g.clearProcessing([r.ca, r.cb]);
-        const loser = r.win ? b : a; const winner = r.win ? a : (r.ca.rank === r.cb.rank ? null : b);
-        if (!loser.dead && !p.dead && g.cardsIn(loser, 'he').length) {
+        // 点数相同时双方都没赢：两人都要被弃置两张牌（按行动顺序依次弃）
+        const tie = !r.win && r.ca.rank === r.cb.rank;
+        const losers = tie ? g.orderBySeat([a, b]) : [r.win ? b : a]; const winner = r.win ? a : (tie ? null : b);
+        for (const loser of losers) {
+          if (loser.dead || p.dead || !g.cardsIn(loser, 'he').length) continue;
           const cs = yield* g.chooseCardsOf(p, loser, 'he', 2, 'addressDiscard', { skill: 'address', target: loser.seat });
           if (cs.length) { yield* g.moveCards({ cards: cs, to: 'discard', by: p.seat, reason: 'address' }); for (const c of cs) g.log('discardOf', { by: p.seat, seat: loser.seat, card: c.id }); yield* g.trigger('discarded', { player: loser, cards: cs, by: p, reason: 'address' }); }
         }
@@ -4930,12 +4933,13 @@ return { RandomAgent, SmartAgent, defaultAnswer, rel, tracker };
 #qx .qx-lrs2 i{font:400 5.6cqw/1 "DejaVu Sans","Segoe UI Symbol","Noto Sans Symbols2",sans-serif;font-style:normal;color:#1b1714}
 #qx .qx-lrs2.qx-lred b,#qx .qx-lrs2.qx-lred i{color:#b0141c}
 /* 花色点数（新）：点数更大，花色是矢量图形 */
-#qx .qx-rs{left:12.6%;top:3.2%;width:25%;height:9.6%;gap:.8cqw;padding:0;justify-content:flex-start}
+#qx .qx-rs{left:12.6%;top:3.2%;width:25%;height:9.6%;gap:1.6cqw;padding:0;justify-content:flex-start}
 #qx .qx-rs .qx-rk{font:700 14.5cqw/1 Cinzel,"Noto Serif","Times New Roman",serif;letter-spacing:-.02em;font-variant-numeric:lining-nums}   /* Cinzel 的数字全部等高（Georgia 是老式数字，3、4、5、7、9 会掉到基线下面，导致和花色的间距忽大忽小） */
 #qx .qx-rs .qx-rk2{transform:none;margin:0;letter-spacing:-.08em;font-size:12cqw}
-#qx .qx-rs .qx-su{display:inline-flex;width:11.5cqw;height:11.5cqw;font-size:0}
+#qx .qx-rs i.qx-su{display:inline-flex;font-size:14.5cqw;width:calc(var(--h,.7) * 1em);height:calc(var(--h,.7) * 1em);flex:none}
+#qx .qx-rs i.qx-su.qx-rk2{font-size:12cqw;letter-spacing:0;transform:none}
 #qx .qx-rs .qx-su .qx-sv{width:100%;height:100%;display:block}
-#qx .qx-tiny .qx-rs .qx-rk{font-size:16cqw}#qx .qx-tiny .qx-rs .qx-rk2{font-size:13cqw}#qx .qx-tiny .qx-rs .qx-su{width:13cqw;height:13cqw}
+#qx .qx-tiny .qx-rs .qx-rk,#qx .qx-tiny .qx-rs i.qx-su{font-size:16cqw}#qx .qx-tiny .qx-rs .qx-rk.qx-rk2,#qx .qx-tiny .qx-rs i.qx-su.qx-rk2{font-size:13cqw}
 #qx .qx-lrs2{gap:.5cqw}
 #qx .qx-lrs2 b{font:700 6.6cqw/1 Cinzel,"Noto Serif","Times New Roman",serif;font-variant-numeric:lining-nums}
 #qx .qx-lrs2 b.qx-lr2{font-size:5.3cqw;letter-spacing:-.07em}
@@ -5353,12 +5357,8 @@ return { RandomAgent, SmartAgent, defaultAnswer, rel, tracker };
 
 /* ── v4 ── */
 /* 点数花色 */
-#qx .qx-rs{gap:.6cqw;padding:0 .6cqw}
-#qx .qx-rs .qx-rk{font:700 14.5cqw/1 "Noto Serif","Noto Serif SC","Times New Roman",Georgia,serif;color:#1b1714;letter-spacing:0;display:inline-block}
-#qx .qx-rs .qx-rk2{transform:scaleX(.78);margin:0 -1.6cqw;letter-spacing:-.04em}
-#qx .qx-rs .qx-su{font:400 12.5cqw/1 "DejaVu Sans","Segoe UI Symbol","Noto Sans Symbols2",sans-serif;font-style:normal;color:#1b1714}
-#qx .qx-rs.qx-rsr .qx-rk,#qx .qx-rs.qx-rsr .qx-su{color:#b0141c}
-#qx .qx-tiny .qx-rs .qx-rk{font-size:16cqw}#qx .qx-tiny .qx-rs .qx-su{font-size:14cqw}
+#qx .qx-rs .qx-rk,#qx .qx-rs i.qx-su{color:#1b1714;font-style:normal}
+#qx .qx-rs.qx-rsr .qx-rk,#qx .qx-rs.qx-rsr i.qx-su{color:#b0141c}
 /* 没有牌堆和弃牌堆 */
 #qx .qx-deckp,#qx .qx-pilep{display:none}
 #qx .qx-ctr{top:270px;height:180px}
@@ -6373,7 +6373,23 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
       if (!c || !c.rank || !c.suit || c.suit === 'none') return '';
       const red = c.suit === 'heart' || c.suit === 'diamond';
       const rk = this.T.rank(c.rank);
-      return `${this.rsClean(name)}<span class="qx-rs qx-rs-${this.catOf(name)}${red ? ' qx-rsr' : ''}"><b class="qx-rk${rk.length > 1 ? ' qx-rk2' : ''}">${rk}</b><i class="qx-su">${this.suitSVG(c.suit)}</i></span>`;
+      return `${this.rsClean(name)}<span class="qx-rs qx-rs-${this.catOf(name)}${red ? ' qx-rsr' : ''}">${(() => { const q = this.rkShift(rk, rk.length > 1 ? -.08 : -.02); const lb = { spade: 8, heart: 6, diamond: 12, club: 6 }[c.suit] || 0; const two = rk.length > 1 ? ' qx-rk2' : '';
+        // 花色和点数一样高（花色高度 = 点数字形的真实高度）；点数右侧的空白和花色左侧的空白都扣掉，两者之间的间距对每张牌都一样
+        return `<b class="qx-rk${two}" style="transform:translateY(${q.dy}em);margin-right:${-q.rb}em">${rk}</b><i class="qx-su${two}" style="--h:${q.h};margin-left:calc(${-lb / 100 * q.h}em)">${this.suitSVG(c.suit)}</i></span>`; })()}`;
+    }
+    // 点数字形的光学校正：按字的真实墨迹（不是字体的行框）算出要挪多少，让点数和花色在同一条中轴线上
+    rkShift(rk, ls) {
+      this._rkSh = this._rkSh || {}; const k = rk + '|' + ls; if (this._rkSh[k]) return this._rkSh[k];
+      const cv = (this._rkcv = this._rkcv || document.createElement('canvas').getContext('2d')); const F = 100;
+      cv.font = `700 ${F}px Cinzel, "Noto Serif", "Times New Roman", serif`; try { cv.letterSpacing = (ls * F) + 'px'; } catch (e) {}
+      const m = cv.measureText(rk); const asc = m.fontBoundingBoxAscent || F * .8, des = m.fontBoundingBoxDescent || F * .2;
+      const dx = (m.width / 2 - (m.actualBoundingBoxRight - m.actualBoundingBoxLeft) / 2 + m.actualBoundingBoxLeft * 0) / F;
+      const inkCx = (m.actualBoundingBoxRight - m.actualBoundingBoxLeft) / 2; const dX = (m.width / 2 - inkCx) / F;
+      const dy = (-(asc - des) / 2 + (m.actualBoundingBoxAscent - m.actualBoundingBoxDescent) / 2) / F;
+      // 高度、右侧空白按「字身」算：Q 的尾巴不算（用 O 代替量），所有点数的花色一样高、间距一样
+      const mb = cv.measureText(rk.replace('Q', 'O')), mE = cv.measureText('E');
+      const r = { dx: +dX.toFixed(3), dy: +((-(asc - des) / 2 + (mb.actualBoundingBoxAscent - mb.actualBoundingBoxDescent) / 2) / F).toFixed(3), h: +((mE.actualBoundingBoxAscent + mE.actualBoundingBoxDescent) / F).toFixed(3), rb: +((mb.width - mb.actualBoundingBoxRight) / F).toFixed(3) }; void dx; void dy;
+      if (document.fonts && document.fonts.check && document.fonts.check(`700 20px Cinzel`)) this._rkSh[k] = r; return r;
     }
     // 盖掉小牌图上印的占位点数：取同一张图里旁边空白处的纹理（只是挪位置，不画新东西），上下两段分别取样避开花边
     rsClean(name) {
@@ -6388,7 +6404,7 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
       if (!rank || !suit || suit === 'none') return '';
       const m = RS_LARGE[this.artKey(name)]; const red = suit === 'heart' || suit === 'diamond'; const rk = this.T.rank(rank);
       const [l, t, r, b, col] = m || [46, 54, 140, 149, '#efe0bf']; const f = n => +n.toFixed(3);
-      return `<span class="qx-lrs2${red ? ' qx-lred' : ''}" style="left:${f((l - 1) / 750 * 100)}%;top:${f((t - 1) / 1140 * 100)}%;width:${f((r - l + 2) / 750 * 100)}%;height:${f((b - t + 2) / 1140 * 100)}%;--lc:${col}"><b class="${rk.length > 1 ? 'qx-lr2' : ''}">${rk}</b><i>${this.suitSVG(suit)}</i></span>`;
+      return `<span class="qx-lrs2${red ? ' qx-lred' : ''}" style="left:${f((l - 1) / 750 * 100)}%;top:${f((t - 1) / 1140 * 100)}%;width:${f((r - l + 2) / 750 * 100)}%;height:${f((b - t + 2) / 1140 * 100)}%;--lc:${col}"><b class="${rk.length > 1 ? 'qx-lr2' : ''}" style="${(() => { const q = this.rkShift(rk, rk.length > 1 ? -.07 : 0); return `transform:translate(${q.dx}em,${q.dy}em)`; })()}">${rk}</b><i>${this.suitSVG(suit)}</i></span>`;
     }
     // c：实体牌；opts.as：按此牌名显示（天兆区的 omenAs）
     cardHTML(c, cls, opts) {
@@ -7151,10 +7167,10 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
           for (const id of l.ids) {
             const k0 = zrun.get(id); const m0 = /^(h|e|j):(\d+)$/.exec(k0 || '');
             // 从手里 / 装备区 / 判定区直接进弃牌堆的牌（被顶掉的装备、判定完或被拆的天兆、阵亡时弃置的所有牌……）：先放到桌面中央，再变暗、淡出
+            if (l.reason === 'omenJudge' && m0) add(id, t('cap_discard', { s: who(+m0[2]) }), null, 'discard');   // 天兆判定完：从判定区落到桌面，再变暗淡出
             if (l.to === 'discard' && m0 && !this.center.some(e => e.id === id && e.kind !== 'equip')) add(id, t('cap_discard', { s: who(+m0[2]) }), null, 'discard');   // 之前留下的装备 / 天兆影子不算：这次是弃置上桌
             // 雕琢等亮牌窗口里没被拿走的牌：从窗口落到桌面上，再变暗、淡出
             if (l.to === 'discard' && this.revealWin && this.revealWin.ids.includes(id) && !this.center.some(e => e.id === id)) add(id, t('cap_discard', { s: who(this.revealWin.seat) }), null, 'discard', true);
-            if (l.reason === 'omenJudge') continue;   // 判定期间天兆仍算在判定区，结束后从判定区上桌
             zrun.set(id, l.to === 'hand' ? 'h:' + l.seat : l.to === 'equip' ? 'e:' + l.seat : l.to === 'judge' ? 'j:' + l.seat : l.to === 'process' ? 'center' : l.to === 'discard' ? 'pile' : 'deck');
           }
         }
@@ -7413,7 +7429,6 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
       const run = new Map(prevLocs); const hopped = new Set();
       for (const l of logs) {
         if (l.type !== 'move' || !l.ids) continue;
-        if (l.reason === 'omenJudge') continue;               // 判定时天兆标记留在原处，只亮出判定牌
         for (const id of l.ids) {
           const k0 = run.get(id); const k1 = keyOf(l, id);
           if (k0 === 'center' && k1 === 'center' && l.to === 'discard' && this.revealWin && this.revealWin.ids.includes(id)) { mkMove(id, 'win', 'center', l, !hopped.has(id)); hopped.add(id); run.set(id, k1); continue; }
