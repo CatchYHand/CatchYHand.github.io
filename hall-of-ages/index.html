@@ -1255,9 +1255,9 @@
       else if (this.opts.selectHeroes && Object.keys(HEROES).length) yield* this.selectHeroes();
       for (const p of this.players) if (!p.hero && p.role === 'chancellor' && this.n >= 5) { p.maxHp = 5; p.hp = 5; }
       this.log('start', { n: this.n, roles: this.players.map(p => p.role) });
-      yield* this.trigger('gameStart', {});
       const initial = this.opts.initialHand == null ? 4 : this.opts.initialHand;
       for (const p of this.players) yield* this.draw(p, initial, 'initial');
+      yield* this.trigger('gameStart', {});   // 「游戏开始时」= 所有人的起始手牌都发完之后
       this.inPlay = true;   // 起始手牌发完，游戏正式开始：在这之前只有「游戏开始时」的技能能发动
       this.current = this.players.find(p => p.role === 'chancellor') || this.players[0];
     }
