@@ -3169,12 +3169,12 @@
   };
   S.laws = {
     name: ['定律', 'LAWS'], type: 'normal',
-    desc: ['当你于一回合内使用第 X 张牌时，你可以摸 X 张牌（X 为 3 的倍数）。', 'When you use your X-th card in a turn (X a multiple of 3), you may draw X cards.'],
+    desc: ['当你于一回合内使用第 X 张牌时，你可以摸 X 张牌（X 为 3、6、9）。', 'When you use your X-th card in a turn (X = 3, 6 or 9), you may draw X cards.'],
     triggers: {
       // 计数一直在后台进行；摸不摸由你决定
       cardUsing: { optional: false, silent: true, can: (g, o, d) => d.use.from === o && !o.dead, *on(g, o) {
         const k = o.marks.lawsTurn === g.turnSeq ? (o.marks.laws || 0) + 1 : 1;
-        o.marks.lawsTurn = g.turnSeq; o.marks.laws = k; if (k % 3 === 0) o.marks.lawsDraw = k;
+        o.marks.lawsTurn = g.turnSeq; o.marks.laws = k; if (k === 3 || k === 6 || k === 9) o.marks.lawsDraw = k;   // 只有第 3、6、9 张，超过 9 不再触发
       } },
       cardUsed: { optional: true, can: (g, o, d) => d.use.from === o && !o.dead && o.marks.lawsDraw > 0, *on(g, o) { const k = o.marks.lawsDraw; o.marks.lawsDraw = 0; yield* g.draw(o, k, 'laws'); } },
     },
