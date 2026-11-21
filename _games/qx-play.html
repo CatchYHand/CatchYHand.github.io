@@ -1051,7 +1051,7 @@
       return false;
     }
     describeEffect(e) {
-      if (e.use) return { card: e.use.card.name, from: e.use.from ? e.use.from.seat : null, target: e.target ? e.target.seat : null };
+      if (e.use) return { card: e.use.card.name, from: e.use.from ? e.use.from.seat : null, target: e.target ? e.target.seat : null, uid: e.use.id, multi: (e.use.targets || []).length > 1 };
       if (e.veto) return { card: 'veto', from: e.from.seat, of: this.describeEffect(e.target) };
       if (e.omen) return { card: e.omen.name, target: e.target.seat, omen: true };
       return {};
@@ -3778,7 +3778,7 @@
     slot_weapon: ['武器', 'Weapon'], slot_armor: ['防具', 'Armor'], slot_minus: ['−1 坐骑', '−1 Mount'], slot_plus: ['+1 坐骑', '+1 Mount'],
     cap_use: ['{s}使用', '{s} used'], cap_useOn: ['{s}对{t}', '{s} → {t}'], cap_play: ['{s}打出', '{s} played'],
     cap_discard: ['{s}弃置', '{s} discarded'], cap_pindian: ['{s}的拼点牌', "{s}'s contest card"], cap_discardOf: ['{s}被弃置', 'Discarded from {s}'], cap_judge: ['{s}的天意牌', '{s}\'s Fate card'],
-    cap_pindian: ['{s}拼点', '{s} contest'], cap_recast: ['{s}重铸', '{s} recast'], cap_show: ['{s}展示', '{s} showed'], cap_reveal: ['亮出', 'Revealed'], cap_retouch: ['{s}改判', '{s} retouched'],
+    cap_pindian: ['{s}拼点', '{s} contest'], cap_recast: ['{s}重铸', '{s} recast'], cap_show: ['{s}展示', '{s} showed'], noVetoRound: ['本轮不使用{c}', 'No {c} This Round'], cap_reveal: ['亮出', 'Revealed'], cap_retouch: ['{s}改判', '{s} retouched'],
     gameOver: ['对局结束', 'Game Over'], winners: ['{w}获胜', 'Winner: {w}'], draw: ['平局', 'Draw'], again: ['再来一局', 'Play Again'],
     youWin: ['你赢了！', 'You Win!'], youLose: ['你输了', 'You Lose'],
     note: ['右键（手机上长按）任意一张牌可查看大图；点击「规则书」查看完整规则。', 'Right-click (or long-press on a phone) any card to see it full size. Open the Rulebook for the full rules.'],
@@ -5213,7 +5213,9 @@ return { RandomAgent, SmartAgent, defaultAnswer, rel, tracker };
 #qx .qx-deq .qx-egv>.qx-ebar.qx-appear{animation:qxeqslide .5s cubic-bezier(.2,.8,.3,1)}
 @keyframes qxeqslide{from{translate:-110% 0;opacity:.4}to{translate:0 0;opacity:1}}
 #qx .qx-deq .qx-ebar .qx-eart{position:absolute;left:0;top:0;bottom:0;width:70px;z-index:1;background-repeat:no-repeat;background-size:112px 168px;background-position:-21px -78px;-webkit-mask-image:linear-gradient(90deg,#000 35%,transparent);mask-image:linear-gradient(90deg,#000 35%,transparent);opacity:.95;border-radius:3px 0 0 3px;pointer-events:none}
-#qx .qx-deq .qx-ebar .qx-eic,#qx .qx-deq .qx-ebar .qx-eval{text-shadow:0 1px 2px #000,0 0 4px #000}
+/* 攻击范围、防具标记、±1：放进一枚深色铜框圆章里，压在插画上也看得清 */
+#qx .qx-deq .qx-ebar .qx-eic,#qx .qx-deq .qx-ebar .qx-eic.qx-eval{width:25px;height:25px;flex:none;border-radius:50%;background:radial-gradient(circle at 40% 35%,#3a2c1a,#140e08 75%);border:1px solid #d6aa5a;box-shadow:0 0 0 1px rgba(0,0,0,.75),0 1px 3px rgba(0,0,0,.9),inset 0 1px 0 rgba(255,225,160,.25);color:#ffd98a;font:700 13px/1 Georgia,'Noto Serif SC',serif;letter-spacing:-.02em;text-shadow:0 1px 1px #000}
+#qx .qx-deq .qx-ebar .qx-eic svg{width:15px;height:15px}
 #qx .qx-deq .qx-ebar .qx-eic svg{filter:drop-shadow(0 1px 1px #000)}
 #qx .qx-deq .qx-ebar .qx-ename{text-shadow:0 1px 2px #000}
 #qx .qx-dsep{display:none}
@@ -5617,7 +5619,8 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
 #qx .qx-cnone{color:#6a5a40;font-size:20px;padding:0 10px}
 #qx .qx-box.qx-optbox{position:relative;width:min(92vw,440px);min-height:0;max-height:none;overflow:visible;padding:20px 24px 18px;border-radius:12px;border:2px solid #b08a3c;background:radial-gradient(ellipse at 50% -10%,#4a3820 0%,#2a2013 55%,#18120b 100%);box-shadow:0 0 0 4px #1a1209,0 0 0 5px #6b5328,0 20px 60px rgba(0,0,0,.85);animation:qxoptin .24s cubic-bezier(.2,.8,.3,1)}
 #qx .qx-box.qx-optbox::before{content:'';position:absolute;inset:6px;border:1px solid rgba(214,176,90,.28);border-radius:8px;pointer-events:none}
-#qx .qx-box.qx-uwin{min-height:0;max-height:calc(100vh - 28px);overflow:visible;padding:20px 26px 20px;border-radius:12px;background:radial-gradient(ellipse at 50% -10%,#4a3820 0%,#2a2013 55%,#18120b 100%);box-shadow:0 0 0 4px #1a1209,0 0 0 5px #6b5328,0 20px 60px rgba(0,0,0,.85);animation:qxoptin .24s cubic-bezier(.2,.8,.3,1)}
+#qx .qx-modal .qx-box{zoom:var(--qx-s,1)}
+#qx .qx-box.qx-uwin{min-height:0;max-height:calc((100vh - 28px) / var(--qx-s,1));overflow:visible;padding:20px 26px 20px;border-radius:12px;background:radial-gradient(ellipse at 50% -10%,#4a3820 0%,#2a2013 55%,#18120b 100%);box-shadow:0 0 0 4px #1a1209,0 0 0 5px #6b5328,0 20px 60px rgba(0,0,0,.85);animation:qxoptin .24s cubic-bezier(.2,.8,.3,1)}
 #qx .qx-box.qx-uwin::before{content:'';position:absolute;inset:6px;border:1px solid rgba(214,176,90,.28);border-radius:8px;pointer-events:none}
 #qx .qx-uwin .qx-opthd span{white-space:normal;max-width:80%}
 #qx .qx-uwin .qx-optsub{max-width:640px;margin-left:auto;margin-right:auto;font-size:14px}
@@ -6014,7 +6017,7 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
       this.g = new E.Game({ players: n, seed, roles: arr, fixedRoles: true, selectHeroes: true });
       this.me = meSeat; this.ui = null; this.logIdx = 0;
       this.animIdx = 0; this.phMem = {}; this.phCur = {}; this.marks = {}; this.handOrder = []; this.vetoBars = false; this.thinkBars = null; this.revealWin = null; this.schemeWin = null; this.roleHold = null; this.groupDone = false; this.lastPh = null;
-      this.closePeek(); this.closeBadgeMenu(); this.closeZoom(); this.pindian = null; this.pdHold = null; this.pdOut = null; this.skFlash = null; this.skMarkHold = null; this.skMarkNow = null; this.skHot = null; this.feast = null; this.shownCards = null; this.centerT = 0; this.locs = null; this.center = []; this.centerIds = new Set(); this.hpPrev = null; this.stepNo = 0; this.thinking = null;
+      this.closePeek(); this.closeBadgeMenu(); this.closeZoom(); this.pindian = null; this.noVetoUid = null; this.pdHold = null; this.pdOut = null; this.skFlash = null; this.skMarkHold = null; this.skMarkNow = null; this.skHot = null; this.feast = null; this.shownCards = null; this.centerT = 0; this.locs = null; this.center = []; this.centerIds = new Set(); this.hpPrev = null; this.stepNo = 0; this.thinking = null;
       const fx = this.$('.qx-fx'); if (fx) fx.innerHTML = ''; const ls = this.$('.qx-lines'); if (ls) ls.innerHTML = '';
       // 新开一局：上一局留在桌面上的牌、状态（横置 / 翻面等）、动画残留全部清空
       this.stLast = null; this.stShown = null; this.disp = null; this.inStep = false; this.hpPrev = null; this.marksPrev = null; if (this._swT) { clearInterval(this._swT); this._swT = null; }
@@ -6085,11 +6088,14 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
       this.ui = null; await this.step(tok); if (tok !== this.token) return; this.showGameOver();
     }
 
+    // 无懈可击询问所针对的「原始效果」（无懈可击的无懈可击一路往回找到那张锦囊）
+    vetoRoot(req) { if (!req || req.kind !== 'respond' || req.reason !== 'veto') return null; let v = req.vetoOf; for (let i = 0; v && v.card === 'veto' && v.of && i < 20; i++) v = v.of; return v && v.uid != null ? v : null; }
     // ── 人类决策 ──
     humanDecide(req) {
       return new Promise(resolve => {
         this.ui = { req, resolve, sel: [], targets: [], skill: null };
         const k = req.kind;
+        { const rt = this.vetoRoot(req); if (rt && rt === req.vetoOf && this.noVetoUid != null && rt.uid === this.noVetoUid && rt.target !== this.me) { this.ui = null; resolve(null); return; } }   // 只跳过直接针对这张锦囊的询问；别人出了无懈可击时，仍然可以用无懈可击去抵消它   // 已选「本轮不使用无懈可击」
         if (k === 'pick' && req.reason === 'feast' && this.feast) {
           this.render();
           // 只剩最后一张可拿（自己是最后一个拿的）：不用点，直接收进手里
@@ -6281,6 +6287,7 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
     onAction(act) {
       const u = this.ui; const k = u.req.kind; const ids = () => u.sel.map(c => c.id);
       if (act === 'yes') return this.answer(true);
+      if (act === 'noVetoRound') { const rt = this.vetoRoot(u.req); if (rt) this.noVetoUid = rt.uid; return this.answer(null); }
       if (act === 'skip') return this.answer(null);
       if (act.startsWith('ascpick:')) { u.ascPick = act.slice(8); this.openAsChoice(); return; }
       if (act.startsWith('asc:')) { if (act === 'asc:') return; const nm = act.slice(4); if (nm === '-') { u.sel = []; u.targets = []; u.asName = null; QXAsk.refresh(this); this.closeModal(); this.render(); return; } u.asName = nm; u.targets = []; QXAsk.refresh(this); this.closeModal(); this.render(); return; }
@@ -6513,7 +6520,7 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
       if (LW < 1280) { s = W / 1280; LW = 1280; if (full) LH = Math.max(760, H / s); }
       if (!full && s > 1.6) { s = 1.6; LW = W / s; }
       LW = Math.min(1920, Math.floor(LW)); LH = Math.min(1100, Math.floor(LH)); s = Math.max(0.3, s);
-      const changed = LW !== this.LW || LH !== this.LH; this.LW = LW; this.LH = LH; this.scale = s;
+      const changed = LW !== this.LW || LH !== this.LH; this.LW = LW; this.LH = LH; this.scale = s; this.root.style.setProperty('--qx-s', s.toFixed(4));   // 弹窗跟牌桌同样缩放：弹窗里的牌和桌上窗口（如五谷丰登）里的牌一样大
       const st = this.$('.qx-stage');
       st.style.width = LW + 'px'; st.style.height = LH + 'px'; st.style.transform = `scale(${s})`;
       st.style.left = Math.max(0, Math.floor((W - LW * s) / 2)) + 'px';
@@ -7533,7 +7540,7 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
             pd.revealed = true; this.renderWins(); await sleep(Math.max(350, 600 * mult));
             pd.done = true; this.renderWins(); await sleep(Math.max(700, 1300 * mult));
             const w = this.$('.qx-pindian'); if (w) { w.classList.add('qx-wfade'); await sleep(260); }
-            this.pindian = null; this.pdHold = null; this.pdOut = null; this.renderWins();
+            this.pindian = null; this.noVetoUid = null; this.pdHold = null; this.pdOut = null; this.renderWins();
             // 拼点牌放到桌面上，变暗；之后被谁拿走就从桌面上飞过去
             for (const id of [l.ca, l.cb]) if (!this.center.some(e => e.id === id)) this.center.push({ id, cap: this.T.t('cap_pindian', { s: this.who(id === l.ca ? l.a : l.b) }), li: base + logs.indexOf(l) + 1, kind: 'pd', t: Date.now() });
             this.centerIds = new Set(this.center.filter(e => e.kind !== 'equip' && e.kind !== 'show').map(e => e.id)); const ctr = this.$('.qx-ctr'); if (ctr) morph(ctr, this.centerHTML());
@@ -7659,7 +7666,7 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
         const isWin = w.classList.contains('qx-win'); let st;
         if (isWin) { const k = w.dataset.mk || w.className; st = this._winFit && this._winFit[k]; if (!st) return; }
         else { st = this._modalOff = this._modalOff || { dx: 0, dy: 0 }; }
-        const host = isWin ? this.$('.qx-wins') : root; const hr = host.getBoundingClientRect(); const zs = (hr.width / (host.offsetWidth || hr.width)) || 1;
+        const host = isWin ? this.$('.qx-wins') : root; const hr = host.getBoundingClientRect(); const zs = isWin ? ((hr.width / (host.offsetWidth || hr.width)) || 1) : (this.scale || 1);   // 弹窗是按牌桌比例 zoom 的，位移也要按这个比例换算
         d = { w, st, x0: e.clientX, y0: e.clientY, dx0: st.dx, dy0: st.dy, zs, isWin }; w.classList.add('qx-wdrag'); e.preventDefault();
       });
       root.addEventListener('pointermove', e => {
@@ -7830,6 +7837,8 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
         const face = mv.forceFace || (!mv.back && (this.keyVisible(mv.k1) || this.keyVisible(mv.k0) || mv.fromBar));
         let leaveDim = false;
         if (mv.k0 === 'center' && mv.k1 !== 'center' && mv.k1 !== 'pile') { const ce = (this.center || []).find(e => e.id === mv.id); if (ce) { const ctr = this.$('.qx-ctr'); const ce2 = ctr && ctr.querySelector(`[data-cid="${mv.id}"]`); if (ce2) mv.from = this.rel(ce2); leaveDim = !!(this.dimmed && this.dimmed.has(mv.id)); this.center = this.center.filter(e => e !== ce); this.centerIds = new Set(this.center.filter(e => e.kind !== 'equip' && e.kind !== 'show').map(e => e.id)); if (this.dimmed) this.dimmed.delete(mv.id); if (ctr) morph(ctr, this.centerHTML()); } }
+        // 这张牌刚刚被展示在桌面中间（如命运），现在真的被拿走：从中间展示的位置飞走，展示的影子同时撤掉，不再从原主人那里突然冒出来
+        if (!mv.copyOnly && mv.k0 !== 'center') { const se = (this.center || []).find(e => e.id === mv.id && e.kind === 'show'); if (se) { const ctr = this.$('.qx-ctr'); const sEl = ctr && ctr.querySelector(`[data-sid="${mv.id}"]`); if (sEl && !mv.from) mv.from = this.rel(sEl); mv.forceFace = true; this.center = this.center.filter(e => e !== se); if (ctr) morph(ctr, this.centerHTML()); } }
         { const pe = (this.center || []).find(e => e.id === mv.id && e.pend); if (pe && mv.k1 === 'center') { pe.pend = false; const ctr = this.$('.qx-ctr'); if (ctr) morph(ctr, this.centerHTML()); } }
         const toEl = mv.toRect ? null : (mv.el && !mv.el.isConnected ? (this.cardEl(mv.id) || mv.el) : mv.el);
         const toBar = toEl && (toEl.classList.contains('qx-ebar') || toEl.classList.contains('qx-sbar') || toEl.classList.contains('qx-omk'));
@@ -8170,6 +8179,8 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
       } else if (k === 'respond') {
         text = this.respondText(req);
         btns = btn('ok', t('confirm'), this.canConfirm(), 'qx-primary') + btn('cancel', t('cancel'));
+        // 群体锦囊结算时：可以选「本轮不使用无懈可击」，之后这张牌对别人生效时不再问我（对我生效时照样问）
+        { const rt = this.vetoRoot(req); if (rt && rt === req.vetoOf && rt.multi && rt.uid != null) btns += btn('noVetoRound', t('noVetoRound', { c: T.cardName('veto') }), true, 'qx-cancel qx-novr'); }
       } else if (k === 'distribute') {
         text = t('distTip');
         btns = btn('ok', t('distBtn'), this.canConfirm(), 'qx-primary') + btn('cancel', t('cancel'));
