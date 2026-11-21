@@ -4673,14 +4673,15 @@ return { RandomAgent, SmartAgent, defaultAnswer, rel, tracker };
         kind: 'chooseCards',
         cards: { pool: byIds(req.options), filter: () => true, min: req.min, max: req.max },
         targets: NONE,
-        ok: () => u.sel.length >= req.min && u.sel.length <= req.max,
+        // 可以不选（min 为 0）时，不选就点「取消」；「确定」只在选了牌之后才能点
+        ok: () => u.sel.length >= Math.max(1, req.min) && u.sel.length <= req.max,
         answer: () => u.sel.map(c => c.id),
       };
       case 'chooseTargets': return {
         kind: 'chooseTargets',
         cards: NONE,
         targets: { min: req.min, max: req.max, keep: true, filter: p => req.options.includes(p.seat) },
-        ok: () => u.targets.length >= req.min && u.targets.length <= req.max,
+        ok: () => u.targets.length >= Math.max(1, req.min) && u.targets.length <= req.max,   // 不选目标就点「取消」
         answer: () => u.targets.map(p => p.seat),
       };
       case 'distribute': return {
@@ -4710,7 +4711,8 @@ return { RandomAgent, SmartAgent, defaultAnswer, rel, tracker };
       return { kind: k, cards: NONE, targets: NONE, buttons: { items: req.options, filter, swap, min: n, max: n }, ok: () => u.btn.length === n, answer: () => u.btn.slice(), cancel: !!req.optional };
     }
     if (k === 'pick') return one(req.options, () => u.btn[0]);
-    if (k === 'chooseOption') return one(req.options.map((_, i) => i), () => u.btn[0]);
+    // 选项窗口：点选项只是选中，按窗口里的「确定」才生效
+    if (k === 'chooseOption') { const its = req.options.map((_, i) => i); return one(its, () => u.btn[0], { buttons: { items: its, filter: () => true, min: 1, max: 1, auto: false } }); }
     if (k === 'chooseSkillOrder') return one(req.options.slice(), () => u.btn[0]);
     if (k === 'chooseHero') return one(req.options.slice(), () => ({ pick: u.btn[0] }));
     return null;
@@ -5615,6 +5617,9 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
 #qx .qx-optc{display:grid;grid-template-columns:34px 1fr;align-items:center;gap:14px;width:100%;min-height:54px;padding:10px 16px;font:inherit;text-align:left;color:#f3e6c4;cursor:pointer;background:linear-gradient(180deg,#3d311e,#261d11);border:1px solid #8a6a30;border-radius:9px;box-shadow:inset 0 1px 0 rgba(255,230,170,.12),0 2px 6px rgba(0,0,0,.45);transition:transform .14s ease,border-color .14s ease,box-shadow .14s ease,background .14s ease}
 #qx .qx-optc:hover{transform:translateY(-1px);border-color:#e6c060;background:linear-gradient(180deg,#4a3a22,#2c2213);box-shadow:inset 0 1px 0 rgba(255,230,170,.2),0 0 0 1px rgba(230,192,96,.35),0 6px 16px rgba(0,0,0,.5)}
 #qx .qx-optc:active{transform:translateY(0) scale(.99)}
+#qx .qx-optc.qx-optsel,#qx .qx-optc.qx-optsel:hover{transform:none;border-color:#ffd877;background:linear-gradient(180deg,#5a4524,#33271a);box-shadow:inset 0 1px 0 rgba(255,235,180,.3),0 0 0 2px rgba(255,214,110,.75),0 0 18px rgba(255,200,90,.35)}
+#qx .qx-optc.qx-optsel .qx-optn{background:radial-gradient(circle at 35% 30%,#fffbe6,#ffd46a 55%,#c89432)}
+#qx .qx-optft{gap:16px}
 #qx .qx-optc.qx-optoff{opacity:.42;cursor:default;filter:grayscale(.5)}
 #qx .qx-optc.qx-optoff:hover{transform:none;border-color:#8a6a30;box-shadow:none;background:linear-gradient(180deg,#3d311e,#261d11)}
 #qx .qx-optn{display:flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:50%;font-style:normal;font:700 13px/1 Cinzel,Georgia,serif;color:#3a2410;background:radial-gradient(circle at 35% 30%,#fff1c2,#e2b85a 55%,#a77a2a);box-shadow:0 0 0 2px #5a4120,0 2px 4px rgba(0,0,0,.6)}
@@ -6111,6 +6116,14 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
 
     // ── 主动技 ──
     activeInst() { const u = this.ui; if (!u || !u.active) return null; return this.g.skillList(this.g.p(this.me)).find(s => s.key === u.active.key); }
+    // 主动技不需要选牌也不需要选目标时，直接发动（省掉多余的「确定」）
+    fireIfNoPick() {
+      const sp = this.activeSpec(); if (!sp) return false; const g = this.g, me = g.p(this.me);
+      const cmax = typeof sp.cards.max === 'function' ? sp.cards.max(g, me) : (sp.cards.max || 0);
+      if (cmax > 0 || (sp.tg.max || 0) > 0) return false;
+      const a = QXAsk.confirm(this); if (a === undefined) return false;
+      this.answer(a); return true;
+    }
     activeSpec() {
       const inst = this.activeInst(); if (!inst) return null; const a = inst.def.active; const g = this.g, me = g.p(this.me);
       const ans = { option: this.ui.active.option };
@@ -6181,17 +6194,23 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
       if (el.dataset.actopts != null) {   // 多选项技能：再点一次取消；否则弹出选项窗口
         const key = el.dataset.actopts;
         if (u.active && u.active.key === key) { u.active = null; u.sel = []; u.targets = []; this.render(); return; }
-        this.openActOpts(key); return;
+        this.actPick = null; this.openActOpts(key); return;
       }
-      if (el.dataset.actopt != null) {
-        const [key, opt] = el.dataset.actopt.split('|'); this.closeModal();
-        u.active = { key, option: +opt }; u.skill = null; u.sel = []; u.targets = []; this.render(); return;
+      if (el.dataset.actopt != null) {   // 选项窗口里点选项：只选中
+        const [key, opt] = el.dataset.actopt.split('|'); this.actPick = { key, opt: +opt }; this.openActOpts(key); return;
       }
-      if (el.dataset.act === 'actoptCancel') { this.closeModal(); this.render(); return; }
+      if (el.dataset.act === 'actoptOk') {
+        const P = this.actPick; if (!P) return; this.actPick = null; this.closeModal();
+        u.active = { key: P.key, option: P.opt }; u.skill = null; u.sel = []; u.targets = [];
+        if (this.fireIfNoPick()) return; this.render(); return;
+      }
+      if (el.dataset.act === 'actoptCancel') { this.actPick = null; this.closeModal(); this.render(); return; }
       if (el.dataset.active != null) {
         const [key, opt] = el.dataset.active.split('|'); const o = opt === '' ? null : +opt;
         u.active = (u.active && u.active.key === key && u.active.option === o) ? null : { key, option: o };
-        u.skill = null; u.sel = []; u.targets = []; this.render(); return;
+        u.skill = null; u.sel = []; u.targets = [];
+        if (u.active && this.fireIfNoPick()) return;   // 不需要选牌、选目标的主动技（如推演）：点按钮直接发动
+        this.render(); return;
       }
       if (el.dataset.act) return this.onAction(el.dataset.act);
       if (el.dataset.skill) {
@@ -8052,7 +8071,7 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
         text = ''; btns = '';   // 权术在独立窗口里操作，下方不再重复提示
       } else if (k === 'chooseTargets') {
         text = T.prompt(req.reason, this.pvars(req)) || t('targets', { min: req.min, max: req.max });
-        btns = btn('ok', t('confirm'), this.canConfirm(), 'qx-primary') + (req.optional ? btn('cancel', t('cancel')) : '');
+        btns = btn('ok', t('confirm'), this.canConfirm(), 'qx-primary') + (req.optional || req.min === 0 ? btn('cancel', t('cancel')) : '');
       } else if (k === 'confirm') {
         if (D[req.skill]) { text = t('confirmEquip', { c: T.cardName(req.skill) }); btns = btn('yes', t('confirm'), true, 'qx-primary') + btn('no', t('cancel')); }
         else { text = (req.reason && T.prompt(req.reason, this.pvars(req))) || t('askSkill', { k: T.skillName(req.skill) }); btns = btn('yes', t('confirm'), true, 'qx-primary') + btn('no', t('cancel')); }
@@ -8171,7 +8190,9 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
         sub = skn ? q.replace(new RegExp('^\\s*' + skn.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\s*[：:]\\s*', 'i'), '').replace(/[：:]\s*$/, '') : t('chooseOne');
         const lab = o => T.option(o, Object.assign({}, this.pvars(req), { n: req.n }));
         if (sub) sub = sub.charAt(0).toUpperCase() + sub.slice(1);
-        body = null; this.showModal(this.optWinHTML(title, sub, req.options.map((o, i) => ({ label: lab(o), desc: typeof o === 'string' && o.startsWith('sk:') && E.SKILLS[o.slice(3)] ? T.skillDesc(o.slice(3)) : '', attr: `data-opt="${i}"` })), foot)); return;
+        const B = u.btn || [];
+        foot = btn('csOk', t('confirm'), this.canConfirm(), 'qx-primary') + (req.optional ? btn('skip', t('cancel'), true, 'qx-cancel') : '');
+        body = null; this.showModal(this.optWinHTML(title, sub, req.options.map((o, i) => ({ label: lab(o), desc: typeof o === 'string' && o.startsWith('sk:') && E.SKILLS[o.slice(3)] ? T.skillDesc(o.slice(3)) : '', attr: `data-opt="${i}"`, sel: B.includes(i) })), foot)); return;
       } else if (k === 'chooseSkillOrder') {
         title = t('order');
         const me = g.p(this.me);
@@ -8242,7 +8263,7 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
     // 统一的「选项」窗口：标题（两侧饰线）、提示、每个选项一张卡片（罗马数字徽记 + 名称 + 说明）、底部取消
     optWinHTML(title, sub, opts, foot) {
       const R = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII'];
-      const items = opts.map((o, i) => `<button class="qx-optc${o.disabled ? ' qx-optoff' : ''}" ${o.disabled ? 'disabled' : o.attr}><i class="qx-optn">${R[i] || i + 1}</i><span class="qx-optt"><b>${esc(o.label)}</b>${o.desc ? `<em>${esc(o.desc)}</em>` : ''}</span></button>`).join('');
+      const items = opts.map((o, i) => `<button class="qx-optc${o.disabled ? ' qx-optoff' : ''}${o.sel ? ' qx-optsel' : ''}" ${o.disabled ? 'disabled' : o.attr}><i class="qx-optn">${R[i] || i + 1}</i><span class="qx-optt"><b>${esc(o.label)}</b>${o.desc ? `<em>${esc(o.desc)}</em>` : ''}</span></button>`).join('');
       return `<div class="qx-box qx-optbox"><i class="qx-optcn qx-optcn1"></i><i class="qx-optcn qx-optcn2"></i><i class="qx-optcn qx-optcn3"></i><i class="qx-optcn qx-optcn4"></i><div class="qx-opthd"><i></i><span>${esc(title)}</span><i></i></div>${sub ? `<div class="qx-optsub">${esc(sub)}</div>` : ''}<div class="qx-optdiv"><i></i><b></b><i></i></div><div class="qx-optlist">${items}</div>${foot ? `<div class="qx-optft">${foot}</div>` : ''}</div>`;
     }
     // 技能的各个选项说明：从技能描述里按「1. … 2. …」切出来
@@ -8250,8 +8271,10 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
     openActOpts(key) {
       const g = this.g, me = g.p(this.me), T = this.T, t = T.t; const inst = g.skillList(me).find(s => s.key === key); if (!inst) return;
       const a = inst.def.active; const ds = this.optDescs(inst.id, a.options.length);
-      const opts = a.options.map((o, i) => ({ label: T.option(o).replace(/^.*[·:：]\s*/, ''), desc: ds[i] || '', attr: `data-actopt="${key}|${i}"`, disabled: !!(a.can && !a.can(g, me, inst, { option: i })) }));
-      this.showModal(this.optWinHTML(T.skillName(inst.id), t('chooseOne'), opts, `<button class="qx-dbt qx-cancel" data-act="actoptCancel">${esc(t('cancel'))}</button>`));
+      const pk = this.actPick && this.actPick.key === key ? this.actPick.opt : null;
+      const opts = a.options.map((o, i) => ({ label: T.option(o).replace(/^.*[·:：]\s*/, ''), desc: ds[i] || '', attr: `data-actopt="${key}|${i}"`, disabled: !!(a.can && !a.can(g, me, inst, { option: i })), sel: pk === i }));
+      // 选中一项后按窗口里的「确定」：不需要再选牌 / 选目标的直接发动；需要的再回到桌面去选
+      this.showModal(this.optWinHTML(T.skillName(inst.id), t('chooseOne'), opts, `<button class="qx-dbt qx-primary" data-act="actoptOk"${pk == null ? ' disabled' : ''}>${esc(t('confirm'))}</button><button class="qx-dbt qx-cancel" data-act="actoptCancel">${esc(t('cancel'))}</button>`));
     }
     // 转化成哪种基本牌：独立窗口，此刻不能使用的牌暗着；选一张按确定，或取消
     openAsChoice() {
