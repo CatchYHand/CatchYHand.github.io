@@ -1178,6 +1178,9 @@
         if (d.targets === 'none' && d.effect) {
           yield* d.effect(this, use, null);
         } else {
+          // 额外结算（如独白）：同一张牌对目标再完整结算一次
+          for (let pass = 0; pass <= (use.data.extraResolve || 0); pass++) {
+          if (pass > 0) { if (this.over || use.from.dead) break; use.nullified = new Set(); this.log('resolveAgain', { seat: use.from.seat, card: card.name }); }
           for (const t of use.targets.slice()) {
             if (this.over) break;
             if (t.dead && !d.allowDeadTarget) continue;
@@ -1191,6 +1194,7 @@
             }
             if (t.dead && !d.allowDeadTarget) continue;
             if (d.effect) yield* d.effect(this, use, t);
+          }
           }
         }
         if (d.after) yield* d.after(this, use);
@@ -2351,7 +2355,7 @@
         const got = [];
         for (const q of others(g, p)) {
           if (!q.hand.length) continue;
-          const c = yield* g.chooseCardOf(p, q, 'h', 'anoint', { skill: 'anoint' });
+          const c = q.hand[Math.floor(g.rand() * q.hand.length)];   // 手牌是背面的，等同盲抽：直接随机，不再逐人询问（避免拿牌前卡顿）
           if (c) got.push([c, q]);
         }
         if (!got.length) return;
@@ -2982,31 +2986,32 @@
   H.shakespeare = { faction: 'renaissance', hp: 3, gender: 'male', skills: ['soliloquy', 'tragedy'], name: ['莎士比亚', 'Shakespeare'], title: ['埃文河诗人', 'The Bard'], rating: 7 };
   S.soliloquy = {
     name: ['独白', 'SOLILOQUY'], type: 'locked', locked: true,
-    desc: ['锁定技，你使用杀无次数限制。你于出牌阶段内使用的第一张杀伤害 +1 且不能被闪响应；其余的杀被其他角色的闪响应后，其对你造成 1 点伤害。', 'Compulsory skill. No limit on your Strikes. The first Strike you use in each Play phase deals +1 damage and cannot be Parried; after any other Strike of yours is Parried, the parrying character deals 1 damage to you.'],
-    mods: { strikeLimit: (g, o, v, p) => p === o ? Infinity : v },
+    desc: ['锁定技，当你于非濒死状态下使用基本牌或非延时类锦囊牌仅指定一名目标时，该牌额外结算一次。', 'Compulsory skill. When you are not dying and use a basic card or a non-delayed Stratagem that targets exactly one character, it resolves one more time.'],
     triggers: {
-      targetConfirmed: { can: (g, o, d) => strikeBy(o, d.use) && g.current === o && g.phase === 'play' && !o.phaseState.soliloquy,
-        *on(g, o, d) { o.phaseState.soliloquy = true; d.use.extraDamage += 1; d.use.targets.forEach(t => d.use.noResponse.add(t)); d.use.data.soliloquyFirst = true; } },
-      strikeParried: { can: (g, o, d) => strikeBy(o, d.use) && !d.use.data.soliloquyFirst && d.target !== o && !d.target.dead, *on(g, o, d) { yield* g.damage({ from: d.target, to: o, amount: 1 }); } },
+      targetConfirmed: {
+        can: (g, o, d) => { const u = d.use; if (u.from !== o || o.dead || o.dying || u.opts.response || u.data.aborted) return false; const t = (E.CARD_DEFS[u.card.name] || {}).type; return (t === 'basic' || t === 'stratagem') && u.targets.length === 1; },
+        *on(g, o, d) { d.use.data.extraResolve = (d.use.data.extraResolve || 0) + 1; },
+      },
     },
   };
   S.tragedy = {
-    name: ['悲剧', 'TRAGEDY'], type: 'limited',
-    desc: ['限定技，一名其他角色死亡时，你可以获得其所有牌和至多两个技能。', 'Limited skill. When another character dies, you may take all their cards and up to two of their skills.'],
+    name: ['悲剧', 'TRAGEDY'], type: 'awaken',
+    desc: ['觉醒技，一名其他角色死亡时，你可以获得其所有牌和至多两个技能，然后失去【悲剧】。', 'Awakening skill. When another character dies, you may take all their cards and up to two of their skills, then lose Tragedy.'],
     triggers: { death: {
-      can: (g, o, d) => d.player !== o && !o.dead && !o.skillState.tragedy,
+      optional: false,   // 觉醒技：第一名其他角色死亡时必定发动；「可以」的部分逐项询问
+      can: (g, o, d) => d.player !== o && !o.dead && !o.skillState.tragedy && o.skills.includes('tragedy'),
       *on(g, o, d) {
         o.skillState.tragedy = true;
         const t = d.player; const cs = [...t.hand, ...t.equipList, ...t.judgeZone];
-        cs.forEach(c => delete c.omenAs);
-        if (cs.length) yield* g.gainCards(o, cs, 'tragedy', t);
-        // 至多选两个技能（主公技不能拿）；每次选一个，可以不再选
+        if (cs.length && (yield* g.confirm(o, 'tragedy', { reason: 'tragedyCards', target: t.seat }))) { cs.forEach(c => delete c.omenAs); yield* g.gainCards(o, cs, 'tragedy', t); }
+        // 至多选两个技能（执笔技不能拿）；每次选一个，可以不再选
         let pool = t.skills.filter(id => S[id] && S[id].type !== 'lord' && !S[id].hidden && !o.skills.includes(id));
         for (let k = 0; k < 2 && pool.length && !o.dead; k++) {
           const i = yield* g.chooseOption(o, [...pool.map(id => 'sk:' + id), 'tragedyStop'], 'tragedySkill', { skill: 'tragedy', target: t.seat, k: k + 1 });
           if (i == null || i >= pool.length) break;
           g.gainSkill(o, pool[i]); pool = pool.filter((_, j) => j !== i);
         }
+        if (o.skills.includes('tragedy')) { o.skills = o.skills.filter(x => x !== 'tragedy'); g.log('skillLost', { seat: o.seat, skill: 'tragedy' }); }
       },
     } },
     ai: {
@@ -3244,7 +3249,7 @@
     vengeanceOpt: ['血誓：选择{t}执行的一项：', 'Vengeance: choose what {t} must do:'],
     lectureSwapOpt: ['讲学：选择与{t}交换的内容：', 'Lecture: choose what to swap with {t}:'],
     allianceTarget: ['联姻：选择一名其他角色。', 'Alliance: choose another character.'],
-    allianceOpt: ['联姻：选择一项（你 {a} 张手牌，{t} {b} 张）：', 'Alliance: choose one (you have {a} cards, {t} has {b}):'],
+    allianceOpt: ['联姻：选择一项', 'Alliance: choose one'], tragedyCards: ['悲剧：是否获得{t}的所有牌？', "Tragedy: take all of {t}'s cards?"],
     allianceDiscard: ['联姻：请弃置 {n} 张手牌。', 'Alliance: discard {n} cards from your hand.'],
     freedomOpt: ['自由：选择代价：', 'Freedom: choose the cost:'],
     freedomEquip: ['自由：选择一张装备牌弃置。', 'Freedom: choose an equipment card to discard.'],
@@ -3971,6 +3976,7 @@
         case 'skill': return ['skill', zh ? `${S(e.seat)}发动【${skillName(e.skill)}】` : `${S(e.seat)} activates ${skillName(e.skill)}`];
         case 'damoclesMove': return ['', zh ? `【${N('damocles')}】移到${S(e.to)}` : `${N('damocles')} passes to ${S(e.to)}`];
         case 'omenHit': return ['', zh ? `${S(e.seat)}的【${N(e.card)}】生效` : `${N(e.card)} takes effect on ${S(e.seat)}`];
+        case 'resolveAgain': return ['', zh ? `【${N(e.card)}】额外结算一次` : `${N(e.card)} resolves again`];
         case 'aborted': return ['', zh ? `【${N(e.card)}】的结算被中止` : `${N(e.card)} stops resolving`];
         case 'recast': return ['', zh ? `${S(e.seat)}重铸【${N(e.card)}】` : `${S(e.seat)} recast ${N(e.card)}`];
         case 'drunk': return ['', zh ? `${S(e.seat)}喝了酒，下一张杀伤害 +1` : `${S(e.seat)} drank Grog: next Strike +1 damage`];
@@ -5587,12 +5593,25 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
 #qx.qx-l-en .qx-mtitle{letter-spacing:1px}
 #qx .qx-cards{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
 #qx .qx-cnone{color:#6a5a40;font-size:20px;padding:0 10px}
-#qx .qx-box.qx-optbox{width:min(92vw,460px);min-height:0;padding:16px 22px 16px;animation:qxoptin .22s cubic-bezier(.2,.8,.3,1)}
-@keyframes qxoptin{from{opacity:0;transform:translateY(8px) scale(.96)}to{opacity:1;transform:none}}
-#qx .qx-optbox .qx-mtitle{font-size:19px;margin-bottom:2px}
-#qx .qx-optbox .qx-msub{margin-bottom:12px}
+#qx .qx-box.qx-optbox{position:relative;width:min(92vw,440px);min-height:0;max-height:none;overflow:visible;padding:20px 24px 18px;border-radius:12px;border:2px solid #b08a3c;background:radial-gradient(ellipse at 50% -10%,#4a3820 0%,#2a2013 55%,#18120b 100%);box-shadow:0 0 0 4px #1a1209,0 0 0 5px #6b5328,0 20px 60px rgba(0,0,0,.85);animation:qxoptin .24s cubic-bezier(.2,.8,.3,1)}
+#qx .qx-box.qx-optbox::before{content:'';position:absolute;inset:6px;border:1px solid rgba(214,176,90,.28);border-radius:8px;pointer-events:none}
+@keyframes qxoptin{from{opacity:0;transform:translateY(10px) scale(.95)}to{opacity:1;transform:none}}
+#qx .qx-optcn{position:absolute;width:10px;height:10px;background:linear-gradient(135deg,#fff0c0,#c99a3c);transform:rotate(45deg);box-shadow:0 0 4px rgba(255,210,120,.6)}
+#qx .qx-optcn1{left:-6px;top:-6px}#qx .qx-optcn2{right:-6px;top:-6px}#qx .qx-optcn3{left:-6px;bottom:-6px}#qx .qx-optcn4{right:-6px;bottom:-6px}
+#qx .qx-opthd{display:flex;align-items:center;justify-content:center;gap:14px;text-align:center}
+#qx .qx-opthd span{flex:none;white-space:nowrap;font:900 21px/1.2 "Noto Serif SC",Georgia,serif;letter-spacing:.18em;padding-left:.18em;color:#f6d98a;text-shadow:0 2px 3px #000,0 0 10px rgba(240,190,80,.25)}
+#qx.qx-l-en .qx-opthd span{font:700 19px/1.2 Cinzel,Georgia,serif;letter-spacing:.08em;padding-left:.08em}
+#qx .qx-opthd i{flex:1;height:1px;max-width:110px;background:linear-gradient(90deg,transparent,#c9a032)}
+#qx .qx-opthd i:last-child{background:linear-gradient(90deg,#c9a032,transparent)}
+#qx .qx-optsub{margin-top:8px;text-align:center;color:#d6c597;font-size:13.5px;line-height:1.5}
+#qx .qx-optdiv{display:flex;align-items:center;justify-content:center;gap:8px;margin:10px 0 14px}
+#qx .qx-optdiv i{width:70px;height:1px;background:linear-gradient(90deg,transparent,rgba(201,160,50,.7))}
+#qx .qx-optdiv i:last-child{background:linear-gradient(90deg,rgba(201,160,50,.7),transparent)}
+#qx .qx-optdiv b{width:7px;height:7px;transform:rotate(45deg);background:#c9a032}
+#qx .qx-optft{display:flex;justify-content:center;margin-top:16px}
+#qx .qx-optft .qx-dbt{min-width:120px}
 #qx .qx-optlist{display:flex;flex-direction:column;gap:10px}
-#qx .qx-optc{display:grid;grid-template-columns:34px 1fr;align-items:center;gap:12px;width:100%;padding:10px 14px;font:inherit;text-align:left;color:#f3e6c4;cursor:pointer;background:linear-gradient(180deg,#3d311e,#261d11);border:1px solid #8a6a30;border-radius:9px;box-shadow:inset 0 1px 0 rgba(255,230,170,.12),0 2px 6px rgba(0,0,0,.45);transition:transform .14s ease,border-color .14s ease,box-shadow .14s ease,background .14s ease}
+#qx .qx-optc{display:grid;grid-template-columns:34px 1fr;align-items:center;gap:14px;width:100%;min-height:54px;padding:10px 16px;font:inherit;text-align:left;color:#f3e6c4;cursor:pointer;background:linear-gradient(180deg,#3d311e,#261d11);border:1px solid #8a6a30;border-radius:9px;box-shadow:inset 0 1px 0 rgba(255,230,170,.12),0 2px 6px rgba(0,0,0,.45);transition:transform .14s ease,border-color .14s ease,box-shadow .14s ease,background .14s ease}
 #qx .qx-optc:hover{transform:translateY(-1px);border-color:#e6c060;background:linear-gradient(180deg,#4a3a22,#2c2213);box-shadow:inset 0 1px 0 rgba(255,230,170,.2),0 0 0 1px rgba(230,192,96,.35),0 6px 16px rgba(0,0,0,.5)}
 #qx .qx-optc:active{transform:translateY(0) scale(.99)}
 #qx .qx-optc.qx-optoff{opacity:.42;cursor:default;filter:grayscale(.5)}
@@ -5645,6 +5664,8 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
 #qx .qx-phl{font-size:14px;letter-spacing:1px}
 #qx .qx-phin{animation:qxphin .34s ease-out both}
 #qx .qx-phout{animation:qxphout .3s ease-in both}
+#qx .qx-omks.qx-omv{pointer-events:none}
+#qx .qx-omks.qx-omv .qx-omk{pointer-events:auto}   /* 天兆竖栏的空白处不挡住旁边的限定技 / 觉醒技标记 */
 #qx .qx-omks.qx-omv{position:absolute;display:flex;flex-direction:column-reverse;justify-content:flex-start;gap:4px;margin:0;z-index:4;width:34px}
 #qx .qx-cards.qx-nowrap{flex-wrap:nowrap;gap:8px}
 #qx .qx-cards.qx-nowrap>*+*{margin-left:var(--ov,0px)}
@@ -5798,6 +5819,8 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
 /* 玩家区：装备区 | 手牌区 | 技能区之间的分隔线（金色细线，两头渐隐，中间一颗菱形） */
 #qx .qx-dsep{position:absolute;top:22px;bottom:14px;width:12px;pointer-events:none;z-index:2}
 #qx .qx-dsep1{left:212px}
+#qx .qx-mymks{position:absolute;left:0;top:2px;width:202px;height:27px;pointer-events:none;z-index:3}   /* 自己的限定技 / 觉醒技标记：阶段标签那一行的最右边，分隔线左侧留一点距离 */
+#qx .qx-mymks .qx-skmdash{position:absolute;right:0;top:0;transform-origin:100% 0;transform:scale(.138);flex-direction:row-reverse;gap:40px}
 #qx .qx-dsep2{left:calc(920px + var(--qx-ex,0px))}
 #qx .qx-dsep::before{content:'';position:absolute;left:5px;top:0;bottom:0;width:2px;background:linear-gradient(180deg,rgba(217,180,90,0),rgba(217,180,90,.75) 18%,rgba(255,226,150,.9) 50%,rgba(217,180,90,.75) 82%,rgba(217,180,90,0));box-shadow:0 0 6px rgba(217,180,90,.35)}
 #qx .qx-dsep::after{content:'';position:absolute;left:1px;top:50%;width:8px;height:8px;margin-top:-5px;transform:rotate(45deg);background:linear-gradient(135deg,#fff0b8,#c9962f);border:1px solid #5a3e12;box-shadow:0 0 6px rgba(255,210,110,.6)}
@@ -5917,7 +5940,7 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
       this.root.addEventListener('mouseover', e => {
         const el = e.target.closest('[data-zoomhero],[data-skmk]'); if (!el || el === this.hoverEl) return;
         clearTimeout(this.hoverT); this.hoverEl = el;
-        this.hoverT = setTimeout(() => { if (this.hoverEl !== el || !el.isConnected || this.peek) return; const [x, y] = this.hoverPos || [0, 0]; const r = el.getBoundingClientRect(); if (x < r.left || x > r.right || y < r.top || y > r.bottom) return; this.openPeek(el, x, y); }, 4000);
+        this.hoverT = setTimeout(() => { if (this.hoverEl !== el || !el.isConnected || this.peek) return; const [x, y] = this.hoverPos || [0, 0]; const r = el.getBoundingClientRect(); if (x < r.left || x > r.right || y < r.top || y > r.bottom) return; this.openPeek(el, x, y); }, 3000);
       });
       this.root.addEventListener('mouseout', e => { const el = this.hoverEl; if (el && (!e.relatedTarget || !el.contains(e.relatedTarget))) { clearTimeout(this.hoverT); this.hoverEl = null; } });
       this.root.addEventListener('mouseleave', () => this.closePeek());
@@ -6022,7 +6045,12 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
       return new Promise(resolve => {
         this.ui = { req, resolve, sel: [], targets: [], skill: null };
         const k = req.kind;
-        if (k === 'pick' && req.reason === 'feast' && this.feast) { this.render(); return; }
+        if (k === 'pick' && req.reason === 'feast' && this.feast) {
+          this.render();
+          // 只剩最后一张可拿（自己是最后一个拿的）：不用点，直接收进手里
+          if (req.options.length === 1) { const u0 = this.ui, tok = this.token; setTimeout(() => { if (this.ui === u0 && tok === this.token) { this.pressButton(String(req.options[0])); if (this.ui === u0) { const a = QXAsk.confirm(this); if (a !== undefined) this.answer(a); } } }, 450); }
+          return;
+        }
         if (k === 'pick' && req.multi && this.revealWin && req.reason === this.revealWin.pickReason) { this.ui.btn = []; this.render(); return; }
         if (k === 'chooseTargets' && req.reason === 'schemeAssign' && this.schemeWin) { this.schemeWin.hidden = false; this.render(); return; }
         if (k === 'chooseCard' || k === 'pick' || k === 'chooseOption' || k === 'chooseSkillOrder' || k === 'chooseHero' || k === 'arrange') this.openChoiceModal();
@@ -6424,7 +6452,8 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
     placeLog(btn) { const d = this.$('.qx-logdd'); if (!d || !btn) return; const r = btn.getBoundingClientRect(), rr = this.root.getBoundingClientRect(); const k = Math.max(1, Math.min(1.6, this.scale || 1)); d.style.setProperty('--qxlk', k); const w2 = Math.min(380 * k, window.innerWidth - 16); d.style.width = w2 + 'px'; const w = w2; d.style.left = Math.max(8, Math.min(window.innerWidth - w - 8, r.right - w)) - rr.left + 'px'; d.style.top = (r.bottom + 6 - rr.top) + 'px'; }
     seatXY(k, n) {
       const P5 = [null, [826, 232], [612, 4], [220, 4], [8, 232]];
-      const P8 = [null, [842, 280], [842, 30], [636, 4], [425, 4], [214, 4], [8, 30], [8, 280]];
+      // 八人局两侧：上面那位顶到最上，下面那位往下挪，让上面那位的阶段条不被下面那位的阵营徽记挡住；下面那位的阶段条离手牌区分隔线仍留出空隙
+      const P8 = [null, [842, 273], [842, 4], [636, 4], [425, 4], [214, 4], [8, 4], [8, 273]];
       const sx = (this.bw() - this.seatW()) / (1012 - (n > 5 ? 162 : 180));
       if (n === 5) return [Math.round(P5[k][0] * sx), P5[k][1]];
       if (n === 8) return [Math.round(P8[k][0] * sx), P8[k][1]];
@@ -6525,7 +6554,7 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
     chainSvg() { return `<svg class="qx-chain" viewBox="0 0 40 16"><g fill="none" stroke="#d8d2c4" stroke-width="2.2"><rect x="2" y="4" width="14" height="8" rx="4"/><rect x="13" y="4" width="14" height="8" rx="4"/><rect x="24" y="4" width="14" height="8" rx="4"/></g></svg>`; }
     // ── 别人的座位 ──
     // ── 座位框（seat/seat-frame.png，坐标按原图 1086×1448） ──
-    seatW() { return this.g && this.g.n > 5 ? 164 : 168; }
+    seatW() { return this.g && this.g.n > 5 ? 162 : 168; }
     // 技能标签：锁定技 / 限定技 / 觉醒技 / 主公技，其余一律标「主动技」
     skTagKey(d) { const k = d.tagType || d.type; return ['locked', 'limited', 'awaken', 'lord'].includes(k) ? k : 'active'; }
     skTagText(d) { return this.T.t(this.skTagKey(d) + 'Tag'); }
@@ -6610,16 +6639,16 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
       const showId = this.shownCards && this.shownCards[p.seat];
       const showC = showId != null && this.g.card(showId);
       return `<div class="qx-por qx-sw" style="width:${w}px;height:${h}px"${shown ? ` data-zoomhero="${p.hero}"` : ''}><div class="qx-sc" style="transform:scale(${s})">
-        <div class="qx-sart">${art}</div>
+        <div class="qx-sart">${art}</div>${this.dSt(p, 'faceDown') && !dead ? `<img class="qx-fdback" src="${this.asset('seatgen/art/ui-heroback.webp')}" alt="" draggable="false">` : ''}
         <img class="qx-sfr" src="${this.asset('seatgen/frame.webp')}" alt="" draggable="false">
         ${cfg ? `<div class="qx-sstrip" style="background:${cfg.strip}"></div>${cfg.emblem ? `<img class="qx-semb" src="${this.asset(cfg.emblem)}" alt="" draggable="false">` : ''}${this.nameHTML(p, cfg)}` : ''}
         ${(() => { const rn = ['', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X'][p.seat + 1] || String(p.seat + 1); const wide = { VII: 104, VIII: 104 }[rn]; return `<div class="qx-sno"><svg viewBox="0 0 112 104"><text x="56" y="82" text-anchor="middle"${wide ? ` textLength="${wide}" lengthAdjust="spacingAndGlyphs"` : ''}>${esc(rn)}</text></svg></div>`; })()}<div class="qx-shc" data-tip="${esc(t('hand'))}">${this.dHandN(p)}</div>
         <div class="qx-srail" data-hp="${hpv}" data-max="${p.maxHp}">${dead ? '' : this.starsHTML(p, hpv, hpv)}</div>
         ${bars}
         ${dead ? '' : this.badgeHTML(p)}
-        ${shown ? this.skMarksHTML(p, side) : ''}
+        ${shown && p.seat !== this.me ? this.skMarksHTML(p, side) : ''}
         ${this.dSt(p, 'drunk') && !dead ? `<div class="qx-drunk">${esc(T.cardName('grog'))}</div>` : ''}
-        ${this.dSt(p, 'chained') && !dead ? this.chainHTML(p) : ''}${this.dSt(p, 'faceDown') && !dead ? `<img class="qx-fdback" src="${this.asset('seatgen/art/ui-heroback.webp')}" alt="" draggable="false">` : ''}
+        ${this.dSt(p, 'chained') && !dead ? this.chainHTML(p) : ''}
         ${dead ? this.deadPlaque(p, false) : ''}
       </div>${showC ? `<div class="qx-shown">${this.cardHTML(showC, 'qx-showc').replace(/data-id="\d+"/, `data-cid="${showC.id}"`)}</div>` : ''}<div class="qx-fxl"></div></div>`;
     }
@@ -6630,6 +6659,7 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
       const items = ids.map(id => { const d = E.SKILLS[id]; const done = !!(p.skillState && p.skillState[id]) && !(this.skMarkHold && this.skMarkHold.has(p.seat + ':' + id));
         const off = d.type === 'limited' ? done : !done; const now = this.skMarkNow && this.skMarkNow.has(p.seat + ':' + id);
         return `<div class="qx-skmk qx-skmk-${d.type}${off ? ' qx-skmoff' : ''}${now ? ' qx-skmnow' : ''}" data-skmk="${p.seat}|${id}|${done ? 1 : 0}"><i></i></div>`; }).join('');
+      if (side === 'dash') return `<div class="qx-mymks" data-mk="mymks"><div class="qx-skmks qx-skmdash">${items}</div></div>`;
       return `<div class="qx-skmks ${p.seat === this.me ? 'qx-skmme' : side === 'r' ? 'qx-skml' : 'qx-skmo'}" data-mk="skm${p.seat}">${items}</div>`;
     }
     seatHTML(p, k) {
@@ -6829,7 +6859,7 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
       const phase = this.phaseHTML(me);
       const meSel = u && this.seatSelectable(me) ? ' qx-sel' : ''; const mePicked = u && u.targets.includes(me) ? ' qx-picked' : '';
       const dimMe = this.targeting() && !meSel ? ' qx-dim' : '';
-      morph(dash, `${phase}
+      morph(dash, `${phase}${this.heroShown(me) ? this.skMarksHTML(me, 'dash') : ''}
         <div class="qx-deq">${slots}</div>
         <div class="qx-dhand" style="width:${n ? Math.round(cw + step * (n - 1)) : 0}px">${handHTML}</div>
         <div class="qx-dsep qx-dsep1"></div><div class="qx-dsep qx-dsep2"></div>
@@ -7482,13 +7512,20 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
     fitFeast() {
       for (const w of this.root.querySelectorAll('.qx-wins > .qx-win')) this.fitWin(w);
     }
+    // 窗口一出来就定好位置和大小（之后内容变化也不再缩放），保证下沿不压到提示文字和操作按钮。
+    // 用 CSS 的 scale 属性而不是 transform，避免和窗口的出场动画打架（之前就是动画结束后又缩一下）
     fitWin(w) {
-      w.style.top = ''; w.style.transform = '';
-      const pr = this.$('.qx-prompt'); if (!pr) return; const lim = this.rel(pr).y - 6;
-      const r = this.rel(w); if (r.y + r.h <= lim) return;
-      const h = r.h; let sc = 1; if (h > lim - 6) sc = Math.max(.6, (lim - 6) / h);
-      const cy = Math.max(6 + h * sc / 2, lim - h * sc / 2);
-      w.style.top = cy + 'px'; w.style.transform = `translate(-50%,-50%) scale(${sc.toFixed(3)})`;
+      const key = w.dataset.mk || w.className; this._winFit = this._winFit || {};
+      let f = this._winFit[key];
+      if (!f || !w.isConnected || f.el !== w) {
+        w.style.top = ''; w.style.scale = '';
+        const pr = this.$('.qx-prompt'); const lim = pr ? this.rel(pr).y - 6 : 470;
+        const cy0 = w.offsetTop, h = w.offsetHeight;   // 布局尺寸，不受动画变换影响（窗口以中心定位）
+        let sc = 1; if (h > lim - 12) sc = Math.max(.6, (lim - 12) / h);
+        const cy = Math.min(cy0, lim - h * sc / 2); const top = Math.max(6 + h * sc / 2, cy);
+        f = this._winFit[key] = { el: w, top, sc };
+      }
+      w.style.top = f.top + 'px'; w.style.scale = f.sc === 1 ? '' : f.sc.toFixed(3);
     }
     // 权术：独立窗口，左右两侧是两名角色的立绘，中间各一个牌槽，两边对称；自己发动时可拖动 / 点击交换两张牌，确定后分牌
     schemeHTML() {
@@ -8010,7 +8047,7 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
         btns = btn('ok', t('confirm'), this.canConfirm(), 'qx-primary') + (req.optional ? btn('cancel', t('cancel')) : '');
       } else if (k === 'confirm') {
         if (D[req.skill]) { text = t('confirmEquip', { c: T.cardName(req.skill) }); btns = btn('yes', t('confirm'), true, 'qx-primary') + btn('no', t('cancel')); }
-        else { text = t('askSkill', { k: T.skillName(req.skill) }); btns = btn('yes', t('confirm'), true, 'qx-primary') + btn('no', t('cancel')); }
+        else { text = (req.reason && T.prompt(req.reason, this.pvars(req))) || t('askSkill', { k: T.skillName(req.skill) }); btns = btn('yes', t('confirm'), true, 'qx-primary') + btn('no', t('cancel')); }
       } else {
         text = t('option');
       }
@@ -8120,9 +8157,13 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
         cls = 'qx-mhero';
         }
       } else if (k === 'chooseOption') {
-        title = T.prompt(req.reason + 'Opt') || t('option');
+        const q = T.prompt(req.reason + 'Opt', this.pvars(req)) || t('chooseOne');
+        const skn = req.skill ? (E.SKILLS[req.skill] ? T.skillName(req.skill) : T.cardName(req.skill)) : '';
+        title = skn || q.replace(/[：:]\s*$/, '');
+        sub = skn ? q.replace(new RegExp('^\\s*' + skn.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\s*[：:]\\s*', 'i'), '').replace(/[：:]\s*$/, '') : t('chooseOne');
         const lab = o => T.option(o, Object.assign({}, this.pvars(req), { n: req.n }));
-        body = null; this.showModal(this.optWinHTML(title, sub, req.options.map((o, i) => ({ label: lab(o), attr: `data-opt="${i}"` })), foot)); return;
+        if (sub) sub = sub.charAt(0).toUpperCase() + sub.slice(1);
+        body = null; this.showModal(this.optWinHTML(title, sub, req.options.map((o, i) => ({ label: lab(o), desc: typeof o === 'string' && o.startsWith('sk:') && E.SKILLS[o.slice(3)] ? T.skillDesc(o.slice(3)) : '', attr: `data-opt="${i}"` })), foot)); return;
       } else if (k === 'chooseSkillOrder') {
         title = t('order');
         const me = g.p(this.me);
@@ -8185,7 +8226,7 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
     optWinHTML(title, sub, opts, foot) {
       const R = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII'];
       const items = opts.map((o, i) => `<button class="qx-optc${o.disabled ? ' qx-optoff' : ''}" ${o.disabled ? 'disabled' : o.attr}><i class="qx-optn">${R[i] || i + 1}</i><span class="qx-optt"><b>${esc(o.label)}</b>${o.desc ? `<em>${esc(o.desc)}</em>` : ''}</span></button>`).join('');
-      return `<div class="qx-box qx-optbox"><div class="qx-mtitle"><i></i><span>${esc(title)}</span><i></i></div>${sub ? `<div class="qx-msub">${esc(sub)}</div>` : ''}<div class="qx-optlist">${items}</div>${foot ? `<div class="qx-mfoot">${foot}</div>` : ''}</div>`;
+      return `<div class="qx-box qx-optbox"><i class="qx-optcn qx-optcn1"></i><i class="qx-optcn qx-optcn2"></i><i class="qx-optcn qx-optcn3"></i><i class="qx-optcn qx-optcn4"></i><div class="qx-opthd"><i></i><span>${esc(title)}</span><i></i></div>${sub ? `<div class="qx-optsub">${esc(sub)}</div>` : ''}<div class="qx-optdiv"><i></i><b></b><i></i></div><div class="qx-optlist">${items}</div>${foot ? `<div class="qx-optft">${foot}</div>` : ''}</div>`;
     }
     // 技能的各个选项说明：从技能描述里按「1. … 2. …」切出来
     optDescs(id, n) { const d = this.T.skillDesc(id); const parts = d.split(/(?:^|[；;。.]\s*|：\s*|:\s*)(?=\d[.．、]\s*)/).filter(x => /^\d[.．、]/.test(x)).map(x => x.replace(/^\d[.．、]\s*/, '').replace(/[；;]$/, '')); return parts.length === n ? parts : []; }
