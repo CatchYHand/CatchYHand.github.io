@@ -5796,7 +5796,7 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
 #qx.qx-choosing .qx-st.qx-tgt .qx-por,#qx.qx-choosing .qx-dpor.qx-tgt .qx-por{animation:none;box-shadow:0 0 0 1px rgba(255,90,60,.45)}
 #qx.qx-choosing .qx-st.qx-sel .qx-por,#qx.qx-choosing .qx-dpor.qx-sel .qx-por{box-shadow:0 0 0 2px #7fd08f,0 0 14px 2px rgba(127,208,143,.65)}
 #qx.qx-choosing .qx-st.qx-picked .qx-por,#qx.qx-choosing .qx-dpor.qx-picked .qx-por{box-shadow:0 0 0 4px #f6d873,0 0 24px 6px rgba(246,216,115,.95)}
-#qx .qx-pkb{position:absolute;left:50%;top:42%;transform:translate(-50%,-50%);z-index:6;padding:3px 14px;border-radius:4px;background:linear-gradient(#f6d873,#c9a03a);color:#2a1a06;font:900 18px/1.2 "Ma Shan Zheng","Noto Serif SC",serif;letter-spacing:2px;box-shadow:0 0 0 2px #2a1a06,0 4px 12px rgba(0,0,0,.7);pointer-events:none;white-space:nowrap;animation:qxpdst .3s cubic-bezier(.2,1.6,.4,1) both}
+#qx .qx-pkb{position:absolute;left:50%;top:25%;transform:translate(-50%,-50%);z-index:6;padding:3px 14px;border-radius:4px;background:linear-gradient(#f6d873,#c9a03a);color:#2a1a06;font:900 18px/1.2 "Ma Shan Zheng","Noto Serif SC",serif;letter-spacing:2px;box-shadow:0 0 0 2px #2a1a06,0 4px 12px rgba(0,0,0,.7);pointer-events:none;white-space:nowrap;animation:qxpdst .3s cubic-bezier(.2,1.6,.4,1) both}
 #qx .qx-pkb i{font-style:normal;margin-right:6px;padding:0 6px;border-radius:50%;background:#2a1a06;color:#f6d873}
 #qx .qx-fit{transition:none!important}
 #qx .qx-box.qx-ascbox{min-height:0!important;height:auto!important}
@@ -6894,7 +6894,7 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
       const tilt = ((p.seat * 37) % 9 - 4) || 3; const out = side === 'l' ? 'translate(-6px,0)' : side === 'r' ? 'translate(6px,0)' : 'translate(0,-6px)';
       return `<div class="${cls.join(' ')}" data-seat="${p.seat}" style="left:${x}px;top:${y}px;width:${w}px;--die:${out} rotate(${tilt}deg)">
         ${this.seatCardHTML(p, w, true, side)}
-        ${pkI >= 0 ? `<div class="qx-pkb">${u.targets.length > 1 ? `<i>${pkI + 1}</i>` : ''}${esc(this.T.t('pickedTag'))}</div>` : ''}
+        ${pkI >= 0 ? `<div class="qx-pkb" style="top:${Math.round(h * 0.25)}px">${u.targets.length > 1 ? `<i>${pkI + 1}</i>` : ''}${esc(this.T.t('pickedTag'))}</div>` : ''}
         ${(() => { const t0 = !p.dead && this.thinkBars && this.thinkBars[p.seat]; return `<div class="qx-think${t0 ? ' qx-on' : ''}" style="top:${h + 2}px;width:${w}px"><i${t0 ? ` style="animation-delay:-${Date.now() - t0}ms"` : ''}></i></div>`; })()}
         <div class="qx-sfoot" style="top:${h + 6}px;width:${w}px">${this.phaseHTML(p)}${side ? '' : `<div class="qx-omks">${this.omensHTML(p)}</div>`}</div>
         ${side ? `<div class="qx-omks qx-omv qx-om-${side}" style="${side === 'l' ? `left:${w + 4}px` : 'left:-38px'};top:0;bottom:auto;height:${h}px">${this.omensHTML(p)}</div>` : ''}
@@ -7097,7 +7097,7 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
         <div class="qx-dsk">${skHTML}</div>
         <div class="qx-dpor${this.isDeadShown(me) ? ' qx-sdead' : ''}${this.dSt(me, 'dying') ? ' qx-sdying' : ''}${this.dSt(me, 'faceDown') && !this.isDeadShown(me) ? ' qx-sflip' : ''}${meSel}${mePicked}${dimMe}" data-seat="${me.seat}">
           ${this.seatCardHTML(me, 160, false)}
-          ${mePicked ? `<div class="qx-pkb">${esc(this.T.t('pickedTag'))}</div>` : ''}
+          ${mePicked ? `<div class="qx-pkb">${u.targets.length > 1 ? `<i>${u.targets.indexOf(me) + 1}</i>` : ''}${esc(this.T.t('pickedTag'))}</div>` : ''}
         </div>`);
       this.applyAimed(); this.reHide(); this.skAlign(); this.fitNames(); this.syncSnakes(); this.handSpread();
     }
