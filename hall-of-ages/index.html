@@ -5590,7 +5590,7 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
 /* 两行播报上移到上方武将之下；桌面中间那排牌跟着稍下移；操作提示和按钮仍在最下面（和原来一样），文字略小以腾出空间 */
 #qx .qx-stage .qx-ctr{top:302px}
 #qx .qx-stage .qx-prompt{top:476px;gap:3px}
-#qx .qx-stage .qx-ptxt{font-size:13.5px;line-height:1.3;padding:3px 16px}
+#qx .qx-stage .qx-ptxt{font-size:13.5px;line-height:1.3;padding:3px 16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:660px;box-sizing:border-box}
 #qx .qx-stage .qx-pbtns .qx-dbt{padding:3px 14px;font-size:14px;line-height:1.6}
 #qx .qx-hvd{position:fixed;z-index:200;pointer-events:none;transform-origin:0 0;opacity:0;transition:opacity .15s ease}
 #qx .qx-hvd.qx-on{opacity:1}
@@ -5966,48 +5966,48 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
   // 询问「是否发动」时跟在后面的一句：告诉玩家发动后会发生什么。q：{ me, n, t }（n 为当时就能算出来的数）
   const CONFIRM_HINT = {
     gordian: ['令此杀不可被闪响应，或伤害 +1', 'this Strike cannot be Parried, or deals +1 damage'],
-    rubicon: ['体力上限调整为手牌数，然后回满体力', 'set max health to your hand size, then heal to full'],
-    divert: ['视为对伤害来源使用一张杀，造成伤害则你回复 1 点体力', 'Strike the damage source; if it hits, recover 1 health'],
-    defiance: q => [`摸 ${q.n} 张牌，然后令其视为对你使用杀`, `draw ${q.n}, then they are treated as using a Strike on you`],
-    unchain: ['摸两张牌，再任意分给各角色', 'draw 2, then hand them out as you like'],
-    vengeance: ['进行天意判定，不为红桃则伤害来源弃光手牌或受到 1~2 点伤害', 'invoke Fate; if not ♥, the source discards their hand or takes 1–2 damage'],
-    pearl: ['摸 Y+2 张牌（Y 为本回合体力变动的次数）', 'draw Y+2 (Y = health changes this turn)'],
-    rally: ['请其他古典角色替你打出杀', 'ask other Classical characters to play a Strike for you'],
-    calling: ['令一名其他角色也执行同样的效果', 'make another character suffer the same'],
-    martyr: ['放弃求药，令一名其他角色回满体力并获得【圣召】', 'give up on saving yourself; another character heals to full and gains Calling'],
-    ransom: ['给其看至多三张手牌，其拿一张并防止伤害，或弃置等量的牌', 'show them up to 3 cards; they take one to prevent the damage, or discard that many'],
-    undying: ['弃置区域内所有牌，回满体力并摸三张牌', 'discard everything in your areas, heal to full and draw 3'],
-    retreat: ['令其摸一张牌并与其拼点，赢则防止此伤害', 'they draw 1 and contest you; win to prevent the damage'],
-    alliance: ['将你或一名其他角色的手牌数调整至与对方相同', 'match your hand size and another character\'s'],
-    kingmaker: ['交给其至少一张手牌，其再把超出体力值的手牌交给你', 'give them cards; they give you every card beyond their health'],
+    rubicon: ['体力上限改为手牌数并回满体力', 'max health becomes your hand size; heal to full'],
+    divert: ['视为对伤害来源出杀，命中则回复 1 点体力', 'Strike the source; heal 1 if it hits'],
+    defiance: q => [`摸 ${q.n} 张牌，然后其视为对你出杀`, `draw ${q.n}, then they Strike you`],
+    unchain: ['摸两张牌，再任意分配', 'draw 2 and hand them out'],
+    vengeance: ['天意判定，非红桃则伤害来源受罚', 'invoke Fate; if not ♥, the source is punished'],
+    pearl: ['摸 Y+2 张牌（Y 为本回合体力变动次数）', 'draw Y+2 (Y = health changes this turn)'],
+    rally: ['请其他古典角色替你出杀', 'ask Classical allies to play a Strike for you'],
+    calling: ['令一名其他角色也承受同样的效果', 'make another character suffer the same'],
+    martyr: ['放弃求药，令另一名角色回满体力并获得【圣召】', 'give up; another character heals fully and gains Calling'],
+    ransom: ['给其看至多三张手牌，以牌换免伤', 'show up to 3 cards to buy off the damage'],
+    undying: ['弃置区域内所有牌，回满体力并摸三张', 'discard all your cards, heal fully, draw 3'],
+    retreat: ['令其摸一张牌并拼点，赢则防止伤害', 'they draw 1, then contest; win to prevent it'],
+    alliance: ['让你或对方的手牌数与另一方相同', 'match hand sizes with another character'],
+    kingmaker: ['交给其手牌，其再把多余的手牌交给你', 'give them cards; they hand you their excess'],
     schiltron: ['获得对方的一张手牌', 'take a card from their hand'],
-    freedom: ['失去 1 点体力或弃置一张装备牌，本回合多摸牌、攻击范围无限、多出杀', 'lose 1 health or discard an Equipment card for extra draws, unlimited range and more Strikes this turn'],
-    redemption: ['为一名角色选择一项救赎（回血 / 摸牌 / 装备 / 获得【救赎】）', 'grant a character one Redemption (heal / draw / equip / gain Redemption)'],
+    freedom: ['付出代价，本回合多摸牌、多出杀', 'pay a cost for extra draws and Strikes this turn'],
+    redemption: ['为一名角色选一项救赎', 'grant a character one blessing'],
     exile: q => [`令一名角色摸 ${q.n} 张牌并翻面`, `make a character draw ${q.n} and turn face down`],
     resurgence: ['令其先失去等量的体力', 'make them lose that much health first'],
-    escort: ['请其他中古角色替你打出闪', 'ask other Medieval characters to play a Parry for you'],
-    sophist: ['弃置一张牌，把此杀转移给你攻击范围内的另一名角色', 'discard a card to redirect this Strike to someone in your range'],
-    telescope: q => [`观看牌堆顶 ${q.n} 张牌并重新排列`, `look at the top ${q.n} cards and rearrange them`],
+    escort: ['请其他中古角色替你出闪', 'ask Medieval allies to play a Parry for you'],
+    sophist: ['弃一张牌，把此杀转给别人', 'discard a card to redirect this Strike'],
+    telescope: q => [`观看并排列牌堆顶 ${q.n} 张牌`, `look at and arrange the top ${q.n} cards`],
     laws: q => [`摸 ${q.n} 张牌`, `draw ${q.n}`],
     enlighten: q => [`摸 ${q.n} 张牌`, `draw ${q.n}`],
-    favor: ['令一名其他角色获得你本回合弃置的牌', 'give another character the cards you discarded this turn'],
-    austerlitz: ['中止此牌，改为视为对所有目标使用杀；没造成伤害则你失去 1 点体力', 'cancel this card and Strike all its targets instead; lose 1 health if none is damaged'],
-    tend: ['令其体力上限变为 3 并回满体力，其可以换一张武将', 'set their max health to 3 and heal fully; they may switch hero'],
-    coil: ['少摸一张牌，横置至多 X 名角色（X 为你的体力值）', 'draw one fewer to chain up to X characters (X = your health)'],
+    favor: ['把本回合弃置的牌交给一名其他角色', 'give away the cards you discarded this turn'],
+    austerlitz: ['改为对所有目标出杀，未造成伤害则失去 1 点体力', 'Strike all its targets instead; lose 1 health if none is hit'],
+    tend: ['令其体力上限变为 3 并回满，可换武将', 'max health 3, heal fully, may switch hero'],
+    coil: ['少摸一张牌，横置至多 X 名角色', 'draw one fewer to chain up to X characters'],
     joy: ['令至多 X 名其他角色各摸 Y+1 张牌', 'let up to X other characters draw Y+1 each'],
     evolve: ['令一名其他角色失去 1 点体力', 'make another character lose 1 health'],
-    railroad: ['弃置一张牌，对此杀选择一项效果', 'discard a card to apply one effect to this Strike'],
-    tragedy: ['获得其所有牌和至多两个技能，然后失去【悲剧】', 'take all their cards and up to two of their skills, then lose Tragedy'],
-    chisel: ['再亮出五张牌，每种花色各拿一张', 'reveal five more and take one of each suit'],
-    fireship: ['令其再摸一张牌，再对其使用火攻', 'they draw 1 and you use Greek Fire on them again'],
+    railroad: ['弃一张牌，对此杀选一项效果', 'discard a card to alter this Strike'],
+    tragedy: ['获得其所有牌和至多两个技能', 'take all their cards and up to two skills'],
+    chisel: ['再亮出五张牌，每种花色拿一张', 'reveal five more, take one per suit'],
+    fireship: ['令其摸一张牌，再对其火攻', 'they draw 1, then Greek Fire again'],
     square: ['对一名角色造成 1 点伤害', 'deal 1 damage to a character'],
     // 军备
-    gemini: ['令其弃置一张手牌，或令你摸一张牌', 'they discard a card from hand or let you draw 1'],
-    winter: ['防止此伤害，改为弃置其两张牌', 'prevent the damage and discard 2 of their cards instead'],
+    gemini: ['其弃一张手牌，或令你摸一张牌', 'they discard a card or you draw 1'],
+    winter: ['防止此伤害，改为弃置其两张牌', 'discard 2 of their cards instead of damage'],
     ram: ['弃置两张牌，令此杀依然造成伤害', 'discard 2 cards so this Strike still deals damage'],
     arquebus: ['将此杀改为火杀', 'turn this Strike into a Fire Strike'],
     longbow: ['弃置其一匹坐骑', 'discard one of their mounts'],
-    aegis: ['进行天意判定，红色则视为你出了闪', 'invoke Fate; if red, you are treated as playing a Parry'],
+    aegis: ['天意判定，红色则视为出闪', 'invoke Fate; red counts as a Parry'],
   };
   const CAP_TYPES = new Set(['use', 'play', 'discard', 'discardOf', 'skill', 'judge', 'judgeResult', 'recast', 'retouch', 'vetoed', 'nullified', 'aborted', 'show']);   // 动画节拍照旧
   const CAP_SHOW = new Set(['skill', 'judgeResult', 'retouch', 'nullified', 'aborted', 'show']);   // 真正显示出来的只有这些
@@ -6413,7 +6413,13 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
       if (this.ui) QXAsk.refresh(this);
       this.fit();
       this.renderTable(); this.renderMe(); this.renderLog(); this.renderWins(); this.fitNames(); this.reHide(); this.applyAimed();
-      this.drawSelLines(); this.chainSweep(); this.syncSnakes();
+      this.drawSelLines(); this.chainSweep(); this.syncSnakes(); this.fitPrompt();
+    }
+    // 提示文字永远一行：放不下就把字号逐步调小（最小 11px），不会把按钮挤到分割线下面
+    fitPrompt() {
+      const el = this.$('.qx-stage .qx-ptxt'); if (!el) return; el.style.fontSize = '';
+      let fs = parseFloat(getComputedStyle(el).fontSize) || 13.5; let k = 0;
+      while (el.scrollWidth > el.clientWidth + 1 && fs > 11 && k++ < 12) { fs -= 0.5; el.style.fontSize = fs + 'px'; }
     }
     syncSnakes() { for (const sv of this.root.querySelectorAll('svg.qx-sksvg:not([data-sy])')) { sv.setAttribute('data-sy', '1'); try { sv.setCurrentTime((performance.now() / 1000) % 1.8); } catch (e) {} } }
     // ── 牌面图片 ──
@@ -7913,7 +7919,7 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
       this.setThinkBars(who);
       // 你也可能响应：所有人的读条和对你的询问同时出现，不等读条
       if (!me.dead && (!l || l.skip !== this.me) && g.canProduce(me, ['veto'], { reason: 'veto' })) { this.vetoBars = true; return Promise.resolve(); }
-      const p = this.$('.qx-prompt'); if (p && !this.ui) p.innerHTML = `<div class="qx-ptxt qx-pwait">${esc(this.T.t('waitVetoAll', { c: this.T.cardName('veto') }))}</div>`;
+      const p = this.$('.qx-prompt'); if (p && !this.ui) p.innerHTML = `<div class="qx-ptxt qx-pwait">${esc(this.T.t('waitVetoAll', { c: this.T.cardName('veto') }))}</div>`; this.fitPrompt();
       return sleep(Math.max(350, 750 * mult)).then(() => this.clearThinkBars());
     }
     judgeVerdict(l, hits) {
