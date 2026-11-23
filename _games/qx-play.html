@@ -695,7 +695,7 @@
     learnRole(p, t) { p.knownRoles = p.knownRoles || {}; p.knownRoles[t.seat] = t.role; this.log('viewRole', { seat: p.seat, target: t.seat, private: true }); }
     // ── 询问 ──
     *ask(p, req) {
-      req.player = p;
+      req.player = p; if (this._eqActive && this._eqActive.seat === p.seat && !req.eqActive) req.eqActive = this._eqActive.key;
       // 可选技能确认发动后的第一个选择（选牌 / 选目标 / 选项）：允许取消 = 反悔不发动
       const oc = this._optCtx; let back = false;
       if (oc && oc.first && p === oc.owner && ['chooseCards', 'chooseTargets', 'chooseOption'].includes(req.kind)) { oc.first = false; if (!req.optional) { req.optional = true; req.backOut = true; back = true; } }
@@ -794,6 +794,10 @@
             const ok = yield* this.confirm(owner, inst.id, { event, data: this.describe(data) });
             if (!ok) continue;
           }
+          // 装备的效果正在发动：界面让这件装备弹出发光（之后为它做的选择也都带着这个标记）
+          const eqPrev = this._eqActive; const isEq = inst.src === 'equip' && optional;
+          if (isEq) { this._eqActive = { seat: owner.seat, key: inst.key }; this.log('equipFx', { seat: owner.seat, key: inst.key, card: inst.card ? inst.card.id : null }); }
+          try {
           if (!optional) { if (!t.silent) this.log('skill', { seat: owner.seat, skill: inst.id, event }); yield* t.on(this, owner, data, inst); }
           else {
             const prev = this._optCtx; const oc = this._optCtx = { owner, first: true, pending: t.silent ? null : { type: 'skill', seat: owner.seat, skill: inst.id, event } };
@@ -801,6 +805,7 @@
             catch (e) { if (e !== OPT_CANCEL) throw e; this._optCtx = prev; continue; }   // 反悔：这次不算发动
             finally { if (this._optCtx === oc) { const pe = oc.pending; this._optCtx = prev; if (pe) { const { type: ty0, ...rest } = pe; this.log(ty0, rest); } } }
           }
+          } finally { if (isEq) { this._eqActive = eqPrev; this.log('equipFxEnd', { seat: owner.seat, key: inst.key }); } }
           if (data.stopTrigger) return data;
         }
       }
@@ -1370,11 +1375,12 @@
         const name = c.omenAs || c.name; const d = CARD_DEFS[name];
         c.omenJudging = p.seat;   // 界面：判定期间天兆标记仍显示在原处
         // 天兆牌在判定结果定下来之前一直留在判定区（失去判定区的牌之类的时机都在结果定下之后）
-        const out = function* () { delete c.omenJudging; if (c.loc && c.loc.zone === 'judge') yield* this.moveCards({ cards: [c], to: 'process', reason: 'omenJudge' }); }.bind(this);
+        const out = function* () { delete c.omenJudging; if (d.passOn) return; if (c.loc && c.loc.zone === 'judge') yield* this.moveCards({ cards: [c], to: 'process', reason: 'omenJudge' }); }.bind(this);
         const vetoed = yield* this.askVeto({ omen: c, target: p });
         if (vetoed) { yield* out(); this.log('vetoed', { seat: p.seat, card: name }); if (d.onVetoed) yield* d.onVetoed(this, p, c); }
         else { this._omenOut = { player: p, out }; yield* d.judgeEffect(this, p, c); if (this._omenOut && this._omenOut.out === out) { this._omenOut = null; yield* out(); } }
         delete c.omenJudging;
+        if (d.passOn && c.loc && c.loc.zone === 'judge' && c.loc.seat === p.seat) yield* this.moveCards({ cards: [c], to: 'process', reason: 'omenJudge' });   // 生效了（没传走）：这时才离开判定区进弃牌堆
         if (c.loc && c.loc.zone === 'process') { delete c.omenAs; yield* this.toDiscard([c], 'omen'); }
         if (!this.useDepth) this.log('tableClear', { reason: 'omen' });
       }
@@ -1680,7 +1686,7 @@
     *judgeEffect(g, p) { yield* g.judge(p, 'blockade', function* (c) { if (c.suit !== 'club') { g.skipPhase(p, 'draw'); g.log('omenHit', { seat: p.seat, card: 'blockade' }); } }); },
   };
   CARD_DEFS.damocles = {
-    type: 'omen', targets: 'self',
+    type: 'omen', targets: 'self', passOn: true,
     canUse: (g, p) => noSame('damocles')(p),
     *judgeEffect(g, p, omen) {
       let hit = false;
@@ -1690,7 +1696,7 @@
           yield* g.damage({ from: null, to: p, amount: 3, nature: 'thunder', card: omen });
         }
       });
-      if (!hit && omen.loc && omen.loc.zone === 'process') yield* passDamocles(g, p, omen);
+      if (!hit && omen.loc && (omen.loc.zone === 'process' || (omen.loc.zone === 'judge' && omen.loc.seat === p.seat))) yield* passDamocles(g, p, omen);
     },
     *onVetoed(g, p, omen) { yield* passDamocles(g, p, omen); },
   };
@@ -2158,7 +2164,7 @@
   };
   S.pearl = {
     name: ['明珠', 'PEARL'], type: 'normal',
-    desc: ['结束阶段，你可以摸 Y+2 张牌（Y 为本回合内所有角色体力值变动的次数）。', 'At the start of your Finish phase, you may draw Y+2 cards (Y = number of times any health changed this turn).'],
+    desc: ['结束阶段开始时，你可以摸 Y+2 张牌（Y 为本回合内所有角色体力值变动的次数）。', 'At the start of your Finish phase, you may draw Y+2 cards (Y = number of times any health changed this turn).'],
     triggers: { phaseStart: { can: (g, o, d) => d.player === o && d.phase === 'finish', *on(g, o) { yield* g.draw(o, (g.hpChanges || 0) + 2, 'pearl'); } } },
   };
 
@@ -2557,7 +2563,7 @@
   H.eleanor = { faction: 'medieval', hp: 3, gender: 'female', skills: ['alliance', 'kingmaker'], name: ['埃莉诺', 'Eleanor'], title: ['两国王后', 'The Twice Queen'], rating: 6 };
   S.alliance = {
     name: ['联姻', 'ALLIANCE'], type: 'normal',
-    desc: ['回合开始以及回合结束阶段各限一次，你可以指定一名其他角色并选择一项：1. 你将手牌数调整至与其相同；2. 其将手牌数调整至与你相同。', 'Once at the start of your turn and once in your Finish phase, you may choose another character and pick one: 1. adjust your hand size to match theirs; 2. they adjust their hand size to match yours. (Adjust = draw up, or discard down choosing which.)'],
+    desc: ['准备阶段和结束阶段各限一次，你可以指定一名其他角色并选择一项：1. 你将手牌数调整至与其相同；2. 其将手牌数调整至与你相同。', 'Once in your Prepare phase and once in your Finish phase, you may choose another character and pick one: 1. adjust your hand size to match theirs; 2. they adjust their hand size to match yours. (Adjust = draw up, or discard down choosing which.)'],
     triggers: { phaseStart: {
       can: (g, o, d) => d.player === o && (d.phase === 'prepare' || d.phase === 'finish') && !o.dead && g.alive.some(t => t !== o && t.hand.length !== o.hand.length),
       *on(g, o) {
@@ -2626,7 +2632,7 @@
   }
   S.freedom = {
     name: ['自由', 'FREEDOM'], type: 'normal',
-    desc: ['回合开始阶段，你可以失去 1 点体力或弃置一张装备牌，然后令你本回合的摸牌阶段额外摸 X 张牌，本出牌阶段内攻击范围变为无限、出杀的次数上限 +X，且弃牌阶段结束时，你可以令一名其他角色获得你本次的弃牌（X 为你已损失的体力值）。', 'At the start of your turn, you may lose 1 health or discard an Equipment card. If you do, this turn you draw X extra cards in your Draw phase; during your Play phase your attack range is unlimited and you may use X more Strikes; and at the end of your Discard phase you may give the cards you discarded to another character (X = your lost health).'],
+    desc: ['准备阶段开始时，你可以失去 1 点体力或弃置一张装备牌，然后令你本回合的摸牌阶段额外摸 X 张牌，本出牌阶段内攻击范围变为无限、出杀的次数上限 +X，且弃牌阶段结束时，你可以令一名其他角色获得你本次的弃牌（X 为你已损失的体力值）。', 'At the start of your Prepare phase, you may lose 1 health or discard an Equipment card. If you do, this turn you draw X extra cards in your Draw phase; during your Play phase your attack range is unlimited and you may use X more Strikes; and at the end of your Discard phase you may give the cards you discarded to another character (X = your lost health).'],
     mods: {
       attackRange: (g, o, v, p) => (p === o && o.turnState.freedomOn && g.phase === 'play') ? 99 : v,
       strikeLimit: (g, o, v, p) => (p === o && o.turnState.freedomOn) ? v + Math.max(0, o.maxHp - o.hp) : v,
@@ -2697,7 +2703,7 @@
   H.dante = { faction: 'medieval', hp: 3, gender: 'male', skills: ['redemption', 'exile'], name: ['但丁', 'Dante'], title: ['神曲诗人', 'The Poet'], rating: 7 };
   S.redemption = {
     name: ['救赎', 'REDEMPTION'], type: 'normal',
-    desc: ['回合开始时，你可以选择一名角色并选择一项：1. 令其回复体力至全场唯一最多；2. 令其摸牌至全场唯一最多；3. 令其从牌堆或弃牌堆随机使用军备牌，直到其军备区没有空位；4. 令其获得【救赎】。每项限一次。', 'At the start of your turn, you may choose a character and one option: 1. heal them until they alone have the most health; 2. they draw until they alone have the most cards; 3. they equip random arsenal cards from the deck or discard pile until every slot is full; 4. they gain Redemption. Each option once per game.'],
+    desc: ['准备阶段开始时，你可以选择一名角色并选择一项：1. 令其回复体力至全场唯一最多；2. 令其摸牌至全场唯一最多；3. 令其从牌堆或弃牌堆随机使用军备牌，直到其军备区没有空位；4. 令其获得【救赎】。每项限一次。', 'At the start of your Prepare phase, you may choose a character and one option: 1. heal them until they alone have the most health; 2. they draw until they alone have the most cards; 3. they equip random arsenal cards from the deck or discard pile until every slot is full; 4. they gain Redemption. Each option once per game.'],
     triggers: { turnStart: {
       can: (g, o, d) => d.player === o && [0, 1, 2, 3].some(i => !(o.skillState.redemption || {})[i]),
       *on(g, o) {
@@ -2781,7 +2787,7 @@
   };
   S.slumber = {
     name: ['山眠', 'SLUMBER'], type: 'awaken', locked: true,
-    desc: ['觉醒技，回合开始时，若你的体力值不大于 2 或没有手牌，你减 1 点体力上限，回复 1 点体力，摸三张牌，然后失去【山眠】并获得【中兴】。', 'Awakening skill. At the start of your turn, if you have 2 or less health or no cards in hand, lose 1 max health, recover 1 health, draw 3, then lose Slumber and gain Resurgence.'],
+    desc: ['觉醒技，准备阶段开始时，若你的体力值不大于 2 或没有手牌，你减 1 点体力上限，回复 1 点体力，摸三张牌，然后失去【山眠】并获得【中兴】。', 'Awakening skill. At the start of your Prepare phase, if you have 2 or less health or no cards in hand, lose 1 max health, recover 1 health, draw 3, then lose Slumber and gain Resurgence.'],
     triggers: { turnStart: {
       can: (g, o, d) => d.player === o && !o.skillState.slumber && (o.hp <= 2 || o.hand.length === 0),
       *on(g, o) { o.skillState.slumber = true; yield* g.changeMaxHp(o, -1); if (o.dead) return; yield* g.recover(o, 1, o); yield* g.draw(o, 3, 'slumber'); o.skills = o.skills.filter(x => x !== 'slumber'); g.log('skillLost', { seat: o.seat, skill: 'slumber' }); g.gainSkill(o, 'resurgence'); },
@@ -2982,10 +2988,10 @@
   H.shakespeare = { faction: 'renaissance', hp: 3, gender: 'male', skills: ['soliloquy', 'tragedy'], name: ['莎士比亚', 'Shakespeare'], title: ['埃文河诗人', 'The Bard'], rating: 7 };
   S.soliloquy = {
     name: ['独白', 'SOLILOQUY'], type: 'locked', locked: true,
-    desc: ['锁定技，当你于非濒死状态下使用基本牌或谋略牌仅指定一名目标时，该牌额外结算一次。', 'Compulsory skill. When you are not dying and use a Basic card or a Stratagem that targets exactly one character, it resolves one more time.'],
+    desc: ['锁定技，当你于非濒死状态下使用杀或谋略牌（铁索连环除外）仅指定一名目标时，该牌额外结算一次。', 'Compulsory skill. When you are not dying and use a Strike or a Stratagem (except Chain Shot) that targets exactly one character, it resolves one more time.'],
     triggers: {
       targetConfirmed: {
-        can: (g, o, d) => { const u = d.use; if (u.from !== o || o.dead || o.dying || u.opts.response || u.data.aborted) return false; const t = (E.CARD_DEFS[u.card.name] || {}).type; return (t === 'basic' || t === 'stratagem') && u.targets.length === 1; },
+        can: (g, o, d) => { const u = d.use; if (u.from !== o || o.dead || o.dying || u.opts.response || u.data.aborted) return false; const t = (E.CARD_DEFS[u.card.name] || {}).type; return (E.family(u.card) === 'strike' || (t === 'stratagem' && u.card.name !== 'chainshot')) && u.targets.length === 1; },
         *on(g, o, d) { d.use.data.extraResolve = (d.use.data.extraResolve || 0) + 1; },
       },
     },
@@ -3020,7 +3026,7 @@
   function* telescope(g, o) { yield* g.arrangeTop(o, Math.min(5, g.alive.length), 'telescope', { skill: 'telescope' }); }
   S.telescope = {
     name: ['望远', 'TELESCOPE'], type: 'normal',
-    desc: ['回合开始时和结束阶段开始时，你可以观看牌堆顶的 X 张牌，并以任意顺序置于牌堆顶或牌堆底（X 为存活角色数，至多为 5）。', 'At the start of your turn and of your Finish phase, you may look at the top X cards and put them back on top or bottom in any order (X = living characters, max 5).'],
+    desc: ['准备阶段开始时和结束阶段开始时，你可以观看牌堆顶的 X 张牌，并以任意顺序置于牌堆顶或牌堆底（X 为存活角色数，至多为 5）。', 'At the start of your Prepare phase and of your Finish phase, you may look at the top X cards and put them back on top or bottom in any order (X = living characters, max 5).'],
     triggers: {
       turnStart: { can: (g, o, d) => d.player === o, *on(g, o) { o.turnState.telescopeTiming = 'start'; yield* telescope(g, o); } },
       phaseStart: { can: (g, o, d) => d.player === o && d.phase === 'finish', *on(g, o) { o.turnState.telescopeTiming = 'end'; yield* telescope(g, o); } },
@@ -3184,7 +3190,7 @@
   H.catherine = { faction: 'renaissance', hp: 4, gender: 'female', skills: ['enlighten', 'favor'], name: ['叶卡捷琳娜', 'Catherine'], title: ['北国女皇', 'The Great'], rating: 8 };
   S.enlighten = {
     name: ['开明', 'ENLIGHTEN'], type: 'normal',
-    desc: ['回合开始阶段和弃牌阶段开始时，你可以摸 X 张牌（X 为你的手牌数）。', 'At the start of your turn (Prepare phase) and of your Discard phase, you may draw X cards (X = cards in your hand).'],
+    desc: ['准备阶段开始时和弃牌阶段开始时，你可以摸 X 张牌（X 为你的手牌数）。', 'At the start of your Prepare phase and of your Discard phase, you may draw X cards (X = cards in your hand).'],
     triggers: { phaseStart: { can: (g, o, d) => d.player === o && (d.phase === 'prepare' || d.phase === 'discard') && o.hand.length > 0, *on(g, o) { yield* g.draw(o, o.hand.length, 'enlighten'); } } },
     ai: { confirm: (g, me, req) => true },
   };
@@ -3551,7 +3557,7 @@
   H.beethoven = { faction: 'revolution', hp: 3, gender: 'male', skills: ['destiny', 'joy'], name: ['贝多芬', 'Beethoven'], title: ['乐圣', 'The Titan'], rating: 7 };
   S.destiny = {
     name: ['命运', 'DESTINY'], type: 'locked', locked: true,
-    desc: ['锁定技，你的回合开始时，所有其他角色随机展示一张手牌：若黑色牌多，你翻面并失去 1 点体力；若红色牌多，你将体力回复至上限；若一样多，你获得这些展示的牌。', 'Compulsory skill. At the start of your turn, every other character reveals a random card from hand. More black: flip and lose 1 health. More red: recover to full health. Tied: take the revealed cards.'],
+    desc: ['锁定技，准备阶段开始时，所有其他角色随机展示一张手牌：若黑色牌多，你翻面并失去 1 点体力；若红色牌多，你将体力回复至上限；若一样多，你获得这些展示的牌。', 'Compulsory skill. At the start of your Prepare phase, every other character reveals a random card from hand. More black: flip and lose 1 health. More red: recover to full health. Tied: take the revealed cards.'],
     triggers: { turnStart: {
       can: (g, o, d) => d.player === o,
       *on(g, o) {
@@ -3582,7 +3588,7 @@
   H.darwin = { faction: 'revolution', hp: 3, gender: 'male', skills: ['evolve', 'fittest'], name: ['达尔文', 'Darwin'], title: ['博物学家', 'The Naturalist'], rating: 6 };
   S.evolve = {
     name: ['演化', 'EVOLVE'], type: 'locked', locked: true,
-    desc: ['锁定技，你的摸牌阶段摸牌数 +1，出牌阶段使用杀的次数上限 +1。你的闪视为酒。当你回复 1 点体力后，你可以令一名其他角色失去 1 点体力。', 'Compulsory skill. Draw 1 more card in your Draw phase and use 1 more Strike per turn. Your Parries count as Grog. After you recover 1 health, you may make another character lose 1 health.'],
+    desc: ['锁定技，你的摸牌阶段摸牌数 +1，出牌阶段使用杀的次数上限 +1。你的闪均视为酒。当你回复 1 点体力后，你可以令一名其他角色失去 1 点体力。', 'Compulsory skill. Draw 1 more card in your Draw phase and use 1 more Strike per Play phase. Your Parries are always treated as Grog. After you recover 1 health, you may make another character lose 1 health.'],
     triggers: {
       drawCount: { can: (g, o, d) => d.player === o, silent: true, optional: false, *on(g, o, d) { d.n += 1; } },
       // 锁定技里的“可以”：每回复 1 点体力，询问一次是否令一名其他角色失去 1 点体力
@@ -3598,6 +3604,7 @@
       forbid: (g, o, v, p, c) => (p === o && c.name === 'parry') ? true : v,
     },
     viewAs: {
+      locked: true,   // 锁定：闪永远视为酒，直接点这张闪就是酒，不需要发动技能
       patterns: ['grog'], count: 1, zones: 'h',
       filter: (g, p, c, ctx) => { const pats = ctx && ctx.pattern ? [].concat(ctx.pattern) : null; return c.name === 'parry' && (!pats || pats.includes('grog')); },
       as: () => 'grog',
@@ -3739,7 +3746,7 @@
   const SUBTYPE = { weapon: ['武器', 'Weapon'], armor: ['护甲', 'Armor'], plus: ['守御战马', 'Destrier'], minus: ['进击战马', 'Charger'] };
   const ROLE = { chancellor: ['执笔者', 'The Chancellor'], keeper: ['护卷人', 'The Keeper'], insurgent: ['焚卷人', 'The Insurgent'], schemer: ['伏笔者', 'The Schemer'] };
   const PHASE = { prepare: ['准备', 'Prepare'], judge: ['判定', 'Judge'], draw: ['摸牌', 'Draw'], play: ['出牌', 'Play'], discard: ['弃牌', 'Discard'], finish: ['结束', 'Finish'] };
-  const PHASEL = { prepare: ['回合开始', 'Turn Start'], judge: ['判定阶段', 'Judge Phase'], draw: ['摸牌阶段', 'Draw Phase'], play: ['出牌阶段', 'Play Phase'], discard: ['弃牌阶段', 'Discard Phase'], finish: ['回合结束', 'Turn End'] };
+  const PHASEL = { prepare: ['准备阶段', 'Prepare Phase'], judge: ['判定阶段', 'Judge Phase'], draw: ['摸牌阶段', 'Draw Phase'], play: ['出牌阶段', 'Play Phase'], discard: ['弃牌阶段', 'Discard Phase'], finish: ['结束阶段', 'Finish Phase'] };
   const SUIT = { spade: '♠', heart: '♥', club: '♣', diamond: '♦', none: '', black: '', red: '' };
   const SUITNAME = { spade: ['黑桃', 'Spade'], heart: ['红桃', 'Heart'], club: ['梅花', 'Club'], diamond: ['方块', 'Diamond'] };
   const NATURE = { normal: ['', ''], fire: ['火焰', 'fire '], thunder: ['雷电', 'thunder '] };
@@ -3859,7 +3866,7 @@
 <h4>选将</h4>
 <p>执笔者先从 8 名武将中选一名（每个时代至少 2 名），其他角色再各从 5 名中选一名（每个时代至少 1 名）。每名候选武将可以换一次。</p>
 <h4>回合流程</h4>
-<p>回合开始 → 准备阶段 → 判定阶段（天兆区里后放入的牌先进行天意判定）→ 摸牌阶段（摸两张）→ 出牌阶段（【杀】每阶段限一次，【酒】每回合限一次）→ 弃牌阶段（手牌数不能超过体力值）→ 结束阶段 → 回合结束。</p>
+<p>一个回合依次有六个阶段：准备阶段 → 判定阶段（天兆区里后放入的牌先进行天意判定）→ 摸牌阶段（摸两张）→ 出牌阶段（【杀】每阶段限一次，【酒】每回合限一次）→ 弃牌阶段（手牌数不能超过体力值）→ 结束阶段。技能里写的「某阶段开始时 / 结束时」就是指这六个阶段。</p>
 <h4>体力与濒死</h4>
 <p>武将牌右上角画的体力格只表示这名武将的体力上限；当前体力显示在座位上武将牌旁的红色体力珠里（例如 3/4）。右键（手机上长按）武将牌可以查看大图。</p>
 <p>体力降到 0 时进入濒死状态，从当前回合角色开始按座次询问是否对其使用【药】（濒死的角色自己也可以用【酒】）。体力仍不大于 0 则阵亡出局。</p>
@@ -3898,7 +3905,7 @@
 <h4>Choosing Heroes</h4>
 <p>The Chancellor picks a hero from 8 (at least 2 from each era); then everyone else picks from 5 (at least 1 from each era). Each candidate may be swapped once.</p>
 <h4>Turn Order</h4>
-<p>Start of turn → Prepare phase → Judge phase (the card placed last in the omen area invokes Fate first) → Draw phase (draw 2) → Play phase (one {Strike} per phase, one {Grog} per turn) → Discard phase (keep no more cards than your health) → Finish phase → End of turn.</p>
+<p>A turn has six phases in order: Prepare phase → Judge phase (the card placed last in the omen area invokes Fate first) → Draw phase (draw 2) → Play phase (one {Strike} per phase, one {Grog} per turn) → Discard phase (keep no more cards than your health) → Finish phase. Skills that say "at the start / end of a phase" refer to these six phases.</p>
 <h4>Health and Dying</h4>
 <p>The health gems printed on a hero card show only that hero's maximum health. Current health is shown by the red gems next to the hero card at each seat (for example 3/4). Right-click (or long-press on mobile) a hero card to see it full size.</p>
 <p>At 0 health a character is dying. Starting with the current player, everyone in seat order may use a {Remedy} on them (the dying character may also use {Grog} on themself). If their health is still 0 or less, they fall.</p>
@@ -4756,6 +4763,12 @@ return { RandomAgent, SmartAgent, defaultAnswer, rel, tracker };
           if (full && cr.max > 1) continue;
           if (cr.filter(c, u.sel)) v.cards.add(c.id);
         }
+        // 锁定的转化（如演化：闪一律视为酒）：不用点技能，直接点这张牌就按转化后的牌用
+        if (!u.skill && !u.autoAs && !u.sel.length && t.viewAsList) {
+          for (const va of t.viewAsList()) { const inst = t.g.skillList(t.g.p(t.me)).find(s => s.key === va.key); if (!inst || !inst.def.viewAs || !inst.def.viewAs.locked) continue;
+            u.skill = va.key; u.asName = va.asName || null; u.autoAs = true; const m2 = modeOf(t); u.skill = null; u.asName = null; u.autoAs = false; if (!m2) continue;
+            const c2 = rng(m2.cards); for (const c of c2.pool()) if (!v.cards.has(c.id) && c2.filter(c, [])) { v.cards.add(c.id); (v.autoAs = v.autoAs || {})[c.id] = va; } }
+        }
         // 已选但已不合法的牌（例如技能切换后）剔除
         const okSel = u.sel.filter(c => cr.pool().includes(c) && (cr.filter(c, []) || cr.filter(c, u.sel)));
         if (okSel.length !== u.sel.length) { u.sel = okSel; return refresh(t); }
@@ -4785,9 +4798,10 @@ return { RandomAgent, SmartAgent, defaultAnswer, rel, tracker };
 
   // ── 点击：只改「已选」，再统一重算
   function clickCard(t, c) {
-    const u = t.ui; const v = refresh(t); const m = v.mode; if (!m || !v.cards.has(c.id)) return false;
+    const u = t.ui; let v = refresh(t); let m = v.mode; if (!m || !v.cards.has(c.id)) return false;
+    if (v.autoAs && v.autoAs[c.id] && !u.skill) { const va = v.autoAs[c.id]; u.skill = va.key; u.asName = va.asName || null; u.auto = true; v = refresh(t); m = v.mode; if (!m || !v.cards.has(c.id)) { u.skill = null; u.asName = null; u.auto = false; return false; } }
     const cr = rng(m.cards);
-    if (u.sel.includes(c)) u.sel = u.sel.filter(x => x !== c);
+    if (u.sel.includes(c)) { u.sel = u.sel.filter(x => x !== c); if (u.auto && !u.sel.length) { u.skill = null; u.asName = null; u.auto = false; } }
     else if (cr.max <= 1) u.sel = [c];
     else if (u.sel.length < cr.max) u.sel = u.sel.concat([c]);
     else return false;
@@ -5240,6 +5254,11 @@ return { RandomAgent, SmartAgent, defaultAnswer, rel, tracker };
 #qx .qx-deq .qx-ebar .qx-eic svg{filter:drop-shadow(0 1px 1px #000)}
 #qx .qx-deq .qx-ebar .qx-ename{text-shadow:0 1px 2px #000}
 #qx .qx-dsep{display:none}
+/* 槽里的装备正在发动：整条往右弹出一点、金边发光（不盖住插画和文字） */
+#qx .qx-deq .qx-egv>.qx-ebar.qx-eqon{transform:translateX(12px);border-color:#ffe08a;box-shadow:0 0 0 1px rgba(255,224,138,.65),0 0 14px 3px rgba(255,210,110,.75),inset 0 0 10px rgba(255,220,140,.35);animation:qxeqglow 1.1s ease-in-out infinite alternate;transition:transform .2s ease-out}
+#qx .qx-deq .qx-egv>.qx-ebar.qx-eqon::before,#qx .qx-deq .qx-egv>.qx-ebar.qx-eqon::after{display:none}
+#qx .qx-deq .qx-egv:has(.qx-eqon){clip-path:none}
+@keyframes qxeqglow{from{box-shadow:0 0 0 1px rgba(255,224,138,.55),0 0 8px 2px rgba(255,210,110,.55),inset 0 0 6px rgba(255,220,140,.25)}to{box-shadow:0 0 0 1px rgba(255,236,170,.9),0 0 18px 5px rgba(255,214,120,.9),inset 0 0 12px rgba(255,226,150,.45)}}
 #qx .qx-ebar.qx-eqcan{border-color:#c9a8ff;box-shadow:0 0 8px rgba(185,150,255,.55);cursor:pointer}
 #qx .qx-ebar.qx-eqon{transform:translateX(16px);border-color:transparent;cursor:pointer;box-shadow:0 0 14px rgba(255,214,120,.55)}
 #qx .qx-ebar.qx-eqon::before{content:"";position:absolute;left:50%;top:50%;width:260px;height:260px;margin:-130px 0 0 -130px;background:conic-gradient(from 0deg,transparent 0deg 120deg,rgba(255,236,170,.15) 150deg,#fff6c8 176deg,transparent 180deg 300deg,rgba(255,236,170,.15) 330deg,#fff6c8 356deg,transparent 360deg);animation:qxspin 1.8s linear infinite;z-index:0}
@@ -6037,7 +6056,7 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
       this.g = new E.Game({ players: n, seed, roles: arr, fixedRoles: true, selectHeroes: true });
       this.me = meSeat; this.ui = null; this.logIdx = 0;
       this.animIdx = 0; this.phMem = {}; this.phCur = {}; this.marks = {}; this.handOrder = []; this.vetoBars = false; this.thinkBars = null; this.revealWin = null; this.schemeWin = null; this.roleHold = null; this.groupDone = false; this.lastPh = null;
-      this.closePeek(); this.closeBadgeMenu(); this.closeZoom(); this.pindian = null; this.noVetoUid = null; this.pdHold = null; this.pdOut = null; this.skFlash = null; this.skMarkHold = null; this.skMarkNow = null; this.skHot = null; this.feast = null; this.shownCards = null; this.centerT = 0; this.locs = null; this.center = []; this.centerIds = new Set(); this.hpPrev = null; this.stepNo = 0; this.thinking = null;
+      this.closePeek(); this.closeBadgeMenu(); this.closeZoom(); this.pindian = null; this.eqHot = null; this.noVetoUid = null; this.pdHold = null; this.pdOut = null; this.skFlash = null; this.skMarkHold = null; this.skMarkNow = null; this.skHot = null; this.feast = null; this.shownCards = null; this.centerT = 0; this.locs = null; this.center = []; this.centerIds = new Set(); this.hpPrev = null; this.stepNo = 0; this.thinking = null;
       const fx = this.$('.qx-fx'); if (fx) fx.innerHTML = ''; const ls = this.$('.qx-lines'); if (ls) ls.innerHTML = '';
       // 新开一局：上一局留在桌面上的牌、状态（横置 / 翻面等）、动画残留全部清空
       this.stLast = null; this.stShown = null; this.disp = null; this.inStep = false; this.hpPrev = null; this.marksPrev = null; if (this._swT) { clearInterval(this._swT); this._swT = null; }
@@ -6135,6 +6154,15 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
       const d = td || document, fsOn = () => !!(d.fullscreenElement || d.webkitFullscreenElement); const on = !this.isFull;
       const apply = v => { this.isFull = v; this.root.classList.toggle('qx-full', v); const b = this.$('[data-act=full]'); if (b) b.textContent = this.T.t(v ? 'fullExit' : 'fullOn'); const fx = this.$('.qx-fsx'); if (fx) fx.textContent = this.T.t('fullExit'); if (this.fit() && this.g) this.render(); setTimeout(() => { if (this.fit() && this.g) this.render(); }, 150); };
       if (!this.fsBound) { this.fsBound = true; const h = () => { if (!fsOn() && this.isFull && this.realFs) { this.realFs = false; apply(false); } }; d.addEventListener('fullscreenchange', h); d.addEventListener('webkitfullscreenchange', h); }
+      // 嵌在网站窗口里：和网站窗口顶栏的全屏按钮做完全一样的事——只让整个页面全屏，游戏窗口跟着网站的布局变大，不再自己铺满（之前自己铺满时会按旧尺寸算，右边一大块跑到屏幕外）
+      if (td) {
+        const tel = d.documentElement;
+        if (fsOn()) { try { const r = (d.exitFullscreen || d.webkitExitFullscreen).call(d); if (r && r.catch) r.catch(() => {}); } catch (e) {} }
+        else { const req = tel.requestFullscreen || tel.webkitRequestFullscreen; if (req) { try { const r = req.call(tel); if (r && r.catch) r.catch(() => {}); } catch (e) {} } }
+        const upd = () => { const b = this.$('[data-act=full]'); if (b) b.textContent = this.T.t(fsOn() ? 'fullExit' : 'fullOn'); if (this.fit() && this.g) this.render(); };
+        if (!this.fsBound2) { this.fsBound2 = true; d.addEventListener('fullscreenchange', () => setTimeout(upd, 60)); d.addEventListener('webkitfullscreenchange', () => setTimeout(upd, 60)); }
+        return;
+      }
       if (on) {
         apply(true);
         if (fsOn()) { this.realFs = 'shared'; return; } // 页面已经全屏（顶栏按的）：只铺满，退出时不动页面的全屏
@@ -6610,9 +6638,12 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
       const rs = c.rank ? `<b class="qx-ers${red ? ' qx-rsred2' : ''}">${T.rank(c.rank)}${T.suit(c.suit)}</b>` : '';
       const attr = owner === this.me ? `data-id="${c.id}"` : `data-cid="${c.id}"`;
       const u = this.ui; let cls = '';
+      const g0me = t0 => t0.g.p(t0.me);
+      if (this.eqHot && this.eqHot.has('e:' + c.id)) cls = ' qx-eqon';
       if (owner === this.me && u) {
         const key = 'e:' + c.id;
-        if (u.skill === key || (u.active && u.active.key === key)) cls = ' qx-eqon';
+        const trid = c.name === 'trident' && u.sel.length && u.sel.length === g0me(this).hand.length && u.sel.some(x => E.family(x) === 'strike' || u.skill) && (u.req.kind === 'play' || u.req.kind === 'useStrike');   // 三叉戟：用最后的手牌出杀时可以多指定目标
+        if (u.skill === key || (u.active && u.active.key === key) || u.req.eqActive === key || trid) cls = ' qx-eqon';
         else if (u.sel.includes(c)) cls = ' qx-picked'; else if (this.cardSelectable(c)) cls = ' qx-sel';
         else if (!u.skill && !u.active && (this.viewAsList().some(x => x.key === key) || (u.req.kind === 'play' && this.activeButtons().some(x => x.key === key)))) cls = ' qx-eqcan';
         if (u.req.kind === 'confirm' && u.req.skill === c.name) cls += ' qx-eqask';
@@ -6773,7 +6804,7 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
         <div class="qx-sart">${art}</div>${this.dSt(p, 'faceDown') && !dead ? `<img class="qx-fdback" src="${this.asset('seatgen/art/ui-heroback.webp')}" alt="" draggable="false">` : ''}
         <img class="qx-sfr" src="${this.asset('seatgen/frame.webp')}" alt="" draggable="false">
         ${cfg ? `<div class="qx-sstrip" style="background:${cfg.strip}"></div>${cfg.emblem ? `<img class="qx-semb" src="${this.asset(cfg.emblem)}" alt="" draggable="false">` : ''}${this.nameHTML(p, cfg)}` : ''}
-        ${(() => { const rn = ['', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X'][p.seat + 1] || String(p.seat + 1); const wide = { VII: 104, VIII: 104 }[rn]; return `<div class="qx-sno"><svg viewBox="0 0 112 104"><text x="56" y="82" text-anchor="middle"${wide ? ` textLength="${wide}" lengthAdjust="spacingAndGlyphs"` : ''}>${esc(rn)}</text></svg></div>`; })()}<div class="qx-shc" data-tip="${esc(t('hand'))}">${this.dHandN(p)}</div>
+        ${!this.g.players.every(q => q.hero) ? '' : (() => { const rn = ['', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X'][p.seat + 1] || String(p.seat + 1); const wide = { VII: 104, VIII: 104 }[rn]; return `<div class="qx-sno"><svg viewBox="0 0 112 104"><text x="56" y="82" text-anchor="middle"${wide ? ` textLength="${wide}" lengthAdjust="spacingAndGlyphs"` : ''}>${esc(rn)}</text></svg></div>`; })()}<div class="qx-shc" data-tip="${esc(t('hand'))}">${this.dHandN(p)}</div>
         <div class="qx-srail" data-hp="${hpv}" data-max="${p.maxHp}">${dead ? '' : this.starsHTML(p, hpv, hpv)}</div>
         ${bars}
         ${dead ? '' : this.badgeHTML(p)}
@@ -6890,7 +6921,7 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
         const st = this.fading && this.fading.has(c.id) ? ' qx-ccfade' : D0.has(c.id) ? ' qx-ccspent' : e.judge === 'open' ? ' qx-cchi' : live.length > 1 ? (e.li === maxLi ? ' qx-cchi' : ' qx-ccdim') : '';   // 天意牌在判定结果出来前一直亮着
         const eq = e.kind === 'equip', sh = e.kind === 'show'; const hid = e.pend || (eq || sh ? e.hold : this.hideSet && this.hideSet.has(c.id));
         const jm = e.verdict ? this.brushMark(e.verdict, e.id) : '';
-        return `<div class="qx-cc${st}" ${eq ? `data-mk="g${c.id}" data-gid` : sh ? `data-mk="s${c.id}" data-sid` : 'data-cid'}="${c.id}" style="left:${Math.round(slotOf.has(e) ? x0 + slotOf.get(e) * step : this.bw() / 2 - cw / 2)}px;z-index:${i + 1}${hid ? ';visibility:hidden' : ''}">${this.cardHTML(c, 'qx-cpic').replace(/ data-id="\d+"/, '')}${tag}${jm}<div class="qx-ccap">${esc(e.cap || '')}</div></div>`;
+        return `<div class="qx-cc${st}" ${eq ? `data-mk="g${c.id}" data-gid` : sh ? `data-mk="${e.sk || 's' + c.id}" data-sk="${e.sk || ''}" data-sid` : 'data-cid'}="${c.id}" style="left:${Math.round(slotOf.has(e) ? x0 + slotOf.get(e) * step : this.bw() / 2 - cw / 2)}px;z-index:${i + 1}${hid ? ';visibility:hidden' : ''}">${this.cardHTML(c, 'qx-cpic').replace(/ data-id="\d+"/, '')}${tag}${jm}<div class="qx-ccap">${esc(e.cap || '')}</div></div>`;
       }).join('');
     }
     renderTable() {
@@ -6994,7 +7025,7 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
         // 有几个选项的技能（如讲学）也只有一个按钮，写武将本身的技能名；点了再弹窗选项
         if (myActs.length && myActs[0].opt != null) btns.push(skBtn(s, d, T.skillName(s.id), true, !!(u.active && u.active.key === s.key), `data-actopts="${s.key}"`, tip));
         else for (const b of myActs) btns.push(skBtn(s, d, T.skillName(s.id), true, !!(u.active && u.active.key === b.key && u.active.option === b.opt), `data-active="${b.key}|${b.opt == null ? '' : b.opt}"`, tip));
-        for (const v of vas.filter(a => a.key === s.key)) btns.push(skBtn(s, d, T.skillName(s.id) + (v.asName ? '·' + T.cardName(v.asName) : ''), true, u.skill === v.key && (u.asName || null) === v.asName, `data-skill="${v.key}|${v.asName || ''}"`, tip));
+        for (const v of vas.filter(a => a.key === s.key && !(d.viewAs && d.viewAs.locked))) btns.push(skBtn(s, d, T.skillName(s.id) + (v.asName ? '·' + T.cardName(v.asName) : ''), true, u.skill === v.key && (u.asName || null) === v.asName, `data-skill="${v.key}|${v.asName || ''}"`, tip));
         const hot = this.skHot === s.id || (asked && u.req.kind !== 'confirm');
         if (!btns.length) btns.push(skBtn(s, d, T.skillName(s.id), d.type !== 'locked' ? (asked || flash || hot) : asked, hot && (d.type !== 'locked' || asked), null, tip, used, flash));
         return btns.join('');
@@ -7103,8 +7134,10 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
     locKey(c) {
       if (c.arranging) return 'deck';
       if (c.omenJudging != null) return 'j:' + c.omenJudging;
-      if (this.centerIds && this.centerIds.has(c.id)) return 'center';
-      const l = c.loc; if (!l) return 'none';
+      const l = c.loc;
+      // 已经进了某人手里 / 装备区 / 判定区的牌，不再因为桌上还留着它的记录就算在桌上（否则会多出一段「从手里飞回桌面」的动画，如阿基米德拿到判定牌之后）
+      if (this.centerIds && this.centerIds.has(c.id) && !(l && ['hand', 'equip', 'judge'].includes(l.zone))) return 'center';
+      if (!l) return 'none';
       if (l.zone === 'hand') return 'h:' + l.seat;
       if (l.zone === 'equip') return 'e:' + l.seat;
       if (l.zone === 'judge') return 'j:' + l.seat;
@@ -7175,7 +7208,8 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
           }
         }
         else if (l.type === 'retouch') add(l.card, t('cap_retouch', { s: who(l.seat) }));
-        else if (l.type === 'show' && l.card != null) add(l.card, t('cap_show', { s: who(l.seat) }), null, 'show');   // 展示：只是把牌亮到桌面中间给大家看，牌还在原处
+        else if (l.type === 'show' && l.card != null) {   // 每次展示都单独占一个位置（同一张牌被展示两次，例如火攻结算两次，也排在后面而不是叠在一起）
+          if (!this.center.some(e => e.log === l)) { const pend = !!this.animMult() && !!this.stepping; this._shk = (this._shk || 0) + 1; this.center.push({ id: l.card, cap: t('cap_show', { s: who(l.seat) }), li, kind: 'show', t: Date.now(), pend, hold: pend, sk: 's' + this._shk, log: l }); } }   // 展示：只是把牌亮到桌面中间给大家看，牌还在原处
       }
       for (const c of g.processing || []) if (!c.arranging && c.omenJudging == null && !this.center.find(e => e.id === c.id) && !(this.pdHold && this.pdHold.has(c.id)) && !(this.revealWin && this.revealWin.ids.includes(c.id)) && !(this.feast && this.feast.ids.includes(c.id))) add(c.id, '');
       if (this.center.length !== this.centerN) this.centerT = Date.now(); 
@@ -7589,7 +7623,7 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
             pd.revealed = true; this.renderWins(); await sleep(Math.max(350, 600 * mult));
             pd.done = true; this.renderWins(); await sleep(Math.max(700, 1300 * mult));
             const w = this.$('.qx-pindian'); if (w) { w.classList.add('qx-wfade'); await sleep(260); }
-            this.pindian = null; this.noVetoUid = null; this.pdHold = null; this.pdOut = null; this.renderWins();
+            this.pindian = null; this.eqHot = null; this.noVetoUid = null; this.pdHold = null; this.pdOut = null; this.renderWins();
             // 拼点牌放到桌面上，变暗；之后被谁拿走就从桌面上飞过去
             for (const id of [l.ca, l.cb]) if (!this.center.some(e => e.id === id)) this.center.push({ id, cap: this.T.t('cap_pindian', { s: this.who(id === l.ca ? l.a : l.b) }), li: base + logs.indexOf(l) + 1, kind: 'pd', t: Date.now() });
             this.centerIds = new Set(this.center.filter(e => e.kind !== 'equip' && e.kind !== 'show').map(e => e.id)); const ctr = this.$('.qx-ctr'); if (ctr) morph(ctr, this.centerHTML());
@@ -7619,9 +7653,15 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
         else if (ty === 'move') { const f = async () => { const mv = moves.filter(m => m.logRef === l && !claimed.has(m)); mv.forEach(m => claimed.add(m)); if (mv.length) await this.flyMany(mv, mult); this.landedDiscards(l.ids || [], mult); }; f.isMove = true; beats.push(f); }
         else if (ty === 'tableClear') { const at = base + logs.indexOf(l) + 1; beats.push(async () => { this.setAimed(null, false); await this.clearCenter(mult, at); if (this.shownCards) { this.shownCards = null; this.renderTable(); this.renderMe(); } }); }   // 展示的牌只在这次结算期间显示
         else if (ty === 'judgeClear') beats.push(() => this.retire(l.cards || [], mult));
+        else if (ty === 'equipFx') beats.push(() => { this.eqHot = this.eqHot || new Set(); this.eqHot.add(l.key); this.renderTable(); this.renderMe(); return sleep(Math.max(200, 350 * mult)); });   // 装备效果发动：装备条弹出发光
+        else if (ty === 'equipFxEnd') beats.push(() => { if (this.eqHot) { this.eqHot.delete(l.key); this.renderTable(); this.renderMe(); } });
         else if (ty === 'turn') { const at = base + logs.indexOf(l) + 1; beats.push(async () => { this.setAimed(null, false); await this.clearCenter(mult, at, true); { const old = (this.center || []).filter(e => (e.li || 0) < at).map(e => e.id); if (old.length) this.forceRetire(old, mult); } this.shownCards = null; /* 一名角色的回合结束：桌面上属于这一回合的牌强制清空 */ this.setPhaseShown(null, null); }); }
         else if (ty === 'damage' || ty === 'loseHp') { const seat = l.to != null ? l.to : l.seat; beats.push(() => this.hitFx(seat, '−' + l.n, ty === 'damage' ? (l.nature || 'normal') : 'lose', mult, l.hp, ty === 'damage' ? l.from : null)); }
-        else if (ty === 'recover') beats.push(() => { if (l.hp > 0) this.stSet(l.seat, 'dying', false); return this.hitFx(l.seat, '+' + l.n, 'heal', mult, l.hp); });
+        else if (ty === 'recover') {
+          // 失去装备时回血（涅墨亚狮皮被拆 / 被顺走）：先播放这张装备离开的动画，再回血
+          const pi = logs.indexOf(l) - 1; const pl = logs[pi];
+          if (pl && pl.type === 'move') { const mv = claim(m => m.logRef === pl && m.k0 === 'e:' + l.seat); if (mv.length) beats.push(() => this.flyMany(mv, mult)); }
+          beats.push(() => { if (l.hp > 0) this.stSet(l.seat, 'dying', false); return this.hitFx(l.seat, '+' + l.n, 'heal', mult, l.hp); }); }
         else if (ty === 'hpSet' || ty === 'maxHp') beats.push(async () => { this.setHpShown(l.seat, g.p(l.seat).hp); });
         else if (ty === 'skill') {
           let tg = (l.targets || []).filter(s => s !== l.seat);
@@ -7644,10 +7684,10 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
         else if (ty === 'aim') beats.push(async () => { const tg = (l.targets || []).filter(s => s !== l.seat); if (tg.length) this.setAimed(tg, true); tg.forEach(s => this.drawLine(this.seatPt(l.seat), this.seatPt(s), mult)); if (tg.length) await sleep(Math.max(200, 380 * mult)); });
         else if (ty === 'show') beats.push(async () => {
           // 展示：像出牌一样飞到桌面中间（下面写「某某展示」），只是动画，牌本身还在原处、不进弃牌堆
-          const ctr = this.$('.qx-ctr'); const ent = (this.center || []).find(e => e.id === l.card && e.kind === 'show');
+          const ctr = this.$('.qx-ctr'); const ent = (this.center || []).find(e => e.log === l) || (this.center || []).find(e => e.id === l.card && e.kind === 'show');
           if (!ent || !mult) { if (ent) { ent.pend = false; ent.hold = false; if (ctr) morph(ctr, this.centerHTML()); } return; }
           ent.pend = false; if (ctr) morph(ctr, this.centerHTML());
-          const toEl = ctr && ctr.querySelector(`[data-sid="${l.card}"]`); const hc = l.seat === this.me ? this.$(`.qx-dash .qx-dhand [data-id="${l.card}"]`) : null;
+          const toEl = ctr && (ctr.querySelector(`[data-sk="${ent.sk}"]`) || ctr.querySelector(`[data-sid="${l.card}"]`)); const hc = l.seat === this.me ? this.$(`.qx-dash .qx-dhand [data-id="${l.card}"]`) : null;
           await this.fly({ id: l.card, k0: 'h:' + l.seat, k1: 'center', copyOnly: true, forceFace: true, el: toEl, from: hc ? this.rel(hc) : undefined }, 0, mult);
           ent.hold = false; if (ctr) morph(ctr, this.centerHTML());
           await sleep(Math.max(300, 500 * mult));
@@ -7812,7 +7852,7 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
     clearThinkBars() { if (!this.thinkBars) return; this.thinkBars = null; this.renderTable(); }
     vetoWindowFx(mult, l) {
       const g = this.g, me = g.p(this.me);
-      const who = g.players.filter(p => !p.dead && p.seat !== this.me && (!l || !l.who || l.who.includes(p.seat))).map(p => p.seat);
+      const who = g.players.filter(p => !p.dead && p.seat !== this.me).map(p => p.seat);   // 询问无懈可击时所有其他角色都显示读条（不暴露谁手里有无懈可击）
       this.setThinkBars(who);
       // 你也可能响应：所有人的读条和对你的询问同时出现，不等读条
       if (!me.dead && (!l || l.skip !== this.me) && g.canProduce(me, ['veto'], { reason: 'veto' })) { this.vetoBars = true; return Promise.resolve(); }
@@ -8196,6 +8236,7 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
     }
     showThink(req, ms) {
       const seat = req.player.seat;
+      if (req.kind === 'respond' && req.reason === 'veto') { this.setThinkBars(this.g.players.filter(p => !p.dead && p.seat !== this.me).map(p => p.seat)); return; }   // 无懈可击：大家一起读条
       this.setThinkBars([seat]);
     }
     pvars(req) {
