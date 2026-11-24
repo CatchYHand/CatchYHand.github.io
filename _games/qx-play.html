@@ -1899,19 +1899,19 @@
     gordianNoParry: ['此杀不可被闪响应', 'Cannot Be Parried'], gordianPlus: ['此杀伤害 +1', '+1 Damage'],
     defianceDiscard: ['弃置 {n} 张牌', 'Discard {n} Cards'], defianceEnd: ['结束出牌阶段', 'End Play Phase'],
     vengeanceDiscard: ['弃置 {n} 张手牌', 'Discard {n} Cards'], vengeanceDamage: ['受到 1~2 点伤害', 'Take 1–2 Damage'],
-    lecture1: ['讲学·各交一张', 'Lecture: Gather'], lecture2: ['讲学·交换手牌', 'Lecture: Swap'],
+    lecture1: ['传道授业·各交一张', 'Lecture: Gather'], lecture2: ['传道授业·交换手牌', 'Lecture: Swap'],
   };
   const PROMPT_TEXT = {
-    mirrorRetouch: ['镜火：可以打出一张手牌代替{t}的天意牌（当前 {c}）。', "Mirror: you may play a card to replace {t}'s Fate card (now {c})."],
-    lectureGive: ['讲学：请交给{t}一张手牌。', 'Lecture: give {t} a card from your hand.'],
-    proofGive: ['推演：选择一张牌交给{t}。', 'Proof: choose a card to give to {t}.'],
-    defianceDiscard: ['拒降：请弃置 {n} 张牌。', 'Defiance: discard {n} cards.'],
-    vengeanceDiscard: ['血誓：请弃置 {n} 张手牌。', 'Vengeance: discard {n} cards from your hand.'],
-    unchainGive: ['挣锁：将 {c} 交给一名角色（可以是自己）。', 'Unchain: give {c} to a character (yourself included).'],
-    narrows: ['隘口：可以立即对{t}使用一张【杀】。', 'Narrows: you may immediately use a Strike on {t}.'],
-    defianceOpt: ['拒降：你的杀造成了伤害，选择一项：', 'Defiance: your Strike dealt damage. Choose one:'],
-    vengeanceOpt: ['血誓：选择一项：', 'Vengeance: choose one:'],
-    gordianOpt: ['断结：选择一项：', 'Gordian: choose one:'],
+    mirrorRetouch: ['聚光焚舟：可以打出一张手牌代替{t}的天意牌（当前 {c}）。', "Mirror: you may play a card to replace {t}'s Fate card (now {c})."],
+    lectureGive: ['传道授业：请交给{t}一张手牌。', 'Lecture: give {t} a card from your hand.'],
+    proofGive: ['集思广益：选择一张牌交给{t}。', 'Proof: choose a card to give to {t}.'],
+    defianceDiscard: ['宁死不降：请弃置 {n} 张牌。', 'Defiance: discard {n} cards.'],
+    vengeanceDiscard: ['血债血偿：请弃置 {n} 张手牌。', 'Vengeance: discard {n} cards from your hand.'],
+    unchainGive: ['挣脱枷锁：将 {c} 交给一名角色（可以是自己）。', 'Unchain: give {c} to a character (yourself included).'],
+    narrows: ['一夫当关：可以立即对{t}使用一张【杀】。', 'Narrows: you may immediately use a Strike on {t}.'],
+    defianceOpt: ['宁死不降：你的杀造成了伤害，选择一项：', 'Defiance: your Strike dealt damage. Choose one:'],
+    vengeanceOpt: ['血债血偿：选择一项：', 'Vengeance: choose one:'],
+    gordianOpt: ['一剑断结：选择一项：', 'Gordian: choose one:'],
   };
 
   // ═════════════ 古典 Classical ═════════════
@@ -1919,7 +1919,7 @@
   // ── 亚历山大 ──
   H.alexander = { faction: 'classical', hp: 4, gender: 'male', skills: ['campaign', 'gordian'], name: ['亚历山大', 'Alexander'], title: ['不败之王', 'The Great'], rating: 8 };
   S.campaign = {
-    name: ['远征', 'CAMPAIGN'], type: 'locked', locked: true,
+    name: ['长驱直入', 'CAMPAIGN'], type: 'locked', locked: true,
     desc: ['锁定技，当你对其他角色造成伤害后，你摸一张牌并令你与其的距离 −1；若你造成的伤害渠道为实体的杀，则改为摸两张牌。', 'Compulsory skill. After you deal damage to another character, draw 1 and your distance to them is reduced by 1 for the rest of the game; if the damage came from a real (not converted) Strike card, draw 2 instead.'],
     triggers: { damageDone: { silent: true, can: (g, o, d) => d.from === o && d.to !== o && !o.dead, *on(g, o, d) {
       const m = o.marks.campaign = o.marks.campaign || {}; m[d.to.seat] = (m[d.to.seat] || 0) + 1; g.log('skill', { seat: o.seat, skill: 'campaign' });
@@ -1930,7 +1930,7 @@
     mods: { distance: (g, o, v, a, b) => (a === o && o.marks.campaign) ? v - (o.marks.campaign[b.seat] || 0) : v },
   };
   S.gordian = {
-    name: ['断结', 'GORDIAN'], type: 'normal',
+    name: ['一剑断结', 'GORDIAN'], type: 'normal',
     desc: ['当你使用杀指定目标后，你可以选择一项：1. 此杀不可被闪响应；2. 此杀的伤害 +1。若你与所有其他角色的距离均为 1，则改为依次执行两项。', 'After your Strike targets, you may choose one: it cannot be answered with a Parry; or it deals +1 damage. If you are at distance 1 from every other character, do both.'],
     triggers: { targetConfirmed: {
       can: (g, o, d) => strikeBy(o, d.use) && d.use.targets.length > 0,
@@ -1947,7 +1947,7 @@
   // ── 凯撒 ──
   H.caesar = { faction: 'classical', hp: 4, gender: 'male', skills: ['rubicon', 'vici'], name: ['凯撒', 'Caesar'], title: ['独裁官', 'The Dictator'], rating: 6 };
   S.rubicon = {
-    name: ['渡河', 'RUBICON'], type: 'limited',
+    name: ['骰子已掷', 'RUBICON'], type: 'limited',
     desc: ['限定技，当你使用杀造成伤害后，若你的手牌数大于体力上限，你可以将体力上限调整至与你的手牌数相同，然后回复体力至体力上限。', 'Limited skill. After your Strike deals damage, if you have more cards in hand than your max health, you may set your max health equal to your hand size, then recover to full health.'],
     triggers: { damageDone: {
       can: (g, o, d) => d.from === o && isStrike(d.card) && !o.skillState.rubicon && o.hand.length > o.maxHp && !o.dead,
@@ -1955,7 +1955,7 @@
     } },
   };
   S.vici = {
-    name: ['三捷', 'VICI'], type: 'normal',
+    name: ['兵贵神速', 'VICI'], type: 'normal',
     desc: ['出牌阶段限一次，你可以减 1 点体力上限并摸三张牌，然后视为使用一张无距离限制的杀。当你以此法造成伤害时，你令该技能视为未发动过。', 'Once per Play phase, you may lose 1 max health and draw 3, then you are treated as using a Strike with no distance limit. If that Strike deals damage, this skill counts as unused.'],
     active: {
       cards: { min: 0, max: 0 },
@@ -1985,7 +1985,7 @@
   // ── 汉尼拔 ──
   H.hannibal = { faction: 'classical', hp: 4, gender: 'male', skills: ['alps', 'cannae'], name: ['汉尼拔', 'Hannibal'], title: ['战略之父', 'The Strategist'], rating: 7 };
   S.alps = {
-    name: ['越山', 'ALPS'], type: 'locked', locked: true,
+    name: ['象越雪山', 'ALPS'], type: 'locked', locked: true,
     desc: ['锁定技，你使用的点数为奇数的牌对其他角色造成的伤害为 3 点。', 'Compulsory skill. Odd-ranked cards you use deal 3 damage to other characters.'],
     triggers: { damageCausing: {
       // "伤害为 3 点"：基础伤害 1 → 3（加 2），酒等加成照常叠加；只算这张牌本身造成的伤害（不含铁索传导）
@@ -2002,7 +2002,7 @@
     return false;
   }
   S.cannae = {
-    name: ['坎尼', 'CANNAE'], type: 'locked', locked: true,
+    name: ['两翼合围', 'CANNAE'], type: 'locked', locked: true,
     desc: ['锁定技，你使用杀可以指定至多三名角色为目标。', 'Compulsory skill. Your Strikes may target up to three characters.'],
     mods: {
       maxTargets: (g, o, v, p, card) => (p === o && isStrike(card)) ? v + 2 : v,
@@ -2012,7 +2012,7 @@
   // ── 西庇阿 ──
   H.scipio = { faction: 'classical', hp: 4, gender: 'male', skills: ['divert', 'zama'], name: ['西庇阿', 'Scipio'], title: ['扎马胜者', 'The Victor'], rating: 6 };
   S.divert = {
-    name: ['移师', 'DIVERT'], type: 'normal',
+    name: ['围魏救赵', 'DIVERT'], type: 'normal',
     desc: ['当你受到杀造成的伤害后，你可以视为对伤害来源使用一张无距离限制的杀。若此杀造成了伤害，你回复 1 点体力。', 'After you take damage from a Strike, you may be treated as using a Strike with no distance limit on the source. If it deals damage, recover 1 health.'],
     triggers: { damaged: {
       can: (g, o, d) => d.to === o && !o.dead && d.from && !d.from.dead && d.from !== o && isStrike(d.card),
@@ -2025,7 +2025,7 @@
     ai: { confirm: (g, me, req, A) => A.threat(g, me, g.p(req.data.from)) > -0.5 },
   };
   S.zama = {
-    name: ['扎马', 'ZAMA'], type: 'locked', locked: true,
+    name: ['避其锋芒', 'ZAMA'], type: 'locked', locked: true,
     desc: ['锁定技，当你成为杀或谋略牌的目标时，若此牌指定了不止一个目标，则其对你无效，然后你摸一张牌。', 'Compulsory skill. When you become a target of a Strike or Stratagem that has more than one target, it has no effect on you and you draw 1.'],
     triggers: { targeted: {
       can: (g, o, d) => d.target === o && d.use.targets.length > 1 && (isStrike(d.use.card) || (E.CARD_DEFS[d.use.card.name] || {}).type === 'stratagem'),
@@ -2036,7 +2036,7 @@
   // ── 列奥尼达 ──
   H.leonidas = { faction: 'classical', hp: 4, gender: 'male', skills: ['narrows', 'defiance'], name: ['列奥尼达', 'Leonidas'], title: ['斯巴达王', 'The Spartan King'], rating: 7 };
   S.narrows = {
-    name: ['隘口', 'NARROWS'], type: 'locked', locked: true,
+    name: ['一夫当关', 'NARROWS'], type: 'locked', locked: true,
     desc: ['锁定技，当你受到伤害后，直到本回合结束，所有其他角色使用的杀和谋略牌对你无效。当你即将对其他角色造成伤害时，将该伤害值调整为目标角色当前体力值的一半（向下取整，至少为 1）。', 'Compulsory skill. After you take damage, other characters\' Strikes and Stratagems have no effect on you until the end of the turn. When you are about to deal damage to another character, that damage becomes half of their current health (rounded down, at least 1).'],
     triggers: {
       damaged: { can: (g, o, d) => d.to === o && !o.dead, *on(g, o) { o.marks.narrows = g.turnSeq || 0; } },
@@ -2050,7 +2050,7 @@
     },
   };
   S.defiance = {
-    name: ['拒降', 'DEFIANCE'], type: 'normal',
+    name: ['宁死不降', 'DEFIANCE'], type: 'normal',
     desc: ['其他角色的出牌阶段开始时，你可以摸 X 张牌，然后令其视为对你使用杀。若此杀对你造成了伤害，除非其弃置 X 张牌，否则其结束此出牌阶段（X 为你已损失的体力，且至多为 5）。', "At the start of another character's Play phase, you may draw X, then they are treated as using a Strike on you. If it damages you, they must discard X cards or end their Play phase (X = your lost health, max 5)."],
     triggers: { phaseStart: {
       can: (g, o, d) => d.phase === 'play' && d.player !== o && !d.player.dead && !o.dead,
@@ -2077,7 +2077,7 @@
   // ── 斯巴达克斯 ──
   H.spartacus = { faction: 'classical', hp: 4, gender: 'male', skills: ['unchain', 'comrades'], name: ['斯巴达克斯', 'Spartacus'], title: ['角斗士', 'The Gladiator'], rating: 7 };
   S.unchain = {
-    name: ['挣锁', 'UNCHAIN'], type: 'normal',
+    name: ['挣脱枷锁', 'UNCHAIN'], type: 'normal',
     desc: ['每当你受到 1 点伤害后，你可以摸两张牌，然后将这些牌任意分配给任意角色。', 'Each time you take 1 damage, you may draw 2, then give them out to any characters as you like.'],
     triggers: { damaged: {
       can: (g, o, d) => d.to === o && !o.dead,
@@ -2106,7 +2106,7 @@
     } },
   };
   S.comrades = {
-    name: ['同袍', 'COMRADES'], type: 'locked', locked: true,
+    name: ['同仇敌忾', 'COMRADES'], type: 'locked', locked: true,
     desc: ['锁定技，体力值大于你的角色不能响应你对其使用的杀。你使用杀的次数上限 +X（X 为你已损失的体力值）。', 'Compulsory skill. Characters with more health than you cannot respond to your Strikes. You may use X more Strikes per turn (X = your lost health).'],
     triggers: { targetConfirmed: {
       can: (g, o, d) => strikeBy(o, d.use) && d.use.targets.some(t => t.hp > o.hp),
@@ -2118,7 +2118,7 @@
   // ── 布狄卡 ──
   H.boudica = { faction: 'classical', hp: 4, gender: 'female', skills: ['chariot', 'vengeance'], name: ['布狄卡', 'Boudica'], title: ['复仇女王', 'The Iceni Queen'], rating: 7 };
   S.chariot = {
-    name: ['战车', 'CHARIOT'], type: 'locked', locked: true,
+    name: ['刀轮战车', 'CHARIOT'], type: 'locked', locked: true,
     desc: ['锁定技，游戏开始时，你从牌堆中随机装备 −1 马和 +1 马各一匹。你的坐骑不能被其他角色获得或弃置。', 'Compulsory skill. At the start of the game, equip a random Charger (−1) and Destrier (+1) from the deck. Other characters cannot take or discard your mounts.'],
     triggers: { gameStart: {
       can: () => true,
@@ -2135,7 +2135,7 @@
   };
   E.Game.judgeOk.vengeance = c => c.suit !== 'heart';   // 血誓：不为红桃时伤害来源要受罚，生效
   S.vengeance = {
-    name: ['血誓', 'VENGEANCE'], type: 'normal',
+    name: ['血债血偿', 'VENGEANCE'], type: 'normal',
     desc: ['当你受到伤害后，你可以进行一次天意判定：若结果不为红桃，你令伤害来源执行一项：弃置所有手牌，或受到你造成的随机 1~2 点伤害。', 'After you take damage, you may invoke Fate: unless ♥, you make the source do one: discard their whole hand, or take 1–2 random damage from you.'],
     triggers: { damaged: {
       can: (g, o, d) => d.to === o && !o.dead && d.from && !d.from.dead && d.from !== o,
@@ -2158,7 +2158,7 @@
   // ── 克娄巴特拉 ──
   H.cleopatra = { faction: 'classical', hp: 3, gender: 'female', skills: ['allure', 'pearl'], name: ['克娄巴特拉', 'Cleopatra'], title: ['尼罗河女王', 'The Nile Queen'], rating: 8 };
   S.allure = {
-    name: ['倾国', 'ALLURE'], type: 'normal',
+    name: ['倾国倾城', 'ALLURE'], type: 'normal',
     desc: ['出牌阶段限 X+1 次，你可以令一名其他角色视为对另一名其他角色使用一张不能被无懈可击响应的决斗（X 为你已损失的体力值）。', 'X+1 times per Play phase, you may make one other character be treated as using a Duel, which cannot be Vetoed, on another other character (X = your lost health).'],
     active: {
       cards: { min: 0, max: 0 },
@@ -2183,7 +2183,7 @@
     } },
   };
   S.pearl = {
-    name: ['明珠', 'PEARL'], type: 'normal',
+    name: ['一掷千金', 'PEARL'], type: 'normal',
     desc: ['结束阶段开始时，你可以摸 Y+2 张牌（Y 为本回合内所有角色体力值变动的次数）。', 'At the start of your Finish phase, you may draw Y+2 cards (Y = number of times any health changed this turn).'],
     triggers: { phaseStart: { can: (g, o, d) => d.player === o && d.phase === 'finish', *on(g, o) { yield* g.draw(o, (g.hpChanges || 0) + 2, 'pearl'); } } },
   };
@@ -2191,7 +2191,7 @@
   // ── 阿基米德 ──
   H.archimedes = { faction: 'classical', hp: 3, gender: 'male', skills: ['lever', 'mirror'], name: ['阿基米德', 'Archimedes'], title: ['几何大师', 'The Geometer'], rating: 7 };
   S.lever = {
-    name: ['杠杆', 'LEVER'], type: 'normal',
+    name: ['撬动乾坤', 'LEVER'], type: 'normal',
     desc: ['出牌阶段限一次，你可以选择一名其他体力值大于你的角色，将你们的体力值都调整为两者之和的一半（你向上取整，对方向下取整）。', 'Once per Play phase, choose another character with more health than you. Both of your health values become half their sum (you round up, they round down).'],
     active: {
       cards: { min: 0, max: 0 }, targets: { min: 1, max: 1, filter: (g, p, t) => t !== p && t.hp > p.hp },
@@ -2213,7 +2213,7 @@
     } },
   };
   S.mirror = {
-    name: ['镜火', 'MIRROR'], type: 'normal',
+    name: ['聚光焚舟', 'MIRROR'], type: 'normal',
     desc: ['一名角色的天意牌生效前，你可以打出一张手牌代替之。任意角色的天意牌生效后，你获得之。', "Before any Fate card takes effect, you may play a card from your hand in its place. After any Fate card takes effect, you gain it."],
     triggers: {
       judgeRetouch: { optional: false, silent: true, can: (g, o) => o.hand.length > 0 && !o.dead,
@@ -2229,7 +2229,7 @@
   // ── 希帕提娅 ──
   H.hypatia = { faction: 'classical', hp: 3, gender: 'female', skills: ['lecture', 'proof'], name: ['希帕提娅', 'Hypatia'], title: ['智慧之光', 'The Philosopher'], rating: 6 };
   S.lecture = {
-    name: ['讲学', 'LECTURE'], type: 'normal',
+    name: ['传道授业', 'LECTURE'], type: 'normal',
     desc: ['出牌阶段每项限一次：1. 你可以令手牌数大于你的其他角色各交给你一张手牌，然后若你的手牌数为全场唯一最多，你失去 1 点体力；2. 你可以与一名手牌数不大于你的角色交换手牌或装备区里的所有牌。', 'Once each per Play phase: 1. Every other character with more cards in hand than you gives you one; then if you alone have the most, lose 1 health. 2. Swap your hand, or everything in your equipment area, with a character whose hand is no larger than yours.'],
     active: {
       options: ['lecture1', 'lecture2'],
@@ -2276,7 +2276,7 @@
     }, cards: (g, me, req, A) => { const cs = me.hand.slice().sort((a, b) => A.keep(g, me, a) - A.keep(g, me, b)); return [cs[0].id]; } },
   };
   S.proof = {
-    name: ['推演', 'PROOF'], type: 'limited',
+    name: ['集思广益', 'PROOF'], type: 'limited',
     desc: ['限定技，出牌阶段，你可以获得所有其他角色的手牌，然后依次交给其他角色各一张牌。', 'Limited skill. During your Play phase, take every other character\'s hand, then give one card to each other character in turn.'],
     active: {
       cards: { min: 0, max: 0 }, targets: { min: 0, max: 0 },
@@ -2307,7 +2307,7 @@
 
   // ── 古典主公技：号令 ──
   S.rally = {
-    name: ['号令', 'RALLY'], type: 'lord',
+    name: ['因粮于敌', 'RALLY'], type: 'lord',
     desc: ['执笔技，当你受到实体牌造成的伤害后，你可以获得此牌。', 'Chancellor skill. After you take damage from a physical card, you may take that card.'],
     triggers: { damaged: {
       // 实体牌：以其本身被使用 / 打出的真实卡牌（转化或视为使用的牌不算）；还在结算区才能拿
@@ -2323,31 +2323,31 @@
   Object.assign(OPTION_TEXT, {
     ransomTake: ['获得其中一张并防止伤害', 'Take One, Prevent Damage'], ransomDiscard: ['弃置 {n} 张牌', 'Discard {n} Cards'],
     domesdayHand: ['观看其手牌，可弃置其中一张黑色牌', 'View Hand, Discard a Black Card'], domesdayRole: ['观看其身份', 'View Role'],
-    redeem0: ['回复体力至全场唯一最多', 'Heal to Most'], redeem1: ['摸牌至全场唯一最多', 'Draw to Most'], redeem2: ['装满军备区', 'Fill Arsenal'], redeem3: ['获得【救赎】', 'Gain Redemption'],
+    redeem0: ['回复体力至全场唯一最多', 'Heal to Most'], redeem1: ['摸牌至全场唯一最多', 'Draw to Most'], redeem2: ['装满军备区', 'Fill Arsenal'], redeem3: ['获得【涤罪升天】', 'Gain Redemption'],
   });
   Object.assign(PROMPT_TEXT, {
-    callingTarget: ['圣召：选择一名其他角色，令其也执行此效果。', 'Calling: choose another character to suffer the same.'],
-    callingDiscard: ['圣召：请弃置 {n} 张牌。', 'Calling: discard {n} cards.'],
-    martyrTarget: ['殉道：选择一名其他角色回复 1 点体力并获得【圣召】。', 'Martyr: choose another character to recover 1 health and gain Calling.'],
-    ransomShow: ['赎金：选择至多三张手牌给{t}观看。', 'Ransom: choose up to three cards to show {t}.'],
-    ransomOpt: ['赎金：选择一项：', 'Ransom: choose one:'], ransomPick: ['赎金：选择一张获得。', 'Ransom: choose one to take.'],
-    ransomDiscard: ['赎金：请弃置 {n} 张牌。', 'Ransom: discard {n} cards.'],
+    callingTarget: ['感同身受：选择一名其他角色，令其也执行此效果。', 'Calling: choose another character to suffer the same.'],
+    callingDiscard: ['感同身受：请弃置 {n} 张牌。', 'Calling: discard {n} cards.'],
+    martyrTarget: ['舍生取义：选择一名其他角色回复 1 点体力并获得【感同身受】。', 'Martyr: choose another character to recover 1 health and gain Calling.'],
+    ransomShow: ['千金赎身：选择至多三张手牌给{t}观看。', 'Ransom: choose up to three cards to show {t}.'],
+    ransomOpt: ['千金赎身：选择一项：', 'Ransom: choose one:'], ransomPick: ['千金赎身：选择一张获得。', 'Ransom: choose one to take.'],
+    ransomDiscard: ['千金赎身：请弃置 {n} 张牌。', 'Ransom: discard {n} cards.'],
     pindian: ['拼点（对手 {t}）：选择一张手牌。', 'Contest against {t}: choose a card.'],
-    domesdayOpt: ['清册：选择一项：', 'Domesday: choose one:'], domesdayPick: ['清册：可以弃置其中一张黑色牌。', 'Domesday: you may discard one black card.'],
-    kingmakerGive: ['拥立：交给{t}至少一张手牌。', 'Kingmaker: give {t} at least one card.'],
-    kingmakerBack: ['拥立：请将 {n} 张手牌交给{t}。', 'Kingmaker: give {n} cards to {t}.'],
-    escort: ['勤王：是否替{t}打出一张【闪】，然后摸一张牌？', 'Escort: play a Parry on behalf of {t}, then draw 1?'],
-    freedomPick: ['自由：选择天兆区的一张牌弃置。', 'Freedom: choose a card in your omen area to discard.'],
-    tradeTake: ['通商：选择{t}区域内的一张牌获得。', "Trade: choose a card from {t}'s areas."],
-    redeemOpt: ['救赎：选择一项：', 'Redemption: choose one:'], redeemTarget: ['救赎：选择一名角色。', 'Redemption: choose a character.'],
-    exileTarget: ['流放：选择一名角色摸 {n} 张牌并翻面。', 'Exile: choose a character to draw {n} and turn face down.'],
-    anointTake: ['圣冠：选择{t}的一张手牌。', "Anoint: take one of {t}'s cards."],
+    domesdayOpt: ['末日审判：选择一项：', 'Domesday: choose one:'], domesdayPick: ['末日审判：可以弃置其中一张黑色牌。', 'Domesday: you may discard one black card.'],
+    kingmakerGive: ['扶立新王：交给{t}至少一张手牌。', 'Kingmaker: give {t} at least one card.'],
+    kingmakerBack: ['扶立新王：请将 {n} 张手牌交给{t}。', 'Kingmaker: give {n} cards to {t}.'],
+    escort: ['勤王护驾：是否替{t}打出一张【闪】，然后摸一张牌？', 'Escort: play a Parry on behalf of {t}, then draw 1?'],
+    freedomPick: ['自由之呼：选择天兆区的一张牌弃置。', 'Freedom: choose a card in your omen area to discard.'],
+    tradeTake: ['互通有无：选择{t}区域内的一张牌获得。', "Trade: choose a card from {t}'s areas."],
+    redeemOpt: ['涤罪升天：选择一项：', 'Redemption: choose one:'], redeemTarget: ['涤罪升天：选择一名角色。', 'Redemption: choose a character.'],
+    exileTarget: ['流离失所：选择一名角色摸 {n} 张牌并翻面。', 'Exile: choose a character to draw {n} and turn face down.'],
+    anointTake: ['四方来朝：选择{t}的一张手牌。', "Anoint: take one of {t}'s cards."],
   });
 
   // ── 查理曼 ──
   H.charlemagne = { faction: 'medieval', hp: 4, gender: 'male', skills: ['anoint', 'paladins'], name: ['查理曼', 'Charlemagne'], title: ['欧洲之父', 'The Father of Europe'], rating: 7 };
   S.anoint = {
-    name: ['圣冠', 'ANOINT'], type: 'normal',
+    name: ['四方来朝', 'ANOINT'], type: 'normal',
     desc: ['出牌阶段限一次，你可以获得所有其他角色各一张手牌。此阶段结束时，你将其中仍在你手里的牌交还原主。', 'Once per Play phase, take one card from every other character\'s hand. At the end of this phase, return those still in your hand to their owners.'],
     active: {
       cards: { min: 0, max: 0 }, targets: { min: 0, max: 0 },
@@ -2383,7 +2383,7 @@
     ai: { play: (g, me, inst, A) => { const n = g.alive.filter(q => q !== me && q.hand.length).length; return n >= 2 ? [{ score: 1 + n * 0.7, ans: { action: 'skill', skill: inst.key } }] : []; } },
   };
   S.paladins = {
-    name: ['圣骑', 'PALADINS'], type: 'normal',
+    name: ['十二圣骑', 'PALADINS'], type: 'normal',
     desc: ['你可以将任意黑色牌当闪使用或打出。每回合你首次使用一张闪时，你摸一张牌。', 'You may use or play any black card as a Parry. The first time each turn you use a Parry, draw 1.'],
     viewAs: { patterns: ['parry'], as: 'parry', count: 1, zones: 'he', filter: (g, p, c) => c.color === 'black' },
     triggers: { cardUsed: {
@@ -2406,7 +2406,7 @@
     else if (kind === 'discard') yield* g.askDiscard(t, n, n, 'he', 'callingDiscard', null, { skill: 'calling', n });
   }
   S.calling = {
-    name: ['圣召', 'CALLING'], type: 'normal',
+    name: ['感同身受', 'CALLING'], type: 'normal',
     desc: ['当你受到伤害、失去体力、减体力上限或弃置牌后，你可以令一名其他角色也执行此效果。', 'After you take damage, lose health, lose max health, or discard cards, you may make another character suffer the same.'],
     triggers: {
       damaged: { can: (g, o, d) => d.to === o && !o.dead && !d.calling, *on(g, o, d) { yield* callingSpread(g, o, 'damage', d.amount, { nature: d.nature }); } },
@@ -2424,8 +2424,8 @@
     },
   };
   S.martyr = {
-    name: ['殉道', 'MARTYR'], type: 'limited',
-    desc: ['限定技，当你进入濒死状态时，你可以放弃求药，然后令一名其他角色将体力回复至体力上限并获得【圣召】。', 'Limited skill. When you are dying, you may refuse to be saved; then another character recovers to full health and gains Calling.'],
+    name: ['舍生取义', 'MARTYR'], type: 'limited',
+    desc: ['限定技，当你进入濒死状态时，你可以放弃求药，然后令一名其他角色将体力回复至体力上限并获得【感同身受】。', 'Limited skill. When you are dying, you may refuse to be saved; then another character recovers to full health and gains Calling.'],
     triggers: { enterDying: {
       can: (g, o, d) => d.player === o && !o.skillState.martyr && g.alive.length > 1,
       *on(g, o, d) {
@@ -2443,7 +2443,7 @@
   // ── 理查一世 ──
   H.richard = { faction: 'medieval', hp: 4, gender: 'male', skills: ['valiant', 'ransom'], name: ['理查一世', 'Richard I'], title: ['狮心王', 'The Lionheart'], rating: 6 };
   S.valiant = {
-    name: ['狮心', 'VALIANT'], type: 'locked', locked: true,
+    name: ['狮心无畏', 'VALIANT'], type: 'locked', locked: true,
     desc: ['锁定技，你的手牌上限和摸牌阶段的摸牌数量等于你的体力上限。当你的手牌数小于体力上限时，你不能成为釜底抽薪和探囊取物的目标；当你的手牌数大于体力上限时，你不能成为流连忘返的目标。', 'Compulsory skill. Your hand limit and the number of cards you draw in your Draw phase both equal your max health. While your hand is smaller than your max health, you cannot be targeted by Sabotage or Pilfer; while it is larger, you cannot be targeted by Lotus Eaters.'],
     triggers: { drawCount: { silent: true, optional: false, can: (g, o, d) => d.player === o, *on(g, o, d) { d.n = o.maxHp; } } },
     mods: {
@@ -2457,7 +2457,7 @@
     },
   };
   S.ransom = {
-    name: ['赎金', 'RANSOM'], type: 'normal',
+    name: ['千金赎身', 'RANSOM'], type: 'normal',
     desc: ['当你受到其他角色造成的伤害时，你可以令其观看你至多三张手牌，然后其选择一项：1. 获得其中一张并防止此伤害；2. 弃置等量的牌。', 'When another character would damage you, you may show them up to three cards from your hand. They choose: take one of them and prevent the damage, or discard that many cards.'],
     triggers: { damageTaking: {
       can: (g, o, d) => d.to === o && d.from && d.from !== o && !d.from.dead && o.hand.length > 0,
@@ -2483,7 +2483,7 @@
   // ── 熙德 ──
   H.elcid = { faction: 'medieval', hp: 4, gender: 'male', skills: ['triumph', 'undying'], name: ['熙德', 'El Cid'], title: ['无敌勇士', 'The Champion'], rating: 7 };
   S.triumph = {
-    name: ['凯旋', 'TRIUMPH'], type: 'locked', locked: true,
+    name: ['得胜而归', 'TRIUMPH'], type: 'locked', locked: true,
     desc: ['锁定技，当你对距离 1 以内的角色造成伤害时，你回复 X 点体力并摸 X 张牌（X 为造成的伤害值）。', 'Compulsory skill. When you deal damage to a character within distance 1, recover X health and draw X (X = the damage dealt).'],
     triggers: {
       // 距离在造成伤害时判定；X 按实际造成的伤害值（伤害结算完后回复、摸牌）
@@ -2492,7 +2492,7 @@
     },
   };
   S.undying = {
-    name: ['不朽', 'UNDYING'], type: 'limited',
+    name: ['虽死犹战', 'UNDYING'], type: 'limited',
     desc: ['限定技，当你进入濒死状态时，你可以弃置你区域内的所有牌，将体力回复至体力上限，然后摸三张牌。', 'Limited skill. When you are dying, you may discard every card in your areas, recover to full health, then draw 3.'],
     triggers: { enterDying: {
       can: (g, o, d) => d.player === o && !o.skillState.undying,
@@ -2509,7 +2509,7 @@
   // ── 威廉一世 ──
   H.william = { faction: 'medieval', hp: 4, gender: 'male', skills: ['retreat', 'domesday'], name: ['威廉一世', 'William'], title: ['征服者', 'The Conqueror'], rating: 6 };
   S.retreat = {
-    name: ['佯退', 'RETREAT'], type: 'normal',
+    name: ['佯败诱敌', 'RETREAT'], type: 'normal',
     desc: ['当你即将受到其他角色造成的伤害时，你可以令其摸一张牌，然后与其拼点：若你赢，防止此伤害并获得对方的拼点牌；若你没赢，此伤害改为 1 点，你收回你的拼点牌。', 'When another character would damage you, you may let them draw 1, then contest them: if you win, prevent the damage and take their card; otherwise the damage becomes 1 and you take back your card.'],
     triggers: { damageTaking: {
       can: (g, o, d) => d.to === o && d.from && d.from !== o && !d.from.dead && o.hand.length > 0,
@@ -2527,7 +2527,7 @@
     },
   };
   S.domesday = {
-    name: ['清册', 'DOMESDAY'], type: 'normal',
+    name: ['末日审判', 'DOMESDAY'], type: 'normal',
     desc: ['出牌阶段限一次，你可以与一名有手牌的其他角色拼点：若你赢，则你对其造成 X 点伤害（X 为其体力值的一半，向上取整）；若你没赢，则你观看其身份，然后你受到其对你造成的 1 点伤害。', 'Once per Play phase, you may contest another character who has cards in hand: if you win, deal X damage to them (X = half their health, rounded up); otherwise, view their role, then they deal 1 damage to you.'],
     active: {
       cards: { min: 0, max: 0 }, targets: { min: 1, max: 1, filter: (g, p, t) => t !== p && t.hand.length > 0 },
@@ -2557,7 +2557,7 @@
   // ── 埃莉诺 ──
   H.eleanor = { faction: 'medieval', hp: 3, gender: 'female', skills: ['alliance', 'kingmaker'], name: ['埃莉诺', 'Eleanor'], title: ['两国王后', 'The Twice Queen'], rating: 6 };
   S.alliance = {
-    name: ['联姻', 'ALLIANCE'], type: 'normal',
+    name: ['秦晋之好', 'ALLIANCE'], type: 'normal',
     desc: ['准备阶段和结束阶段各限一次，你可以指定一名其他角色并选择一项：1. 你将手牌数调整至与其相同；2. 其将手牌数调整至与你相同。', 'Once in your Prepare phase and once in your Finish phase, you may choose another character and pick one: 1. adjust your hand size to match theirs; 2. they adjust their hand size to match yours. (Adjust = draw up, or discard down choosing which.)'],
     triggers: { phaseStart: {
       can: (g, o, d) => d.player === o && (d.phase === 'prepare' || d.phase === 'finish') && !o.dead && g.alive.some(t => t !== o && t.hand.length !== o.hand.length),
@@ -2588,7 +2588,7 @@
     },
   };
   S.kingmaker = {
-    name: ['拥立', 'KINGMAKER'], type: 'normal',
+    name: ['扶立新王', 'KINGMAKER'], type: 'normal',
     desc: ['其他角色的弃牌阶段开始时，你可以交给其至少一张手牌，然后其将超出其体力值数量的手牌交给你。', "At the start of another character's Discard phase, you may give them at least one card from your hand; then they give you every card in hand beyond their health."],
     triggers: { phaseStart: {
       can: (g, o, d) => d.phase === 'discard' && d.player !== o && !d.player.dead && o.hand.length > 0,
@@ -2609,7 +2609,7 @@
   // ── 华莱士 ──
   H.wallace = { faction: 'medieval', hp: 4, gender: 'male', skills: ['schiltron', 'freedom'], name: ['华莱士', 'Wallace'], title: ['勇敢之心', 'The Braveheart'], rating: 7 };
   S.schiltron = {
-    name: ['枪阵', 'SCHILTRON'], type: 'normal',
+    name: ['刺猬方阵', 'SCHILTRON'], type: 'normal',
     desc: ['你可以将杀当闪、闪当杀使用或打出；若如此做，你可以获得对方的一张手牌。', 'You may use or play a Strike as a Parry, or a Parry as a Strike. If you do, you may take a card from your opponent\'s hand.'],
     viewAs: { patterns: ['strike', 'parry'], count: 1, zones: 'h', filter: (g, p, c, ctx) => {
       const pats = ctx && ctx.pattern ? [].concat(ctx.pattern) : ['strike'];
@@ -2626,7 +2626,7 @@
     return use.targets.filter(t => t !== o && !t.dead);
   }
   S.freedom = {
-    name: ['自由', 'FREEDOM'], type: 'normal',
+    name: ['自由之呼', 'FREEDOM'], type: 'normal',
     desc: ['准备阶段开始时，你可以失去 1 点体力或弃置一张装备牌，然后令你本回合的摸牌阶段额外摸 X 张牌，本出牌阶段内攻击范围变为无限、出杀的次数上限 +X，且弃牌阶段结束时，你可以令一名其他角色获得你本次的弃牌（X 为你已损失的体力值）。', 'At the start of your Prepare phase, you may lose 1 health or discard an Equipment card. If you do, this turn you draw X extra in your Draw phase; during your Play phase your attack range is unlimited and you may use X more Strikes; and at the end of your Discard phase you may give the cards you discarded to another character (X = your lost health).'],
     mods: {
       attackRange: (g, o, v, p) => (p === o && o.turnState.freedomOn && g.phase === 'play') ? 99 : v,
@@ -2664,7 +2664,7 @@
   // ── 马可·波罗 ──
   H.marcopolo = { faction: 'medieval', hp: 3, gender: 'male', skills: ['journal', 'trade'], name: ['马可·波罗', 'Marco Polo'], title: ['东方行者', 'The Traveler'], rating: 7 };
   S.journal = {
-    name: ['行记', 'JOURNAL'], type: 'normal',
+    name: ['东方见闻', 'JOURNAL'], type: 'normal',
     desc: ['出牌阶段限一次，你可以将一张方块手牌当流连忘返对自己使用，然后回复 1 点体力并摸 X 张牌（X 为这张牌的点数的一半，向上取整）。若你的天兆区里有牌，你使用牌无次数限制。', 'Once per Play phase, use a ♦ card from your hand as Lotus Eaters on yourself, then recover 1 health and draw X (X = half its rank, rounded up). While your omen area has cards, your cards have no use limit.'],
     active: {
       cards: { min: 1, max: 1, zones: 'h', filter: (g, p, c) => c.suit === 'diamond' }, targets: { min: 0, max: 0 },
@@ -2683,7 +2683,7 @@
     ai: { play: (g, me, inst, A) => { const ds = me.hand.filter(c => c.suit === 'diamond').sort((a, b) => b.rank - a.rank); if (!ds.length) return []; const c = ds[0]; const v = Math.min(c.rank, 8) * 0.55 + (me.wounded ? 1.5 : 0) - 2.6 - A.keep(g, me, c) * 0.2; return v > 0.3 ? [{ score: v, ans: { action: 'skill', skill: inst.key, cardIds: [c.id] } }] : []; } },
   };
   S.trade = {
-    name: ['通商', 'TRADE'], type: 'locked', locked: true,
+    name: ['互通有无', 'TRADE'], type: 'locked', locked: true,
     desc: ['锁定技，当你受到伤害后，其他角色各获得你区域内的一张牌，然后你获得其他角色区域内各一张牌。', 'Compulsory skill. After you take damage, every other character takes one card from your areas, then you take one card from each of their areas.'],
     triggers: { damaged: {
       can: (g, o, d) => d.to === o && !o.dead,
@@ -2697,8 +2697,8 @@
   // ── 但丁 ──
   H.dante = { faction: 'medieval', hp: 3, gender: 'male', skills: ['redemption', 'exile'], name: ['但丁', 'Dante'], title: ['神曲诗人', 'The Poet'], rating: 7 };
   S.redemption = {
-    name: ['救赎', 'REDEMPTION'], type: 'normal',
-    desc: ['准备阶段开始时，你可以选择一名角色并选择一项：1. 令其回复体力至全场唯一最多；2. 令其摸牌至全场唯一最多；3. 令其从牌堆或弃牌堆随机使用军备牌，直到其军备区没有空位；4. 令其获得【救赎】。每项限一次。', 'At the start of your Prepare phase, you may choose a character and one option: 1. heal them until they alone have the most health; 2. they draw until they alone have the most cards; 3. they equip random arsenal cards from the deck or discard pile until every slot is full; 4. they gain Redemption. Each option once per game.'],
+    name: ['涤罪升天', 'REDEMPTION'], type: 'normal',
+    desc: ['准备阶段开始时，你可以选择一名角色并选择一项：1. 令其回复体力至全场唯一最多；2. 令其摸牌至全场唯一最多；3. 令其从牌堆或弃牌堆随机使用军备牌，直到其军备区没有空位；4. 令其获得【涤罪升天】。每项限一次。', 'At the start of your Prepare phase, you may choose a character and one option: 1. heal them until they alone have the most health; 2. they draw until they alone have the most cards; 3. they equip random arsenal cards from the deck or discard pile until every slot is full; 4. they gain Redemption. Each option once per game.'],
     triggers: { turnStart: {
       can: (g, o, d) => d.player === o && [0, 1, 2, 3].some(i => !(o.skillState.redemption || {})[i]),
       *on(g, o) {
@@ -2748,7 +2748,7 @@
     },
   };
   S.exile = {
-    name: ['流放', 'EXILE'], type: 'normal',
+    name: ['流离失所', 'EXILE'], type: 'normal',
     desc: ['当你受到其他角色造成的伤害后，你可以令一名角色摸 X 张牌并翻面（X 为你已损失的体力值）。', 'After another character damages you, you may make a character draw X and turn face down (X = your lost health).'],
     triggers: { damaged: {
       can: (g, o, d) => d.to === o && !o.dead && d.from && d.from !== o,
@@ -2772,7 +2772,7 @@
   // ── 腓特烈一世 ──
   H.barbarossa = { faction: 'medieval', hp: 4, gender: 'male', skills: ['knights', 'slumber'], name: ['腓特烈一世', 'Barbarossa'], title: ['红胡子', 'The Redbeard'], rating: 7 };
   S.knights = {
-    name: ['铁骑', 'KNIGHTS'], type: 'locked', locked: true,
+    name: ['铁骑突出', 'KNIGHTS'], type: 'locked', locked: true,
     desc: ['锁定技，你使用的杀须连续使用两张闪才能抵消；与你决斗的另一方每次须连续打出两张杀。', 'Compulsory skill. Your Strikes need two Parries to cancel. In a Duel with you, your opponent must play two Strikes each time.'],
     triggers: {
       targetConfirmed: { silent: true, can: (g, o, d) => strikeBy(o, d.use), *on(g, o, d) { d.use.data.parryNeed = d.use.data.parryNeed || new Map(); for (const t of d.use.targets) d.use.data.parryNeed.set(t, 2); } },
@@ -2781,15 +2781,15 @@
     },
   };
   S.slumber = {
-    name: ['山眠', 'SLUMBER'], type: 'awaken', locked: true,
-    desc: ['觉醒技，准备阶段开始时，若你的体力值不大于 2 或没有手牌，你减 1 点体力上限，回复 1 点体力，摸三张牌，然后失去【山眠】并获得【中兴】。', 'Awakening skill. At the start of your Prepare phase, if you have 2 or less health or no cards in hand, lose 1 max health, recover 1 health, draw 3, then lose Slumber and gain Resurgence.'],
+    name: ['山中长眠', 'SLUMBER'], type: 'awaken', locked: true,
+    desc: ['觉醒技，准备阶段开始时，若你的体力值不大于 2 或没有手牌，你减 1 点体力上限，回复 1 点体力，摸三张牌，然后失去【山中长眠】并获得【王者归来】。', 'Awakening skill. At the start of your Prepare phase, if you have 2 or less health or no cards in hand, lose 1 max health, recover 1 health, draw 3, then lose Slumber and gain Resurgence.'],
     triggers: { turnStart: {
       can: (g, o, d) => d.player === o && !o.skillState.slumber && (o.hp <= 2 || o.hand.length === 0),
       *on(g, o) { o.skillState.slumber = true; yield* g.changeMaxHp(o, -1); if (o.dead) return; yield* g.recover(o, 1, o); yield* g.draw(o, 3, 'slumber'); o.skills = o.skills.filter(x => x !== 'slumber'); g.log('skillLost', { seat: o.seat, skill: 'slumber' }); g.gainSkill(o, 'resurgence'); },
     } },
   };
   S.resurgence = {
-    name: ['中兴', 'RESURGENCE'], type: 'normal',
+    name: ['王者归来', 'RESURGENCE'], type: 'normal',
     desc: ['每项每回合限一次：1. 当你使用杀或决斗对其他角色造成伤害时，你可以令其先失去等量的体力；2. 本回合你使用的下一张杀或决斗可以额外指定一个目标。', 'Once each per turn: 1. When your Strike or Duel would damage another character, you may first make them lose that much health; 2. Your next Strike or Duel this turn may take one extra target.'],
     triggers: {
       damageCausing: {
@@ -2804,7 +2804,7 @@
 
   // ── 中古主公技：勤王 ──
   S.escort = {
-    name: ['勤王', 'ESCORT'], type: 'lord',
+    name: ['勤王护驾', 'ESCORT'], type: 'lord',
     desc: ['执笔技，每回合限一次，当你需要使用或打出闪时，其他角色可以替你打出一张闪，然后其摸一张牌。', 'Chancellor skill. Once per turn, when you need to use or play a Parry, another character may play one for you, then they draw 1.'],
     triggers: { askResponse: {
       can: (g, o, d) => d.player === o && d.req.pattern.includes('parry') && !d.result && d.req.reason !== 'escort' && o.marks.escortTurn !== (g.turnSeq || 0) && others(g, o).some(q => !q.dead),
@@ -2827,28 +2827,28 @@
     codexNone: ['不选择', 'Skip'],
   });
   Object.assign(PROMPT_TEXT, {
-    codexOpt: ['手稿：选择本回合的点数规律：', 'Codex: choose this turn\'s rank pattern:'],
-    sophistPick: ['诡辩：弃置一张牌，将此杀转移给你攻击范围内的另一名角色。', 'Sophist: discard a card to redirect this Strike to another character in your range.'],
-    sophistTarget: ['诡辩：选择新的目标。', 'Sophist: choose the new target.'],
-    schemeAssign: ['权术：选择获得 {c} 的角色。', 'Scheme: choose who receives {c}.'],
-    schemeStrike: ['权术：可以视为对其中任意名角色使用杀。', 'Scheme: you may be treated as using a Strike on any of them.'],
-    telescope: ['望远：依次点选要放在牌堆顶的牌（先点的在最上面），其余置于牌堆底。', 'Telescope: click cards to keep on top (first clicked goes topmost); the rest go to the bottom.'],
-    chiselPick: ['雕琢：每种花色选一张获得。', 'Chisel: take one card of each suit.'],
-    plunder: ['劫掠：可以对{t}使用一张【杀】。', 'Plunder: you may use a Strike on {t}.'],
-    fireshipTarget: ['火船：可以再选择一名其他角色重复此流程。', 'Fireship: you may choose another character to repeat.'],
-    favorTarget: ['恩赏：选择一名其他角色获得这些牌。', 'Favor: choose another character to receive these cards.'],
+    codexOpt: ['步步高升：选择本回合的点数规律：', 'Codex: choose this turn\'s rank pattern:'],
+    sophistPick: ['嫁祸于人：弃置一张牌，将此杀转移给你攻击范围内的另一名角色。', 'Sophist: discard a card to redirect this Strike to another character in your range.'],
+    sophistTarget: ['嫁祸于人：选择新的目标。', 'Sophist: choose the new target.'],
+    schemeAssign: ['驱虎吞狼：选择获得 {c} 的角色。', 'Scheme: choose who receives {c}.'],
+    schemeStrike: ['驱虎吞狼：可以视为对其中任意名角色使用杀。', 'Scheme: you may be treated as using a Strike on any of them.'],
+    telescope: ['仰观天象：依次点选要放在牌堆顶的牌（先点的在最上面），其余置于牌堆底。', 'Telescope: click cards to keep on top (first clicked goes topmost); the rest go to the bottom.'],
+    chiselPick: ['精雕细琢：每种花色选一张获得。', 'Chisel: take one card of each suit.'],
+    plunder: ['趁火打劫：可以对{t}使用一张【杀】。', 'Plunder: you may use a Strike on {t}.'],
+    fireshipTarget: ['火船破阵：可以再选择一名其他角色重复此流程。', 'Fireship: you may choose another character to repeat.'],
+    favorTarget: ['恩宠有加：选择一名其他角色获得这些牌。', 'Favor: choose another character to receive these cards.'],
   });
 
   // ── 伊丽莎白一世 ──
   H.elizabeth = { faction: 'renaissance', hp: 3, gender: 'female', skills: ['seapower', 'mantle'], name: ['伊丽莎白一世', 'Elizabeth I'], title: ['荣光女王', 'Gloriana'], rating: 7 };
   S.seapower = {
-    name: ['海权', 'SEAPOWER'], type: 'locked', locked: true,
+    name: ['海上霸权', 'SEAPOWER'], type: 'locked', locked: true,
     desc: ['锁定技，每当你使用一张谋略牌后，你摸一张牌。你使用谋略牌无距离限制。', 'Compulsory skill. After you use a Stratagem, draw 1. Your Stratagems have no distance limit.'],
     triggers: { cardUsed: { can: (g, o, d) => d.use.from === o && (E.CARD_DEFS[d.use.card.name] || {}).type === 'stratagem' && !o.dead, *on(g, o) { yield* g.draw(o, 1, 'seapower'); } } },
     mods: { ignoreDistance: (g, o, v, p, t, card) => (p === o && card && (E.CARD_DEFS[card.name] || {}).type === 'stratagem') ? true : v },
   };
   S.mantle = {
-    name: ['斗篷', 'MANTLE'], type: 'normal',
+    name: ['解袍铺路', 'MANTLE'], type: 'normal',
     desc: ['你可以将一张黑色牌当无懈可击使用。', 'You may use any black card as a Veto.'],
     viewAs: { patterns: ['veto'], as: 'veto', count: 1, zones: 'he', filter: (g, p, c) => c.color === 'black' },
   };
@@ -2856,7 +2856,7 @@
   // ── 达·芬奇 ──
   H.davinci = { faction: 'renaissance', hp: 3, gender: 'male', skills: ['codex', 'invert'], name: ['达·芬奇', 'Da Vinci'], title: ['全才', 'The Universal Man'], rating: 6 };
   S.codex = {
-    name: ['手稿', 'CODEX'], type: 'locked', locked: true,
+    name: ['步步高升', 'CODEX'], type: 'locked', locked: true,
     desc: ['锁定技，出牌阶段，每当你使用一张牌时，若这张牌的点数比该阶段内你使用的上一张牌大，则你摸一张牌。', 'Compulsory skill. During your Play phase, whenever you use a card whose rank is higher than the previous card you used this phase, draw 1.'],
     triggers: { cardUsing: {
       silent: true, optional: false,
@@ -2872,7 +2872,7 @@
   // 当作那张牌现在能不能用（如杀已到使用上限、满体力的药）：不能用时技能不可发动
   const invertOk = (g, p) => { const n = lastUsable(g, p); if (!n) return false; const c = g.cardsIn(p, 'he')[0]; return !!c && g.playable(p, V(n, [c]), { phase: true }); };
   S.invert = {
-    name: ['镜书', 'INVERT'], type: 'normal',
+    name: ['如法炮制', 'INVERT'], type: 'normal',
     desc: ['出牌阶段限一次，你可以将一张牌当作你本回合上一张使用的非装备牌使用。', 'Once per Play phase, you may use any card as the last non-equipment card you used this turn.'],
     active: {
       cards: { min: 1, max: 1, zones: 'he' },
@@ -2914,7 +2914,7 @@
   // ── 马基雅维利 ──
   H.machiavelli = { faction: 'renaissance', hp: 3, gender: 'male', skills: ['scheme', 'sophist'], name: ['马基雅维利', 'Machiavelli'], title: ['君王之师', "The Prince's Tutor"], rating: 7 };
   S.scheme = {
-    name: ['权术', 'SCHEME'], type: 'normal',
+    name: ['驱虎吞狼', 'SCHEME'], type: 'normal',
     desc: ['出牌阶段限一次，你可以展示牌堆顶的两张牌并分别交给两名角色（可以包括你），然后视为获得点数较大的牌的角色对另一名角色使用杀；之后你可以视为对其中任意名其他角色使用杀。以此法使用的杀造成伤害后，你获得受伤角色的一张牌。', 'Once per Play phase, reveal the top two cards and give one each to two characters (you may be one). The one with the higher rank is treated as using a Strike on the other; then you may be treated as using a Strike on any of them other than yourself. Whenever these Strikes deal damage, you take a card from the damaged character.'],
     active: {
       cards: { min: 0, max: 0 }, targets: { min: 2, max: 2, filter: () => true },
@@ -2959,7 +2959,7 @@
     },
   };
   S.sophist = {
-    name: ['诡辩', 'SOPHIST'], type: 'normal',
+    name: ['嫁祸于人', 'SOPHIST'], type: 'normal',
     desc: ['当你成为杀的目标时，你可以弃置一张牌，将此杀转移给你攻击范围内的另一名角色（不能是使用者）。', "When you become a Strike's target, you may discard a card to redirect it to another character within your attack range (not its user)."],
     triggers: { targeted: {
       can: (g, o, d) => d.target === o && d.use.targets.includes(o) && !d.use.nullified.has(o) && isStrike(d.use.card) && o.cardCount > 0 &&   // 目标已被改走、或这张杀已对你无效时不能发动
@@ -2984,7 +2984,7 @@
   // ── 莎士比亚 ──
   H.shakespeare = { faction: 'renaissance', hp: 3, gender: 'male', skills: ['soliloquy', 'tragedy'], name: ['莎士比亚', 'Shakespeare'], title: ['埃文河诗人', 'The Bard'], rating: 7 };
   S.soliloquy = {
-    name: ['独白', 'SOLILOQUY'], type: 'locked', locked: true,
+    name: ['一唱三叹', 'SOLILOQUY'], type: 'locked', locked: true,
     desc: ['锁定技，当你于非濒死状态下使用杀或谋略牌（铁索连环除外）仅指定一名目标时，该牌额外结算一次。', 'Compulsory skill. When you are not dying and use a Strike or a Stratagem (except Chain Shot) that targets exactly one character, it resolves one more time.'],
     triggers: {
       targetConfirmed: {
@@ -2994,8 +2994,8 @@
     },
   };
   S.tragedy = {
-    name: ['悲剧', 'TRAGEDY'], type: 'awaken',
-    desc: ['觉醒技，一名其他角色死亡时，你可以获得其所有牌和至多两个技能，然后失去【悲剧】。', 'Awakening skill. When another character dies, you may take all their cards and up to two of their skills, then lose Tragedy.'],
+    name: ['薪火相传', 'TRAGEDY'], type: 'awaken',
+    desc: ['觉醒技，一名其他角色死亡时，你可以获得其所有牌和至多两个技能，然后失去【薪火相传】。', 'Awakening skill. When another character dies, you may take all their cards and up to two of their skills, then lose Tragedy.'],
     triggers: { death: {
       optional: false,   // 觉醒技：第一名其他角色死亡时必定发动；「可以」的部分逐项询问
       can: (g, o, d) => d.player !== o && !o.dead && !o.skillState.tragedy && o.skills.includes('tragedy'),
@@ -3022,7 +3022,7 @@
   H.galileo = { faction: 'renaissance', hp: 3, gender: 'male', skills: ['telescope', 'eppur'], name: ['伽利略', 'Galileo'], title: ['星际信使', 'The Stargazer'], rating: 7 };
   function* telescope(g, o) { yield* g.arrangeTop(o, Math.min(5, g.alive.length), 'telescope', { skill: 'telescope' }); }
   S.telescope = {
-    name: ['望远', 'TELESCOPE'], type: 'normal',
+    name: ['仰观天象', 'TELESCOPE'], type: 'normal',
     desc: ['准备阶段开始时和结束阶段开始时，你可以观看牌堆顶的 X 张牌，并以任意顺序置于牌堆顶或牌堆底（X 为存活角色数，至多为 5）。', 'At the start of your Prepare phase and of your Finish phase, you may look at the top X cards and put them back on top or bottom in any order (X = living characters, max 5).'],
     triggers: {
       turnStart: { can: (g, o, d) => d.player === o, *on(g, o) { o.turnState.telescopeTiming = 'start'; yield* telescope(g, o); } },
@@ -3032,7 +3032,7 @@
   };
   const EPPUR = { spade: 'veto', heart: 'remedy', club: 'parry', diamond: 'fire_strike' };
   S.eppur = {
-    name: ['仍动', 'EPPUR'], type: 'locked', locked: true,
+    name: ['地仍在转', 'EPPUR'], type: 'locked', locked: true,
     desc: ['锁定技，你的手牌数不能小于 X（X 为你已损失的体力值）。你可以将一张牌按花色当作以下牌使用或打出：黑桃当无懈可击，红桃当药，梅花当闪，方块当火杀。', 'Compulsory skill. You never have fewer than X cards in hand (X = your lost health). You may use or play a card by suit as: ♠ Veto, ♥ Remedy, ♣ Parry, ♦ Fire Strike.'],
     viewAs: {
       patterns: ['veto', 'remedy', 'parry', 'strike'], count: 1, zones: 'he',
@@ -3060,7 +3060,7 @@
     return take.length;
   }
   S.chisel = {
-    name: ['雕琢', 'CHISEL'], type: 'locked', locked: true,
+    name: ['精雕细琢', 'CHISEL'], type: 'locked', locked: true,
     desc: ['锁定技，摸牌阶段，你放弃摸牌，改为亮出牌堆顶的五张牌，获得其中每种花色各一张，弃置其余的牌。若你第一次以此法获得的牌少于四张，你可以再这样做一次。', 'Compulsory skill. In your Draw phase, instead of drawing, reveal the top five cards, take one of each suit, and discard the rest. If you took fewer than four the first time, you may do this once more.'],
     triggers: { drawCount: {
       can: (g, o, d) => d.player === o && !d.replaced,
@@ -3073,7 +3073,7 @@
     ai: { confirm: () => true, pick: (g, me, req, A) => { const by = {}; for (const id of req.options) { const c = g.card(id); if (!by[c.suit] || A.keep(g, me, c) > A.keep(g, me, by[c.suit])) by[c.suit] = c; } return Object.values(by).map(c => c.id); } },
   };
   S.david = {
-    name: ['大卫', 'DAVID'], type: 'locked', locked: true,
+    name: ['蓄势待发', 'DAVID'], type: 'locked', locked: true,
     desc: ['锁定技，若你于出牌阶段内没有使用过杀，你跳过本回合的弃牌阶段。', 'Compulsory skill. If you used no Strike during your Play phase, skip your Discard phase this turn.'],
     triggers: { phaseEnd: { can: (g, o, d) => d.player === o && d.phase === 'play' && !o.turnState.usedStrikeInPlay, *on(g, o) { g.skipPhase(o, 'discard'); } } },
   };
@@ -3081,7 +3081,7 @@
   // ── 德雷克 ──
   H.drake = { faction: 'renaissance', hp: 4, gender: 'male', skills: ['plunder', 'fireship'], name: ['德雷克', 'Drake'], title: ['女王海狼', 'The Sea Dog'], rating: 7 };
   S.plunder = {
-    name: ['劫掠', 'PLUNDER'], type: 'normal',
+    name: ['趁火打劫', 'PLUNDER'], type: 'normal',
     desc: ['你的回合外，其他角色使用红色牌后，你可以对其使用一张无距离限制的杀；此杀造成伤害后，你获得其所有手牌。', 'Outside your turn, after another character uses a red card, you may use a Strike on them with no distance limit. If it deals damage, take every card in their hand.'],
     triggers: { cardUsed: {
       optional: false, silent: true,
@@ -3094,7 +3094,7 @@
     } },
   };
   S.fireship = {
-    name: ['火船', 'FIRESHIP'], type: 'normal',
+    name: ['火船破阵', 'FIRESHIP'], type: 'normal',
     desc: ['出牌阶段限一次，你可以令一名其他角色摸一张牌，然后视为对其使用火攻；若此火攻造成了伤害，你可以对其重复此流程。你使用火攻造成伤害后，摸一张牌。', 'Once per Play phase, make another character draw 1, then you are treated as using Greek Fire on them. If it deals damage, you may repeat this on the same character. After any Greek Fire of yours deals damage, draw 1.'],
     active: {
       cards: { min: 0, max: 0 }, targets: { min: 1, max: 1, filter: (g, p, t) => t !== p },
@@ -3124,7 +3124,7 @@
   // ── 古斯塔夫 ──
   H.gustavus = { faction: 'renaissance', hp: 4, gender: 'male', skills: ['volley', 'reform'], name: ['古斯塔夫', 'Gustavus'], title: ['北方雄狮', 'The Lion of the North'], rating: 6 };
   S.volley = {
-    name: ['齐射', 'VOLLEY'], type: 'normal',
+    name: ['排枪齐射', 'VOLLEY'], type: 'normal',
     desc: ['出牌阶段，你可以将两张相同花色的手牌当做万箭齐发使用。', 'During your Play phase, you may use two cards of the same suit from your hand as Arrowstorm.'],
     active: {
       // 选牌时：第二张必须和第一张同花色
@@ -3145,7 +3145,7 @@
   };
   const BASICS = ['strike', 'parry', 'remedy', 'grog'];
   S.reform = {
-    name: ['改革', 'REFORM'], type: 'locked', locked: true,
+    name: ['变法图强', 'REFORM'], type: 'locked', locked: true,
     desc: ['锁定技，你可以将一张军备牌当任意基本牌使用或打出。你的军备区没有牌时，你受到谋略牌造成的伤害 −1。', 'Compulsory skill. You may use or play any arsenal card as any basic card. While your arsenal area is empty, damage you take from Stratagems is reduced by 1.'],
     viewAs: {
       patterns: ['strike', 'parry', 'remedy', 'grog'], count: 1, zones: 'he', choices: BASICS,
@@ -3163,7 +3163,7 @@
   // ── 牛顿 ──
   H.newton = { faction: 'renaissance', hp: 3, gender: 'male', skills: ['gravity', 'laws'], name: ['牛顿', 'Newton'], title: ['物理之父', 'The Father of Physics'], rating: 6 };
   S.gravity = {
-    name: ['引力', 'GRAVITY'], type: 'locked', locked: true,
+    name: ['作法自毙', 'GRAVITY'], type: 'locked', locked: true,
     desc: ['锁定技，当你成为其他角色使用的基本牌或谋略牌的目标时，其也成为此牌的目标。', 'Compulsory skill. When another character targets you with a basic card or Stratagem, they become a target of it too.'],
     triggers: { targeted: {
       can: (g, o, d) => d.target === o && d.use.from && d.use.from !== o && !d.use.from.dead && !d.use.targets.includes(d.use.from) && ['basic', 'stratagem'].includes((E.CARD_DEFS[d.use.card.name] || {}).type),
@@ -3171,7 +3171,7 @@
     } },
   };
   S.laws = {
-    name: ['定律', 'LAWS'], type: 'normal',
+    name: ['三大定律', 'LAWS'], type: 'normal',
     desc: ['当你于一回合内使用第 X 张牌时，你可以摸 X 张牌（X 为 3、6、9）。', 'When you use your X-th card in a turn (X = 3, 6 or 9), you may draw X.'],
     triggers: {
       // 计数一直在后台进行；摸不摸由你决定
@@ -3186,13 +3186,13 @@
   // ── 叶卡捷琳娜 ──
   H.catherine = { faction: 'renaissance', hp: 4, gender: 'female', skills: ['enlighten', 'favor'], name: ['叶卡捷琳娜', 'Catherine'], title: ['北国女皇', 'The Great'], rating: 8 };
   S.enlighten = {
-    name: ['开明', 'ENLIGHTEN'], type: 'normal',
+    name: ['开明专制', 'ENLIGHTEN'], type: 'normal',
     desc: ['准备阶段开始时和弃牌阶段开始时，你可以摸 X 张牌（X 为你的手牌数）。', 'At the start of your Prepare phase and of your Discard phase, you may draw X (X = cards in your hand).'],
     triggers: { phaseStart: { can: (g, o, d) => d.player === o && (d.phase === 'prepare' || d.phase === 'discard') && o.hand.length > 0, *on(g, o) { yield* g.draw(o, o.hand.length, 'enlighten'); } } },
     ai: { confirm: (g, me, req) => true },
   };
   S.favor = {
-    name: ['恩赏', 'FAVOR'], type: 'limited',
+    name: ['恩宠有加', 'FAVOR'], type: 'limited',
     desc: ['限定技，结束阶段开始时，你可以令一名其他角色获得本回合你因弃置而置入弃牌堆的所有牌。', 'Limited skill. At the start of your Finish phase, you may give another character every card you discarded this turn that is still in the discard pile.'],
     triggers: {
       discarded: { optional: false, silent: true, can: (g, o, d) => d.player === o && g.current === o && (!d.by || d.by === o), *on(g, o, d) { (o.turnState.favor = o.turnState.favor || []).push(...d.cards.map(c => c.id)); } },
@@ -3214,7 +3214,7 @@
 
   // ── 文艺主公技：赞助 ──
   S.patron = {
-    name: ['赞助', 'PATRON'], type: 'lord',
+    name: ['慷慨解囊', 'PATRON'], type: 'lord',
     desc: ['执笔技，出牌阶段限一次，你可以令所有其他角色依次选择是否令你摸一张牌。', 'Chancellor skill. Once per Play phase, you may have each other character choose in turn whether to have you draw 1.'],
     active: {
       cards: { min: 0, max: 0 }, targets: { min: 0, max: 0 },
@@ -3240,34 +3240,34 @@
 
   // ═════════════ 革新 Revolution ═════════════
   Object.assign(PROMPT_TEXT, {
-    returnTarget: ['百日：选择一名角色受到 {n} 点雷电伤害。', 'Return: choose a character to take {n} thunder damage.'],
-    squareTarget: ['方阵：可以对一名角色造成 1 点伤害。', 'Square: you may deal 1 damage to a character.'],
-    nemesisGive: ['宿敌：请交给{t} {n} 张牌。', 'Nemesis: give {n} cards to {t}.'],
-    emancipatePick: ['解放：选择{t}天兆区的一张牌移到你的天兆区。', "Emancipate: choose a card in {t}'s omen area to move to yours."],
-    addressDiscard: ['演说：选择{t}的牌弃置。', "Address: choose {t}'s cards to discard."],
-    founderGive: ['建国：请交给{t}一张牌。', 'Founder: give {t} a card.'],
-    tendPick: ['救护：可以选择一名武将替换（也可以不换）。', 'Tend: you may pick a hero to switch to (or keep yours).'],
-    laurelGive: ['双桂：请展示并交给{t}一张手牌。', 'Laurel: reveal and give {t} a card from your hand.'],
-    laurelShow: ['双桂：请展示一张手牌。', 'Laurel: reveal a card from your hand.'],
-    laurelTakeOpt: ['双桂：可以获得所有展示的黑牌或红牌：', 'Laurel: you may take all the revealed black cards or all the red ones:'],
-    laurelLose: ['双桂：选择展示黑色牌的角色失去 1 点体力（可以不选）。', 'Laurel: choose who revealed a black card to lose 1 health (optional).'],
-    laurelHeal: ['双桂：选择展示红色牌的角色回复 1 点体力（可以不选）。', 'Laurel: choose who revealed a red card to recover 1 health (optional).'],
-    coilChain: ['线圈：选择至多 {n} 名角色横置。', 'Coil: choose up to {n} characters to chain.'],
-    coilTarget: ['线圈：选择一名角色受到 2 点雷电伤害。', 'Coil: choose a character to take 2 thunder damage.'],
-    joyTarget: ['欢乐：选择至多 {n} 名其他角色各摸牌。', 'Joy: choose up to {n} other characters to draw cards.'],
-    railroadOpt: ['暗渡：选择一项：', 'Railroad: choose one:'],
-    railroadCost: ['暗渡：弃置一张牌。', 'Railroad: discard a card.'],
-    evolveTarget: ['演化：选择一名其他角色失去 1 点体力。', 'Evolve: choose another character to lose 1 health.'],
-    vengeanceOpt: ['血誓：选择{t}执行的一项：', 'Vengeance: choose what {t} must do:'],
-    lectureSwapOpt: ['讲学：选择与{t}交换的内容：', 'Lecture: choose what to swap with {t}:'],
-    allianceTarget: ['联姻：选择一名其他角色。', 'Alliance: choose another character.'],
-    allianceOpt: ['联姻：选择一项', 'Alliance: choose one'], tragedyCards: ['悲剧：是否获得{t}的所有牌？', "Tragedy: take all of {t}'s cards?"],
-    allianceDiscard: ['联姻：请弃置 {n} 张手牌。', 'Alliance: discard {n} cards from your hand.'],
-    freedomOpt: ['自由：选择代价：', 'Freedom: choose the cost:'],
-    freedomEquip: ['自由：选择一张装备牌弃置。', 'Freedom: choose an equipment card to discard.'],
-    freedomGive: ['自由：选择一名其他角色获得你本次弃置的 {n} 张牌。', 'Freedom: choose another character to take the {n} cards you discarded.'],
-    tragedySkillOpt: ['悲剧：选择要获得的第 {k} 个技能：', 'Tragedy: choose skill #{k} to take:'],
-    patronAsk: ['赞助：是否令{t}摸一张牌？', 'Patron: have {t} draw 1?'],
+    returnTarget: ['百日王朝：选择一名角色受到 {n} 点雷电伤害。', 'Return: choose a character to take {n} thunder damage.'],
+    squareTarget: ['步兵方阵：可以对一名角色造成 1 点伤害。', 'Square: you may deal 1 damage to a character.'],
+    nemesisGive: ['冤家路窄：请交给{t} {n} 张牌。', 'Nemesis: give {n} cards to {t}.'],
+    emancipatePick: ['解民倒悬：选择{t}天兆区的一张牌移到你的天兆区。', "Emancipate: choose a card in {t}'s omen area to move to yours."],
+    addressDiscard: ['兄弟阋墙：选择{t}的牌弃置。', "Address: choose {t}'s cards to discard."],
+    founderGive: ['众望所归：请交给{t}一张牌。', 'Founder: give {t} a card.'],
+    tendPick: ['起死回生：可以选择一名武将替换（也可以不换）。', 'Tend: you may pick a hero to switch to (or keep yours).'],
+    laurelGive: ['双冠加身：请展示并交给{t}一张手牌。', 'Laurel: reveal and give {t} a card from your hand.'],
+    laurelShow: ['双冠加身：请展示一张手牌。', 'Laurel: reveal a card from your hand.'],
+    laurelTakeOpt: ['双冠加身：可以获得所有展示的黑牌或红牌：', 'Laurel: you may take all the revealed black cards or all the red ones:'],
+    laurelLose: ['双冠加身：选择展示黑色牌的角色失去 1 点体力（可以不选）。', 'Laurel: choose who revealed a black card to lose 1 health (optional).'],
+    laurelHeal: ['双冠加身：选择展示红色牌的角色回复 1 点体力（可以不选）。', 'Laurel: choose who revealed a red card to recover 1 health (optional).'],
+    coilChain: ['电闪雷鸣：选择至多 {n} 名角色横置。', 'Coil: choose up to {n} characters to chain.'],
+    coilTarget: ['电闪雷鸣：选择一名角色受到 2 点雷电伤害。', 'Coil: choose a character to take 2 thunder damage.'],
+    joyTarget: ['与众同乐：选择至多 {n} 名其他角色各摸牌。', 'Joy: choose up to {n} other characters to draw cards.'],
+    railroadOpt: ['暗度陈仓：选择一项：', 'Railroad: choose one:'],
+    railroadCost: ['暗度陈仓：弃置一张牌。', 'Railroad: discard a card.'],
+    evolveTarget: ['物竞天择：选择一名其他角色失去 1 点体力。', 'Evolve: choose another character to lose 1 health.'],
+    vengeanceOpt: ['血债血偿：选择{t}执行的一项：', 'Vengeance: choose what {t} must do:'],
+    lectureSwapOpt: ['传道授业：选择与{t}交换的内容：', 'Lecture: choose what to swap with {t}:'],
+    allianceTarget: ['秦晋之好：选择一名其他角色。', 'Alliance: choose another character.'],
+    allianceOpt: ['秦晋之好：选择一项', 'Alliance: choose one'], tragedyCards: ['薪火相传：是否获得{t}的所有牌？', "Tragedy: take all of {t}'s cards?"],
+    allianceDiscard: ['秦晋之好：请弃置 {n} 张手牌。', 'Alliance: discard {n} cards from your hand.'],
+    freedomOpt: ['自由之呼：选择代价：', 'Freedom: choose the cost:'],
+    freedomEquip: ['自由之呼：选择一张装备牌弃置。', 'Freedom: choose an equipment card to discard.'],
+    freedomGive: ['自由之呼：选择一名其他角色获得你本次弃置的 {n} 张牌。', 'Freedom: choose another character to take the {n} cards you discarded.'],
+    tragedySkillOpt: ['薪火相传：选择要获得的第 {k} 个技能：', 'Tragedy: choose skill #{k} to take:'],
+    patronAsk: ['慷慨解囊：是否令{t}摸一张牌？', 'Patron: have {t} draw 1?'],
   });
   Object.assign(OPTION_TEXT, {
     coilSkipDraw: ['跳过摸牌阶段', 'Skip Draw'], coilSkipPlay: ['跳过出牌阶段', 'Skip Play'],
@@ -3284,7 +3284,7 @@
   // ── 拿破仑 ──
   H.napoleon = { faction: 'revolution', hp: 4, gender: 'male', skills: ['austerlitz', 'returnx'], name: ['拿破仑', 'Napoleon'], title: ['法兰西皇帝', 'The Emperor'], rating: 8 };
   S.austerlitz = {
-    name: ['三皇', 'AUSTERLITZ'], type: 'normal',
+    name: ['三皇会战', 'AUSTERLITZ'], type: 'normal',
     desc: ['当你使用谋略牌指定其他角色为目标后，你可以中止此牌的结算并视为对所有目标角色使用一张杀。若你未以此法造成伤害，你失去 1 点体力。', 'After you use a Stratagem targeting other characters, you may stop its resolution and instead be treated as using a Strike on all its targets. If that Strike deals no damage, lose 1 health.'],
     triggers: { targetConfirmed: {
       can: (g, o, d) => d.use.from === o && !o.dead && !d.use.opts.response && !d.use.data.aborted && d.use.card.name !== 'veto' && (E.CARD_DEFS[d.use.card.name] || {}).type === 'stratagem' && d.use.targets.some(t => t !== o && !t.dead),
@@ -3306,7 +3306,7 @@
     } },
   };
   S.returnx = {
-    name: ['百日', 'RETURN'], type: 'locked', locked: true,
+    name: ['百日王朝', 'RETURN'], type: 'locked', locked: true,
     desc: ['锁定技，当你进入濒死状态时，你减 1 点体力上限，将体力回复至体力上限，然后对一名角色造成 4−X 点雷电伤害（X 为你的体力上限）。', 'Compulsory skill. When you are dying, lose 1 max health and recover to full, then deal 4−X thunder damage to a character (X = your max health).'],
     triggers: { enterDying: {
       can: (g, o, d) => d.player === o && !o.dead,
@@ -3324,7 +3324,7 @@
   // ── 威灵顿 ──
   H.wellington = { faction: 'revolution', hp: 4, gender: 'male', skills: ['square', 'nemesis'], name: ['威灵顿', 'Wellington'], title: ['铁公爵', 'The Iron Duke'], rating: 7 };
   S.square = {
-    name: ['方阵', 'SQUARE'], type: 'normal',
+    name: ['步兵方阵', 'SQUARE'], type: 'normal',
     desc: ['当你失去一个区域内的所有牌后，你可以对一名角色造成 1 点伤害。', 'After you lose the last card in one of your areas, you may deal 1 damage to a character.'],
     triggers: { afterMove: {
       optional: false, silent: true,
@@ -3349,7 +3349,7 @@
     },
   };
   S.nemesis = {
-    name: ['宿敌', 'NEMESIS'], type: 'normal',
+    name: ['冤家路窄', 'NEMESIS'], type: 'normal',
     desc: ['出牌阶段限一次，你可以选择一名其他角色，弃置一张牌并将你的武将牌翻面，然后获得其所有手牌。此阶段结束时，你交给该角色 X 张牌（X 为其体力值）。', 'Once per Play phase, choose another character, discard a card and turn yourself face down, then take their whole hand. At the end of this phase, give them X cards (X = their health).'],
     active: {
       cards: { min: 1, max: 1, zones: 'he' }, targets: { min: 1, max: 1, filter: (g, p, t) => t !== p && t.hand.length > 0 },
@@ -3379,7 +3379,7 @@
   H.lincoln = { faction: 'revolution', hp: 4, gender: 'male', skills: ['emancipate', 'address'], name: ['林肯', 'Lincoln'], title: ['解放者', 'The Emancipator'], rating: 7 };
   const omenName = c => c.omenAs || c.name;
   S.emancipate = {
-    name: ['解放', 'EMANCIPATE'], type: 'normal', tagType: 'locked',   // 第一句是锁定技：描述里要有锁定技标签；出牌阶段那部分仍可主动发动
+    name: ['解民倒悬', 'EMANCIPATE'], type: 'normal', tagType: 'locked',   // 第一句是锁定技：描述里要有锁定技标签；出牌阶段那部分仍可主动发动
     desc: ['锁定技，你跳过判定阶段。出牌阶段限一次，你可以将一名其他角色天兆区里的一张牌移到你的天兆区，然后你与其各回复 1 点体力，并且你摸三张牌。', 'Compulsory: you skip your Judge phase. Once per Play phase, you may move a card from another character\'s omen area to yours; then you both recover 1 health, and you draw 3.'],
     triggers: { turnStart: { optional: false, silent: true, can: (g, o, d) => d.player === o, *on(g, o) { g.skipPhase(o, 'judge'); } } },
     active: {
@@ -3402,7 +3402,7 @@
     ai: { play: (g, me, inst, A) => { let bt = null, bv = 0; for (const t of g.alive) { if (t === me || !inst.def.active.targets.filter(g, me, t)) continue; const v = 3 + (A.rel(g, me, t) > 0 ? 2 : A.rel(g, me, t) < -0.3 ? -3.5 : -1); if (v > bv) { bv = v; bt = t; } } return bt ? [{ score: bv, ans: { action: 'skill', skill: inst.key, targets: [bt.seat] } }] : []; } },
   };
   S.address = {
-    name: ['演说', 'ADDRESS'], type: 'normal',
+    name: ['兄弟阋墙', 'ADDRESS'], type: 'normal',
     desc: ['出牌阶段限一次，你可以令两名角色拼点：没赢的角色（若点数相同则为双方），你各弃置其两张牌；若有角色拼点赢且其不是你，你摸两张牌。', 'Once per Play phase, make two characters contest: you discard two cards from each character who did not win (both, on a tie). If someone won and it is not you, draw 2.'],
     active: {
       cards: { min: 0, max: 0 }, targets: { min: 2, max: 2, filter: (g, p, t) => t.hand.length > 0 },
@@ -3429,7 +3429,7 @@
   // ── 玻利瓦尔 ──
   H.bolivar = { faction: 'revolution', hp: 4, gender: 'male', skills: ['founder', 'andes'], name: ['玻利瓦尔', 'Bolivar'], title: ['南美解放者', 'The Liberator'], rating: 7 };
   S.founder = {
-    name: ['建国', 'FOUNDER'], type: 'locked', locked: true,
+    name: ['众望所归', 'FOUNDER'], type: 'locked', locked: true,
     desc: ['锁定技，其他角色的出牌阶段开始时和结束时，若其手牌数不小于你，其交给你一张牌。', 'Compulsory skill. At the start and end of another character\'s Play phase, if they have at least as many cards in hand as you, they give you a card.'],
     triggers: {
       phaseStart: { can: (g, o, d) => d.phase === 'play' && d.player !== o && !d.player.dead && d.player.hand.length >= o.hand.length && d.player.cardCount > 0, *on(g, o, d) { yield* founderTake(g, o, d.player); } },
@@ -3438,7 +3438,7 @@
   };
   function* founderTake(g, o, t) { g.log('aim', { seat: o.seat, targets: [t.seat] }); const [c] = yield* g.chooseOwnCards(t, 1, 1, 'he', 'founderGive', null, { skill: 'founder', to: o.seat }); if (c) yield* g.gainCards(o, [c], 'founder', t); g.log('aimEnd', { seat: o.seat, targets: [t.seat] }); }
   S.andes = {
-    name: ['越岭', 'ANDES'], type: 'locked', locked: true,
+    name: ['出其不意', 'ANDES'], type: 'locked', locked: true,
     desc: ['锁定技，你使用的杀无视目标的护甲。', 'Compulsory skill. Your Strikes ignore armor.'],
     triggers: {
       targetConfirmed: { silent: true, can: (g, o, d) => strikeBy(o, d.use), *on(g, o, d) { d.use.data.ignoreArmor = d.use.data.ignoreArmor || new Set(); d.use.targets.forEach(t => d.use.data.ignoreArmor.add(t)); } },
@@ -3448,7 +3448,7 @@
   // ── 南丁格尔 ──
   H.nightingale = { faction: 'revolution', hp: 3, gender: 'female', skills: ['lamp', 'tend'], name: ['南丁格尔', 'Nightingale'], title: ['提灯女士', 'The Lady with the Lamp'], rating: 7 };
   S.lamp = {
-    name: ['提灯', 'LAMP'], type: 'normal',
+    name: ['提灯巡夜', 'LAMP'], type: 'normal',
     desc: ['你的回合外，你可以将一张红色牌当药使用。出牌阶段限一次，你可以弃置一张手牌，令一名已受伤的角色回复 1 点体力。', 'Outside your turn, you may use any red card as a Remedy. Once per Play phase, you may discard a card from hand to let a wounded character recover 1 health.'],
     viewAs: { patterns: ['remedy'], as: 'remedy', count: 1, zones: 'he', filter: (g, p, c) => c.color === 'red', can: (g, p) => g.current !== p },
     active: {
@@ -3460,7 +3460,7 @@
     ai: { play: (g, me, inst, A) => { const cs = me.hand.slice().sort((a, b) => A.keep(g, me, a) - A.keep(g, me, b)); if (!cs.length) return []; let bt = null, bv = 0; for (const t of g.alive) { if (!t.wounded) continue; const r = A.rel(g, me, t); if (r < 0.3) continue; const v = r * (t.hp <= 1 ? 3 : 1.8) - A.keep(g, me, cs[0]) * 0.3; if (v > bv) { bv = v; bt = t; } } return bt ? [{ score: bv, ans: { action: 'skill', skill: inst.key, cardIds: [cs[0].id], targets: [bt.seat] } }] : []; } },
   };
   S.tend = {
-    name: ['救护', 'TEND'], type: 'limited',
+    name: ['起死回生', 'TEND'], type: 'limited',
     desc: ['限定技，当一名角色进入濒死状态时，你可以令其体力上限调整为 3 并回复所有体力，然后其可以从随机三张与其不同时代且不在场的武将牌中选择一张替换其武将。', 'Limited skill. When a character is dying, you may set their max health to 3 and fully heal them; then they may replace their hero with one of three random heroes from a different era that are not in play.'],
     triggers: { enterDying: {
       can: (g, o, d) => !o.skillState.tend && !d.player.dead && !o.dead,
@@ -3481,7 +3481,7 @@
   // ── 居里夫人 ──
   H.curie = { faction: 'revolution', hp: 3, gender: 'female', skills: ['radiate', 'laurel'], name: ['居里夫人', 'Marie Curie'], title: ['镭之母', 'The Radiant'], rating: 7 };
   S.radiate = {
-    name: ['放射', 'RADIATE'], type: 'locked', locked: true,
+    name: ['辐射四方', 'RADIATE'], type: 'locked', locked: true,
     desc: ['锁定技，你攻击范围内的其他角色手牌上限 −1。你造成的伤害均视为体力流失。', 'Compulsory skill. Other characters within your attack range have hand limit −1. All damage you would deal becomes health loss instead.'],
     mods: { handLimit: (g, o, v, p) => (p !== o && !o.dead && g.inAttackRange(o, p)) ? v - 1 : v },
     triggers: { damageCausing: {
@@ -3490,7 +3490,7 @@
     } },
   };
   S.laurel = {
-    name: ['双桂', 'LAUREL'], type: 'normal',
+    name: ['双冠加身', 'LAUREL'], type: 'normal',
     desc: ['出牌阶段限一次，你可以令所有其他角色各展示一张手牌，然后你可以令展示黑色牌的角色各失去 1 点体力、展示红色牌的角色各回复 1 点体力，然后你可以获得所有展示的黑牌或红牌。', 'Once per Play phase, every other character reveals a card from their hand. Then you may make those who revealed black lose 1 health each and those who revealed red recover 1 health each; then you may take all the revealed black cards, or all the revealed red ones.'],
     active: {
       cards: { min: 0, max: 0 }, targets: { min: 0, max: 0 },
@@ -3527,12 +3527,12 @@
   // ── 特斯拉 ──
   H.tesla = { faction: 'revolution', hp: 3, gender: 'male', skills: ['current', 'coil'], name: ['特斯拉', 'Tesla'], title: ['电气之神', 'The Electrician'], rating: 7 };
   S.current = {
-    name: ['交流', 'CURRENT'], type: 'locked', locked: true,
+    name: ['化害为利', 'CURRENT'], type: 'locked', locked: true,
     desc: ['锁定技，你受到的雷电伤害均改为回复等量体力。', 'Compulsory skill. Thunder damage to you heals you by that amount instead.'],
     triggers: { damageTaking: { can: (g, o, d) => d.to === o && d.nature === 'thunder', *on(g, o, d) { const n = d.amount; d.prevented = true; yield* g.recover(o, n, o); } } },
   };
   S.coil = {
-    name: ['线圈', 'COIL'], type: 'normal',
+    name: ['电闪雷鸣', 'COIL'], type: 'normal',
     desc: ['摸牌阶段，你可以少摸一张牌并令至多 X 名角色横置（X 为你的体力值）；出牌阶段限一次，若有角色处于横置状态，则你可以对一名角色造成 2 点雷电伤害。', 'In your Draw phase, you may draw one fewer card to chain up to X characters (X = your health). Once per Play phase, if any character is chained, you may deal 2 thunder damage to a character.'],
     triggers: { drawCount: {
       can: (g, o, d) => d.player === o && !d.replaced && d.n > 0 && g.alive.some(t => !t.chained),
@@ -3566,7 +3566,7 @@
   // ── 贝多芬 ──
   H.beethoven = { faction: 'revolution', hp: 3, gender: 'male', skills: ['destiny', 'joy'], name: ['贝多芬', 'Beethoven'], title: ['乐圣', 'The Titan'], rating: 7 };
   S.destiny = {
-    name: ['命运', 'DESTINY'], type: 'locked', locked: true,
+    name: ['命运叩门', 'DESTINY'], type: 'locked', locked: true,
     desc: ['锁定技，准备阶段开始时，所有其他角色随机展示一张手牌：若黑色牌多，你翻面并失去 1 点体力；若红色牌多，你将体力回复至上限；若一样多，你获得这些展示的牌。', 'Compulsory skill. At the start of your Prepare phase, every other character reveals a random card from hand. More black: flip and lose 1 health. More red: recover to full health. Tied: take the revealed cards.'],
     triggers: { turnStart: {
       can: (g, o, d) => d.player === o,
@@ -3581,7 +3581,7 @@
     } },
   };
   S.joy = {
-    name: ['欢乐', 'JOY'], type: 'normal',
+    name: ['与众同乐', 'JOY'], type: 'normal',
     desc: ['每回合限一次，当你一次性获得不少于两张牌后，你可以令至多 X 名其他角色各摸 Y+1 张牌（X 为你的体力值，Y 为你已损失的体力值）。', 'Once per turn, after you gain two or more cards at once, you may let up to X other characters draw Y+1 each (X = your health, Y = your lost health).'],
     triggers: { afterMove: {
       can: (g, o, d) => !o.dead && o.marks.joy !== (g.turnSeq || 0) && d.moves.filter(m => m.to === 'hand' && m.toSeat === o.seat && !(m.from && m.from.zone === 'hand' && m.from.seat === o.seat)).length >= 2 && o.hp > 0,
@@ -3597,7 +3597,7 @@
   // ── 达尔文 ──
   H.darwin = { faction: 'revolution', hp: 3, gender: 'male', skills: ['evolve', 'fittest'], name: ['达尔文', 'Darwin'], title: ['博物学家', 'The Naturalist'], rating: 6 };
   S.evolve = {
-    name: ['演化', 'EVOLVE'], type: 'locked', locked: true,
+    name: ['物竞天择', 'EVOLVE'], type: 'locked', locked: true,
     desc: ['锁定技，你的摸牌阶段摸牌数 +1，出牌阶段使用杀的次数上限 +1。你的闪均视为酒。当你回复 1 点体力后，你可以令一名其他角色失去 1 点体力。', 'Compulsory skill. Draw 1 more in your Draw phase and use 1 more Strike per Play phase. Your Parries are always treated as Grog. After you recover 1 health, you may make another character lose 1 health.'],
     triggers: {
       drawCount: { can: (g, o, d) => d.player === o, silent: true, optional: false, *on(g, o, d) { d.n += 1; } },
@@ -3625,7 +3625,7 @@
     },
   };
   S.fittest = {
-    name: ['适者', 'FITTEST'], type: 'locked', locked: true,
+    name: ['适者生存', 'FITTEST'], type: 'locked', locked: true,
     desc: ['锁定技，你的体力值不能大于 1，你的手牌上限等于你的体力上限。当你进入或脱离濒死状态时，你摸两张牌。', 'Compulsory skill. Your health can never exceed 1, and your hand limit equals your max health. When you enter or leave the dying state, draw 2.'],
     mods: { handLimit: (g, o, v, p) => p === o ? o.maxHp : v },
     triggers: {
@@ -3639,7 +3639,7 @@
   // ── 塔布曼 ──
   H.tubman = { faction: 'revolution', hp: 3, gender: 'female', skills: ['railroad', 'neverlost'], name: ['塔布曼', 'Tubman'], title: ['自由向导', 'The Conductor'], rating: 7 };
   S.railroad = {
-    name: ['暗渡', 'RAILROAD'], type: 'normal',
+    name: ['暗度陈仓', 'RAILROAD'], type: 'normal',
     desc: ['当其他角色使用杀指定目标时，你可以弃置一张牌，然后选择一项未执行过的：1. 此杀不能被闪响应；2. 此杀无效；3. 将此杀的目标改为你；4. 目标于此杀结算后回复 1 点体力。四项都执行过后，重置为都未执行过。', 'When another character uses a Strike and chooses targets, you may discard a card, then choose an option not used yet: 1. it cannot be Parried; 2. it has no effect; 3. you become its target instead; 4. its targets recover 1 health after it resolves. Once all four are used, they reset.'],
     triggers: {
       targeting: {
@@ -3672,7 +3672,7 @@
     },
   };
   S.neverlost = {
-    name: ['无失', 'NEVERLOST'], type: 'locked', locked: true,
+    name: ['万无一失', 'NEVERLOST'], type: 'locked', locked: true,
     desc: ['锁定技，若你没有手牌，你不能成为杀和决斗的目标。', 'Compulsory skill. While you have no cards in hand, you cannot be targeted by Strikes or Duels.'],
     mods: { canTarget: (g, o, v, user, t, card) => (v && t === o && o.hand.length === 0 && (isStrike(card) || card.name === 'duel')) ? false : v },
   };
@@ -3681,7 +3681,7 @@
   // 复原：已翻面的角色翻回正面，已横置的角色重置
   const restorable = q => !q.dead && (q.faceDown || q.chained);
   S.uprise = {
-    name: ['号召', 'UPRISE'], type: 'lord',
+    name: ['拨乱反正', 'UPRISE'], type: 'lord',
     desc: ['执笔技，出牌阶段限一次，你可以令一名角色复原（翻回正面并重置）。', 'Chancellor skill. Once per Play phase, you may restore a character (turn them face up and unchain them).'],
     active: {
       cards: { min: 0, max: 0 }, targets: { min: 1, max: 1, filter: (g, p, t) => restorable(t) },
@@ -3768,7 +3768,7 @@
   const UI = {
     title: ['群星议会', 'The Hall of Ages'],
     newGame: ['新开一局', 'New Game'],
-    distBtn: ['分发', 'Give'], distTip: ['挣锁：选牌和一名角色，点「分发」交给他；点「取消」全部留下。', 'Unchain: pick cards and a character, then Give. Cancel keeps them.'],
+    distBtn: ['分发', 'Give'], distTip: ['挣脱枷锁：选牌和一名角色，点「分发」交给他；点「取消」全部留下。', 'Unchain: pick cards and a character, then Give. Cancel keeps them.'],
         fullOn: ['全屏', 'Full Screen'], fullExit: ['退出全屏', 'Exit Full Screen'],
     fbBtn: ['问题反馈', 'Report Issue'], fbTitle: ['记录一个问题', 'Note an Issue'], fbPh: ['哪里不对？比如：刚才弃牌动画卡住了', 'What looked wrong? e.g. the discard animation just froze'],
     fbSave: ['记下', 'Save Note'], fbClose: ['关闭', 'Close'], fbExport: ['下载反馈文件', 'Download Feedback File'], fbCopy: ['复制反馈内容', 'Copy Feedback'],
@@ -4026,8 +4026,8 @@
         case 'maxHp': return ['', zh ? `${S(e.seat)}的体力上限${e.delta > 0 ? '+' : ''}${e.delta}（现为 ${e.maxHp}）` : `${S(e.seat)}'s max health ${e.delta > 0 ? '+' : ''}${e.delta} (now ${e.maxHp})`];
         case 'swapHands': return ['', zh ? `${S(e.seat)}与${S(e.with)}交换了手牌` : `${S(e.seat)} swapped hands with ${S(e.with)}`];
         case 'playEnded': return ['', zh ? `${S(e.seat)}的出牌阶段被迫结束` : `${S(e.seat)}'s Play phase ends`];
-        case 'patronYes': return ['', zh ? `${S(e.seat)}同意赞助，令${S(e.to)}摸一张牌` : `${S(e.seat)} agrees to the Patron: ${S(e.to)} draws 1`];
-        case 'patronNo': return ['', zh ? `${S(e.seat)}拒绝赞助` : `${S(e.seat)} declines the Patron`];
+        case 'patronYes': return ['', zh ? `${S(e.seat)}同意【慷慨解囊】，令${S(e.to)}摸一张牌` : `${S(e.seat)} agrees to the Patron: ${S(e.to)} draws 1`];
+        case 'patronNo': return ['', zh ? `${S(e.seat)}拒绝【慷慨解囊】` : `${S(e.seat)} declines the Patron`];
         case 'gameOver': return ['end', e.winners.length ? (zh ? `对局结束：${e.winners.map(role).join('、')}获胜` : `Game over: ${e.winners.map(role).join(' & ')} win`) : (zh ? '对局结束：平局' : 'Game over: draw')];
       }
       return null;
@@ -6314,7 +6314,7 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
     pearl: ['摸 Y+2 张牌（Y 为本回合体力变动次数）', 'draw Y+2 (Y = health changes this turn)'],
     rally: ['获得对你造成伤害的这张牌', 'take the card that damaged you'],
     calling: ['令一名其他角色也承受同样的效果', 'make another character suffer the same'],
-    martyr: ['放弃求药，令另一名角色回满体力并获得【圣召】', 'give up; another character heals fully and gains Calling'],
+    martyr: ['放弃求药，令另一名角色回满体力并获得【感同身受】', 'give up; another character heals fully and gains Calling'],
     ransom: ['给其看至多三张手牌，以牌换免伤', 'show up to 3 cards to buy off the damage'],
     undying: ['弃置区域内所有牌，回满体力并摸三张', 'discard all your cards, heal fully, draw 3'],
     retreat: ['令其摸一张牌并拼点，赢则防止伤害', 'they draw 1, then contest; win to prevent it'],
@@ -6322,7 +6322,7 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
     kingmaker: ['交给其手牌，其再把多余的手牌交给你', 'give them cards; they hand you their excess'],
     schiltron: ['获得对方的一张手牌', 'take a card from their hand'],
     freedom: ['付出代价，本回合多摸牌、多出杀', 'pay a cost for extra draws and Strikes this turn'],
-    redemption: ['为一名角色选一项救赎', 'grant a character one blessing'],
+    redemption: ['为一名角色选一项（涤罪升天）', 'grant a character one blessing'],
     exile: q => [`令一名角色摸 ${q.n} 张牌并翻面`, `make a character draw ${q.n} and turn face down`],
     resurgence: ['令其先失去等量的体力', 'make them lose that much health first'],
     escort: ['请其他角色替你出闪，出闪者摸一张牌', 'ask others to play a Parry for you; they draw 1'],
@@ -7776,7 +7776,12 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
       for (const p of g.players) { this.stLast[p.seat] = this.stOf(p); this.jzLast[p.seat] = p.judgeZone.map(c => c.id).concat((g.processing || []).filter(c => c.omenJudging === p.seat).map(c => c.id)); this.eqLast[p.seat] = Object.values(p.equips).filter(Boolean); }
     }
     dKey(id) { return this.disp ? this.disp.get(id) : null; }
-    dHandN(p) { if (!this.disp) return p.hand.length; let n = 0; const k = 'h:' + p.seat; for (const v of this.disp.values()) if (v === k) n++; return n; }
+    dHandN(p) {
+      // 已经扣进拼点窗口的牌：规则上还在手里（双方都扣完才一起亮出），但显示上已经离手，手牌数不能再加回去
+      const out = this.pdOut && this.pdOut.size ? [...this.pdOut] : [];
+      if (!this.disp) return p.hand.length - out.filter(id => p.hand.some(c => c.id === id)).length;
+      let n = 0; const k = 'h:' + p.seat; for (const [id, v] of this.disp) if (v === k && !out.includes(id)) n++; return n;
+    }
     dEquip(p, slot) {
       if (!this.disp) return p.equips[slot];
       const k = 'e:' + p.seat; const cands = [p.equips[slot]].concat((this.eqLast && this.eqLast[p.seat]) || []).filter(Boolean);
@@ -7958,7 +7963,7 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
             await sleep(500 * mult);   // 无名杀：用牌后停 1 个单位时长（每个目标的 0.5 单位在各自结算时才发生）
           });
         } else if (ty === 'resolveAgain') {
-          // 额外结算一次（如【独白】）：第二次结算开始时，目标指示线重新连一次
+          // 额外结算一次（如【一唱三叹】）：第二次结算开始时，目标指示线重新连一次
           const tg = (l.targets || []).filter(s => s !== l.seat);
           beats.push(async () => { tg.forEach(s => this.drawLine(this.seatPt(l.seat), this.seatPt(s), mult)); if (tg.length) this.setAimed(tg, true); await sleep(500 * mult); });
         } else if (ty === 'draw') {
@@ -8562,12 +8567,21 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
       if (at > now) setTimeout(() => this.vfxNow(seat, kind), at - now); else this.vfxNow(seat, kind);
     }
     // 军备特效（分层）：器物和特效各自一层单独动；粒子 / 闪光 / 枪口火光 / 震动 / 音效和单层特效共用
+    // 用牌 / 军备特效的位置（所有人同样大小）：自己 —— 桌面正中、提示栏处；顶上的人 —— 武将牌正下方；左右两边的人 —— 武将牌朝内一侧的下方（左右对称）
+    vfxSpot(seat, pe) {
+      const any = this.$('.qx-st .qx-por'); const W0 = any ? this.rel(any).w : this.rel(pe).w * .75; const S = Math.round(W0 * .64);
+      if (seat === this.me) { const pr = this.$('.qx-prompt'); const q = pr ? this.rel(pr) : null; return { S, cx: this.bw() / 2, cy: q ? q.y + q.h / 2 : this.rel(pe).y - S }; }
+      const r = this.rel(pe); const side = r.x < 100 ? 'l' : r.x > this.bw() - r.w - 100 ? 'r' : '';
+      if (side === 'l') return { S, cx: r.x + r.w + S * .62, cy: r.y + r.h - S * .4 };
+      if (side === 'r') return { S, cx: r.x - S * .62, cy: r.y + r.h - S * .4 };
+      return { S, cx: r.x + r.w / 2, cy: r.y + r.h + S * .45 };
+    }
     vfxLayers(seat, kind) {
       const cfg = EQFX[kind]; const pe = this.porEl(seat); const fx = this.$('.qx-fx'); if (!pe || !fx) return;
-      const r = this.rel(pe); const S = Math.round(r.w * 1.3), D = 1000, hit = cfg.hit;
+      const { S, cx, cy } = this.vfxSpot(seat, pe), D = 1000, hit = cfg.hit;
       fx.querySelectorAll(`.qx-vfx[data-seat="${seat}"]`).forEach(x => x.remove());
       const box = document.createElement('div'); box.className = 'qx-vfx'; box.dataset.seat = seat;
-      box.style.cssText = `left:${Math.round(r.x + r.w / 2 - S / 2)}px;top:${Math.round(r.y + r.h * .46 - S / 2)}px;width:${S}px;height:${S}px`;
+      box.style.cssText = `left:${Math.round(cx - S / 2)}px;top:${Math.round(cy - S / 2)}px;width:${S}px;height:${S}px`;
       box.innerHTML = `<i class="qx-vfxfl" style="background:radial-gradient(circle,${cfg.flash} 0%,transparent 62%)"></i><div class="qx-vfxp"></div>`;
       fx.appendChild(box); const pl = box.querySelector('.qx-vfxp'), fl = box.querySelector('.qx-vfxfl');
       const add = (cls, css) => { const e = document.createElement('i'); e.className = cls; if (css) e.style.cssText = css; box.insertBefore(e, pl); return e; };
@@ -8610,10 +8624,10 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
       if (EQFX[kind]) return this.vfxLayers(seat, kind);
       const cfg = VFX[kind], src = VFX_ART[kind];
       const pe = this.porEl(seat); const fx = this.$('.qx-fx'); if (!pe || !fx) return;
-      const r = this.rel(pe); const S = Math.round(r.w * 1.3), D = 1000;   // 所有特效：同样大小、同样 1 秒
+      const { S, cx, cy } = this.vfxSpot(seat, pe), D = 1000;   // 所有特效：同样大小、同样 1 秒
       fx.querySelectorAll(`.qx-vfx[data-seat="${seat}"]`).forEach(x => x.remove());
       const box = document.createElement('div'); box.className = 'qx-vfx'; box.dataset.seat = seat;
-      box.style.cssText = `left:${Math.round(r.x + r.w / 2 - S / 2)}px;top:${Math.round(r.y + r.h * .46 - S / 2)}px;width:${S}px;height:${S}px`;
+      box.style.cssText = `left:${Math.round(cx - S / 2)}px;top:${Math.round(cy - S / 2)}px;width:${S}px;height:${S}px`;
       const A = cfg.anim, medal = A === 'medal';
       box.innerHTML = `<i class="qx-vfxfl" style="background:radial-gradient(circle,${cfg.flash} 0%,transparent 62%)"></i><div class="qx-vfxw"><img class="qx-vfxi${medal ? ' qx-vfxmd' : ''}" src="${src}" alt="" draggable="false"></div><div class="qx-vfxp"></div>`;
       fx.appendChild(box);
