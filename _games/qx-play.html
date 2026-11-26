@@ -415,7 +415,7 @@
   const PHASES = ['prepare', 'judge', 'draw', 'play', 'discard', 'finish'];
   const ROLESETS = {
     5: ['chancellor', 'keeper', 'insurgent', 'insurgent', 'schemer'],
-    8: ['chancellor', 'keeper', 'keeper', 'insurgent', 'insurgent', 'insurgent', 'insurgent', 'schemer'],
+    8: ['chancellor', 'keeper', 'keeper', 'insurgent', 'insurgent', 'insurgent', 'schemer', 'schemer'],   // 八人局：1 执笔者、2 护卷人、3 焚卷人、2 伏笔者
   };
   const CARD_DEFS = {};   // 牌名 → 定义（由 qx-cards.js 注册）
   const SKILLS = {};      // 技能 id → 定义（由武将文件注册）
@@ -924,7 +924,7 @@
     checkWin() {
       const alive = this.alive; const sov = this.players.find(p => p.role === 'chancellor');
       if (sov && sov.dead) {
-        if (alive.length === 1 && alive[0].role === 'schemer') throw new GameOver(['schemer'], 'schemer');
+        if (alive.length === 1 && alive[0].role === 'schemer') { const go = new GameOver(['schemer'], 'schemer'); go.seats = [alive[0].seat]; throw go; }   // 两个伏笔者时只有活到最后的那一个获胜
         throw new GameOver(['insurgent'], 'chancellor-dead');
       }
       if (!alive.some(p => p.role === 'insurgent' || p.role === 'schemer')) throw new GameOver(['chancellor', 'keeper'], 'loyal');
@@ -1176,7 +1176,7 @@
       }
 
       // 酒的加成
-      if (family(card) === 'strike' && from.turnState.drunk) { use.extraDamage += 1; from.turnState.drunk = false; use.data.drunk = true; }
+      if (family(card) === 'strike' && from.turnState.drunk) { use.extraDamage += 1; from.turnState.drunk = false; use.data.drunk = true; this.log('drunk', { seat: from.seat, off: true }); }
       yield* this.trigger('cardUsing', { use });      // 使用时（如 火绳枪改火杀）
       if (!opts.response) {
         yield* this.trigger('targeting', { use });    // 指定目标时（可改目标）
@@ -1355,7 +1355,7 @@
         }
         throw new GameOver([], 'turn-limit');
       } catch (e) {
-        if (e && e.qxGameOver) { this.over = true; this.result = { winners: e.winners, reason: e.reason }; this.log('gameOver', this.result); return this.result; }
+        if (e && e.qxGameOver) { this.over = true; this.result = { winners: e.winners, reason: e.reason, seats: e.seats || null }; this.log('gameOver', this.result); return this.result; }
         throw e;
       }
     }
@@ -1397,6 +1397,7 @@
         c.omenJudging = p.seat;   // 界面：判定期间天兆标记仍显示在原处
         // 天兆牌在判定结果定下来之前一直留在判定区（失去判定区的牌之类的时机都在结果定下之后）
         const out = function* () { delete c.omenJudging; if (d.passOn) return; if (c.loc && c.loc.zone === 'judge') yield* this.moveCards({ cards: [c], to: 'process', reason: 'omenJudge' }); }.bind(this);
+        this.log('omenShow', { seat: p.seat, card: c.id, name });   // 界面：即将判定的天兆牌先亮到桌面中间（只是展示）
         const vetoed = yield* this.askVeto({ omen: c, target: p });
         if (vetoed) { yield* out(); this.log('vetoed', { seat: p.seat, card: name }); if (d.onVetoed) yield* d.onVetoed(this, p, c); }
         else { this._omenOut = { player: p, out }; yield* d.judgeEffect(this, p, c); if (this._omenOut && this._omenOut.out === out) { this._omenOut = null; yield* out(); } }
@@ -3799,7 +3800,7 @@
     slot_weapon: ['武器', 'Weapon'], slot_armor: ['防具', 'Armor'], slot_minus: ['−1 坐骑', '−1 Mount'], slot_plus: ['+1 坐骑', '+1 Mount'],
     cap_use: ['{s}使用', '{s} used'], cap_useOn: ['{s}对{t}', '{s} → {t}'], cap_play: ['{s}打出', '{s} played'],
     cap_discard: ['{s}弃置', '{s} discarded'], cap_pindian: ['{s}的拼点牌', "{s}'s contest card"], cap_discardOf: ['{s}被弃置', 'Discarded from {s}'], cap_judge: ['{s}的天意牌', '{s}\'s Fate card'],
-    cap_pindian: ['{s}拼点', '{s} contest'], cap_recast: ['{s}重铸', '{s} recast'], cap_show: ['{s}展示', '{s} showed'], noVetoRound: ['本轮不使用{c}', 'No {c} This Round'], cap_reveal: ['亮出', 'Revealed'], cap_retouch: ['{s}改判', '{s} retouched'],
+    cap_pindian: ['{s}拼点', '{s} contest'], cap_recast: ['{s}重铸', '{s} recast'], cap_show: ['{s}展示', '{s} showed'], cap_omenShow: ['{s}的{c}', "{s}'s {c}"], noVetoRound: ['本轮不使用{c}', 'No {c} This Round'], cap_reveal: ['亮出', 'Revealed'], cap_retouch: ['{s}改判', '{s} retouched'],
     gameOver: ['对局结束', 'Game Over'], winners: ['{w}获胜', 'Winner: {w}'], draw: ['平局', 'Draw'], again: ['再来一局', 'Play Again'],
     youWin: ['你赢了！', 'You Win!'], youLose: ['你输了', 'You Lose'],
     sfxOn: ['音效：开', 'Sound: On'], sfxOff: ['音效：关', 'Sound: Off'],
@@ -3887,7 +3888,7 @@
 <tr><td>护卷人</td><td>相信笔在执笔者手里历史不会走向深渊，守护执笔者。</td></tr>
 <tr><td>焚卷人</td><td>认定笔落错了人，要焚卷重来。</td></tr>
 <tr><td>伏笔者</td><td>暗中布局，只想成为最后的执笔者。</td></tr></table>
-<p>五人局：执笔者、护卷人、焚卷人 ×2、伏笔者。八人局：执笔者、护卷人 ×2、焚卷人 ×4、伏笔者。除执笔者外，身份牌背面朝上，只有自己能看到；角色阵亡时翻开身份牌。</p>
+<p>五人局：执笔者、护卷人、焚卷人 ×2、伏笔者。八人局：执笔者、护卷人 ×2、焚卷人 ×3、伏笔者 ×2（两名伏笔者各自为战，只有最后剩下的那一个能获胜）。除执笔者外，身份牌背面朝上，只有自己能看到；角色阵亡时翻开身份牌。</p>
 <h4>胜负</h4>
 <p>执笔者倒下：若场上只剩伏笔者，伏笔者获胜；否则焚卷人获胜。焚卷人与伏笔者全部倒下：执笔者与护卷人获胜。胜负一旦确定，对局立即结束。</p>
 <p>击杀焚卷人的角色摸三张牌；执笔者误杀护卷人，须弃置所有手牌和军备区里的牌。</p>
@@ -3926,7 +3927,7 @@
 <tr><td>The Keeper</td><td>Believes history is safe in the Chancellor's hand, and protects the Chancellor.</td></tr>
 <tr><td>The Insurgent</td><td>Believes the pen is in the wrong hand and wants to burn the book and begin again.</td></tr>
 <tr><td>The Schemer</td><td>Lays plans in secret and wants to be the last one holding the pen.</td></tr></table>
-<p>5 players: Chancellor, Keeper, 2 Insurgents, Schemer. 8 players: Chancellor, 2 Keepers, 4 Insurgents, Schemer. Except for the Chancellor, role cards stay face down and only their owners see them. A role card is turned face up when its owner falls.</p>
+<p>5 players: Chancellor, Keeper, 2 Insurgents, Schemer. 8 players: Chancellor, 2 Keepers, 3 Insurgents, 2 Schemers (the two Schemers play alone; only the last one standing can win). Except for the Chancellor, role cards stay face down and only their owners see them. A role card is turned face up when its owner falls.</p>
 <h4>Victory</h4>
 <p>If the Chancellor falls, the Schemer wins if they are the only one left; otherwise the Insurgents win. If every Insurgent and the Schemer have fallen, the Chancellor and the Keepers win. The game ends the moment a winner is decided.</p>
 <p>Whoever defeats an Insurgent draws 3. If the Chancellor defeats a Keeper, the Chancellor discards every card in hand and in their arsenal area.</p>
@@ -3996,6 +3997,7 @@
         case 'judge': return ['', zh ? `${S(e.seat)}进行天意判定（${JR(e.reason)}）` : `${S(e.seat)} invokes Fate (${JR(e.reason)})`];
         case 'judgeResult': return ['', zh ? `　判定牌：${C(e.card)}` : `  Fate card: ${C(e.card)}`];
         case 'retouch': return ['', zh ? `${S(e.seat)}改判为 ${C(e.card)}` : `${S(e.seat)} changed the Fate card to ${C(e.card)}`];
+        case 'omenShow': return ['', zh ? `${S(e.seat)}的【${N(e.name)}】即将判定` : `${S(e.seat)}'s ${N(e.name)} is about to be judged`];
         case 'vetoed': return ['', zh ? `【${N(e.card)}】对${S(e.seat)}的效果被抵消` : `${N(e.card)} on ${S(e.seat)} was cancelled`];
         case 'nullified': return ['', zh ? `【${N(e.card)}】对${S(e.seat)}无效` : `${N(e.card)} has no effect on ${S(e.seat)}`];
         case 'parried': return ['', zh ? `${S(e.seat)}闪开了这一击` : `${S(e.seat)} parried`];
@@ -4212,6 +4214,7 @@ function rel(g, me, T) {
         helpInsurgent: { chancellor: 0.2, keeper: -0.9, insurgent: 0.1 },
         endgame: { chancellor: G.length ? 0.2 : -1, keeper: -1, insurgent: -1 },
       }[mode];
+      if (known === 'schemer') return mode === 'endgame' ? -1 : -0.5;   // 另一名伏笔者：最终只能有一个人赢
       if (alive.length <= 2 && known === 'chancellor') return -1;
       if (known) return tab[known] != null ? tab[known] : 0;
       // 未亮身份：按推断的阵营套用
@@ -5226,6 +5229,9 @@ return { RandomAgent, SmartAgent, defaultAnswer, rel, tracker };
 #qx .qx-sart{position:absolute;left:151px;top:11px;width:922px;height:1424px;overflow:hidden;background:#120e09}
 #qx .qx-sc .qx-fdback{position:absolute;left:151px;top:11px;width:922px;height:1424px;object-fit:fill;opacity:.46;pointer-events:none}   /* 翻面：武将牌背面半透明盖在立绘上 */
 #qx .qx-sc .qx-sart img{width:100%;height:100%;display:block;transition:filter .9s}
+#qx .qx-sc .qx-drunkfx::after{content:'';position:absolute;inset:0;background:rgba(255,60,40,.22);mix-blend-mode:screen}
+#qx .qx-sc .qx-drunkfx{position:absolute;left:151px;top:11px;width:922px;height:1424px;pointer-events:none;background:radial-gradient(ellipse at 50% 45%,rgba(255,40,30,.28),rgba(200,0,0,.55));mix-blend-mode:multiply;box-shadow:inset 0 0 160px rgba(255,30,20,.7);animation:qxdrunkin .35s ease-out}   /* 酒：立绘上一层红色滤镜（不盖边框） */
+@keyframes qxdrunkin{from{opacity:0}to{opacity:1}}
 #qx .qx-sblank{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:360px;color:#5a4a30;background:repeating-linear-gradient(45deg,#231d14 0 60px,#1d1811 60px 120px)}
 #qx .qx-sc .qx-sfr{position:absolute;left:0;top:0;width:1086px;height:1448px;pointer-events:none}
 #qx .qx-sstrip{position:absolute;left:24px;top:182px;width:112px;height:1248px;pointer-events:none}
@@ -6243,6 +6249,7 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
       { k: 'obj', o: '20% 80%', fr: F([0, { opacity: 0, transform: 'translate(-8%,8%) rotate(-6deg)', easing: 'cubic-bezier(.3,.7,.4,1)' }], [.16, { opacity: 1, transform: 'none' }], [.42, { opacity: 1, transform: 'none' }], [.46, { opacity: 1, transform: 'translate(-4%,4%) rotate(-2deg)', filter: 'brightness(1.3)' }], [.62, { opacity: 1, transform: 'translate(0,0)', filter: 'brightness(1)' }], [.82, { opacity: 1, transform: 'none' }], OUT(1)) },
       { k: 'smk', o: '58% 30%', fr: F([0, { opacity: 0, transform: 'translateY(4%) scale(.8)' }], [.16, { opacity: .9, transform: 'translateY(0) scale(1)' }], [.42, { opacity: .9, transform: 'translate(1%,-4%) scale(1.08)' }], [.7, { opacity: .5, transform: 'translate(3%,-10%) scale(1.2)' }], OUT(1, { transform: 'translate(4%,-14%) scale(1.3)' })) } ] },
   };
+  const VFX_EQ_MS = 2000;   // 军备特效统一 2 秒（基本牌不再播特效）
   const BOW = { t1: [414, 90], t2: [383, 1162], nock: [105, 559], W: 1254 };   // 长弓：两端弦扣、拉满时的搭箭点（原图坐标）
   // 音效：用 Web Audio 现场合成（不需要音频文件），和动画的时间点对齐
   class QXSfx {
@@ -6257,24 +6264,25 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
     }
     nbuf() { if (this._nb) return this._nb; const c = this.ctx, n = c.sampleRate * 2, b = c.createBuffer(1, n, c.sampleRate), d = b.getChannelData(0); for (let i = 0; i < n; i++) d[i] = Math.random() * 2 - 1; return (this._nb = b); }
     env(g, t, a, peak, dur) { g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(peak, t + a); g.gain.exponentialRampToValueAtTime(0.0001, t + Math.max(a + .01, dur)); }
-    noise(t, dur, o) {
+    noise(t, dur, o) { if (this.t0 != null && this.k && this.k !== 1) t = this.t0 + (t - this.t0) * this.k;   // 特效拉长到 2 秒：各个声音的时间点按比例后移，和画面对齐
       const c = this.ctx, src = c.createBufferSource(); src.buffer = this.nbuf(); const f = c.createBiquadFilter(); f.type = o.type || 'bandpass'; f.Q.value = o.q || 1;
       f.frequency.setValueAtTime(o.f0 || 1000, t); if (o.f1) f.frequency.exponentialRampToValueAtTime(o.f1, t + dur);
       const g = c.createGain(); this.env(g, t, o.a || .01, o.g || .3, dur); src.connect(f); f.connect(g); g.connect(this.master);
       src.start(t, Math.random()); src.stop(t + dur + .05); return g;
     }
-    tone(t, dur, o) {
+    tone(t, dur, o) { if (this.t0 != null && this.k && this.k !== 1) t = this.t0 + (t - this.t0) * this.k;   // 特效拉长到 2 秒：各个声音的时间点按比例后移，和画面对齐
       const c = this.ctx, os = c.createOscillator(); os.type = o.type || 'sine'; os.frequency.setValueAtTime(o.f0, t); if (o.f1) os.frequency.exponentialRampToValueAtTime(o.f1, t + dur);
       const g = c.createGain(); this.env(g, t, o.a || .005, o.g || .2, dur); os.connect(g); g.connect(this.master); os.start(t); os.stop(t + dur + .05);
     }
-    play(kind) {
+    play(kind, stretch) { this.k = stretch || 1; this.t0 = null; return this.play1(kind); }
+    play1(kind) {
       const c = this.ensure(); if (!c) return;
       const B = { linothorax: 2.4, trident: 1.7, winter: 1.7, excalibur: 1.6, misericorde: 1.5, sarissa: 1.5, grog: 1.8, strike: 1.3, fire: 1.4, remedy: 1.4 }[kind];   // 各音效的响度大致拉平
       if (B) { const keep = this.master, g = c.createGain(); g.gain.value = B; g.connect(keep); this.master = g; try { this.play0(kind); } finally { this.master = keep; } return; }
       this.play0(kind);
     }
     play0(kind) {
-      const c = this.ctx; const t = c.currentTime + .02, R = Math.random;
+      const c = this.ctx; const t = c.currentTime + .02, R = Math.random; this.t0 = t;
       const whoosh = (lo, hi, g) => { this.noise(t, .24, { type: 'bandpass', f0: lo, f1: hi, q: .9, a: .16, g }); };
       if (kind === 'strike') { whoosh(500, 3200, .35); this.noise(t + .2, .06, { type: 'highpass', f0: 3500, g: .35 }); this.tone(t + .2, .45, { f0: 1850, g: .16 }); this.tone(t + .2, .32, { f0: 3720, g: .08 }); this.tone(t + .2, .2, { f0: 5200, g: .04 }); }
       else if (kind === 'fire') { whoosh(300, 1600, .35); this.noise(t + .17, .55, { type: 'lowpass', f0: 900, f1: 300, a: .03, g: .55 }); for (let i = 0; i < 16; i++) this.noise(t + .2 + R() * .7, .012 + R() * .012, { type: 'highpass', f0: 1800 + R() * 2500, g: .15 + R() * .25 }); }
@@ -6525,7 +6533,7 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
         try { r = gen.next(ans); } catch (e) { console.error(e); this.$('.qx-log').insertAdjacentHTML('beforeend', `<div class="qx-l-death">Engine error: ${esc(e.message)}</div>`); return; }
       }
       this.ui = null; await this.step(tok); if (tok !== this.token) return;
-      { const r = g.result; if (r) { const me = g.p(this.me); const win = r.winners.includes(me.role); await this.banner(!r.winners.length ? 'lose' : win ? 'win' : 'lose', this.T.t(!r.winners.length ? 'drawEnd' : win ? 'victory' : 'defeat'), 3000); if (tok !== this.token) return; } }
+      { const r = g.result; if (r) { const me = g.p(this.me); const win = this.isWinner(me); await this.banner(!r.winners.length ? 'lose' : win ? 'win' : 'lose', this.T.t(!r.winners.length ? 'drawEnd' : win ? 'victory' : 'defeat'), 3000); if (tok !== this.token) return; } }
       this.showGameOver();
     }
 
@@ -7220,7 +7228,7 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
       const showId = this.shownCards && this.shownCards[p.seat];
       const showC = showId != null && this.g.card(showId);
       return `<div class="qx-por qx-sw" style="width:${w}px;height:${h}px"${shown ? ` data-zoomhero="${p.hero}"` : ''}><div class="qx-sc" style="transform:scale(${s})">
-        <div class="qx-sart">${art}</div>${this.dSt(p, 'faceDown') && !dead ? `<img class="qx-fdback" src="${this.asset('seatgen/art/ui-heroback.webp')}" alt="" draggable="false">` : ''}
+        <div class="qx-sart">${art}</div>${this.dSt(p, 'drunk') && !dead ? '<i class="qx-drunkfx"></i>' : ''}${this.dSt(p, 'faceDown') && !dead ? `<img class="qx-fdback" src="${this.asset('seatgen/art/ui-heroback.webp')}" alt="" draggable="false">` : ''}
         <img class="qx-sfr" src="${this.asset('seatgen/frame.webp')}" alt="" draggable="false">
         ${cfg ? `<div class="qx-sstrip" style="background:${cfg.strip}"></div>${cfg.emblem ? `<img class="qx-semb" src="${this.asset(cfg.emblem)}" alt="" draggable="false">` : ''}${this.nameHTML(p, cfg)}` : ''}
         ${!this.g.players.every(q => q.hero) ? '' : (() => { const rn = ['', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X'][p.seat + 1] || String(p.seat + 1); const wide = { VII: 104, VIII: 104 }[rn]; return `<div class="qx-sno"><svg viewBox="0 0 112 104"><text x="56" y="82" text-anchor="middle"${wide ? ` textLength="${wide}" lengthAdjust="spacingAndGlyphs"` : ''}>${esc(rn)}</text></svg></div>`; })()}<div class="qx-shc" data-tip="${esc(t('hand'))}">${this.dHandN(p)}</div>
@@ -7228,7 +7236,6 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
         ${bars}
         ${dead ? '' : this.badgeHTML(p)}
         ${shown && p.seat !== this.me ? this.skMarksHTML(p, side) : ''}
-        ${this.dSt(p, 'drunk') && !dead ? `<div class="qx-drunk">${esc(T.cardName('grog'))}</div>` : ''}
         ${this.dSt(p, 'chained') && !dead ? this.chainHTML(p) : ''}
         ${dead ? this.deadPlaque(p, false) : ''}
       </div>${showC ? `<div class="qx-shown">${this.cardHTML(showC, 'qx-showc').replace(/data-id="\d+"/, `data-cid="${showC.id}"`)}</div>` : ''}<div class="qx-fxl"></div></div>`;
@@ -7631,6 +7638,8 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
           }
         }
         else if (l.type === 'retouch') add(l.card, t('cap_retouch', { s: who(l.seat) }));
+        else if (l.type === 'omenShow' && l.card != null) {   // 即将判定的天兆牌：亮到桌面中间（只是展示，牌仍在天兆区）
+          if (!this.center.some(e => e.log === l)) { const pend = !!this.animMult() && !!this.stepping; this._shk = (this._shk || 0) + 1; this.center.push({ id: l.card, cap: t('cap_omenShow', { s: who(l.seat), c: this.T.cardName(l.name) }), as: l.name, li, kind: 'show', t: Date.now(), pend, hold: pend, sk: 's' + this._shk, log: l }); } }
         else if (l.type === 'show' && l.card != null) {   // 每次展示都单独占一个位置（同一张牌被展示两次，例如火攻结算两次，也排在后面而不是叠在一起）
           if (!this.center.some(e => e.log === l)) { const pend = !!this.animMult() && !!this.stepping; this._shk = (this._shk || 0) + 1; this.center.push({ id: l.card, cap: t('cap_show', { s: who(l.seat) }), li, kind: 'show', t: Date.now(), pend, hold: pend, sk: 's' + this._shk, log: l }); } }   // 展示：只是把牌亮到桌面中间给大家看，牌还在原处
       }
@@ -8113,6 +8122,15 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
         });
         else if (ty === 'aimEnd') beats.push(() => { this.setAimed((l.targets || []), false); });
         else if (ty === 'aim') beats.push(async () => { const tg = (l.targets || []).filter(s => s !== l.seat); if (tg.length) this.setAimed(tg, true); tg.forEach(s => this.drawLine(this.seatPt(l.seat), this.seatPt(s), mult)); if (tg.length) await sleep(Math.max(200, 380 * mult)); });
+        else if (ty === 'omenShow') beats.push(async () => {
+          const ctr = this.$('.qx-ctr'); const ent = (this.center || []).find(e => e.log === l);
+          if (!ent || !mult) { if (ent) { ent.pend = false; ent.hold = false; if (ctr) morph(ctr, this.centerHTML()); } return; }
+          ent.pend = false; if (ctr) morph(ctr, this.centerHTML());
+          const toEl = ctr && ctr.querySelector(`[data-sk="${ent.sk}"]`);
+          await this.fly({ id: l.card, k0: 'j:' + l.seat, k1: 'center', copyOnly: true, forceFace: true, el: toEl }, 0, mult);
+          ent.hold = false; if (ctr) morph(ctr, this.centerHTML());
+          await sleep(Math.max(400, 700 * mult));
+        });
         else if (ty === 'show') beats.push(async () => {
           // 展示：像出牌一样飞到桌面中间（下面写「某某展示」），只是动画，牌本身还在原处、不进弃牌堆
           const ctr = this.$('.qx-ctr'); const ent = (this.center || []).find(e => e.log === l) || (this.center || []).find(e => e.id === l.card && e.kind === 'show');
@@ -8228,7 +8246,8 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
       const picks = mine ? (u.btn || []) : (R.picks || []);
       const n = R.slots || R.ids.length;   // 槽位数跟窗口绑定，牌被拿走后虚线框仍在
       const vw = mine ? this.view() : null;
-      const cardEl = id => { const c = g.card(id); const off = mine && !picks.includes(id) && vw && !vw.buttons.has(id); return c ? `<div class="qx-rvc${mine && !off ? ' qx-rvcan' : ''}${off ? ' qx-rvoff' : ''}" data-rv="${id}">${this.cardHTML(c, 'qx-wcard').replace(/ data-id="\d+"/, ` data-cid="${id}"`)}</div>` : ''; };
+      const pickedSuits = R.pickReason === 'chiselPick' ? new Set(picks.map(x => (g.card(x) || {}).suit)) : null;   // 精雕细琢：每种花色只能拿一张，拿了某个花色后同花色的其余牌变暗
+      const cardEl = id => { const c = g.card(id); const off = mine && !picks.includes(id) && ((vw && !vw.buttons.has(id)) || (pickedSuits && c && pickedSuits.has(c.suit))); return c ? `<div class="qx-rvc${mine && !off ? ' qx-rvcan' : ''}${off ? ' qx-rvoff' : ''}" data-rv="${id}">${this.cardHTML(c, 'qx-wcard').replace(/ data-id="\d+"/, ` data-cid="${id}"`)}</div>` : ''; };
       const top = R.ids.filter(id => !picks.includes(id));
       const row = (arr, name) => `<div class="qx-arow"><div class="qx-clab">${esc(t(name))}</div><div class="qx-aslots">${Array.from({ length: n }, (_, i) => `<div class="qx-aslot${name === 'rvTake' ? ' qx-rvdrop' : ''}">${arr[i] != null ? cardEl(arr[i]) : ''}</div>`).join('')}</div></div>`;
       const cnt = mine ? u.req.multi.count : null;
@@ -8556,20 +8575,23 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
     // 出杀 / 闪 / 药 / 酒：在使用者的武将牌上播 1 秒的图像特效 + 音效（位置同三国杀：用牌者的武将牌中央）
     stampFx(seat, name, mult) {
       const kind = /strike/.test(name) ? (name === 'fire_strike' ? 'fire' : name === 'thunder_strike' ? 'thunder' : 'strike') : ['parry', 'remedy', 'grog'].includes(name) ? name : null;
-      if (!kind || !mult) return;
-      this.vfx(seat, kind);
+      void kind; return;   // 基本牌（杀 / 闪 / 药 / 酒）用后不再播小动画；只保留军备的特效
     }
     // 用牌 / 军备特效：同一个座位上的特效排队播放（不会互相打断）
     vfx(seat, kind) {
       if (!EQFX[kind] && (!VFX[kind] || !VFX_ART[kind])) return;
       this._vfxQ = this._vfxQ || {}; const now = Date.now(); const at = Math.max(now, this._vfxQ[seat] || 0);
-      this._vfxQ[seat] = at + 1000;
+      this._vfxQ[seat] = at + (EQFX[kind] || D[kind] ? VFX_EQ_MS : 1000);
       if (at > now) setTimeout(() => this.vfxNow(seat, kind), at - now); else this.vfxNow(seat, kind);
     }
     // 军备特效（分层）：器物和特效各自一层单独动；粒子 / 闪光 / 枪口火光 / 震动 / 音效和单层特效共用
     // 用牌 / 军备特效的位置（所有人同样大小）：自己 —— 桌面正中、提示栏处；顶上的人 —— 武将牌正下方；左右两边的人 —— 武将牌朝内一侧的下方（左右对称）
-    vfxSpot(seat, pe) {
+    vfxSpot(seat, pe, eq) {
       const any = this.$('.qx-st .qx-por'); const W0 = any ? this.rel(any).w : this.rel(pe).w * .75; const S = Math.round(W0 * .64);
+      if (eq && seat !== this.me) {   // 军备特效：其他人 —— 武将牌上军备区（四条装备栏）的正中间
+        const r = this.rel(pe); const sc = pe.querySelector('.qx-sc'); const k = sc && sc.offsetWidth ? r.w / sc.offsetWidth : r.w / 1224;
+        return { S, cx: r.x + (157 + 789 / 2) * k, cy: r.y + (817 + 154 * 2 - 2) * k };
+      }
       if (seat === this.me) { const pr = this.$('.qx-prompt'); const q = pr ? this.rel(pr) : null; return { S, cx: this.bw() / 2, cy: q ? q.y + q.h / 2 : this.rel(pe).y - S }; }
       const r = this.rel(pe); const side = r.x < 100 ? 'l' : r.x > this.bw() - r.w - 100 ? 'r' : '';
       if (side === 'l') return { S, cx: r.x + r.w + S * .62, cy: r.y + r.h - S * .4 };
@@ -8578,7 +8600,7 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
     }
     vfxLayers(seat, kind) {
       const cfg = EQFX[kind]; const pe = this.porEl(seat); const fx = this.$('.qx-fx'); if (!pe || !fx) return;
-      const { S, cx, cy } = this.vfxSpot(seat, pe), D = 1000, hit = cfg.hit;
+      const { S, cx, cy } = this.vfxSpot(seat, pe, true), D = VFX_EQ_MS, hit = cfg.hit;
       fx.querySelectorAll(`.qx-vfx[data-seat="${seat}"]`).forEach(x => x.remove());
       const box = document.createElement('div'); box.className = 'qx-vfx'; box.dataset.seat = seat;
       box.style.cssText = `left:${Math.round(cx - S / 2)}px;top:${Math.round(cy - S / 2)}px;width:${S}px;height:${S}px`;
@@ -8603,7 +8625,7 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
       fl.animate([{ transform: 'scale(.3)', opacity: 0 }, { transform: 'scale(.3)', opacity: 0, offset: Math.max(0, hit - .02) }, { transform: 'scale(.9)', opacity: .9, offset: hit + .04 }, { transform: 'scale(1.3)', opacity: 0, offset: Math.min(1, hit + .32) }, { transform: 'scale(1.3)', opacity: 0 }], { duration: D, fill: 'both' });
       this.vfxParticles(pl, cfg, S, D);
       if (cfg.shake) { const m = cfg.shake * 2; setTimeout(() => { const e2 = this.porEl(seat); if (e2) e2.animate([{ translate: '0 0' }, { translate: `${-m}px ${m / 2}px` }, { translate: `${m * .75}px ${-m / 2}px` }, { translate: `${-m / 2}px ${m / 4}px` }, { translate: '0 0' }], { duration: 220 + cfg.shake * 40 }); }, D * hit); }
-      this.sfx.play(kind);
+      this.sfx.play(kind, D / 1000);
       setTimeout(() => box.remove(), D + 60);
     }
     vfxParticles(pl, cfg, S, D) {
@@ -8622,9 +8644,9 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
     }
     vfxNow(seat, kind) {
       if (EQFX[kind]) return this.vfxLayers(seat, kind);
-      const cfg = VFX[kind], src = VFX_ART[kind];
+      const cfg = VFX[kind], src = VFX_ART[kind]; const isEq = !!D[kind];
       const pe = this.porEl(seat); const fx = this.$('.qx-fx'); if (!pe || !fx) return;
-      const { S, cx, cy } = this.vfxSpot(seat, pe), D = 1000;   // 所有特效：同样大小、同样 1 秒
+      const { S, cx, cy } = this.vfxSpot(seat, pe, isEq), DUR = isEq ? VFX_EQ_MS : 1000;   // 所有特效：同样大小、同样 1 秒
       fx.querySelectorAll(`.qx-vfx[data-seat="${seat}"]`).forEach(x => x.remove());
       const box = document.createElement('div'); box.className = 'qx-vfx'; box.dataset.seat = seat;
       box.style.cssText = `left:${Math.round(cx - S / 2)}px;top:${Math.round(cy - S / 2)}px;width:${S}px;height:${S}px`;
@@ -8634,18 +8656,18 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
       const img = box.querySelector('.qx-vfxi'), wrap = box.querySelector('.qx-vfxw'), fl = box.querySelector('.qx-vfxfl'), pl = box.querySelector('.qx-vfxp');
       const hit = cfg.hit || .22;
       // 缓动写在每一段关键帧上（写在选项里会扭曲整条时间线，导致各个时间点对不上）
-      const anim = (el, fr, ez) => { if (ez) fr = fr.map((f, k) => k < fr.length - 1 ? Object.assign({ easing: ez }, f) : f); return el.animate(fr, { duration: D, fill: 'both' }); };
+      const anim = (el, fr, ez) => { if (ez) fr = fr.map((f, k) => k < fr.length - 1 ? Object.assign({ easing: ez }, f) : f); return el.animate(fr, { duration: DUR, fill: 'both' }); };
       const add = (cls, css, parent) => { const e = document.createElement(cls.startsWith('img') ? 'img' : 'i'); if (cls.startsWith('img')) { e.className = cls.slice(4); e.draggable = false; e.alt = ''; } else e.className = cls; if (css) e.style.cssText = css; (parent || box).insertBefore(e, pl); return e; };
       const out = [{ offset: .8, opacity: 1 }, { opacity: 0 }];
       if (A === 'swing') {
         const f0 = cfg.from != null ? cfg.from : 55;
         img.style.transformOrigin = cfg.origin;
         anim(img, [{ transform: `rotate(${f0}deg) scale(1.08)`, opacity: 0, filter: 'blur(5px) brightness(1.5)' }, { transform: `rotate(${-f0 / 11}deg) scale(1)`, opacity: 1, filter: 'blur(0px) brightness(1.9)', offset: hit }, { transform: 'rotate(0deg) scale(1)', opacity: 1, filter: 'blur(0px) brightness(1.15)', offset: hit + .1 }, { transform: 'rotate(0deg) scale(1.03)', opacity: 1, filter: 'blur(0px) brightness(1)', offset: .75 }, { transform: 'rotate(0deg) scale(1.06)', opacity: 0, filter: 'blur(1px) brightness(1)' }], 'cubic-bezier(.3,.6,.4,1)');
-        if (cfg.flicker) wrap.animate([{ filter: 'brightness(1)' }, { filter: 'brightness(1)', offset: .24 }, { filter: 'brightness(1.8) saturate(1.3)', offset: .3 }, { filter: 'brightness(.9)', offset: .36 }, { filter: 'brightness(1.6)', offset: .44 }, { filter: 'brightness(1)', offset: .52 }, { filter: 'brightness(1.4)', offset: .62 }, { filter: 'brightness(1)', offset: .7 }, { filter: 'brightness(1)' }], { duration: D, fill: 'both' });
+        if (cfg.flicker) wrap.animate([{ filter: 'brightness(1)' }, { filter: 'brightness(1)', offset: .24 }, { filter: 'brightness(1.8) saturate(1.3)', offset: .3 }, { filter: 'brightness(.9)', offset: .36 }, { filter: 'brightness(1.6)', offset: .44 }, { filter: 'brightness(1)', offset: .52 }, { filter: 'brightness(1.4)', offset: .62 }, { filter: 'brightness(1)', offset: .7 }, { filter: 'brightness(1)' }], { duration: DUR, fill: 'both' });
       } else if (A === 'slam') {
         const big = cfg.soft ? 1.35 : 1.75;
         anim(img, [{ transform: `scale(${big})`, opacity: 0, filter: 'brightness(1.4)' }, { transform: 'scale(.93)', opacity: 1, filter: 'brightness(1.9)', offset: hit }, { transform: 'scale(1.03)', opacity: 1, filter: 'brightness(1.2)', offset: hit + .12 }, { transform: 'scale(1)', opacity: 1, filter: 'brightness(1)', offset: hit + .24 }, { transform: 'scale(1)', opacity: 1, filter: 'brightness(1)', offset: .78 }, { transform: 'scale(1.05)', opacity: 0, filter: 'brightness(1)' }], 'cubic-bezier(.4,0,.6,1)');
-        if (cfg.ring) { const ring = add('qx-vfxring', `border-color:${cfg.ring};box-shadow:0 0 18px ${cfg.ring},inset 0 0 14px ${cfg.ring}`); ring.animate([{ transform: 'scale(.3)', opacity: 0 }, { transform: 'scale(.35)', opacity: 0, offset: hit - .01 }, { transform: 'scale(.5)', opacity: 1, offset: hit + .02 }, { transform: 'scale(1.35)', opacity: 0, offset: hit + .42 }, { transform: 'scale(1.35)', opacity: 0 }], { duration: D, fill: 'both' }); }
+        if (cfg.ring) { const ring = add('qx-vfxring', `border-color:${cfg.ring};box-shadow:0 0 18px ${cfg.ring},inset 0 0 14px ${cfg.ring}`); ring.animate([{ transform: 'scale(.3)', opacity: 0 }, { transform: 'scale(.35)', opacity: 0, offset: hit - .01 }, { transform: 'scale(.5)', opacity: 1, offset: hit + .02 }, { transform: 'scale(1.35)', opacity: 0, offset: hit + .42 }, { transform: 'scale(1.35)', opacity: 0 }], { duration: DUR, fill: 'both' }); }
       } else if (A === 'tip') {
         img.style.transformOrigin = '62% 88%';
         anim(img, [{ transform: 'rotate(-28deg) scale(.6)', opacity: 0 }, { transform: 'rotate(9deg) scale(1.05)', opacity: 1, offset: hit + .02 }, { transform: 'rotate(-2deg) scale(1)', opacity: 1, offset: .4 }, { transform: 'rotate(0deg) scale(1)', opacity: 1, offset: .78 }, { transform: 'rotate(0deg) translateY(-5%) scale(1.02)', opacity: 0 }], 'cubic-bezier(.3,.7,.4,1)');
@@ -8655,7 +8677,7 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
         anim(img, [{ transform: 'translateY(-34%) scale(1.04)', opacity: 0, filter: 'blur(4px) brightness(1.6)' }, { transform: 'translateY(2%) scale(1)', opacity: 1, filter: 'blur(0px) brightness(2)', offset: hit }, { transform: 'translateY(0) scale(1)', opacity: 1, filter: 'blur(0px) brightness(1.15)', offset: hit + .12 }, { transform: 'translateY(0) scale(1.02)', opacity: 1, filter: 'brightness(1)', offset: .78 }, { transform: 'translateY(-2%) scale(1.04)', opacity: 0, filter: 'brightness(1)' }], 'cubic-bezier(.55,0,.8,.5)');
       } else if (A === 'cross') {   // 双子剑：两剑交叉合拢，两颗星闪烁
         anim(img, [{ transform: 'scale(.55) rotate(-12deg)', opacity: 0, filter: 'brightness(1.4)' }, { transform: 'scale(1.05) rotate(2deg)', opacity: 1, filter: 'brightness(1.8)', offset: hit }, { transform: 'scale(1) rotate(0deg)', opacity: 1, filter: 'brightness(1.1)', offset: hit + .14 }, { transform: 'scale(1.01)', opacity: 1, filter: 'brightness(1)', offset: .78 }, { transform: 'scale(1.04)', opacity: 0, filter: 'brightness(1)' }], 'cubic-bezier(.3,.7,.4,1)');
-        for (const [k, [x, y]] of (cfg.twin || []).entries()) { const st = add('qx-vfxstar', `left:${x}%;top:${y}%`); st.animate([{ transform: 'translate(-50%,-50%) scale(0) rotate(0deg)', opacity: 0 }, { transform: 'translate(-50%,-50%) scale(0) rotate(0deg)', opacity: 0, offset: hit + k * .08 }, { transform: 'translate(-50%,-50%) scale(1.3) rotate(45deg)', opacity: 1, offset: hit + .08 + k * .08 }, { transform: 'translate(-50%,-50%) scale(.2) rotate(90deg)', opacity: 0, offset: hit + .36 + k * .08 }, { transform: 'translate(-50%,-50%) scale(0)', opacity: 0 }], { duration: D, fill: 'both' }); }
+        for (const [k, [x, y]] of (cfg.twin || []).entries()) { const st = add('qx-vfxstar', `left:${x}%;top:${y}%`); st.animate([{ transform: 'translate(-50%,-50%) scale(0) rotate(0deg)', opacity: 0 }, { transform: 'translate(-50%,-50%) scale(0) rotate(0deg)', opacity: 0, offset: hit + k * .08 }, { transform: 'translate(-50%,-50%) scale(1.3) rotate(45deg)', opacity: 1, offset: hit + .08 + k * .08 }, { transform: 'translate(-50%,-50%) scale(.2) rotate(90deg)', opacity: 0, offset: hit + .36 + k * .08 }, { transform: 'translate(-50%,-50%) scale(0)', opacity: 0 }], { duration: DUR, fill: 'both' }); }
       } else if (A === 'thrust') {   // 长矛 / 三叉戟：沿矛的方向刺出
         const [dx, dy] = cfg.dir;
         anim(img, [{ transform: `translate(${dx * 24}%,${dy * 24}%)`, opacity: 0, filter: 'blur(4px)' }, { transform: `translate(${-dx * 3}%,${-dy * 3}%)`, opacity: 1, filter: 'blur(0px) brightness(1.6)', offset: hit }, { transform: 'translate(0,0)', opacity: 1, filter: 'brightness(1.1)', offset: hit + .12 }, { transform: 'translate(0,0)', opacity: 1, filter: 'brightness(1)', offset: .78 }, { transform: `translate(${dx * 4}%,${dy * 4}%)`, opacity: 0, filter: 'brightness(1)' }], 'cubic-bezier(.5,0,.75,.6)');
@@ -8666,22 +8688,22 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
       } else if (A === 'burn') {   // 亚麻胸甲着火：从下往上烧起来，火光闪动
         img.style.webkitMaskImage = img.style.maskImage = 'linear-gradient(to top,#000 var(--qxburn2),transparent calc(var(--qxburn2) + 14%))';
         anim(img, [{ '--qxburn2': '-14%', opacity: 1, transform: 'scale(.96)' }, { '--qxburn2': '100%', opacity: 1, transform: 'scale(1)', offset: .32 }, { '--qxburn2': '100%', opacity: 1, transform: 'scale(1.01)', offset: .78 }, { '--qxburn2': '100%', opacity: 0, transform: 'scale(1.03)' }], 'ease-out');
-        wrap.animate([{ filter: 'brightness(1)' }, { filter: 'brightness(1.5)', offset: .3 }, { filter: 'brightness(1.05)', offset: .4 }, { filter: 'brightness(1.35)', offset: .5 }, { filter: 'brightness(1)', offset: .6 }, { filter: 'brightness(1.25)', offset: .7 }, { filter: 'brightness(1)' }], { duration: D, fill: 'both' });
+        wrap.animate([{ filter: 'brightness(1)' }, { filter: 'brightness(1.5)', offset: .3 }, { filter: 'brightness(1.05)', offset: .4 }, { filter: 'brightness(1.35)', offset: .5 }, { filter: 'brightness(1)', offset: .6 }, { filter: 'brightness(1.25)', offset: .7 }, { filter: 'brightness(1)' }], { duration: DUR, fill: 'both' });
       } else if (A === 'medal') {   // 从牌面原画裁出的圆形画面：弹出，再叠加代码画的枪口火光 / 刺击光
         anim(img, [{ transform: 'scale(.4)', opacity: 0 }, { transform: 'scale(1.06)', opacity: 1, offset: .16 }, { transform: 'scale(1)', opacity: 1, offset: .26 }, { transform: 'scale(1)', opacity: 1, offset: .8 }, { transform: 'scale(1.04)', opacity: 0 }], 'cubic-bezier(.3,.7,.4,1)');
-        const rim = add('qx-vfxrim'); rim.animate([{ opacity: 0 }, { opacity: 1, offset: .2 }, { opacity: .7, offset: .8 }, { opacity: 0 }], { duration: D, fill: 'both' });
+        const rim = add('qx-vfxrim'); rim.animate([{ opacity: 0 }, { opacity: 1, offset: .2 }, { opacity: .7, offset: .8 }, { opacity: 0 }], { duration: DUR, fill: 'both' });
         if (cfg.muzzle) {
           const [mx, my] = cfg.muzzle; const shots = cfg.burst || 1;
           for (let k = 0; k < shots; k++) {
             const t0 = hit + k * (shots > 1 ? .065 : 0); const mf = add('qx-vfxmz', `left:${mx}%;top:${my}%`);
-            mf.animate([{ transform: 'translate(-50%,-50%) scale(0)', opacity: 0 }, { transform: 'translate(-50%,-50%) scale(0)', opacity: 0, offset: t0 }, { transform: `translate(-50%,-50%) scale(${shots > 1 ? .8 + (k % 2) * .3 : 1.5}) rotate(${k * 37}deg)`, opacity: 1, offset: t0 + .015 }, { transform: 'translate(-50%,-50%) scale(.3)', opacity: 0, offset: Math.min(.99, t0 + (shots > 1 ? .05 : .12)) }, { transform: 'translate(-50%,-50%) scale(0)', opacity: 0 }], { duration: D, fill: 'both' });
+            mf.animate([{ transform: 'translate(-50%,-50%) scale(0)', opacity: 0 }, { transform: 'translate(-50%,-50%) scale(0)', opacity: 0, offset: t0 }, { transform: `translate(-50%,-50%) scale(${shots > 1 ? .8 + (k % 2) * .3 : 1.5}) rotate(${k * 37}deg)`, opacity: 1, offset: t0 + .015 }, { transform: 'translate(-50%,-50%) scale(.3)', opacity: 0, offset: Math.min(.99, t0 + (shots > 1 ? .05 : .12)) }, { transform: 'translate(-50%,-50%) scale(0)', opacity: 0 }], { duration: DUR, fill: 'both' });
           }
-          if (cfg.smoke) for (let k = 0; k < 5; k++) { const sm = add('qx-vfxsm', `left:${mx}%;top:${my}%`); const t0 = hit + .02 + k * .03; sm.animate([{ transform: 'translate(-50%,-50%) scale(.2)', opacity: 0 }, { transform: 'translate(-50%,-50%) scale(.2)', opacity: 0, offset: t0 }, { transform: 'translate(-50%,-50%) scale(.6)', opacity: .85, offset: t0 + .06 }, { transform: `translate(calc(-50% + ${10 + k * 9}px),calc(-50% - ${14 + k * 8}px)) scale(${1.4 + k * .2})`, opacity: 0, offset: Math.min(.99, t0 + .5) }, { opacity: 0 }], { duration: D, fill: 'both' }); }
+          if (cfg.smoke) for (let k = 0; k < 5; k++) { const sm = add('qx-vfxsm', `left:${mx}%;top:${my}%`); const t0 = hit + .02 + k * .03; sm.animate([{ transform: 'translate(-50%,-50%) scale(.2)', opacity: 0 }, { transform: 'translate(-50%,-50%) scale(.2)', opacity: 0, offset: t0 }, { transform: 'translate(-50%,-50%) scale(.6)', opacity: .85, offset: t0 + .06 }, { transform: `translate(calc(-50% + ${10 + k * 9}px),calc(-50% - ${14 + k * 8}px)) scale(${1.4 + k * .2})`, opacity: 0, offset: Math.min(.99, t0 + .5) }, { opacity: 0 }], { duration: DUR, fill: 'both' }); }
         }
         if (cfg.stab) {   // 慈悲短剑：沿刀身方向刺出一道白光
           const [[x0, y0], [x1, y1]] = cfg.stab; const len = Math.hypot(x1 - x0, y1 - y0), ang = Math.atan2(y1 - y0, x1 - x0) * 180 / Math.PI;
           const st = add('qx-vfxstab', `left:${x0}%;top:${y0}%;width:${len}%;transform:rotate(${ang}deg)`);
-          st.animate([{ clipPath: 'inset(0 100% 0 0)', opacity: 0 }, { clipPath: 'inset(0 100% 0 0)', opacity: 1, offset: hit - .08 }, { clipPath: 'inset(0 0 0 0)', opacity: 1, offset: hit }, { clipPath: 'inset(0 0 0 85%)', opacity: 0, offset: hit + .2 }, { opacity: 0 }], { duration: D, fill: 'both' });
+          st.animate([{ clipPath: 'inset(0 100% 0 0)', opacity: 0 }, { clipPath: 'inset(0 100% 0 0)', opacity: 1, offset: hit - .08 }, { clipPath: 'inset(0 0 0 0)', opacity: 1, offset: hit }, { clipPath: 'inset(0 0 0 85%)', opacity: 0, offset: hit + .2 }, { opacity: 0 }], { duration: DUR, fill: 'both' });
         }
       } else if (A === 'bow') {   // 英格兰长弓：弦从拉满（搭箭点）弹回、箭射出；弦由代码画，和握弓的手不冲突
         const k = 100 / BOW.W; const pct = v => (v * k).toFixed(2) + '%';
@@ -8693,12 +8715,12 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
         // 搭箭点（弦的中点）随时间的位置：拉满 → 微微再拉 → 放箭弹回并抖动 → 伸直
         const P = [[0, BOW.nock[0]], [.14, BOW.nock[0]], [.38, BOW.nock[0] - 10], [.43, xs + 34], [.48, xs - 16], [.53, xs + 9], [.58, xs - 5], [.64, xs + 2], [.7, xs], [1, xs]];
         const segFr = (T, op) => P.map(([o, x]) => { const dx = x - T[0], dy = yA - T[1]; return { offset: o, transform: `rotate(${(Math.atan2(dy, dx) * 180 / Math.PI).toFixed(2)}deg) scaleX(${(Math.hypot(dx, dy) * k / 100).toFixed(4)})`, opacity: o < .1 ? o / .1 * op : o > .8 ? (1 - o) / .2 * op : op }; });
-        s1.animate(segFr(BOW.t1, 1), { duration: D, fill: 'both' }); s2.animate(segFr(BOW.t2, 1), { duration: D, fill: 'both' });
-        arrow.animate([{ transform: 'translateX(0)', opacity: 0 }, { transform: 'translateX(0)', opacity: 1, offset: .14 }, { transform: 'translateX(-.8%)', opacity: 1, offset: .38 }, { transform: `translateX(${((xs - BOW.nock[0]) * k).toFixed(1)}%)`, opacity: 1, offset: .43, easing: 'cubic-bezier(.3,0,1,1)' }, { transform: 'translateX(95%)', opacity: 0, offset: .6 }, { transform: 'translateX(95%)', opacity: 0 }], { duration: D, fill: 'both' });
-        const tr = add('qx-vfxtrail', `top:${pct(yA)}`); tr.animate([{ opacity: 0, transform: 'scaleX(0)' }, { opacity: 0, transform: 'scaleX(0)', offset: .4 }, { opacity: .9, transform: 'scaleX(1)', offset: .48 }, { opacity: 0, transform: 'scaleX(1.1)', offset: .7 }, { opacity: 0 }], { duration: D, fill: 'both' });
+        s1.animate(segFr(BOW.t1, 1), { duration: DUR, fill: 'both' }); s2.animate(segFr(BOW.t2, 1), { duration: DUR, fill: 'both' });
+        arrow.animate([{ transform: 'translateX(0)', opacity: 0 }, { transform: 'translateX(0)', opacity: 1, offset: .14 }, { transform: 'translateX(-.8%)', opacity: 1, offset: .38 }, { transform: `translateX(${((xs - BOW.nock[0]) * k).toFixed(1)}%)`, opacity: 1, offset: .43, easing: 'cubic-bezier(.3,0,1,1)' }, { transform: 'translateX(95%)', opacity: 0, offset: .6 }, { transform: 'translateX(95%)', opacity: 0 }], { duration: DUR, fill: 'both' });
+        const tr = add('qx-vfxtrail', `top:${pct(yA)}`); tr.animate([{ opacity: 0, transform: 'scaleX(0)' }, { opacity: 0, transform: 'scaleX(0)', offset: .4 }, { opacity: .9, transform: 'scaleX(1)', offset: .48 }, { opacity: 0, transform: 'scaleX(1.1)', offset: .7 }, { opacity: 0 }], { duration: DUR, fill: 'both' });
       }
       void out;
-      fl.animate([{ transform: 'scale(.3)', opacity: 0 }, { transform: 'scale(.3)', opacity: 0, offset: Math.max(0, hit - .02) }, { transform: 'scale(.9)', opacity: .9, offset: hit + .04 }, { transform: 'scale(1.3)', opacity: 0, offset: Math.min(1, hit + .32) }, { transform: 'scale(1.3)', opacity: 0 }], { duration: D, fill: 'both' });
+      fl.animate([{ transform: 'scale(.3)', opacity: 0 }, { transform: 'scale(.3)', opacity: 0, offset: Math.max(0, hit - .02) }, { transform: 'scale(.9)', opacity: .9, offset: hit + .04 }, { transform: 'scale(1.3)', opacity: 0, offset: Math.min(1, hit + .32) }, { transform: 'scale(1.3)', opacity: 0 }], { duration: DUR, fill: 'both' });
       // 粒子
       const P = cfg.pt || {}; const mode = P.mode || 'spark'; const N = 18;
       for (let k = 0; k < N; k++) {
@@ -8712,12 +8734,12 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
         b.style.cssText = `left:${x0}%;top:${y0}%;width:${sz}px;height:${sz}px;background:${col};box-shadow:0 0 ${Math.round(sz * 2)}px ${col}`;
         pl.appendChild(b);
         const en = Math.min(1, st + .3 + Math.random() * .3); const tx = (dx * S / 100).toFixed(1), ty = (dy * S / 100).toFixed(1);
-        b.animate([{ transform: 'translate(0,0) scale(1)', opacity: 0 }, { transform: 'translate(0,0) scale(1)', opacity: 0, offset: st }, { transform: 'translate(0,0) scale(1.2)', opacity: 1, offset: Math.min(en - .01, st + .03), easing: 'ease-out' }, { transform: `translate(${tx}px,${ty}px) scale(.4)`, opacity: 0, offset: en }, { transform: `translate(${tx}px,${ty}px) scale(.4)`, opacity: 0 }], { duration: D, fill: 'both' });
+        b.animate([{ transform: 'translate(0,0) scale(1)', opacity: 0 }, { transform: 'translate(0,0) scale(1)', opacity: 0, offset: st }, { transform: 'translate(0,0) scale(1.2)', opacity: 1, offset: Math.min(en - .01, st + .03), easing: 'ease-out' }, { transform: `translate(${tx}px,${ty}px) scale(.4)`, opacity: 0, offset: en }, { transform: `translate(${tx}px,${ty}px) scale(.4)`, opacity: 0 }], { duration: DUR, fill: 'both' });
       }
       // 命中那一下：武将牌轻震（强度按特效）
-      if (cfg.shake) { const m = cfg.shake * 2; setTimeout(() => { const e2 = this.porEl(seat); if (e2) e2.animate([{ translate: '0 0' }, { translate: `${-m}px ${m / 2}px` }, { translate: `${m * .75}px ${-m / 2}px` }, { translate: `${-m / 2}px ${m / 4}px` }, { translate: '0 0' }], { duration: 220 + cfg.shake * 40 }); }, D * hit); }
-      this.sfx.play(kind);
-      setTimeout(() => box.remove(), D + 60);
+      if (cfg.shake) { const m = cfg.shake * 2; setTimeout(() => { const e2 = this.porEl(seat); if (e2) e2.animate([{ translate: '0 0' }, { translate: `${-m}px ${m / 2}px` }, { translate: `${m * .75}px ${-m / 2}px` }, { translate: `${-m / 2}px ${m / 4}px` }, { translate: '0 0' }], { duration: 220 + cfg.shake * 40 }); }, DUR * hit); }
+      this.sfx.play(kind, DUR / 1000);
+      setTimeout(() => box.remove(), DUR + 60);
     }
     // 技能：武将牌上飞入技能横幅；限定技、觉醒技再加立绘特写
     skillFx(seat, id, mult) {
@@ -9178,12 +9200,13 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
       { const tx = el.querySelector('.qx-bftx span'); const max = W * (1 - 2 * A.cut) * 0.86; let fs = this.lang === 'zh' ? 78 : 54; tx.style.setProperty('--fs', fs + 'px'); while (fs > 24 && tx.offsetWidth > max) { fs -= 2; tx.style.setProperty('--fs', fs + 'px'); } }   // 文字总在中间的空白里
       return new Promise(res => setTimeout(() => { el.classList.add('qx-bfout'); setTimeout(() => { el.remove(); res(); }, 450); }, ms));
     }
+    isWinner(p) { const r = this.g.result; if (!r) return false; return r.seats ? r.seats.includes(p.seat) : r.winners.includes(p.role); }
     showGameOver() {
       const g = this.g, T = this.T, t = T.t; if (!g.result) return;
-      const w = g.result.winners; const me = g.p(this.me); const res = !w.length ? 'tie' : w.includes(me.role) ? 'win' : 'lose';
+      const w = g.result.winners; const me = g.p(this.me); const res = !w.length ? 'tie' : this.isWinner(me) ? 'win' : 'lose';
       const c0 = (g.players.find(p => p.role === 'chancellor') || g.players[0]).seat; const order = g.players.map((_, i) => g.players[(c0 + i) % g.players.length]);   // 从执笔者起按座次，阵亡的也列出
       const rows = order.map(p => {
-        const h = E.HEROES[p.hero] || {}; const cfg = this.factionCfg(h.faction); const won = w.includes(p.role); const r = !w.length ? 'tie' : won ? 'win' : 'lose';
+        const h = E.HEROES[p.hero] || {}; const cfg = this.factionCfg(h.faction); const won = this.isWinner(p); const r = !w.length ? 'tie' : won ? 'win' : 'lose';
         return `<tr class="qx-gvr${p.seat === this.me ? ' qx-gvme' : ''}${p.dead ? ' qx-gvdead' : ''}">
           <td><div class="qx-gvh"><i class="qx-gvstrip" style="background:${cfg.strip}"></i><div class="qx-gvpic">${p.hero ? `<img src="${this.seatArtSrc(p.hero)}" alt="" draggable="false">` : ''}</div><div class="qx-gvnm"><b>${esc(p.hero ? T.heroName(p.hero) : t('seat', { n: p.seat + 1 }))}</b><span>${p.seat === this.me ? `<em class="qx-gvyou">${esc(t('you'))}</em>` : ''}${p.dead ? `<em class="qx-gvded">${esc(t('dead'))}</em>` : ''}</span></div></div></td>
           <td class="qx-gvtt">${esc(p.hero ? T.heroTitle(p.hero) : '')}</td>
