@@ -909,6 +909,11 @@
       this.log('death', { seat: p.seat, role: p.role, killer: killer ? killer.seat : null });
       this.checkWin();
       yield* this.trigger('death', { player: p, killer, info });
+      // 阵亡角色先弃置区域内所有的牌、清空状态，「死亡后」的效果结算完，最后才执行奖惩
+      const rest = [...p.hand, ...p.equipList, ...p.judgeZone];
+      if (rest.length) yield* this.moveCards({ cards: rest, to: 'discard', reason: 'death' });
+      p.chained = false; p.faceDown = false;   // 阵亡清空所有状态
+      yield* this.trigger('afterDeath', { player: p, killer });
       // 奖惩
       if (killer && !killer.dead) {
         if (p.role === 'insurgent') { yield* this.draw(killer, 3, 'reward'); }
@@ -916,10 +921,6 @@
           const all = [...killer.hand, ...killer.equipList]; if (all.length) yield* this.discard(killer, all, 'penalty');
         }
       }
-      const rest = [...p.hand, ...p.equipList, ...p.judgeZone];
-      if (rest.length) yield* this.moveCards({ cards: rest, to: 'discard', reason: 'death' });
-      p.chained = false; p.faceDown = false;   // 阵亡清空所有状态
-      yield* this.trigger('afterDeath', { player: p, killer });
     }
     checkWin() {
       const alive = this.alive; const sov = this.players.find(p => p.role === 'chancellor');
@@ -959,7 +960,7 @@
       return this.skillList(p).filter(s => {
         const v = s.def.viewAs; if (!v) return false;
         if (!v.patterns.some(x => [].concat(patterns).includes(x))) return false;
-        return !v.can || v.can(this, p, ctx, s);
+        return !v.can || v.can(this, p, ctx, s, [].concat(patterns));
       });
     }
     forbidden(p, c) { return this.q('forbid', false, p, c); }
@@ -979,8 +980,9 @@
         if (v.can && !v.can(this, p, ctx, inst)) return null;
         const zones = v.zones || 'h';
         if (cs.some(c => !this.cardsIn(p, zones).includes(c))) return null;
-        const n = v.count == null ? 1 : v.count;
+        const n = vaCount(v, this, p);
         if (cs.length !== n) return null;
+        if (v.sameSuit && cs.some(c => c.suit !== cs[0].suit)) return null;   // 须同花色
         if (v.filter && cs.some(c => !v.filter(this, p, c, ctx))) return null;
         const name = typeof v.as === 'function' ? v.as(this, p, cs, ctx, ans) : v.as;
         if (!name) return null;
@@ -1058,7 +1060,7 @@
     describeEffect(e) {
       if (e.use) return { card: e.use.card.name, from: e.use.from ? e.use.from.seat : null, target: e.target ? e.target.seat : null, uid: e.use.id, multi: (e.use.targets || []).length > 1 };
       if (e.veto) return { card: 'veto', from: e.from.seat, of: this.describeEffect(e.target) };
-      if (e.omen) return { card: e.omen.name, target: e.target.seat, omen: true };
+      if (e.omen) return { card: e.omen.omenAs || e.omen.name, target: e.target.seat, omen: true, id: e.omen.id };   // 当作天兆牌使用的牌：按它当作的牌名说
       return {};
     }
 
@@ -1139,7 +1141,7 @@
       const real = card.subcards.filter(c => !c.virtual);
       let tridentFx = false;   // 三叉戟：目标数超过了不带三叉戟时的上限
       if (family(card) === 'strike' && use.targets.length > 1 && from.equips.weapon && from.equips.weapon.name === 'trident') { const w = from.equips.weapon; from.equips.weapon = null; const m0 = this.maxTargets(from, card); from.equips.weapon = w; tridentFx = use.targets.length > m0; }
-      this.log('use', { seat: from.seat, card: card.name, ids: real.map(c => c.id), targets: use.targets.map(t => t.seat), virtual: !!card.virtual, skill: card.viaSkill || null });
+      this.log('use', { seat: from.seat, card: card.name, ids: real.map(c => c.id), targets: use.targets.map(t => t.seat), virtual: !!card.virtual, skill: card.viaSkill || null, top: this.useDepth === 1 && card.name !== 'veto' });   // top：最外层的一次用牌（界面：整件事结算完之前桌上的牌都不暗）
       if (tridentFx) this.log('equipVfx', { seat: from.seat, key: 'trident' });
       if (real.length) yield* this.moveCards({ cards: real, to: 'process', by: from.seat, reason: 'use' });
       if (family(card) === 'strike' && opts.phase && !opts.noCount) {
@@ -1449,7 +1451,7 @@
         const targets = (ans.targets || []).map(s => this.players[s]);
         if (cards.some(c => !c) || targets.some(t => !t)) return false;
         if (a.valid && !a.valid(this, p, cards, targets, inst, ans)) return false;
-        this.log('skill', { seat: p.seat, skill: inst.id, active: true, targets: targets.map(t => t.seat) });
+        this.log('skill', { seat: p.seat, skill: inst.id, active: true, targets: targets.map(t => t.seat), top: !this.useDepth });
         this.useDepth = (this.useDepth || 0) + 1;
         try { yield* a.use(this, p, cards, targets, inst, ans); } finally { this.useDepth--; }
         if (this.useDepth === 0) this.log('tableClear', { reason: 'skill' });
@@ -1497,7 +1499,9 @@
     return game.result;
   }
 
-  return { Game, Player, Card, GameOver, virtualCard, family, matches, CARD_DEFS, SKILLS, HEROES, SUITS, SUIT_COLOR, PHASES, ROLESETS, runSync, runAsync, rng };
+  // 转化技一次要用几张牌（可以随角色状态变化，如伽利略：Y 为体力值）
+  const vaCount = (v, g, p) => typeof v.count === 'function' ? v.count(g, p) : (v.count == null ? 1 : v.count);
+  return { Game, Player, Card, GameOver, virtualCard, family, matches, vaCount, CARD_DEFS, SKILLS, HEROES, SUITS, SUIT_COLOR, PHASES, ROLESETS, runSync, runAsync, rng };
 });
 
 </script>
@@ -1897,7 +1901,7 @@
   };
   // 技能选项等界面文字
   const OPTION_TEXT = {
-    gordianNoParry: ['此杀不可被闪响应', 'Cannot Be Parried'], gordianPlus: ['此杀伤害 +1', '+1 Damage'],
+    gordianNoParry: ['此【杀】不可被【闪】响应', 'Cannot Be Parried'], gordianPlus: ['此杀伤害 +1', '+1 Damage'],
     defianceDiscard: ['弃置 {n} 张牌', 'Discard {n} Cards'], defianceEnd: ['结束出牌阶段', 'End Play Phase'],
     vengeanceDiscard: ['弃置 {n} 张手牌', 'Discard {n} Cards'], vengeanceDamage: ['受到 1~2 点伤害', 'Take 1–2 Damage'],
     lecture1: ['传道授业·各交一张', 'Lecture: Gather'], lecture2: ['传道授业·交换手牌', 'Lecture: Swap'],
@@ -1909,8 +1913,8 @@
     defianceDiscard: ['宁死不降：请弃置 {n} 张牌。', 'Defiance: discard {n} cards.'],
     vengeanceDiscard: ['血债血偿：请弃置 {n} 张手牌。', 'Vengeance: discard {n} cards from your hand.'],
     unchainGive: ['挣脱枷锁：将 {c} 交给一名角色（可以是自己）。', 'Unchain: give {c} to a character (yourself included).'],
-    narrows: ['一夫当关：可以立即对{t}使用一张【杀】。', 'Narrows: you may immediately use a Strike on {t}.'],
-    defianceOpt: ['宁死不降：你的杀造成了伤害，选择一项：', 'Defiance: your Strike dealt damage. Choose one:'],
+    narrows: ['一夫当关：可以立即对{t}使用一张【杀】。', 'Narrows: you may immediately use a {Strike} on {t}.'],
+    defianceOpt: ['宁死不降：你的【杀】造成了伤害，选择一项：', 'Defiance: your {Strike} dealt damage. Choose one:'],
     vengeanceOpt: ['血债血偿：选择一项：', 'Vengeance: choose one:'],
     gordianOpt: ['一剑断结：选择一项：', 'Gordian: choose one:'],
   };
@@ -1921,7 +1925,7 @@
   H.alexander = { faction: 'classical', hp: 4, gender: 'male', skills: ['campaign', 'gordian'], name: ['亚历山大', 'Alexander'], title: ['不败之王', 'The Great'], rating: 8 };
   S.campaign = {
     name: ['长驱直入', 'CAMPAIGN'], type: 'locked', locked: true,
-    desc: ['锁定技，当你对其他角色造成伤害后，你摸一张牌并令你与其的距离 −1；若你造成的伤害渠道为实体的杀，则改为摸两张牌。', 'Compulsory skill. After you deal damage to another character, draw 1 and your distance to them is reduced by 1 for the rest of the game; if the damage came from a real (not converted) Strike card, draw 2 instead.'],
+    desc: ['锁定技，当你对其他角色造成伤害后，你摸一张牌并令你与其的距离 −1；若你造成的伤害渠道为实体的【杀】，则改为摸两张牌。', 'Compulsory skill. After you deal damage to another character, draw 1 and your distance to them is reduced by 1 for the rest of the game; if the damage came from a real (not converted) {Strike} card, draw 2 instead.'],
     triggers: { damageDone: { silent: true, can: (g, o, d) => d.from === o && d.to !== o && !o.dead, *on(g, o, d) {
       const m = o.marks.campaign = o.marks.campaign || {}; m[d.to.seat] = (m[d.to.seat] || 0) + 1; g.log('skill', { seat: o.seat, skill: 'campaign' });
       // 实体的杀：真实的杀牌本身造成的伤害（不是转化 / 视为的杀）
@@ -1932,7 +1936,7 @@
   };
   S.gordian = {
     name: ['一剑断结', 'GORDIAN'], type: 'normal',
-    desc: ['当你使用杀指定目标后，你可以选择一项：1. 此杀不可被闪响应；2. 此杀的伤害 +1。若你与所有其他角色的距离均为 1，则改为依次执行两项。', 'After your Strike targets, you may choose one: it cannot be answered with a Parry; or it deals +1 damage. If you are at distance 1 from every other character, do both.'],
+    desc: ['当你使用【杀】指定目标后，你可以选择一项：1. 此【杀】不可被【闪】响应；2. 此【杀】的伤害 +1。若你与所有其他角色的距离均为 1，则改为依次执行两项。', 'After your {Strike} targets, you may choose one: it cannot be answered with a {Parry}; or it deals +1 damage. If you are at distance 1 from every other character, do both.'],
     triggers: { targetConfirmed: {
       can: (g, o, d) => strikeBy(o, d.use) && d.use.targets.length > 0,
       *on(g, o, d) {
@@ -1949,7 +1953,7 @@
   H.caesar = { faction: 'classical', hp: 4, gender: 'male', skills: ['rubicon', 'vici'], name: ['凯撒', 'Caesar'], title: ['独裁官', 'The Dictator'], rating: 6 };
   S.rubicon = {
     name: ['骰子已掷', 'RUBICON'], type: 'limited',
-    desc: ['限定技，当你使用杀造成伤害后，若你的手牌数大于体力上限，你可以将体力上限调整至与你的手牌数相同，然后回复体力至体力上限。', 'Limited skill. After your Strike deals damage, if you have more cards in hand than your max health, you may set your max health equal to your hand size, then recover to full health.'],
+    desc: ['限定技，当你使用【杀】造成伤害后，若你的手牌数大于体力上限，你可以将体力上限调整至与你的手牌数相同，然后回复体力至体力上限。', 'Limited skill. After your {Strike} deals damage, if you have more cards in hand than your max health, you may set your max health equal to your hand size, then recover to full health.'],
     triggers: { damageDone: {
       can: (g, o, d) => d.from === o && isStrike(d.card) && !o.skillState.rubicon && o.hand.length > o.maxHp && !o.dead,
       *on(g, o) { o.skillState.rubicon = true; yield* g.changeMaxHp(o, o.hand.length - o.maxHp); yield* g.recover(o, o.maxHp - o.hp, o); },
@@ -1957,7 +1961,7 @@
   };
   S.vici = {
     name: ['兵贵神速', 'VICI'], type: 'normal',
-    desc: ['出牌阶段限一次，你可以减 1 点体力上限并摸三张牌，然后视为使用一张无距离限制的杀。当你以此法造成伤害时，你令该技能视为未发动过。', 'Once per Play phase, you may lose 1 max health and draw 3, then you are treated as using a Strike with no distance limit. If that Strike deals damage, this skill counts as unused.'],
+    desc: ['出牌阶段限一次，你可以减 1 点体力上限并摸三张牌，然后视为使用一张无距离限制的【杀】。当你以此法造成伤害时，你令该技能视为未发动过。', 'Once per Play phase, you may lose 1 max health and draw 3, then you are treated as using a {Strike} with no distance limit. If that {Strike} deals damage, this skill counts as unused.'],
     active: {
       cards: { min: 0, max: 0 },
       targets: { min: 1, max: (g, p) => g.maxTargets(p, V('strike', [])), filter: (g, p, t, sel) => t !== p && !sel.includes(t) && g.targetAllowed(p, t, V('strike', [])) },
@@ -2004,7 +2008,7 @@
   }
   S.cannae = {
     name: ['两翼合围', 'CANNAE'], type: 'locked', locked: true,
-    desc: ['锁定技，你使用杀可以指定至多三名角色为目标。', 'Compulsory skill. Your Strikes may target up to three characters.'],
+    desc: ['锁定技，你使用【杀】可以指定至多三名角色为目标。', 'Compulsory skill. Your {Strike} cards may target up to three characters.'],
     mods: {
       maxTargets: (g, o, v, p, card) => (p === o && isStrike(card)) ? v + 2 : v,
     },
@@ -2014,7 +2018,7 @@
   H.scipio = { faction: 'classical', hp: 4, gender: 'male', skills: ['divert', 'zama'], name: ['西庇阿', 'Scipio'], title: ['扎马胜者', 'The Victor'], rating: 6 };
   S.divert = {
     name: ['围魏救赵', 'DIVERT'], type: 'normal',
-    desc: ['当你受到杀造成的伤害后，你可以视为对伤害来源使用一张无距离限制的杀。若此杀造成了伤害，你回复 1 点体力。', 'After you take damage from a Strike, you may be treated as using a Strike with no distance limit on the source. If it deals damage, recover 1 health.'],
+    desc: ['当你受到【杀】造成的伤害后，你可以视为对伤害来源使用一张无距离限制的【杀】。若此【杀】造成了伤害，你回复 1 点体力。', 'After you take damage from a {Strike}, you may be treated as using a {Strike} with no distance limit on the source. If it deals damage, recover 1 health.'],
     triggers: { damaged: {
       can: (g, o, d) => d.to === o && !o.dead && d.from && !d.from.dead && d.from !== o && isStrike(d.card),
       *on(g, o, d) {
@@ -2027,7 +2031,7 @@
   };
   S.zama = {
     name: ['避其锋芒', 'ZAMA'], type: 'locked', locked: true,
-    desc: ['锁定技，当你成为杀或谋略牌的目标时，若此牌指定了不止一个目标，则其对你无效，然后你摸一张牌。', 'Compulsory skill. When you become a target of a Strike or Stratagem that has more than one target, it has no effect on you and you draw 1.'],
+    desc: ['锁定技，当你成为【杀】或谋略牌的目标时，若此牌指定了不止一个目标，则其对你无效，然后你摸一张牌。', 'Compulsory skill. When you become a target of a {Strike} or Stratagem that has more than one target, it has no effect on you and you draw 1.'],
     triggers: { targeted: {
       can: (g, o, d) => d.target === o && d.use.targets.length > 1 && (isStrike(d.use.card) || (E.CARD_DEFS[d.use.card.name] || {}).type === 'stratagem'),
       *on(g, o, d) { d.use.nullified.add(o); yield* g.draw(o, 1, 'zama'); },
@@ -2038,7 +2042,7 @@
   H.leonidas = { faction: 'classical', hp: 4, gender: 'male', skills: ['narrows', 'defiance'], name: ['列奥尼达', 'Leonidas'], title: ['斯巴达王', 'The Spartan King'], rating: 7 };
   S.narrows = {
     name: ['一夫当关', 'NARROWS'], type: 'locked', locked: true,
-    desc: ['锁定技，当你受到伤害后，直到本回合结束，所有其他角色使用的杀和谋略牌对你无效。当你即将对其他角色造成伤害时，将该伤害值调整为目标角色当前体力值的一半（向下取整，至少为 1）。', 'Compulsory skill. After you take damage, other characters\' Strikes and Stratagems have no effect on you until the end of the turn. When you are about to deal damage to another character, that damage becomes half of their current health (rounded down, at least 1).'],
+    desc: ['锁定技，当你受到伤害后，直到本回合结束，所有其他角色使用的【杀】和谋略牌对你无效。当你即将对其他角色造成伤害时，将该伤害值调整为目标角色当前体力值的一半（向下取整，至少为 1）。', 'Compulsory skill. After you take damage, other characters\' {Strike} cards and Stratagems have no effect on you until the end of the turn. When you are about to deal damage to another character, that damage becomes half of their current health (rounded down, at least 1).'],
     triggers: {
       damaged: { can: (g, o, d) => d.to === o && !o.dead, *on(g, o) { o.marks.narrows = g.turnSeq || 0; } },
       effectBefore: {
@@ -2052,7 +2056,7 @@
   };
   S.defiance = {
     name: ['宁死不降', 'DEFIANCE'], type: 'normal',
-    desc: ['其他角色的出牌阶段开始时，你可以摸 X 张牌，然后令其视为对你使用杀。若此杀对你造成了伤害，除非其弃置 X 张牌，否则其结束此出牌阶段（X 为你已损失的体力，且至多为 5）。', "At the start of another character's Play phase, you may draw X, then they are treated as using a Strike on you. If it damages you, they must discard X cards or end their Play phase (X = your lost health, max 5)."],
+    desc: ['其他角色的出牌阶段开始时，你可以摸 X 张牌，然后令其视为对你使用【杀】。若此【杀】对你造成了伤害，除非其弃置 X 张牌，否则其结束此出牌阶段（X 为你已损失的体力，且至多为 5）。', "At the start of another character's Play phase, you may draw X, then they are treated as using a {Strike} on you. If it damages you, they must discard X cards or end their Play phase (X = your lost health, max 5)."],
     triggers: { phaseStart: {
       can: (g, o, d) => d.phase === 'play' && d.player !== o && !d.player.dead && !o.dead,
       *on(g, o, d) {
@@ -2108,7 +2112,7 @@
   };
   S.comrades = {
     name: ['同仇敌忾', 'COMRADES'], type: 'locked', locked: true,
-    desc: ['锁定技，体力值大于你的角色不能响应你对其使用的杀。你使用杀的次数上限 +X（X 为你已损失的体力值）。', 'Compulsory skill. Characters with more health than you cannot respond to your Strikes. You may use X more Strikes per turn (X = your lost health).'],
+    desc: ['锁定技，体力值大于你的角色不能响应你对其使用的【杀】。你使用【杀】的次数上限 +X（X 为你已损失的体力值）。', 'Compulsory skill. Characters with more health than you cannot respond to your {Strike} cards. You may use X more {Strike} cards per turn (X = your lost health).'],
     triggers: { targetConfirmed: {
       can: (g, o, d) => strikeBy(o, d.use) && d.use.targets.some(t => t.hp > o.hp),
       *on(g, o, d) { for (const t of d.use.targets) if (t.hp > o.hp) d.use.noResponse.add(t); },
@@ -2120,7 +2124,7 @@
   H.boudica = { faction: 'classical', hp: 4, gender: 'female', skills: ['chariot', 'vengeance'], name: ['布狄卡', 'Boudica'], title: ['复仇女王', 'The Iceni Queen'], rating: 7 };
   S.chariot = {
     name: ['刀轮战车', 'CHARIOT'], type: 'locked', locked: true,
-    desc: ['锁定技，游戏开始时，你从牌堆中随机装备 −1 马和 +1 马各一匹。你的坐骑不能被其他角色获得或弃置。', 'Compulsory skill. At the start of the game, equip a random Charger (−1) and Destrier (+1) from the deck. Other characters cannot take or discard your mounts.'],
+    desc: ['锁定技，游戏开始时，你从牌堆中随机装备进击战马和守御战马各一匹。你的坐骑不能被其他角色获得或弃置。', 'Compulsory skill. At the start of the game, equip a random Charger (−1) and Destrier (+1) from the deck. Other characters cannot take or discard your mounts.'],
     triggers: { gameStart: {
       can: () => true,
       *on(g, o) {
@@ -2160,7 +2164,7 @@
   H.cleopatra = { faction: 'classical', hp: 3, gender: 'female', skills: ['allure', 'pearl'], name: ['克娄巴特拉', 'Cleopatra'], title: ['尼罗河女王', 'The Nile Queen'], rating: 8 };
   S.allure = {
     name: ['倾国倾城', 'ALLURE'], type: 'normal',
-    desc: ['出牌阶段限 X+1 次，你可以令一名其他角色视为对另一名其他角色使用一张不能被无懈可击响应的决斗（X 为你已损失的体力值）。', 'X+1 times per Play phase, you may make one other character be treated as using a Duel, which cannot be Vetoed, on another other character (X = your lost health).'],
+    desc: ['出牌阶段限 X+1 次，你可以令一名其他角色视为对另一名其他角色使用一张不能被【无懈可击】响应的【决斗】（X 为你已损失的体力值）。', 'X+1 times per Play phase, you may make one other character be treated as using a {Duel}, which cannot be answered with a {Veto}, on another other character (X = your lost health).'],
     active: {
       cards: { min: 0, max: 0 },
       targets: { min: 2, max: 2, filter: (g, p, t, sel) => t !== p && (sel.length === 0 || g.targetAllowed(sel[0], t, V('duel', []))) },
@@ -2231,7 +2235,7 @@
   H.hypatia = { faction: 'classical', hp: 3, gender: 'female', skills: ['lecture', 'proof'], name: ['希帕提娅', 'Hypatia'], title: ['智慧之光', 'The Philosopher'], rating: 6 };
   S.lecture = {
     name: ['传道授业', 'LECTURE'], type: 'normal',
-    desc: ['出牌阶段每项限一次：1. 你可以令手牌数大于你的其他角色各交给你一张手牌，然后若你的手牌数为全场唯一最多，你失去 1 点体力；2. 你可以与一名手牌数不大于你的角色交换手牌或装备区里的所有牌。', 'Once each per Play phase: 1. Every other character with more cards in hand than you gives you one; then if you alone have the most, lose 1 health. 2. Swap your hand, or everything in your equipment area, with a character whose hand is no larger than yours.'],
+    desc: ['出牌阶段每项限一次：1. 你可以令手牌数大于你的其他角色各交给你一张手牌，然后若你的手牌数为全场唯一最多，你失去 1 点体力；2. 你可以与一名手牌数不大于你的角色交换手牌或军备区里的所有牌。', 'Once each per Play phase: 1. Every other character with more cards in hand than you gives you one; then if you alone have the most, lose 1 health. 2. Swap your hand, or everything in your arsenal area, with a character whose hand is no larger than yours.'],
     active: {
       options: ['lecture1', 'lecture2'],
       cards: { min: 0, max: 0 },
@@ -2337,7 +2341,7 @@
     domesdayOpt: ['末日审判：选择一项：', 'Domesday: choose one:'], domesdayPick: ['末日审判：可以弃置其中一张黑色牌。', 'Domesday: you may discard one black card.'],
     kingmakerGive: ['扶立新王：交给{t}至少一张手牌。', 'Kingmaker: give {t} at least one card.'],
     kingmakerBack: ['扶立新王：请将 {n} 张手牌交给{t}。', 'Kingmaker: give {n} cards to {t}.'],
-    escort: ['勤王护驾：是否替{t}打出一张【闪】，然后摸一张牌？', 'Escort: play a Parry on behalf of {t}, then draw 1?'],
+    escort: ['勤王护驾：是否替{t}打出一张【闪】，然后摸一张牌？', 'Escort: play a {Parry} on behalf of {t}, then draw 1?'],
     freedomPick: ['自由之呼：选择天兆区的一张牌弃置。', 'Freedom: choose a card in your omen area to discard.'],
     tradeTake: ['互通有无：选择{t}区域内的一张牌获得。', "Trade: choose a card from {t}'s areas."],
     redeemOpt: ['涤罪升天：选择一项：', 'Redemption: choose one:'], redeemTarget: ['涤罪升天：选择一名角色。', 'Redemption: choose a character.'],
@@ -2385,7 +2389,7 @@
   };
   S.paladins = {
     name: ['十二圣骑', 'PALADINS'], type: 'normal',
-    desc: ['你可以将任意黑色牌当闪使用或打出。每回合你首次使用一张闪时，你摸一张牌。', 'You may use or play any black card as a Parry. The first time each turn you use a Parry, draw 1.'],
+    desc: ['你可以将任意黑色牌当【闪】使用或打出。每回合你首次使用一张【闪】时，你摸一张牌。', 'You may use or play any black card as a {Parry}. The first time each turn you use a {Parry}, draw 1.'],
     viewAs: { patterns: ['parry'], as: 'parry', count: 1, zones: 'he', filter: (g, p, c) => c.color === 'black' },
     triggers: { cardUsed: {
       optional: false,
@@ -2445,7 +2449,7 @@
   H.richard = { faction: 'medieval', hp: 4, gender: 'male', skills: ['valiant', 'ransom'], name: ['理查一世', 'Richard I'], title: ['狮心王', 'The Lionheart'], rating: 6 };
   S.valiant = {
     name: ['狮心无畏', 'VALIANT'], type: 'locked', locked: true,
-    desc: ['锁定技，你的手牌上限和摸牌阶段的摸牌数量等于你的体力上限。当你的手牌数小于体力上限时，你不能成为釜底抽薪和探囊取物的目标；当你的手牌数大于体力上限时，你不能成为流连忘返的目标。', 'Compulsory skill. Your hand limit and the number of cards you draw in your Draw phase both equal your max health. While your hand is smaller than your max health, you cannot be targeted by Sabotage or Pilfer; while it is larger, you cannot be targeted by Lotus Eaters.'],
+    desc: ['锁定技，你的手牌上限和摸牌阶段的摸牌数量等于你的体力上限。当你的手牌数小于体力上限时，你不能成为【釜底抽薪】和【探囊取物】的目标；当你的手牌数大于体力上限时，你不能成为【流连忘返】的目标。', 'Compulsory skill. Your hand limit and the number of cards you draw in your Draw phase both equal your max health. While your hand is smaller than your max health, you cannot be targeted by {Sabotage} or {Pilfer}; while it is larger, you cannot be targeted by {Lotus Eaters}.'],
     triggers: { drawCount: { silent: true, optional: false, can: (g, o, d) => d.player === o, *on(g, o, d) { d.n = o.maxHp; } } },
     mods: {
       handLimit: (g, o, v, p) => p === o ? o.maxHp : v,
@@ -2559,33 +2563,34 @@
   H.eleanor = { faction: 'medieval', hp: 3, gender: 'female', skills: ['alliance', 'kingmaker'], name: ['埃莉诺', 'Eleanor'], title: ['两国王后', 'The Twice Queen'], rating: 6 };
   S.alliance = {
     name: ['秦晋之好', 'ALLIANCE'], type: 'normal',
-    desc: ['准备阶段和结束阶段各限一次，你可以指定一名其他角色并选择一项：1. 你将手牌数调整至与其相同；2. 其将手牌数调整至与你相同。', 'Once in your Prepare phase and once in your Finish phase, you may choose another character and pick one: 1. adjust your hand size to match theirs; 2. they adjust their hand size to match yours. (Adjust = draw up, or discard down choosing which.)'],
-    triggers: { phaseStart: {
-      can: (g, o, d) => d.player === o && (d.phase === 'prepare' || d.phase === 'finish') && !o.dead && g.alive.some(t => t !== o && t.hand.length !== o.hand.length),
-      *on(g, o) {
-        const cands = g.alive.filter(t => t !== o && t.hand.length !== o.hand.length);
-        const [t] = yield* g.chooseTargets(o, cands, 1, 1, 'allianceTarget', { skill: 'alliance' }); if (!t) return;
+    desc: ['出牌阶段限一次，你可以指定一名其他角色并选择一项：1. 你将手牌数调整至与其相同；2. 其将手牌数调整至与你相同。被调整的角色至多调整至 X 张手牌（X 为存活角色数）。', 'Once per Play phase, you may choose another character and pick one: 1. match your hand size to theirs; 2. they match their hand size to yours. The adjusted character can be brought up to at most X cards (X = living characters).'],
+    active: {
+      cards: { min: 0, max: 0 }, targets: { min: 1, max: 1, filter: (g, p, t) => t !== p && t.hand.length !== p.hand.length },
+      can: (g, p) => !p.phaseState.alliance && g.alive.some(t => t !== p && t.hand.length !== p.hand.length),
+      valid: (g, p, cards, targets) => !cards.length && targets.length === 1 && targets[0] !== p && targets[0].hand.length !== p.hand.length,
+      *use(g, o, cards, targets) {
+        o.phaseState.alliance = true; const t = targets[0];
         const i = yield* g.chooseOption(o, ['allianceMe', 'allianceThem'], 'alliance', { skill: 'alliance', target: t.seat, a: o.hand.length, b: t.hand.length });
-        // 调整：多了就弃（由弃牌的一方自己选弃哪些），少了就摸
-        const [who, to] = i === 0 ? [o, t.hand.length] : [t, o.hand.length];
+        // 调整：多了就弃（由弃牌的一方自己选弃哪些），少了就摸；最多调整到 X 张（X 为存活角色数）
+        const [who, to0] = i === 0 ? [o, t.hand.length] : [t, o.hand.length];
+        const to = Math.min(to0, g.alive.length);
         const diff = to - who.hand.length;
         if (diff > 0) yield* g.draw(who, diff, 'alliance');
         else if (diff < 0) yield* g.askDiscard(who, -diff, -diff, 'h', 'allianceDiscard', null, { skill: 'alliance', n: -diff });
       },
-    } },
+    },
     ai: {
       // 估算每个目标、每个选项的收益：自己摸牌 / 让敌人弃牌 / 让队友摸牌为正
       _best(g, me, A) {
         let best = null;
         for (const t of g.alive) { if (t === me || t.hand.length === me.hand.length) continue; const r = A.rel(g, me, t);
-          const v1 = (t.hand.length - me.hand.length) * (t.hand.length > me.hand.length ? 1 : 0.7);
-          const v2 = (me.hand.length - t.hand.length) * (r > 0.2 ? 0.9 : r < -0.2 ? -1 : 0);
+          const X = g.alive.length; const v1 = (Math.min(t.hand.length, X) - me.hand.length) * (t.hand.length > me.hand.length ? 1 : 0.7);
+          const v2 = (Math.min(me.hand.length, X) - t.hand.length) * (r > 0.2 ? 0.9 : r < -0.2 ? -1 : 0);
           for (const [i, v] of [[0, v1], [1, v2]]) if (!best || v > best.v) best = { t, i, v }; }
         return best;
       },
-      confirm(g, me, req, A) { const b = S.alliance.ai._best(g, me, A); return !!b && b.v >= 1; },
-      targets(g, me, req, A) { const b = S.alliance.ai._best(g, me, A); return [b && req.options.includes(b.t.seat) ? b.t.seat : req.options[0]]; },
-      option(g, me, req, A) { const t = g.p(req.target); const r = A.rel(g, me, t); const v1 = (t.hand.length - me.hand.length) * (t.hand.length > me.hand.length ? 1 : 0.7); const v2 = (me.hand.length - t.hand.length) * (r > 0.2 ? 0.9 : r < -0.2 ? -1 : 0); return v1 >= v2 ? 0 : 1; },
+      play(g, me, inst, A) { const b = S.alliance.ai._best(g, me, A); return b && b.v >= 1 ? [{ score: 1 + b.v * .4, ans: { action: 'skill', skill: inst.key, cardIds: [], targets: [b.t.seat] } }] : []; },
+      option(g, me, req, A) { const t = g.p(req.target); const r = A.rel(g, me, t); const v1 = (Math.min(t.hand.length, g.alive.length) - me.hand.length) * (t.hand.length > me.hand.length ? 1 : 0.7); const v2 = (Math.min(me.hand.length, g.alive.length) - t.hand.length) * (r > 0.2 ? 0.9 : r < -0.2 ? -1 : 0); return v1 >= v2 ? 0 : 1; },
     },
   };
   S.kingmaker = {
@@ -2611,7 +2616,7 @@
   H.wallace = { faction: 'medieval', hp: 4, gender: 'male', skills: ['schiltron', 'freedom'], name: ['华莱士', 'Wallace'], title: ['勇敢之心', 'The Braveheart'], rating: 7 };
   S.schiltron = {
     name: ['刺猬方阵', 'SCHILTRON'], type: 'normal',
-    desc: ['你可以将杀当闪、闪当杀使用或打出；若如此做，你可以获得对方的一张手牌。', 'You may use or play a Strike as a Parry, or a Parry as a Strike. If you do, you may take a card from your opponent\'s hand.'],
+    desc: ['你可以将【杀】当【闪】、【闪】当【杀】使用或打出；若如此做，你可以获得对方的一张手牌。', 'You may use or play a {Strike} as a {Parry}, or a {Parry} as a {Strike}. If you do, you may take a card from your opponent\'s hand.'],
     viewAs: { patterns: ['strike', 'parry'], count: 1, zones: 'h', filter: (g, p, c, ctx) => {
       const pats = ctx && ctx.pattern ? [].concat(ctx.pattern) : ['strike'];
       return (c.name === 'parry' && pats.includes('strike')) || (isStrike(c) && pats.includes('parry'));
@@ -2628,7 +2633,7 @@
   }
   S.freedom = {
     name: ['自由之呼', 'FREEDOM'], type: 'normal',
-    desc: ['准备阶段开始时，你可以失去 1 点体力或弃置一张装备牌，然后令你本回合的摸牌阶段额外摸 X 张牌，本出牌阶段内攻击范围变为无限、出杀的次数上限 +X，且弃牌阶段结束时，你可以令一名其他角色获得你本次的弃牌（X 为你已损失的体力值）。', 'At the start of your Prepare phase, you may lose 1 health or discard an Equipment card. If you do, this turn you draw X extra in your Draw phase; during your Play phase your attack range is unlimited and you may use X more Strikes; and at the end of your Discard phase you may give the cards you discarded to another character (X = your lost health).'],
+    desc: ['准备阶段开始时，你可以失去 1 点体力或弃置一张军备牌，然后令你本回合的摸牌阶段额外摸 X 张牌，本出牌阶段内攻击范围变为无限、出【杀】的次数上限 +X，且弃牌阶段结束时，你可以令一名其他角色获得你本次的弃牌（X 为你已损失的体力值）。', 'At the start of your Prepare phase, you may lose 1 health or discard an Arsenal card. If you do, this turn you draw X extra in your Draw phase; during your Play phase your attack range is unlimited and you may use X more {Strike} cards; and at the end of your Discard phase you may give the cards you discarded to another character (X = your lost health).'],
     mods: {
       attackRange: (g, o, v, p) => (p === o && o.turnState.freedomOn && g.phase === 'play') ? 99 : v,
       strikeLimit: (g, o, v, p) => (p === o && o.turnState.freedomOn) ? v + Math.max(0, o.maxHp - o.hp) : v,
@@ -2666,7 +2671,7 @@
   H.marcopolo = { faction: 'medieval', hp: 3, gender: 'male', skills: ['journal', 'trade'], name: ['马可·波罗', 'Marco Polo'], title: ['东方行者', 'The Traveler'], rating: 7 };
   S.journal = {
     name: ['东方见闻', 'JOURNAL'], type: 'normal',
-    desc: ['出牌阶段限一次，你可以将一张方块手牌当流连忘返对自己使用，然后回复 1 点体力并摸 X 张牌（X 为这张牌的点数的一半，向上取整）。若你的天兆区里有牌，你使用牌无次数限制。', 'Once per Play phase, use a ♦ card from your hand as Lotus Eaters on yourself, then recover 1 health and draw X (X = half its rank, rounded up). While your omen area has cards, your cards have no use limit.'],
+    desc: ['出牌阶段限一次，你可以将一张方块手牌当【流连忘返】对自己使用，然后回复 1 点体力并摸 X 张牌（X 为这张牌的点数的一半，向上取整）。若你的天兆区里有牌，你使用牌无次数限制。', 'Once per Play phase, use a ♦ card from your hand as {Lotus Eaters} on yourself, then recover 1 health and draw X (X = half its rank, rounded up). While your omen area has cards, your cards have no use limit.'],
     active: {
       cards: { min: 1, max: 1, zones: 'h', filter: (g, p, c) => c.suit === 'diamond' }, targets: { min: 0, max: 0 },
       can: (g, p) => !p.phaseState.journal && p.hand.some(c => c.suit === 'diamond') && !p.judgeZone.some(c => (c.omenAs || c.name) === 'lotus'),
@@ -2774,7 +2779,7 @@
   H.barbarossa = { faction: 'medieval', hp: 4, gender: 'male', skills: ['knights', 'slumber'], name: ['腓特烈一世', 'Barbarossa'], title: ['红胡子', 'The Redbeard'], rating: 7 };
   S.knights = {
     name: ['铁骑突出', 'KNIGHTS'], type: 'locked', locked: true,
-    desc: ['锁定技，你使用的杀须连续使用两张闪才能抵消；与你决斗的另一方每次须连续打出两张杀。', 'Compulsory skill. Your Strikes need two Parries to cancel. In a Duel with you, your opponent must play two Strikes each time.'],
+    desc: ['锁定技，你使用的【杀】须连续使用两张【闪】才能抵消；与你【决斗】的另一方每次须连续打出两张【杀】。', 'Compulsory skill. Your {Strike} cards need two {Parry} cards to cancel. In a {Duel} with you, your opponent must play two {Strike} cards each time.'],
     triggers: {
       targetConfirmed: { silent: true, can: (g, o, d) => strikeBy(o, d.use), *on(g, o, d) { d.use.data.parryNeed = d.use.data.parryNeed || new Map(); for (const t of d.use.targets) d.use.data.parryNeed.set(t, 2); } },
       cardUsing: { silent: true, can: (g, o, d) => d.use.card.name === 'duel' && (d.use.from === o || d.use.targets.includes(o)),
@@ -2791,7 +2796,7 @@
   };
   S.resurgence = {
     name: ['王者归来', 'RESURGENCE'], type: 'normal',
-    desc: ['每项每回合限一次：1. 当你使用杀或决斗对其他角色造成伤害时，你可以令其先失去等量的体力；2. 本回合你使用的下一张杀或决斗可以额外指定一个目标。', 'Once each per turn: 1. When your Strike or Duel would damage another character, you may first make them lose that much health; 2. Your next Strike or Duel this turn may take one extra target.'],
+    desc: ['每项每回合限一次：1. 当你使用【杀】或【决斗】对其他角色造成伤害时，你可以令其先失去等量的体力；2. 本回合你使用的下一张【杀】或【决斗】可以额外指定一个目标。', 'Once each per turn: 1. When your {Strike} or {Duel} would damage another character, you may first make them lose that much health; 2. Your next {Strike} or {Duel} this turn may take one extra target.'],
     triggers: {
       damageCausing: {
         can: (g, o, d) => d.from === o && d.to !== o && d.use && d.use.from === o && (isStrike(d.use.card) || d.use.card.name === 'duel') && g.current && !g.current.turnState.resurgence1,
@@ -2806,7 +2811,7 @@
   // ── 中古主公技：勤王 ──
   S.escort = {
     name: ['勤王护驾', 'ESCORT'], type: 'lord',
-    desc: ['执笔技，每回合限一次，当你需要使用或打出闪时，其他角色可以替你打出一张闪，然后其摸一张牌。', 'Chancellor skill. Once per turn, when you need to use or play a Parry, another character may play one for you, then they draw 1.'],
+    desc: ['执笔技，每回合限一次，当你需要使用或打出【闪】时，其他角色可以替你打出一张【闪】，然后其摸一张牌。', 'Chancellor skill. Once per turn, when you need to use or play a {Parry}, another character may play one for you, then they draw 1.'],
     triggers: { askResponse: {
       can: (g, o, d) => d.player === o && d.req.pattern.includes('parry') && !d.result && d.req.reason !== 'escort' && o.marks.escortTurn !== (g.turnSeq || 0) && others(g, o).some(q => !q.dead),
       *on(g, o, d) {
@@ -2829,13 +2834,13 @@
   });
   Object.assign(PROMPT_TEXT, {
     codexOpt: ['步步高升：选择本回合的点数规律：', 'Codex: choose this turn\'s rank pattern:'],
-    sophistPick: ['嫁祸于人：弃置一张牌，将此杀转移给你攻击范围内的另一名角色。', 'Sophist: discard a card to redirect this Strike to another character in your range.'],
+    sophistPick: ['嫁祸于人：弃置一张牌，将此【杀】转移给你攻击范围内的另一名角色。', 'Sophist: discard a card to redirect this {Strike} to another character in your range.'],
     sophistTarget: ['嫁祸于人：选择新的目标。', 'Sophist: choose the new target.'],
-    schemeAssign: ['驱虎吞狼：选择获得 {c} 的角色。', 'Scheme: choose who receives {c}.'],
-    schemeStrike: ['驱虎吞狼：可以视为对其中任意名角色使用杀。', 'Scheme: you may be treated as using a Strike on any of them.'],
+    schemeAssign: ['隔岸观火：选择获得 {c} 的角色。', 'Scheme: choose who receives {c}.'],
+    schemeStrike: ['隔岸观火：可以视为对其中任意名角色使用【杀】。', 'Scheme: you may be treated as using a {Strike} on any of them.'],
     telescope: ['仰观天象：依次点选要放在牌堆顶的牌（先点的在最上面），其余置于牌堆底。', 'Telescope: click cards to keep on top (first clicked goes topmost); the rest go to the bottom.'],
     chiselPick: ['精雕细琢：每种花色选一张获得。', 'Chisel: take one card of each suit.'],
-    plunder: ['趁火打劫：可以对{t}使用一张【杀】。', 'Plunder: you may use a Strike on {t}.'],
+    plunder: ['趁火打劫：可以对{t}使用一张【杀】。', 'Plunder: you may use a {Strike} on {t}.'],
     fireshipTarget: ['火船破阵：可以再选择一名其他角色重复此流程。', 'Fireship: you may choose another character to repeat.'],
     favorTarget: ['恩宠有加：选择一名其他角色获得这些牌。', 'Favor: choose another character to receive these cards.'],
   });
@@ -2850,7 +2855,7 @@
   };
   S.mantle = {
     name: ['解袍铺路', 'MANTLE'], type: 'normal',
-    desc: ['你可以将一张黑色牌当无懈可击使用。', 'You may use any black card as a Veto.'],
+    desc: ['你可以将一张黑色牌当【无懈可击】使用。', 'You may use any black card as a {Veto}.'],
     viewAs: { patterns: ['veto'], as: 'veto', count: 1, zones: 'he', filter: (g, p, c) => c.color === 'black' },
   };
 
@@ -2874,7 +2879,7 @@
   const invertOk = (g, p) => { const n = lastUsable(g, p); if (!n) return false; const c = g.cardsIn(p, 'he')[0]; return !!c && g.playable(p, V(n, [c]), { phase: true }); };
   S.invert = {
     name: ['如法炮制', 'INVERT'], type: 'normal',
-    desc: ['出牌阶段限一次，你可以将一张牌当作你本回合上一张使用的非装备牌使用。', 'Once per Play phase, you may use any card as the last non-equipment card you used this turn.'],
+    desc: ['出牌阶段限一次，你可以将一张牌当作你本回合上一张使用的非军备牌使用。', 'Once per Play phase, you may use any card as the last non-Arsenal card you used this turn.'],
     active: {
       cards: { min: 1, max: 1, zones: 'he' },
       targets: (g, p) => {
@@ -2915,8 +2920,8 @@
   // ── 马基雅维利 ──
   H.machiavelli = { faction: 'renaissance', hp: 3, gender: 'male', skills: ['scheme', 'sophist'], name: ['马基雅维利', 'Machiavelli'], title: ['君王之师', "The Prince's Tutor"], rating: 7 };
   S.scheme = {
-    name: ['驱虎吞狼', 'SCHEME'], type: 'normal',
-    desc: ['出牌阶段限一次，你可以展示牌堆顶的两张牌并分别交给两名角色（可以包括你），然后视为获得点数较大的牌的角色对另一名角色使用杀；之后你可以视为对其中任意名其他角色使用杀。以此法使用的杀造成伤害后，你获得受伤角色的一张牌。', 'Once per Play phase, reveal the top two cards and give one each to two characters (you may be one). The one with the higher rank is treated as using a Strike on the other; then you may be treated as using a Strike on any of them other than yourself. Whenever these Strikes deal damage, you take a card from the damaged character.'],
+    name: ['隔岸观火', 'SCHEME'], type: 'normal',
+    desc: ['出牌阶段限一次，你可以展示牌堆顶的两张牌并分别交给两名角色（可以包括你），然后视为获得点数较大的牌的角色对另一名角色使用【杀】；之后你可以视为对其中任意名其他角色使用【杀】。以此法使用的【杀】造成伤害后，你获得受伤角色的一张牌。', 'Once per Play phase, reveal the top two cards and give one each to two characters (you may be one). The one with the higher rank is treated as using a {Strike} on the other; then you may be treated as using a {Strike} on any of them other than yourself. Whenever these {Strike} cards deal damage, you take a card from the damaged character.'],
     active: {
       cards: { min: 0, max: 0 }, targets: { min: 2, max: 2, filter: () => true },
       can: (g, p) => !p.phaseState.scheme && g.alive.length >= 2,
@@ -2961,7 +2966,7 @@
   };
   S.sophist = {
     name: ['嫁祸于人', 'SOPHIST'], type: 'normal',
-    desc: ['当你成为杀的目标时，你可以弃置一张牌，将此杀转移给你攻击范围内的另一名角色（不能是使用者）。', "When you become a Strike's target, you may discard a card to redirect it to another character within your attack range (not its user)."],
+    desc: ['当你成为【杀】的目标时，你可以弃置一张牌，将此【杀】转移给你攻击范围内的另一名角色（不能是使用者）。', "When you become a {Strike}'s target, you may discard a card to redirect it to another character within your attack range (not its user)."],
     triggers: { targeted: {
       can: (g, o, d) => d.target === o && d.use.targets.includes(o) && !d.use.nullified.has(o) && isStrike(d.use.card) && o.cardCount > 0 &&   // 目标已被改走、或这张杀已对你无效时不能发动
         g.alive.some(t => t !== o && t !== d.use.from && !d.use.targets.includes(t) && g.inAttackRange(o, t)),
@@ -2986,7 +2991,7 @@
   H.shakespeare = { faction: 'renaissance', hp: 3, gender: 'male', skills: ['soliloquy', 'tragedy'], name: ['莎士比亚', 'Shakespeare'], title: ['埃文河诗人', 'The Bard'], rating: 7 };
   S.soliloquy = {
     name: ['一唱三叹', 'SOLILOQUY'], type: 'locked', locked: true,
-    desc: ['锁定技，当你于非濒死状态下使用杀或谋略牌（铁索连环除外）仅指定一名目标时，该牌额外结算一次。', 'Compulsory skill. When you are not dying and use a Strike or a Stratagem (except Chain Shot) that targets exactly one character, it resolves one more time.'],
+    desc: ['锁定技，当你于非濒死状态下使用【杀】或谋略牌（【铁索连环】除外）仅指定一名目标时，该牌额外结算一次。', 'Compulsory skill. When you are not dying and use a {Strike} or a Stratagem (except {Chain Shot}) that targets exactly one character, it resolves one more time.'],
     triggers: {
       targetConfirmed: {
         can: (g, o, d) => { const u = d.use; if (u.from !== o || o.dead || o.dying || u.opts.response || u.data.aborted) return false; const t = (E.CARD_DEFS[u.card.name] || {}).type; return (E.family(u.card) === 'strike' || (t === 'stratagem' && u.card.name !== 'chainshot')) && u.targets.length === 1; },
@@ -3034,10 +3039,12 @@
   const EPPUR = { spade: 'veto', heart: 'remedy', club: 'parry', diamond: 'fire_strike' };
   S.eppur = {
     name: ['地仍在转', 'EPPUR'], type: 'locked', locked: true,
-    desc: ['锁定技，你的手牌数不能小于 X（X 为你已损失的体力值）。你可以将一张牌按花色当作以下牌使用或打出：黑桃当无懈可击，红桃当药，梅花当闪，方块当火杀。', 'Compulsory skill. You never have fewer than X cards in hand (X = your lost health). You may use or play a card by suit as: ♠ Veto, ♥ Remedy, ♣ Parry, ♦ Fire Strike.'],
+    desc: ['锁定技，你的手牌数不能小于 X。你可以将 Y 张同花色的牌按花色当作以下牌使用或打出：黑桃当【无懈可击】，红桃当【药】，梅花当【闪】，方块当【火杀】（X 为你已损失的体力值，Y 为你的体力值且至少为 1）。', 'Compulsory skill. You never have fewer than X cards in hand. You may use or play Y cards of the same suit as follows: Spades as a {Veto}, Hearts as a {Remedy}, Clubs as a {Parry}, Diamonds as a {Fire Strike} (X = your lost health; Y = your health, at least 1).'],
     viewAs: {
-      patterns: ['veto', 'remedy', 'parry', 'strike'], count: 1, zones: 'he',
+      patterns: ['veto', 'remedy', 'parry', 'strike'], count: (g, p) => Math.max(1, p.hp), sameSuit: true, zones: 'he',
       filter: (g, p, c, ctx) => { const n = EPPUR[c.suit]; if (!n) return false; const pats = ctx && ctx.pattern ? [].concat(ctx.pattern) : null; return pats ? E.matches(V(n, []), pats) : (n === 'remedy' || n === 'fire_strike'); },
+      // 没有足够张数的对应花色时，这个技能根本不出现（不会再询问）
+      can: (g, p, ctx, inst, pats) => { const Y = Math.max(1, p.hp); const want = (ctx && ctx.pattern) ? [].concat(ctx.pattern) : pats; const cs = g.cardsIn(p, 'he'); return Object.keys(EPPUR).some(suit => { const n = EPPUR[suit]; if (want && !E.matches(V(n, []), want)) return false; return cs.filter(c => c.suit === suit).length >= Y; }); },
       as: (g, p, cs) => EPPUR[cs[0].suit],
     },
     triggers: {
@@ -3075,7 +3082,7 @@
   };
   S.david = {
     name: ['蓄势待发', 'DAVID'], type: 'locked', locked: true,
-    desc: ['锁定技，若你于出牌阶段内没有使用过杀，你跳过本回合的弃牌阶段。', 'Compulsory skill. If you used no Strike during your Play phase, skip your Discard phase this turn.'],
+    desc: ['锁定技，若你于出牌阶段内没有使用过【杀】，你跳过本回合的弃牌阶段。', 'Compulsory skill. If you used no {Strike} during your Play phase, skip your Discard phase this turn.'],
     triggers: { phaseEnd: { can: (g, o, d) => d.player === o && d.phase === 'play' && !o.turnState.usedStrikeInPlay, *on(g, o) { g.skipPhase(o, 'discard'); } } },
   };
 
@@ -3083,7 +3090,7 @@
   H.drake = { faction: 'renaissance', hp: 4, gender: 'male', skills: ['plunder', 'fireship'], name: ['德雷克', 'Drake'], title: ['女王海狼', 'The Sea Dog'], rating: 7 };
   S.plunder = {
     name: ['趁火打劫', 'PLUNDER'], type: 'normal',
-    desc: ['你的回合外，其他角色使用红色牌后，你可以对其使用一张无距离限制的杀；此杀造成伤害后，你获得其所有手牌。', 'Outside your turn, after another character uses a red card, you may use a Strike on them with no distance limit. If it deals damage, take every card in their hand.'],
+    desc: ['你的回合外，其他角色使用红色牌后，你可以对其使用一张无距离限制的【杀】；此【杀】造成伤害后，你获得其所有手牌。', 'Outside your turn, after another character uses a red card, you may use a {Strike} on them with no distance limit. If it deals damage, take every card in their hand.'],
     triggers: { cardUsed: {
       optional: false, silent: true,
       can: (g, o, d) => g.current !== o && d.use.from && d.use.from !== o && !d.use.from.dead && !o.dead && d.use.card.color === 'red' && g.canProduce(o, ['strike'], {}),
@@ -3096,7 +3103,7 @@
   };
   S.fireship = {
     name: ['火船破阵', 'FIRESHIP'], type: 'normal',
-    desc: ['出牌阶段限一次，你可以令一名其他角色摸一张牌，然后视为对其使用火攻；若此火攻造成了伤害，你可以对其重复此流程。你使用火攻造成伤害后，摸一张牌。', 'Once per Play phase, make another character draw 1, then you are treated as using Greek Fire on them. If it deals damage, you may repeat this on the same character. After any Greek Fire of yours deals damage, draw 1.'],
+    desc: ['出牌阶段限一次，你可以令一名其他角色摸一张牌，然后视为对其使用【火攻】；若此【火攻】造成了伤害，你可以对其重复此流程。你使用【火攻】造成伤害后，摸一张牌。', 'Once per Play phase, make another character draw 1, then you are treated as using {Greek Fire} on them. If it deals damage, you may repeat this on the same character. After any {Greek Fire} of yours deals damage, draw 1.'],
     active: {
       cards: { min: 0, max: 0 }, targets: { min: 1, max: 1, filter: (g, p, t) => t !== p },
       can: (g, p) => !p.phaseState.fireship && p.hand.length > 0,
@@ -3126,7 +3133,7 @@
   H.gustavus = { faction: 'renaissance', hp: 4, gender: 'male', skills: ['volley', 'reform'], name: ['古斯塔夫', 'Gustavus'], title: ['北方雄狮', 'The Lion of the North'], rating: 6 };
   S.volley = {
     name: ['排枪齐射', 'VOLLEY'], type: 'normal',
-    desc: ['出牌阶段，你可以将两张相同花色的手牌当做万箭齐发使用。', 'During your Play phase, you may use two cards of the same suit from your hand as Arrowstorm.'],
+    desc: ['出牌阶段，你可以将两张相同花色的手牌当做【万箭齐发】使用。', 'During your Play phase, you may use two cards of the same suit from your hand as {Arrowstorm}.'],
     active: {
       // 选牌时：第二张必须和第一张同花色
       cards: { min: 2, max: 2, zones: 'h', filter: (g, p, c, sel) => !sel || !sel.length || sel.includes(c) || sel.every(x => x.suit === c.suit) },
@@ -3243,7 +3250,6 @@
   Object.assign(PROMPT_TEXT, {
     returnTarget: ['百日王朝：选择一名角色受到 {n} 点雷电伤害。', 'Return: choose a character to take {n} thunder damage.'],
     squareTarget: ['步兵方阵：可以对一名角色造成 1 点伤害。', 'Square: you may deal 1 damage to a character.'],
-    nemesisGive: ['冤家路窄：请交给{t} {n} 张牌。', 'Nemesis: give {n} cards to {t}.'],
     emancipatePick: ['解民倒悬：选择{t}天兆区的一张牌移到你的天兆区。', "Emancipate: choose a card in {t}'s omen area to move to yours."],
     addressDiscard: ['兄弟阋墙：选择{t}的牌弃置。', "Address: choose {t}'s cards to discard."],
     founderGive: ['众望所归：请交给{t}一张牌。', 'Founder: give {t} a card.'],
@@ -3261,11 +3267,10 @@
     evolveTarget: ['物竞天择：选择一名其他角色失去 1 点体力。', 'Evolve: choose another character to lose 1 health.'],
     vengeanceOpt: ['血债血偿：选择{t}执行的一项：', 'Vengeance: choose what {t} must do:'],
     lectureSwapOpt: ['传道授业：选择与{t}交换的内容：', 'Lecture: choose what to swap with {t}:'],
-    allianceTarget: ['秦晋之好：选择一名其他角色。', 'Alliance: choose another character.'],
     allianceOpt: ['秦晋之好：选择一项', 'Alliance: choose one'], tragedyCards: ['薪火相传：是否获得{t}的所有牌？', "Tragedy: take all of {t}'s cards?"],
     allianceDiscard: ['秦晋之好：请弃置 {n} 张手牌。', 'Alliance: discard {n} cards from your hand.'],
     freedomOpt: ['自由之呼：选择代价：', 'Freedom: choose the cost:'],
-    freedomEquip: ['自由之呼：选择一张装备牌弃置。', 'Freedom: choose an equipment card to discard.'],
+    freedomEquip: ['自由之呼：选择一张军备牌弃置。', 'Freedom: choose an Arsenal card to discard.'],
     freedomGive: ['自由之呼：选择一名其他角色获得你本次弃置的 {n} 张牌。', 'Freedom: choose another character to take the {n} cards you discarded.'],
     tragedySkillOpt: ['薪火相传：选择要获得的第 {k} 个技能：', 'Tragedy: choose skill #{k} to take:'],
     patronAsk: ['慷慨解囊：是否令{t}摸一张牌？', 'Patron: have {t} draw 1?'],
@@ -3273,12 +3278,12 @@
   Object.assign(OPTION_TEXT, {
     coilSkipDraw: ['跳过摸牌阶段', 'Skip Draw'], coilSkipPlay: ['跳过出牌阶段', 'Skip Play'],
     vengeanceDiscardAll: ['令其弃置所有手牌（{n} 张）', 'Discard Their Whole Hand ({n})'],
-    lectureSwapHand: ['交换手牌', 'Swap Hands'], lectureSwapEquip: ['交换装备区里的所有牌', 'Swap All Equipment'],
+    lectureSwapHand: ['交换手牌', 'Swap Hands'], lectureSwapEquip: ['交换军备区里的所有牌', 'Swap All Arsenal Cards'],
     allianceMe: ['你将手牌数调整至与其相同', 'Match Your Hand to Theirs'], allianceThem: ['其将手牌数调整至与你相同', 'They Match Their Hand to Yours'],
-    freedomHp: ['失去 1 点体力', 'Lose 1 Health'], freedomEquip: ['弃置一张装备牌', 'Discard an Equipment Card'],
+    freedomHp: ['失去 1 点体力', 'Lose 1 Health'], freedomEquip: ['弃置一张军备牌', 'Discard an Arsenal Card'],
     tragedyStop: ['不再获得技能', 'Take No More Skills'],
     laurelTakeBlack: ['获得展示的黑牌（{nb} 张）', 'Take the Black Cards ({nb})'], laurelTakeRed: ['获得展示的红牌（{nr} 张）', 'Take the Red Cards ({nr})'], laurelTakeNone: ['都不获得', 'Take None'],
-    rr0: ['此杀不能被闪响应', 'Cannot Be Parried'], rr1: ['此杀无效', 'Strike Has No Effect'], rr2: ['将目标改为你', 'Redirect to You'], rr3: ['目标结算后回复 1 点体力', 'Target Recovers 1 After'],
+    rr0: ['此【杀】不能被【闪】响应', 'Cannot Be Parried'], rr1: ['此【杀】无效', 'Strike Has No Effect'], rr2: ['将目标改为你', 'Redirect to You'], rr3: ['目标结算后回复 1 点体力', 'Target Recovers 1 After'],
   });
   const CAT = c => (E.CARD_DEFS[c.name] || {}).type;
 
@@ -3286,7 +3291,7 @@
   H.napoleon = { faction: 'revolution', hp: 4, gender: 'male', skills: ['austerlitz', 'returnx'], name: ['拿破仑', 'Napoleon'], title: ['法兰西皇帝', 'The Emperor'], rating: 8 };
   S.austerlitz = {
     name: ['三皇会战', 'AUSTERLITZ'], type: 'normal',
-    desc: ['当你使用谋略牌指定其他角色为目标后，你可以中止此牌的结算并视为对所有目标角色使用一张杀。若你未以此法造成伤害，你失去 1 点体力。', 'After you use a Stratagem targeting other characters, you may stop its resolution and instead be treated as using a Strike on all its targets. If that Strike deals no damage, lose 1 health.'],
+    desc: ['当你使用谋略牌指定其他角色为目标后，你可以中止此牌的结算并视为对所有目标角色使用一张【杀】。若你未以此法造成伤害，你失去 1 点体力。', 'After you use a Stratagem targeting other characters, you may stop its resolution and instead be treated as using a {Strike} on all its targets. If that {Strike} deals no damage, lose 1 health.'],
     triggers: { targetConfirmed: {
       can: (g, o, d) => d.use.from === o && !o.dead && !d.use.opts.response && !d.use.data.aborted && d.use.card.name !== 'veto' && (E.CARD_DEFS[d.use.card.name] || {}).type === 'stratagem' && d.use.targets.some(t => t !== o && !t.dead),
       *on(g, o, d) {
@@ -3350,31 +3355,15 @@
     },
   };
   S.nemesis = {
-    name: ['冤家路窄', 'NEMESIS'], type: 'normal',
-    desc: ['出牌阶段限一次，你可以选择一名其他角色，弃置一张牌并将你的武将牌翻面，然后获得其所有手牌。此阶段结束时，你交给该角色 X 张牌（X 为其体力值）。', 'Once per Play phase, choose another character, discard a card and turn yourself face down, then take their whole hand. At the end of this phase, give them X cards (X = their health).'],
-    active: {
-      cards: { min: 1, max: 1, zones: 'he' }, targets: { min: 1, max: 1, filter: (g, p, t) => t !== p && t.hand.length > 0 },
-      can: (g, p) => !p.phaseState.nemesisUsed && p.cardCount > 0,
-      valid: (g, p, cards, targets) => cards.length === 1 && targets.length === 1 && targets[0] !== p,
-      *use(g, p, cards, targets) {
-        p.phaseState.nemesisUsed = true; p.phaseState.nemesis = targets[0].seat; const t = targets[0];
-        yield* g.discard(p, cards, 'nemesis');
-        p.faceDown = !p.faceDown; g.log('flip', { seat: p.seat, faceDown: p.faceDown });
-        if (t.hand.length) yield* g.gainCards(p, t.hand.slice(), 'nemesis', t);
-      },
-    },
-    triggers: { phaseEnd: {
-      optional: false, silent: true,
-      can: (g, o, d) => d.player === o && d.phase === 'play' && o.phaseState.nemesis != null && !g.p(o.phaseState.nemesis).dead,
-      *on(g, o) {
-        const t = g.p(o.phaseState.nemesis); const n = Math.min(Math.max(0, t.hp), o.cardCount);
-        if (n > 0) { const cs = yield* g.chooseOwnCards(o, n, n, 'he', 'nemesisGive', null, { skill: 'nemesis', to: t.seat, n }); yield* g.gainCards(t, cs, 'nemesis', o); }
-      },
+    name: ['冤家路窄', 'NEMESIS'], type: 'locked', locked: true,
+    desc: ['锁定技，当你失去最后的手牌后，你立即摸一张牌。', 'Compulsory skill. After you lose the last card in your hand, you immediately draw 1.'],
+    triggers: { afterMove: {
+      optional: false,
+      can: (g, o, d) => !o.dead && o.hand.length === 0 && d.moves.some(m => m.from && m.from.seat === o.seat && m.from.zone === 'hand'),
+      *on(g, o) { yield* g.draw(o, 1, 'nemesis'); },
     } },
-    ai: {
-      play: (g, me, inst, A) => { if (me.faceDown) return []; let bt = null, bv = 0; for (const t of g.alive) { if (t === me) continue; const v = (A.rel(g, me, t) < -0.1 ? 1 : 0.2) * (t.hand.length - t.hp) * 1.2 + (A.rel(g, me, t) < -0.1 ? t.hand.length * 0.3 : 0) - 2.5; if (v > bv) { bv = v; bt = t; } } const cs = g.cardsIn(me, 'he').sort((a, b) => A.keep(g, me, a) - A.keep(g, me, b)); return bt && cs.length ? [{ score: bv, ans: { action: 'skill', skill: inst.key, cardIds: [cs[0].id], targets: [bt.seat] } }] : []; },
-    },
   };
+
 
   // ── 林肯 ──
   H.lincoln = { faction: 'revolution', hp: 4, gender: 'male', skills: ['emancipate', 'address'], name: ['林肯', 'Lincoln'], title: ['解放者', 'The Emancipator'], rating: 7 };
@@ -3440,7 +3429,7 @@
   function* founderTake(g, o, t) { g.log('aim', { seat: o.seat, targets: [t.seat] }); const [c] = yield* g.chooseOwnCards(t, 1, 1, 'he', 'founderGive', null, { skill: 'founder', to: o.seat }); if (c) yield* g.gainCards(o, [c], 'founder', t); g.log('aimEnd', { seat: o.seat, targets: [t.seat] }); }
   S.andes = {
     name: ['出其不意', 'ANDES'], type: 'locked', locked: true,
-    desc: ['锁定技，你使用的杀无视目标的护甲。', 'Compulsory skill. Your Strikes ignore armor.'],
+    desc: ['锁定技，你使用的【杀】无视目标的防具。', 'Compulsory skill. Your {Strike} cards ignore armor.'],
     triggers: {
       targetConfirmed: { silent: true, can: (g, o, d) => strikeBy(o, d.use), *on(g, o, d) { d.use.data.ignoreArmor = d.use.data.ignoreArmor || new Set(); d.use.targets.forEach(t => d.use.data.ignoreArmor.add(t)); } },
     },
@@ -3450,7 +3439,7 @@
   H.nightingale = { faction: 'revolution', hp: 3, gender: 'female', skills: ['lamp', 'tend'], name: ['南丁格尔', 'Nightingale'], title: ['提灯女士', 'The Lady with the Lamp'], rating: 7 };
   S.lamp = {
     name: ['提灯巡夜', 'LAMP'], type: 'normal',
-    desc: ['你的回合外，你可以将一张红色牌当药使用。出牌阶段限一次，你可以弃置一张手牌，令一名已受伤的角色回复 1 点体力。', 'Outside your turn, you may use any red card as a Remedy. Once per Play phase, you may discard a card from hand to let a wounded character recover 1 health.'],
+    desc: ['你的回合外，你可以将一张红色牌当【药】使用。出牌阶段限一次，你可以弃置一张手牌，令一名已受伤的角色回复 1 点体力。', 'Outside your turn, you may use any red card as a {Remedy}. Once per Play phase, you may discard a card from hand to let a wounded character recover 1 health.'],
     viewAs: { patterns: ['remedy'], as: 'remedy', count: 1, zones: 'he', filter: (g, p, c) => c.color === 'red', can: (g, p) => g.current !== p },
     active: {
       cards: { min: 1, max: 1, zones: 'h' }, targets: { min: 1, max: 1, filter: (g, p, t) => t.wounded },
@@ -3599,7 +3588,7 @@
   H.darwin = { faction: 'revolution', hp: 3, gender: 'male', skills: ['evolve', 'fittest'], name: ['达尔文', 'Darwin'], title: ['博物学家', 'The Naturalist'], rating: 6 };
   S.evolve = {
     name: ['物竞天择', 'EVOLVE'], type: 'locked', locked: true,
-    desc: ['锁定技，你的摸牌阶段摸牌数 +1，出牌阶段使用杀的次数上限 +1。你的闪均视为酒。当你回复 1 点体力后，你可以令一名其他角色失去 1 点体力。', 'Compulsory skill. Draw 1 more in your Draw phase and use 1 more Strike per Play phase. Your Parries are always treated as Grog. After you recover 1 health, you may make another character lose 1 health.'],
+    desc: ['锁定技，你的摸牌阶段摸牌数 +1，出牌阶段使用【杀】的次数上限 +1。你的【闪】均视为【酒】。当你回复 1 点体力后，你可以令一名其他角色失去 1 点体力。', 'Compulsory skill. Draw 1 more in your Draw phase and use 1 more {Strike} per Play phase. Your {Parry} cards are always treated as {Grog}. After you recover 1 health, you may make another character lose 1 health.'],
     triggers: {
       drawCount: { can: (g, o, d) => d.player === o, silent: true, optional: false, *on(g, o, d) { d.n += 1; } },
       // 锁定技里的“可以”：每回复 1 点体力，询问一次是否令一名其他角色失去 1 点体力
@@ -3641,7 +3630,7 @@
   H.tubman = { faction: 'revolution', hp: 3, gender: 'female', skills: ['railroad', 'neverlost'], name: ['塔布曼', 'Tubman'], title: ['自由向导', 'The Conductor'], rating: 7 };
   S.railroad = {
     name: ['暗度陈仓', 'RAILROAD'], type: 'normal',
-    desc: ['当其他角色使用杀指定目标时，你可以弃置一张牌，然后选择一项未执行过的：1. 此杀不能被闪响应；2. 此杀无效；3. 将此杀的目标改为你；4. 目标于此杀结算后回复 1 点体力。四项都执行过后，重置为都未执行过。', 'When another character uses a Strike and chooses targets, you may discard a card, then choose an option not used yet: 1. it cannot be Parried; 2. it has no effect; 3. you become its target instead; 4. its targets recover 1 health after it resolves. Once all four are used, they reset.'],
+    desc: ['当其他角色使用【杀】指定目标时，你可以弃置一张牌，然后选择一项未执行过的：1. 此【杀】不能被【闪】响应；2. 此【杀】无效；3. 将此【杀】的目标改为你；4. 目标于此【杀】结算后回复 1 点体力。四项都执行过后，重置为都未执行过。', 'When another character uses a {Strike} and chooses targets, you may discard a card, then choose an option not used yet: 1. it cannot be answered with a {Parry}; 2. it has no effect; 3. you become its target instead; 4. its targets recover 1 health after it resolves. Once all four are used, they reset.'],
     triggers: {
       targeting: {
         can: (g, o, d) => d.use.from && d.use.from !== o && isStrike(d.use.card) && o.cardCount > 0 && !o.dead && !d.use.opts.response,
@@ -3674,7 +3663,7 @@
   };
   S.neverlost = {
     name: ['万无一失', 'NEVERLOST'], type: 'locked', locked: true,
-    desc: ['锁定技，若你没有手牌，你不能成为杀和决斗的目标。', 'Compulsory skill. While you have no cards in hand, you cannot be targeted by Strikes or Duels.'],
+    desc: ['锁定技，若你没有手牌，你不能成为【杀】和【决斗】的目标。', 'Compulsory skill. While you have no cards in hand, you cannot be targeted by {Strike} cards or Duels.'],
     mods: { canTarget: (g, o, v, user, t, card) => (v && t === o && o.hand.length === 0 && (isStrike(card) || card.name === 'duel')) ? false : v },
   };
 
@@ -3712,19 +3701,19 @@
   const NAME = QC.CARD_TEXT;
 
   const DESC = {
-    strike: ['出牌阶段限一次，对攻击范围内的一名其他角色使用：其须使用一张闪，否则受到 1 点伤害。', 'Once per Play phase, target another character within your attack range. They must use a Parry or take 1 damage.'],
-    fire_strike: ['同杀，造成的是火焰伤害。', 'As Strike, but deals fire damage.'],
-    thunder_strike: ['同杀，造成的是雷电伤害。', 'As Strike, but deals thunder damage.'],
-    parry: ['抵消一张对你使用的杀。', 'Cancel a Strike used on you.'],
+    strike: ['出牌阶段限一次，对攻击范围内的一名其他角色使用：其须使用一张【闪】，否则受到 1 点伤害。', 'Once per Play phase, target another character within your attack range. They must use a {Parry} or take 1 damage.'],
+    fire_strike: ['同【杀】，造成的是火焰伤害。', 'As {Strike}, but deals fire damage.'],
+    thunder_strike: ['同【杀】，造成的是雷电伤害。', 'As {Strike}, but deals thunder damage.'],
+    parry: ['抵消一张对你使用的【杀】。', 'Cancel a {Strike} used on you.'],
     remedy: ['出牌阶段对自己使用，回复 1 点体力；或对濒死的角色使用，令其回复 1 点体力。', 'Recover 1 health during your Play phase, or use on a dying character to restore 1 health.'],
-    grog: ['每回合限一次，出牌阶段使用：本回合你的下一张杀伤害 +1。濒死时可对自己使用，回复 1 点体力。', 'Once per turn in your Play phase: your next Strike this turn deals +1 damage. When dying, use on yourself to recover 1 health.'],
-    duel: ['对一名其他角色使用：由其开始，双方轮流打出杀，先不出的一方受到对方造成的 1 点伤害。', 'Target another character. Starting with them, you take turns playing Strikes. The first who cannot takes 1 damage from the other.'],
+    grog: ['每回合限一次，出牌阶段使用：本回合你的下一张杀伤害 +1。濒死时可对自己使用，回复 1 点体力。', 'Once per turn in your Play phase: your next {Strike} this turn deals +1 damage. When dying, use on yourself to recover 1 health.'],
+    duel: ['对一名其他角色使用：由其开始，双方轮流打出【杀】，先不出的一方受到对方造成的 1 点伤害。', 'Target another character. Starting with them, you take turns playing {Strike} cards. The first who cannot takes 1 damage from the other.'],
     sabotage: ['弃置一名其他角色区域内的一张牌。', "Discard one card from another character's areas."],
     pilfer: ['获得距离为 1 的一名其他角色区域内的一张牌。', 'Take one card from the areas of a character at distance 1.'],
     windfall: ['摸两张牌。', 'Draw 2.'],
-    catspaw: ['出牌阶段，对一名其他角色使用：其视为对其攻击范围内另一名由你指定的角色使用一张杀；若此杀没有造成伤害，其视为对你使用一张杀。', 'Target another character and name a victim within their attack range. They are treated as using a Strike on the victim. If it deals no damage, they are treated as using a Strike on you.'],
-    invasion: ['所有其他角色须打出一张杀，否则受到 1 点伤害。', 'All other characters must play a Strike or take 1 damage.'],
-    arrowstorm: ['所有其他角色须打出一张闪，否则受到 1 点伤害。', 'All other characters must play a Parry or take 1 damage.'],
+    catspaw: ['出牌阶段，对一名其他角色使用：其视为对其攻击范围内另一名由你指定的角色使用一张【杀】；若此【杀】没有造成伤害，其视为对你使用一张【杀】。', 'Target another character and name a victim within their attack range. They are treated as using a {Strike} on the victim. If it deals no damage, they are treated as using a {Strike} on you.'],
+    invasion: ['所有其他角色须打出一张【杀】，否则受到 1 点伤害。', 'All other characters must play a {Strike} or take 1 damage.'],
+    arrowstorm: ['所有其他角色须打出一张【闪】，否则受到 1 点伤害。', 'All other characters must play a {Parry} or take 1 damage.'],
     respite: ['所有角色各回复 1 点体力。', 'Every character recovers 1 health.'],
     feast: ['亮出牌堆顶与存活角色数相同数量的牌，从你开始，每名角色依次获得其中一张。', 'Reveal one card per living character. Starting with you, each character takes one.'],
     veto: ['抵消一张谋略牌或天兆牌对一名角色的效果。', "Cancel a Stratagem's or Omen's effect on one character."],
@@ -3733,21 +3722,21 @@
     damocles: ['置于你的天兆区。判定阶段进行天意判定：若为黑桃 2–9，你受到 3 点雷电伤害；否则将其移至下家。', 'Place in your omen area. Fate: on ♠2–9 you take 3 thunder damage; otherwise it passes to the next player.'],
     lotus: ['置于一名其他角色的天兆区。其判定阶段进行天意判定：若不为红桃，其跳过出牌阶段。', "Place in another character's omen area. Fate: unless ♥, they skip their Play phase."],
     blockade: ['置于距离为 1 的一名其他角色的天兆区。天意判定若不为梅花，其跳过摸牌阶段。', "Place in the omen area of a character at distance 1. Fate: unless ♣, they skip their Draw phase."],
-    gatling: ['出牌阶段你使用杀不限次数。', 'You may use any number of Strikes in your Play phase.'],
-    excalibur: ['锁定技，你的杀无视目标的护甲。', "Locked. Your Strikes ignore the target's armor."],
-    gemini: ['你的杀指定异性角色后，可以令其选择一项：弃置一张手牌，或令你摸一张牌。', 'After your Strike targets a character of the other gender, they must discard a card from hand or let you draw 1.'],
-    winter: ['你的杀造成伤害时，可以防止此伤害，改为弃置其两张牌。', 'When your Strike would deal damage, you may prevent it and discard two of their cards instead.'],
-    misericorde: ['锁定技，你的杀对没有手牌的角色造成的伤害 +1。', 'Locked. Your Strikes deal +1 damage to characters with no cards in hand.'],
-    berserker: ['你的杀被闪抵消后，可以对其再使用一张杀。', 'After your Strike is parried, you may use another Strike on the same target.'],
-    sarissa: ['你可以将两张手牌当杀使用或打出。', 'You may use or play two cards from your hand as a Strike.'],
-    ram: ['你的杀被闪抵消后，可以弃置两张牌，令此杀依然命中。', 'After your Strike is parried, you may discard two cards to make it hit anyway.'],
-    trident: ['你使用的杀是你最后的手牌时，可以额外指定至多两个目标。', 'If your Strike is your last card in hand, it may target up to two more characters.'],
-    arquebus: ['你可以将普通杀当火杀使用。', 'You may use a plain Strike as a Fire Strike.'],
-    longbow: ['你的杀造成伤害时，可以弃置其一匹战马。', 'When your Strike deals damage, you may discard one of their mounts.'],
-    aegis: ['当你需要使用或打出闪时，可以进行天意判定：若为红色，视为你使用或打出了一张闪。', 'When you need a Parry, you may invoke Fate: on red, it counts as a Parry.'],
-    testudo: ['锁定技，黑色杀对你无效。', 'Locked. Black Strikes have no effect on you.'],
-    linothorax: ['锁定技，普通杀、铁蹄压境、万箭齐发对你无效；你受到的火焰伤害 +1。', 'Locked. Plain Strikes, Invasion, and Arrowstorm have no effect on you. Fire damage to you is increased by 1.'],
-    nemean: ['锁定技，你每次受到的伤害至多为 1 点；你失去此牌时，回复 1 点体力。', 'Locked. You take at most 1 damage at a time. When you lose this card, recover 1 health.'],
+    gatling: ['出牌阶段你使用【杀】不限次数。', 'You may use any number of {Strike} cards in your Play phase.'],
+    excalibur: ['锁定技，你的【杀】无视目标的防具。', "Compulsory. Your {Strike} cards ignore the target's armor."],
+    gemini: ['你的【杀】指定异性角色后，可以令其选择一项：弃置一张手牌，或令你摸一张牌。', 'After your {Strike} targets a character of the other gender, they must discard a card from hand or let you draw 1.'],
+    winter: ['你的【杀】造成伤害时，可以防止此伤害，改为弃置其两张牌。', 'When your {Strike} would deal damage, you may prevent it and discard two of their cards instead.'],
+    misericorde: ['锁定技，你的【杀】对没有手牌的角色造成的伤害 +1。', 'Compulsory. Your {Strike} cards deal +1 damage to characters with no cards in hand.'],
+    berserker: ['你的【杀】被【闪】抵消后，可以对其再使用一张【杀】。', 'After your {Strike} is parried, you may use another {Strike} on the same target.'],
+    sarissa: ['你可以将两张手牌当【杀】使用或打出。', 'You may use or play two cards from your hand as a {Strike}.'],
+    ram: ['你的【杀】被【闪】抵消后，可以弃置两张牌，令此【杀】依然命中。', 'After your {Strike} is parried, you may discard two cards to make it hit anyway.'],
+    trident: ['你使用的【杀】是你最后的手牌时，可以额外指定至多两个目标。', 'If your {Strike} is your last card in hand, it may target up to two more characters.'],
+    arquebus: ['你可以将普通【杀】当【火杀】使用。', 'You may use a plain {Strike} as a {Fire Strike}.'],
+    longbow: ['你的【杀】造成伤害时，可以弃置其一匹战马。', 'When your {Strike} deals damage, you may discard one of their mounts.'],
+    aegis: ['当你需要使用或打出【闪】时，可以进行天意判定：若为红色，视为你使用或打出了一张【闪】。', 'When you need a {Parry}, you may invoke Fate: on red, it counts as a {Parry}.'],
+    testudo: ['锁定技，黑色【杀】对你无效。', 'Compulsory. Black {Strike} cards have no effect on you.'],
+    linothorax: ['锁定技，普通【杀】、【铁蹄压境】、【万箭齐发】对你无效；你受到的火焰伤害 +1。', 'Compulsory. Plain {Strike} cards, {Invasion}, and {Arrowstorm} have no effect on you. Fire damage to you is increased by 1.'],
+    nemean: ['锁定技，你每次受到的伤害至多为 1 点；你失去此牌时，回复 1 点体力。', 'Compulsory. You take at most 1 damage at a time. When you lose this card, recover 1 health.'],
   };
   const PLUS = ['其他角色与你的距离 +1。', 'Other characters are 1 farther from you.'];
   const MINUS = ['你与其他角色的距离 −1。', 'You are 1 closer to other characters.'];
@@ -3755,7 +3744,7 @@
   for (const n of ['pegasus', 'sleipnir', 'arion']) DESC[n] = MINUS;
 
   const CATEGORY = { basic: ['基本牌', 'BASIC'], stratagem: ['谋略牌', 'STRATAGEM'], omen: ['天兆牌', 'OMEN'], equip: ['军备牌', 'ARSENAL'] };
-  const SUBTYPE = { weapon: ['武器', 'Weapon'], armor: ['护甲', 'Armor'], plus: ['守御战马', 'Destrier'], minus: ['进击战马', 'Charger'] };
+  const SUBTYPE = { weapon: ['武器', 'Weapon'], armor: ['防具', 'Armor'], plus: ['守御战马', 'Destrier'], minus: ['进击战马', 'Charger'] };
   const ROLE = { chancellor: ['执笔者', 'The Chancellor'], keeper: ['护卷人', 'The Keeper'], insurgent: ['焚卷人', 'The Insurgent'], schemer: ['伏笔者', 'The Schemer'] };
   const PHASE = { prepare: ['准备', 'Prepare'], judge: ['判定', 'Judge'], draw: ['摸牌', 'Draw'], play: ['出牌', 'Play'], discard: ['弃牌', 'Discard'], finish: ['结束', 'Finish'] };
   const PHASEL = { prepare: ['准备阶段', 'Prepare Phase'], judge: ['判定阶段', 'Judge Phase'], draw: ['摸牌阶段', 'Draw Phase'], play: ['出牌阶段', 'Play Phase'], discard: ['弃牌阶段', 'Discard Phase'], finish: ['结束阶段', 'Finish Phase'] };
@@ -3822,23 +3811,23 @@
     pickTarget1: ['选择【{c}】的目标。', 'Choose a target for {c}.'], pickTargetsN: ['选择【{c}】的 {n} 个目标。', 'Choose {n} targets for {c}.'],
     pickTargets: ['选择【{c}】的目标（{min}–{max} 名）。', 'Choose targets for {c} ({min}–{max}).'],
     pickTargetsCat: ['驱虎吞狼：先选一名其他角色，再选其攻击范围内的另一名角色。', "Cat's Paw: pick another character, then a victim within their attack range."],
-    sarissa: ['萨里沙长矛：选择两张手牌当杀。', 'Sarissa: choose two cards from hand to use as a Strike.'],
-    r_strike: ['{s} 对你使用了【杀】，请使用【闪】。', '{s} used a Strike on you. Use a Parry.'],
-    r_strike2: ['{s} 对你使用了【杀】，须连续使用 {n} 张【闪】（已出 {g} 张）。', '{s} used a Strike on you. You need {n} Parries ({g} used).'],
-    r_duel: ['决斗（对手 {s}）：请打出【杀】。', 'Duel against {s}: play a Strike.'],
-    r_invasion: ['铁蹄压境：请打出【杀】，否则受到 1 点伤害。', 'Invasion: play a Strike or take 1 damage.'],
-    r_arrowstorm: ['万箭齐发：请打出【闪】，否则受到 1 点伤害。', 'Arrowstorm: play a Parry or take 1 damage.'],
-    r_save: ['{t} 濒死，是否对其使用【药】？', '{t} is dying. Use a Remedy on them?'],
-    r_saveSelf: ['你濒死了，是否使用【药】或【酒】？', 'You are dying. Use a Remedy or Grog?'],
-    r_veto: ['是否使用【无懈可击】抵消 {f} 的【{c}】{t}？', 'Use Veto to cancel {c} from {f}{t}?'],
-    r_vetoTarget: ['（对 {t}）', ' (on {t})'], r_vetoOmen: ['是否使用【无懈可击】抵消 {t} 天兆区的【{c}】？', "Use Veto to cancel the {c} in {t}'s omen area?"],
-    r_vetoVeto: ['是否使用【无懈可击】抵消 {f} 的【无懈可击】？', "Use Veto to cancel {f}'s Veto?"],
+    sarissa: ['萨里沙长矛：选择两张手牌当【杀】。', 'Sarissa: choose two cards from hand to use as a {Strike}.'],
+    r_strike: ['{s} 对你使用了【杀】，请使用【闪】。', '{s} used a {Strike} on you. Use a {Parry}.'],
+    r_strike2: ['{s} 对你使用了【杀】，须连续使用 {n} 张【闪】（已出 {g} 张）。', '{s} used a {Strike} on you. You need {n} {Parry} cards ({g} used).'],
+    r_duel: ['【决斗】（对手 {s}）：请打出【杀】。', '{Duel} against {s}: play a {Strike}.'],
+    r_invasion: ['铁蹄压境：请打出【杀】，否则受到 1 点伤害。', 'Invasion: play a {Strike} or take 1 damage.'],
+    r_arrowstorm: ['万箭齐发：请打出【闪】，否则受到 1 点伤害。', 'Arrowstorm: play a {Parry} or take 1 damage.'],
+    r_save: ['{t} 濒死，是否对其使用【药】？', '{t} is dying. Use a {Remedy} on them?'],
+    r_saveSelf: ['你濒死了，是否使用【药】或【酒】？', 'You are dying. Use a {Remedy} or {Grog}?'],
+    r_veto: ['是否使用【无懈可击】抵消 {f} 的【{c}】{t}？', 'Use {Veto} to cancel {c} from {f}{t}?'],
+    r_vetoTarget: ['（对 {t}）', ' (on {t})'], r_vetoOmen: ['是否使用【无懈可击】抵消 {t} 天兆区的【{c}】？', "Use {Veto} to cancel the {c} in {t}'s omen area?"],
+    r_vetoVeto: ['是否使用【无懈可击】抵消 {f} 的【无懈可击】？', "Use {Veto} to cancel {f}'s {Veto}?"],
     r_generic: ['请使用或打出：{p}', 'Use or play: {p}'],
     phaseDiscard: ['弃牌阶段：请弃置 {n} 张手牌。', 'Discard phase: discard {n} card(s).'],
     greekfireShow: ['火攻：请展示一张手牌。', 'Greek Fire: reveal a card from your hand.'],
     greekfire: ['火攻：可以弃置一张{s}手牌，造成 1 点火焰伤害。', 'Greek Fire: you may discard a {s} card to deal 1 fire damage.'],
     gemini: ['双子剑：请弃置一张手牌。', 'Gemini: discard a card from hand.'],
-    ram: ['攻城锤：弃置两张牌，令此杀依然命中。', 'Battering Ram: discard two cards to make the Strike hit.'],
+    ram: ['攻城锤：弃置两张牌，令此【杀】依然命中。', 'Battering Ram: discard two cards to make the {Strike} hit.'],
     chooseCards: ['请选择 {min}–{max} 张牌。', 'Choose {min}–{max} card(s).'],
     c_sabotage: ['釜底抽薪：选择 {t} 的一张牌弃置。', "Sabotage: choose one of {t}'s cards to discard."],
     c_pilfer: ['探囊取物：选择 {t} 的一张牌获得。', "Pilfer: choose one of {t}'s cards to take."],
@@ -3862,8 +3851,8 @@
     pickSkillAs: ['{k}：选择一张牌当作【{as}】使用{r}。', '{k}: choose a card to use as {as}{r}.'],
     askSkillDo: ['是否发动【{k}】：{h}？', 'Activate {k}: {h}?'], askEquipDo: ['是否发动【{k}】的效果：{h}？', 'Use {k}: {h}?'],
     confirmEquip: ['是否发动【{c}】的效果？', 'Use the effect of {c}?'],
-        us_berserker: ['狂战士斧：可以继续对 {t} 使用一张【杀】。', 'Berserker: you may use another Strike on {t}.'],
-    us_generic: ['选择一张【杀】使用。', 'Choose a Strike to use.'],
+        us_berserker: ['狂战士斧：可以继续对 {t} 使用一张【杀】。', 'Berserker: you may use another {Strike} on {t}.'],
+    us_generic: ['选择一张【杀】使用。', 'Choose a {Strike} to use.'],
     option: ['请选择：', 'Choose:'], order: ['选择先发动的效果：', 'Choose which effect resolves first:'],
     targets: ['选择 {min}–{max} 名角色。', 'Choose {min}–{max} character(s).'],
   };
@@ -3912,7 +3901,7 @@
 <table>
 <tr><td>技能</td><td>武将牌上的能力。锁定技必须发动；限定技每局只能发动一次；觉醒技满足条件时自动发动；执笔技只有身为执笔者时才拥有，只对同时代的角色生效。</td></tr>
 <tr><td>效果</td><td>游戏牌上的文字。</td></tr>
-<tr><td>天意判定</td><td>翻开牌堆顶的一张牌作为判定牌，看其花色点数决定结果；生效前可能被技能改判。</td></tr>
+<tr><td>天意判定</td><td>翻开牌堆顶的一张牌作为天意牌，看其花色点数决定结果；生效前可能被技能改判。</td></tr>
 <tr><td>天兆区 / 军备区</td><td>放天兆牌和军备牌的区域。</td></tr><tr><td>区域</td><td>手牌区、军备区、天兆区三者的合称。技能或牌里说「区域内的牌」时，这三处的牌都可以选；只说某一个区时才限定在那里。</td></tr>
 <tr><td>横置 / 重置</td><td>【铁索连环】等效果使角色横置；横置的角色受到属性伤害后重置并传导伤害。</td></tr><tr><td>复原</td><td>已翻面的角色翻回正面，已横置的角色重置。</td></tr><tr><td>实体牌</td><td>以其本身被使用或打出的真实卡牌；转化或视为使用的牌不是实体牌。</td></tr>
 </table>`;
@@ -3957,20 +3946,22 @@
 </table>`;
   }
 
+  // 英文文本里牌名写成 {Strike}（和牌面一致），显示时去掉花括号
+  const UB = s => typeof s === 'string' ? s.replace(/\{([A-Z][^{}]*)\}/g, '$1') : s;
   function mk(lang) {
     const L = lang === 'en' ? 1 : 0;
-    const t = (key, vars) => { if (key === 'seat' && vars && typeof vars.n === 'number') vars = Object.assign({}, vars, { n: ROMAN[vars.n] || vars.n }); const e = UI[key] || P[key]; let s = e ? e[L] : key; if (vars) for (const k in vars) s = s.split('{' + k + '}').join(vars[k]); return s; };
+    const t = (key, vars) => { if (key === 'seat' && vars && typeof vars.n === 'number') vars = Object.assign({}, vars, { n: ROMAN[vars.n] || vars.n }); const e = UI[key] || P[key]; let s = e ? e[L] : key; if (vars) for (const k in vars) s = s.split('{' + k + '}').join(vars[k]); return UB(s); };
     const cardName = n => NAME[n] ? NAME[n][L] : n;
     const QH = () => (typeof QXHeroes !== 'undefined' ? QXHeroes : (typeof require === 'function' ? (() => { try { return require('./qx-heroes.js'); } catch (e) { return null; } })() : null));
     const skillName = n => E.SKILLS[n] ? E.SKILLS[n].name[L] : (NAME[n] ? NAME[n][L] : n);
-    const skillDesc = n => E.SKILLS[n] ? E.SKILLS[n].desc[L].replace(/^(锁定技|主公技|执笔技|限定技|觉醒技)[，,、]\s*/, '').replace(/^(Compulsory|Lord|Chancellor|Limited|Awakening) skill\.\s*/, '') : '';
+    const skillDesc = n => E.SKILLS[n] ? UB(E.SKILLS[n].desc[L]).replace(/^(锁定技|主公技|执笔技|限定技|觉醒技)[，,、]\s*/, '').replace(/^(Compulsory|Lord|Chancellor|Limited|Awakening) skill\.\s*/, '') : '';
     const heroName = k => E.HEROES[k] ? E.HEROES[k].name[L] : (k || '');
     const heroTitle = k => E.HEROES[k] ? E.HEROES[k].title[L] : '';
     const faction = f => { const q = QH(); return q && q.FACTIONS[f] ? q.FACTIONS[f].name[L] : (f || ''); };
     const factionColor = f => { const q = QH(); return q && q.FACTIONS[f] ? q.FACTIONS[f].color : '#555'; };
     const fill = (str, vars) => { if (vars) for (const k in vars) str = str.split('{' + k + '}').join(vars[k]); return str; };
-    const option = (key, vars) => { if (typeof key === 'string' && key.startsWith('sk:')) return skillName(key.slice(3)); const q = QH(); const e = q && q.OPTION_TEXT[key]; return e ? fill(e[L], vars) : (key === 'discardHand' ? t('discardOpt') : key === 'letDraw' ? t('letDraw') : cardName(key)); };
-    const prompt = (key, vars) => { const q = QH(); const e = q && q.PROMPT_TEXT[key]; return e ? fill(e[L], vars) : null; };
+    const option = (key, vars) => { if (typeof key === 'string' && key.startsWith('sk:')) return skillName(key.slice(3)); const q = QH(); const e = q && q.OPTION_TEXT[key]; return e ? UB(fill(e[L], vars)) : (key === 'discardHand' ? t('discardOpt') : key === 'letDraw' ? t('letDraw') : cardName(key)); };
+    const prompt = (key, vars) => { const q = QH(); const e = q && q.PROMPT_TEXT[key]; return e ? UB(fill(e[L], vars)) : null; };
     const role = r => ROLE[r] ? ROLE[r][L] : '?';
     const seat = (g, s, viewer) => s == null ? (L ? 'no source' : '无来源') : (s === viewer ? t('you') : t('seat', { n: s + 1 }));
     const cardLabel = (c) => c ? cardName(c.name) + ' ' + SUIT[c.suit] + RANK(c.rank) : '?';
@@ -3995,7 +3986,7 @@
         case 'dying': return ['dmg', zh ? `${S(e.seat)}进入濒死状态` : `${S(e.seat)} is dying`];
         case 'death': return ['death', zh ? `${S(e.seat)}阵亡，身份是${role(e.role)}` : `${S(e.seat)} has fallen. Role: ${role(e.role)}`];
         case 'judge': return ['', zh ? `${S(e.seat)}进行天意判定（${JR(e.reason)}）` : `${S(e.seat)} invokes Fate (${JR(e.reason)})`];
-        case 'judgeResult': return ['', zh ? `　判定牌：${C(e.card)}` : `  Fate card: ${C(e.card)}`];
+        case 'judgeResult': return ['', zh ? `　天意牌：${C(e.card)}` : `  Fate card: ${C(e.card)}`];
         case 'retouch': return ['', zh ? `${S(e.seat)}改判为 ${C(e.card)}` : `${S(e.seat)} changed the Fate card to ${C(e.card)}`];
         case 'omenShow': return ['', zh ? `${S(e.seat)}的【${N(e.name)}】即将判定` : `${S(e.seat)}'s ${N(e.name)} is about to be judged`];
         case 'vetoed': return ['', zh ? `【${N(e.card)}】对${S(e.seat)}的效果被抵消` : `${N(e.card)} on ${S(e.seat)} was cancelled`];
@@ -4037,8 +4028,8 @@
     function JR(r) { if (E.SKILLS[r]) return skillName(r); return NAME[r] ? cardName(r) : r; }
     return {
       L, lang: L ? 'en' : 'zh', t, cardName, skillName, skillDesc, heroName, heroTitle, faction, factionColor, option, prompt, role, seat, cardLabel, logLine,
-      desc: n => { const c = QC.BY_KEY && QC.BY_KEY[n]; if (c && c.effect_zh) return L ? c.effect_en : c.effect_zh; return DESC[n] ? DESC[n][L] : ''; },
-      rulesHTML: () => rulesHTML(L),
+      desc: n => { const c = QC.BY_KEY && QC.BY_KEY[n]; if (c && c.effect_zh) return L ? UB(c.effect_en) : c.effect_zh; return DESC[n] ? UB(DESC[n][L]) : ''; },
+      rulesHTML: () => UB(rulesHTML(L)), ub: UB,
       category: n => { const d = E.CARD_DEFS[n]; if (!d) return ''; return CATEGORY[d.type][L] + (d.sub ? ' · ' + SUBTYPE[d.sub][L] : ''); },
       phase: p => PHASE[p] ? PHASE[p][L] : '', phaseLabel: p => PHASEL[p] ? PHASEL[p][L] : '', suit: s => SUIT[s] || '', suitName: s => SUITNAME[s] ? SUITNAME[s][L] : '', rank: RANK,
     };
@@ -4071,8 +4062,9 @@ class RandomAgent {
         if (hc.length) return { cardIds: [this.pickOne(hc).id] };
         const vs = g.viewAsSkills(p, req.pattern, req);
         for (const s of vs) {
-          const v = s.def.viewAs; const n = v.count == null ? 1 : v.count;
-          const pool = g.cardsIn(p, v.zones || 'h').filter(c => !v.filter || v.filter(g, p, c, req));
+          const v = s.def.viewAs; const n = E.vaCount(v, g, p);
+          let pool = g.cardsIn(p, v.zones || 'h').filter(c => !v.filter || v.filter(g, p, c, req));
+          if (v.sameSuit) { const by = {}; pool.forEach(c => (by[c.suit] = by[c.suit] || []).push(c)); pool = Object.values(by).find(a => a.length >= n) || []; }
           if (pool.length >= n) return { cardIds: pool.slice(0, n).map(c => c.id), skill: s.key };
         }
         return null;
@@ -4111,8 +4103,9 @@ class RandomAgent {
       if (E.CARD_DEFS[c.name].recastable && this.r() < 0.2) opts.push({ recast: c });
     }
     for (const s of g.viewAsSkills(p, ['strike'], { phase: true })) {
-      const v = s.def.viewAs; const n = v.count == null ? 1 : v.count;
-      const pool = g.cardsIn(p, v.zones || 'h').filter(c => !v.filter || v.filter(g, p, c, {}));
+      const v = s.def.viewAs; const n = E.vaCount(v, g, p);
+      let pool = g.cardsIn(p, v.zones || 'h').filter(c => !v.filter || v.filter(g, p, c, {}));
+      if (v.sameSuit) { const by = {}; pool.forEach(c => (by[c.suit] = by[c.suit] || []).push(c)); pool = Object.values(by).find(a => a.length >= n) || []; }
       if (pool.length >= n) { const vc = g.buildCard(p, { cardIds: pool.slice(0, n).map(c => c.id), skill: s.key }, ['strike'], {}); if (vc && g.playable(p, vc)) opts.push({ card: vc, skill: s.key }); }
     }
     if (!opts.length) return { action: 'end' };
@@ -4321,7 +4314,7 @@ class SmartAgent {
     // 手牌 + 单张转化（枪阵、仍动、改革等）
     const entries = me.hand.map(c => ({ c, ids: [c.id], skill: null }));
     for (const inst of g.viewAsSkills(me, ['strike', 'remedy', 'grog', 'parry', 'veto'], { phase: true })) {
-      const v = inst.def.viewAs; if ((v.count == null ? 1 : v.count) !== 1 || inst.id === 'sarissa') continue;
+      const v = inst.def.viewAs; if (E.vaCount(v, g, me) !== 1 || inst.id === 'sarissa') continue;
       const pool = g.cardsIn(me, v.zones || 'h').filter(x => !v.filter || v.filter(g, me, x, {}));
       for (const x of pool) for (const asName of (v.choices || [null])) {
         const vc = g.buildCard(me, { cardIds: [x.id], skill: inst.key, asName }, null, { phase: true });
@@ -4462,8 +4455,9 @@ class SmartAgent {
     const opts = [];
     for (const c of me.hand) if (E.matches(c, req.pattern) && !g.forbidden(me, c)) opts.push({ cost: this.keep(g, me, c), ans: { cardIds: [c.id] } });
     for (const s of g.viewAsSkills(me, req.pattern, req)) {
-      const v = s.def.viewAs; const n = v.count == null ? 1 : v.count;
-      const pool = g.cardsIn(me, v.zones || 'h').filter(c => !v.filter || v.filter(g, me, c, req)).sort((a, b) => this.keep(g, me, a) - this.keep(g, me, b));
+      const v = s.def.viewAs; const n = E.vaCount(v, g, me);
+      let pool = g.cardsIn(me, v.zones || 'h').filter(c => !v.filter || v.filter(g, me, c, req)).sort((a, b) => this.keep(g, me, a) - this.keep(g, me, b));
+      if (v.sameSuit) { const by = {}; pool.forEach(c => (by[c.suit] = by[c.suit] || []).push(c)); pool = Object.values(by).find(a => a.length >= n) || []; }
       if (pool.length >= n) { const pick = pool.slice(0, n); const vc = g.buildCard(me, { cardIds: pick.map(c => c.id), skill: s.key }, req.pattern, req); if (vc) opts.push({ cost: pick.reduce((s2, c) => s2 + this.keep(g, me, c), 0) + 0.5, ans: { cardIds: pick.map(c => c.id), skill: s.key } }); }
     }
     opts.sort((a, b) => a.cost - b.cost);
@@ -4637,7 +4631,7 @@ return { RandomAgent, SmartAgent, defaultAnswer, rel, tracker };
     const u = t.ui, g = t.g, me = g.p(t.me); const k = u.req.kind;
     if (u.skill) {
       const inst = g.skillList(me).find(s => s.key === u.skill); if (!inst || !inst.def.viewAs) return null;
-      const v = inst.def.viewAs; const n = v.count == null ? 1 : v.count;
+      const v = inst.def.viewAs; const n = E.vaCount(v, g, me);
       if (u.sel.length !== n) return null;
       return g.buildCard(me, { cardIds: u.sel.map(c => c.id), skill: u.skill, asName: u.asName },
         k === 'play' ? null : (u.req.pattern || ['strike']), k === 'play' ? { phase: true } : u.req);
@@ -4674,11 +4668,11 @@ return { RandomAgent, SmartAgent, defaultAnswer, rel, tracker };
     // 转化技（含装备转化技，如萨里沙长矛）
     if (u.skill) {
       const inst = g.skillList(me).find(s => s.key === u.skill); if (!inst || !inst.def.viewAs) return null;
-      const v = inst.def.viewAs; const n = v.count == null ? 1 : v.count;
+      const v = inst.def.viewAs; const n = E.vaCount(v, g, me);
       const ctx = k === 'play' ? {} : req;
       const base = {
         kind: 'viewAs',
-        cards: { pool: () => g.cardsIn(me, v.zones || 'h'), filter: c => !v.filter || v.filter(g, me, c, ctx), min: n, max: n },
+        cards: { pool: () => g.cardsIn(me, v.zones || 'h'), filter: (c, sel) => (!v.filter || v.filter(g, me, c, ctx)) && (!v.sameSuit || !(sel || u.sel).length || (sel || u.sel)[0] === c || (sel || u.sel)[0].suit === c.suit), min: n, max: n },
         answerBase: () => ({ cardIds: u.sel.map(c => c.id), skill: u.skill, asName: u.asName || undefined }),
       };
       if (k === 'play') return Object.assign(base, {
@@ -5536,9 +5530,18 @@ return { RandomAgent, SmartAgent, defaultAnswer, rel, tracker };
 #qx .qx-skbn{position:absolute;z-index:14;pointer-events:none;white-space:nowrap;color:#fff;font-weight:bold;letter-spacing:.12em;line-height:1;background-size:100% 100%;background-repeat:no-repeat;text-shadow:0 1px 2px #000}
 #qx .qx-por.qx-skfx{animation:qxskfx 1s ease-out}
 /* 立绘特写 */
-#qx .qx-splash{position:absolute;top:300px;width:340px;pointer-events:none;z-index:60;text-align:center;filter:drop-shadow(0 10px 30px rgba(0,0,0,.85))}
-#qx .qx-splash img{width:100%;display:block}
-#qx .qx-splash div{margin-top:-6px;font-size:26px;font-weight:900;letter-spacing:6px;color:#ffe9a8;text-shadow:0 0 12px rgba(240,180,60,.9),0 2px 3px #000}
+#qx .qx-splash{position:absolute;top:300px;width:600px;height:400px;pointer-events:none;z-index:60;filter:drop-shadow(0 14px 34px rgba(0,0,0,.9))}
+#qx .qx-spart{position:absolute;inset:0;overflow:hidden;border-radius:6px;border:2px solid #c9a24e;box-shadow:inset 0 0 0 2px rgba(40,26,8,.8),0 0 0 1px #2a1a08;-webkit-mask-image:linear-gradient(90deg,#000 70%,rgba(0,0,0,.85));mask-image:linear-gradient(90deg,#000 70%,rgba(0,0,0,.85))}
+#qx .qx-spart::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent 45%,rgba(10,6,2,.55) 68%,rgba(10,6,2,.85))}
+#qx .qx-spimg{width:100%;height:100%;object-fit:cover;object-position:50% 30%;display:block}
+#qx .qx-spimg.qx-spfb{width:64%;object-position:50% 12%}
+#qx .qx-spsweep{position:absolute;top:0;bottom:0;width:26%;background:linear-gradient(100deg,transparent,rgba(255,236,180,.35),transparent);mix-blend-mode:screen;opacity:0}
+#qx .qx-spname{position:absolute;right:26px;top:22px;bottom:22px;display:flex;flex-direction:row-reverse;align-items:flex-start;gap:10px}
+#qx .qx-spname b{writing-mode:vertical-rl;white-space:nowrap;font:400 76px/1 "Ma Shan Zheng","Noto Serif SC",serif;letter-spacing:.02em;background:linear-gradient(180deg,#fffbe8 0%,#ffe08a 40%,#e0a030 75%,#a8661c 100%);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 3px 0 #2a1406) drop-shadow(0 0 14px rgba(255,190,80,.55))}
+#qx .qx-sptag{writing-mode:vertical-rl;margin-top:6px;padding:8px 4px;font:700 15px/1 "Noto Serif SC",serif;letter-spacing:.3em;color:#2a1406;background:linear-gradient(180deg,#f6d873,#c9a03a);border-radius:3px;box-shadow:0 0 8px rgba(246,216,115,.5)}
+#qx .qx-splen .qx-spname{left:auto;right:22px;top:auto;bottom:24px;flex-direction:column;align-items:flex-end;gap:6px}
+#qx .qx-splen .qx-spname b{writing-mode:horizontal-tb;font:700 46px/1.05 Cinzel,Georgia,serif;letter-spacing:.06em;text-align:right;max-width:300px}
+#qx .qx-splen .qx-sptag{writing-mode:horizontal-tb;padding:3px 10px;font:700 12px/1.2 Cinzel,Georgia,serif;letter-spacing:.14em}
 /* 展示 */
 #qx .qx-fan{position:absolute;display:flex;gap:4px;z-index:50;padding:5px;background:rgba(14,10,6,.82);border:1px solid #c9a032;border-radius:6px;transform-origin:50% 50%}
 /* 阵亡牌匾（座位框坐标） */
@@ -6313,10 +6316,10 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
   const NAT_TITLE = {"fire_small_zh":"data:image/webp;base64,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","thunder_small_zh":"data:image/webp;base64,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","fire_small_en":"data:image/webp;base64,UklGRu4WAABXRUJQVlA4IOIWAADQTwCdASoPAUEAPiUQhkIhoQvc43IMASJagC8I8LCz7x+Rv5AfLRZ/7x+Cvyi+RPdl1p5kPPX/C+5X5l/3X/m/333V/nP/we4v+r/63+s/6nf299QH84/yX7j+8h/wv2x9039/9QT+qf5vrPvQT/cX04vZS/tf/S/dD2vf//hWXKn9n4W+P72J7mf3rmFRHfmf3p/a/3z229nPyIyf/7Hvu+8lAJ+lf2//W/md7231//K9NO5c/3fIdUDPzd/xvVX/5/9B6M/p3/tf6T4Df5x/Y/+p68fsg/bf//+6b+wH//IxVhc17tZKFP1cbTYL84IsEaLie/HtjFGukJIXzFrnYAYaPmA6eumUvEEilMGF7M0fnMW45G7GGedKg/YqINmzRsN724zivLaVljmavzVhLMFT3r2SnP79jFDkodbhD42ti/HCX5eOB4PF/ZPshkqZRkhYbvLpUyTQ7XcV0hDSJX/H+knJstUSlfIXtD8SeJeLjNhyW5UzM1eE6+7n243DiyS0SdtjgT9M+4FJLc9cn4kx8CpCf7njFU94HiCeO9DAgdMERCXHASxC8AoIKCDXALh3ztHZ7w1gSypS1pxecdwrRXz3PzZHn+lZMqf/rRGQicte5qYBNTjtj47KmnEqvvqG2uujPm9otJpLrjie7Z6ISGyA1EDklwmxay1HFh0Vn2t1xoPQ0yo+YTJp7464qML9ObsW5YgGwndzLMoeZ1qEYF9J5e5X5ijNB3jXqvxl/UWRXrGH0CzECg828/LnoXjFW4uoBSChpI6Oma62+L5HP+gCdVeGAWuBt3T97MZfO0UkQzsrDkaU8ppA/IoyO6FcJcaOKEGnnhEAKGPUpwWnzwAwwAD+/6wQQVRvTXLAv85gn+DBAPTPpcrYEBt/a+fvb+CRPkIDSEN6AUkln61EuL//2h1UoAvD+YvFCpCta+Zi3/+l5x4Hd3UUHMD6v/4CvdQAsB4+UwqL1O1riSF9ATER6JxEXbsaEIii2NsZ77CNk7QF4sgcwUbDlCvUr/l7dw7v61x8I3uqxmCgO+ITeuy+vsRldjEyjdxAt7z/YhSnx0ZrBSVO5Oqn01LVsz7V+G0oQWFPU8DGXsahMnYmQ97H0f9Zm1N5D5KXavnwGpaPYUTVPwH3Vdl2dJInVq1SLqipTZhcaRxzbW+gNIEj5haLuw+2huQRrpG2YW3G3D+fEUfTZ6dN7H+Wf6g2KCvz+rFYAyB64/+F3ZGWr4NEMx+6UGRaKHi8DeypbNosa+WiFSVpEdPddDNm6jcVcxb4KUSmgUQyh0Xydzjuj9gNIJl7OBm8t4exkupfXdfrJT/N+Eb+3L1aEeK1DEh677FVkVHQszxLFKtT8Zlo3GW5YkIE6ovHzRlTFsLr+zrjsH5gSUEQ+WmeaW8mWhZ15YqVc1GKVzVZJf0xDLuhYe7dvqtd9IzoidI4mropnDDN/ziGsW1bR8m12QYNjC5AX3IS5tO2NsvBLI7FxwUUj/EWraXyLWsuuS+xyrSnZddpejA6qkk2GSF4UQjYO4c4byBeGJ6LW34wWBOfrAx6nmn8vstge1HwodX18wfq+KfmE4N6rhOGIr5yY69v+nze0jqXgUhkhjQXdbHwXzyd+lnBa4tGWPmtoV/mJcM43mUCM1Ij+X4Ap7TITlP+/e7OYWGtBDEIBG+o/ym5xEldJlKE0sCfc4HEnb4TkphTbe/P4ONE5n7lknHH/yhw/30N95dj8AdVvpEKkHkP+zDLak6lp0omP6P1/px9msAoKQxmG1HQCCsIhGCgdk00OCC7zEnvHnQz5vOwdb/3neu6sJuNP5jmdmWr0FopKpJ4HPbffRwowfGQmxUJZRwlcNO4AubfSHUe645r0/RZsV2e7G+DRz/XR4wuHTLQCCtJ8GPYUQS89msopPVwhdvJQDpEhwnp8eD6bHVOG/JW7o8jZygJ29BPpzF+06xdcIKORDUX0dW0lSL8gFJpYxYSOGgG3GsOg6DR/1gJx0mL+It6uqRWpv/4vWFcDDCYAJGVRlcLOPwzdwX06mdSWTVlYcICh7CnS7WRgOuibd/A5+CuM0EVWBPM5eyA/KR4xBuVpgsPIwQMA/1rQRKofb97ZzLW8U9LVpJ5Zp4ONcOH2LUEssLkfEVKvJ7phGZ+BfV7upf1iPDduog3kjZvJdBO3Dwhrk3bVcucNlle48MvnVtWu8UqPEgdn9psXpvrxw311/xQN9BtSGgZvARHtq5hvSIIheNDMVIMjS/+hyvT9vOJ2hrlX/w1cH+N6Xw0LfZFZ4c9ReJiBZ4r7AcJt7iI4x7Jzp5ZiBBuh+tYB3kiwvv0Z//AhqnhCz0+IG1HlqXg6rNTj7NDmYZ9/+EWCJX/jW1y20ncWGf/wmKP3XoQFBZzM6cL8QvWcN05j+7SNE2cUYzU74rhoflgrhJ2fdd5hBrq6oJBBr7D95rpJ+1I0mTXKzdY3BKeTbTD6clMmdV5F4ByTE81OO7ysW/iDUcDyJIriFJsTfH4BYft8jSgXTCfYaDAltOl/h7wOgn302qfgbfa/kS+jgIMBTI1mj3K1pviL/wsjXCYr1SrKKYS1Yj3CQ6c6XlgzB73wjmAFqKjlf4CidLDWV0Y97O1pFOVQCEPPP52WotmTgIf40gg9jhEs1FlKP9MDW6f0uNrP/2zIFg1yslyOEfHnvOWr3sMtPSAfItxtip3CwEUF641KSGY914VPNd2cQn856+eU10d9ZgknfCxLHIEBr0ot2jn9qPGvA64iSjVasqTgOcnxUGClUqVtpxTAbsO1lbv0e8BhsIpXsNyBB7ceO6f4ZX/XykEMWRRtHhFEnZmw5w0K975s7fGei7Y3dBcP+VhpTX4Bk8Ag0jrWNYFOOY3LVnHIpaVZ6iTI2xudCRv/jar1b7g0S2ec3CXsXG2YM4tgeRbY+/7/5Fy/u/mFDeWuvQ5F6LYUZJx18uEUISdEFiNCer4FvHe+j70IOnCq6vb3eQUZJyPk53w9DteEPFdzclHFcfko952bbOa93F5gFk09EN/iU14FDZ0u82ufapEMEYKxTdwwpxCv1h06ShFtVzrqyF5Ie6ZDldrOjRCB4N58DGc0JOO/F9Z6twlTtzQhdvkM9UnDJwvMplZG8/Ujh9YQRn8LnHHJmfe8TRHT9SDv6C/9lLCrYMAuoTInWI/rb0h6NN6aLwO2XaI/+YqyZ9Tw8xUMTgS5WVjEZiVjU05gYlO7BVNGCZ8dTqEuSWh68Q6KyBRYKcgDfDdGgE249khdBBM0T+g8xZ93uc54cIuVRNXXp/3LhTsK5QoQ9QKsLDF44QMP71e5SzYCAdEC3oQx660oS2Jzz45yHcmyZ1DlaACcR0Jje96QE1z9TQgJP7DnKRxv1OqXsPy6lyJXG32ZPzaNcU3gGDiDzLyMrk5JpRg3Q16gkaNWq6PzdujjpnMZvE+ZQAAEpgPJer/nb1lIoKxcuCjNoMw2jROmZrHzpVBNeqQq8uWbDSNYuHgGQdrOii/spRrCODLDYhrdVU0GN2BYKfSQ8JvJmP+tdQBth2Nfbcl9en2SIMuLwj5scTFNkBGq/S2qZbPdhQ54M8/KnHglCKIhJRetpqjQ+MTCFF6WtugoP+Nu+UtfgrYERIQbEUSE2MGfLbve+6qFLomUBBADY5pfn6aU9SkewuZjqj2/+F6LWGkj3/Hcja0dB5JFd/HLKt3QbzjPT+WrVysqajNSodrkcXX2GhSrYCO7US7U14WrNfrb5pbv8QxAHcw/0bO0+S03QTtf2qT/DTQ3K5SaUMozgYv2JsnMEKqnDUeV9ONG3DSrEeKAOaL7oCPPpXBqFaQdVwqFmmwB2JpgtdYHMJSgSlVlh1gzj42MuepDYSxQdTjcaoDXJQsAOQRQRAo41XcnO8rLRrJKxnLInZcphOBM1EHMRYTtnouKPlCIrjKNVa98gVyEQGtKQPMg8auurRnIVs3Srp9WE0TrKk5HAre7cUWoj9qmwrCp5PPUp7JfdVe8vJIfWnxMe2oGc7jG8P5HK8rB5tUHOknr6ZyRvmq/GbXuy2OdZsPA7uZDGTGC1qa66XHU0XRGOmr/kOwGTXE7Da3B+4YMaglBtZwWt2Q70YzD3OCw+beP1rbh2v/NJ1i4KIQcnnPQR1JRXFVw+FOzhde8J+qjygyqxwWNrVW95zuuUStiKSs1668zaz+ItdJrWI3nXMZHMx7ehn+R9A2x1dyt92cG6E7O4N0T/pVsfAaHjQN6XeeQxSr4yaP5ncSjxX+Ny7lmQChSdDVzPLA5ZUo+0nYmzb+c49psvwQNubZuykzc3xaeyT4JewL4LJETls8LE4elFOoaTontU+phQZkYm3/8aPQ3uEvd9CVEAZc58ifF984q0adSaTzVCTSX9Es4vPIpMHqrfycrqawr15nbhd8T650eF3fjDDLRn5PL4hgkNxnxp+FmDbHSoybbUL8Zda7sySAZffPLg3lVaNaKJLiBrVhejj+bWEtk0FzY7m+xcc7Ugz3jW6j2fwNXCTLqQZNi+qzZlM7SfJWRCmRSi5Ml2kcgZkS/igCo9xOO1ApNnTTQrZbd72j4mvXJJWXUnsai0O8e3CcUflXfuOmHUblJJ0ANpzCt7QMqBQ52TGt04RVp2mLzDHs2iX4TYDHDVpG7QeIQ8w1Ky+6IsOTeqB0ZyORdCzqOeA3NLQusCxwcw3nYLFAvFPBEBLuN3e6PuVRdV8eaXohXK9RD7+vk8EvHz2Y7JSl06j4jDdhiPuCuG9I8505eoavZwMuek+a9bMfXMyDP4u44+0kq7tNxks6FXWmQ4v4rDabsH9S+xeNGCtGqhvr1VnuNwqwJgFo0ODnk2495JHjXwDH4cQ2zxN5LZhy6LmuAEg2AG0tmR7bk8hzQj9AesD1GH1/Bi/iYzBTkjzfrvkLCGDMvVVmzld8U+WHtCNeCKj9rW/coM4ShuvltigcVTdjjYBPjVLeCtTbK7muVe0lu8VfWhxn54Jckbf6GWFyor4uj1n/IfJDhASBT6DmI+zIS8I8H+RozzpuQePPlqTaHdFGgKiS6OBMaUt12ZKjAi5R8kd3Dr0QIrpKQnOaQ8CkhdpusoaNhaMhvEcXIOEOGI8RvjyqquvNpm4uxOdT+nhY67LhkQcXqA+42DVRZBSxoAJYPF75JYX68jGxGG+fydsCPvpbuY3v/WIV1W/gH8TBPE/QwdPekylqZd48744VdVP8f54QNVdYT7H2Q1XZlZo/yrfas+08WYCxGSMi5WVq5eDZLHn4zdtTd3Aj4yClgQVd5uJhJQTvqzZAnmuif3zgQ6SC+5xWPZBS0dQ0aeMTRHvQwMVSzuiTx9xj7Z4XBqPFdmHrC27437Xz0Y51L8QYG/UxefZdPhWwdkfiHezBkSu2D/zySSi1rMWHGHjNFkfgsjS/bwQ696U374dTSKbrk1VTKGkxKriMHwYG6r6r8FM2out0OTK9/LgAk7uj39I7BbrbzfF9xy/vjInU5zC//vsZeZSgNpoC2i8rdFPeWMU2dRfE+W3RfvVRDN+b3hbYhImLHD+TZtdBftL/nTayH/2sakYfAgukOJeVoxafIQfSjbzgUj3bvFynE71xChPfUXHAJ0gbgWX4B3hTfHGMrQrShdTmf/3ryfsGNEtqDHVAoSSsxXVHC7ry/cqpF3aDkcVGhnDeQKr78LgVzUcXE2j/T16Dr0X/msVm9p6QiyjjCZtZhk6w+uR/AW65BBGlWjJ9Y8vS1dafxoPvar8WHN6fEYHXt9k8tksJKSb+ahrtG4CTK6ycPc+TjVaykhkUpwyphhmb6D63/U3Z/j8qga2NdExl11TYNvsPFDqYRpUErziozHhTAOIDpzi7T1+6sJVVz79yzNKH5IB+2auSS5B6p7X9OHnrHGMbscLGN2vgTYTsB73L+OiN5H2o6Xk17sDF6N/fay9PfCA/zyCu3a8DYfFArwGFxWw1YMXjJ7iC4/fdz8nv5E6EjxsaGbxpBBVPaD8pM7suc3+eA5EmGhIP9lmEtVQ9ieeT3ETskp551n7PU95zekYJXq802pilUGqLhvrnQcb6nA1ezIParqQvkmRyb6BkGCeY7KjAg5s1aD2gt2cFP6FOzwVl5a63l+/3xGGghIUAtFZloe12SrdeljijkuN+YirbV3bvK0O5UrX4wc+6FgArFtJSvGQnDcRqTw3+WZ1FZ3eSMatnM22VqOBtVJuwf4anhiED6ggDgvLK1ITa2+xoFHNJcV92BjJph+rNUMUfpMphXTXDd1rVoA/LuoXnK+QsVb39Vb/mx7hR7+/WMr0yr8Xvemx4mcRY6xZKXp2ZtdKa2aVzt3/0VCn1Mu9Hx5mvBSmPZMbpZ/UzsIsocp58/ek/rxmyRqxpueVhe7nskmtyVw5J6JHt9DgdfDn0JYZKPbCqKxP8IJWBAR08AavC8glpjOBsEZvh3NNjRqZ5LXOUNVff164Wugd1LPtUBXzUejNo2gh3B6BTrvXOUi2tcu7SOjGptd/9XwL45yUGGqG8lrXQpZ1lVeqhsnbdMSc+5EAdKGDGQfImcmq/XPYOmh+eyof4z4/aNeLAupf551zeiRnrpkyXexAYTSWllYyUUO3Z8rFMMzpdh7PhaaNjarx4cifGTzXkqBcPLM6374XWgYnC/S0Z3FtlhMSga6k1UqWz09ndQ3pTcLAazDizlMdAVkwNDZMwP4cG5B+kGGiMNWDtO9CBchbXI4rcdl4+VAJtTMr2ZbIuw7AlvyCSa3y34UBbht9L5xt3UBLcUCoTSk9J60627Ufu8YvxY1NVqsZRpjl5CFi7SPkv/VQYUhs5eTUpTwn4pB9ZVpyFStbLGvZoUBOUdvaLAZEvhEq0NyUymrT1fH5GEvB/t5UfFt0iLSxBaQoyF1eufhJo4wkVZtcQfqISpZaSIAQbwlHvZj6n586H9CD/Ton+9O3q2JBdnpKaF4wRixUM3zT0LZJlsI7sWDyyQGOAJnh1vARA32t42P9AjZmuRk2tj98Mc49pfmGC/xadofwsB3DamqyJ6Ym1yahxJ6IwZmcikXnoFYocB2+d7fmU8+QKPPbvtrLRS2FNWZQHwcQ15ciN6GT9SPC+2lXLyfaYKfMeOGT4WYVcUucPrtiwlyTO5o1Cm/hS+oRvoWFqdjvMmhTYuwPSouJMJmfZkPH2G2Fi/DEXIRHjOm+cp9sfE2A3j+K+fcF+MRHSAQSLMZ07D7CIOFVv+sKsGpjyQSZS9OrbW/rbcr3pa6GgdNZk8mgCv9Q4y8Tb28I/cdfFKrbPw9upJqJxuBIbOT/0UQQclVcMW9oZMsKjsxFAwrwQPxX0fH6Ui5vMeTlSWPTfNu+JZFy/srMNeAf6JmDQlsrJu9d8RcrKhhf180CL5B2zGvUvwh1P6ZuS+o7NNAOi6bspkTmVqI0hY4kpXp7HNamv0ivEnOLbHjcQikWJ1Vot30GjzNwvWhHugpZHogpL9V2jvmpRAPwCfKK49cxOiXN0TEMxD8bg/n2wEKH/B72oorH8IXzG5xXLGV7FAFo2+mw3NIw+z5bZSuXut5NBPKgA6r0EOikvWPxtMzKjaU7s+g8ygrs4FkZO6svh2dmQAq7SNIA4AACdJEcT0rVW+38ADLIrpGEcauqECAAhvQ0hPVhi+X4AArTlZvLrzROdrXYcvGelBlH1cN5HEYfH2PPAamtZ5YgapmAA4J2EmpOKn2r8mrtDjm/cX2uxhY5fUbgY4DqCz0NBhGF898vizg7mlUiGCIKCQ4EqjZHwtAgYI/w138q/wtUBXlMst6YwNIx0qgV0n041VCl7L4Vf2at6mAFiPMAAAA==","thunder_small_en":"data:image/webp;base64,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","fire_large_zh":"data:image/webp;base64,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","thunder_large_zh":"data:image/webp;base64,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","fire_large_en":"data:image/webp;base64,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","thunder_large_en":"data:image/webp;base64,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"};
   // 询问「是否发动」时跟在后面的一句：告诉玩家发动后会发生什么。q：{ me, n, t }（n 为当时就能算出来的数）
   const CONFIRM_HINT = {
-    gordian: ['令此杀不可被闪响应，或伤害 +1', 'this Strike cannot be Parried, or deals +1 damage'],
+    gordian: ['令此【杀】不可被【闪】响应，或伤害 +1', 'this {Strike} cannot be answered with a {Parry}, or deals +1 damage'],
     rubicon: ['体力上限改为手牌数并回满体力', 'max health becomes your hand size; heal to full'],
-    divert: ['视为对伤害来源出杀，命中则回复 1 点体力', 'Strike the source; heal 1 if it hits'],
-    defiance: q => [`摸 ${q.n} 张牌，然后其视为对你出杀`, `draw ${q.n}, then they Strike you`],
+    divert: ['视为对伤害来源出【杀】，命中则回复 1 点体力', 'use a {Strike} on the source; heal 1 if it hits'],
+    defiance: q => [`摸 ${q.n} 张牌，然后其视为对你出【杀】`, `draw ${q.n}, then they use a {Strike} on you`],
     unchain: ['摸两张牌，再任意分配', 'draw 2 and hand them out'],
     vengeance: ['天意判定，非红桃则伤害来源受罚', 'invoke Fate; if not ♥, the source is punished'],
     pearl: ['摸 Y+2 张牌（Y 为本回合体力变动次数）', 'draw Y+2 (Y = health changes this turn)'],
@@ -6329,33 +6332,33 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
     alliance: ['让你或对方的手牌数与另一方相同', 'match hand sizes with another character'],
     kingmaker: ['交给其手牌，其再把多余的手牌交给你', 'give them cards; they hand you their excess'],
     schiltron: ['获得对方的一张手牌', 'take a card from their hand'],
-    freedom: ['付出代价，本回合多摸牌、多出杀', 'pay a cost for extra draws and Strikes this turn'],
+    freedom: ['付出代价，本回合多摸牌、多出【杀】', 'pay a cost for extra draws and {Strike} cards this turn'],
     redemption: ['为一名角色选一项（涤罪升天）', 'grant a character one blessing'],
     exile: q => [`令一名角色摸 ${q.n} 张牌并翻面`, `make a character draw ${q.n} and turn face down`],
     resurgence: ['令其先失去等量的体力', 'make them lose that much health first'],
-    escort: ['请其他角色替你出闪，出闪者摸一张牌', 'ask others to play a Parry for you; they draw 1'],
-    sophist: ['弃一张牌，把此杀转给别人', 'discard a card to redirect this Strike'],
+    escort: ['请其他角色替你出【闪】，出【闪】者摸一张牌', 'ask others to play a {Parry} for you; they draw 1'],
+    sophist: ['弃一张牌，把此【杀】转给别人', 'discard a card to redirect this {Strike}'],
     telescope: q => [`观看并排列牌堆顶 ${q.n} 张牌`, `look at and arrange the top ${q.n} cards`],
     laws: q => [`摸 ${q.n} 张牌`, `draw ${q.n}`],
     enlighten: q => [`摸 ${q.n} 张牌`, `draw ${q.n}`],
     favor: ['把本回合弃置的牌交给一名其他角色', 'give away the cards you discarded this turn'],
-    austerlitz: ['改为对所有目标出杀，未造成伤害则失去 1 点体力', 'Strike all its targets instead; lose 1 health if none is hit'],
+    austerlitz: ['改为对所有目标出【杀】，未造成伤害则失去 1 点体力', 'use a {Strike} on all its targets instead; lose 1 health if none is hit'],
     tend: ['令其体力上限变为 3 并回满，可换武将', 'max health 3, heal fully, may switch hero'],
     coil: ['少摸一张牌，横置至多 X 名角色', 'draw one fewer to chain up to X characters'],
     joy: ['令至多 X 名其他角色各摸 Y+1 张牌', 'let up to X other characters draw Y+1 each'],
     evolve: ['令一名其他角色失去 1 点体力', 'make another character lose 1 health'],
-    railroad: ['弃一张牌，对此杀选一项效果', 'discard a card to alter this Strike'],
+    railroad: ['弃一张牌，对此【杀】选一项效果', 'discard a card to alter this {Strike}'],
     tragedy: ['获得其所有牌和至多两个技能', 'take all their cards and up to two skills'],
     chisel: ['再亮出五张牌，每种花色拿一张', 'reveal five more, take one per suit'],
-    fireship: ['令其摸一张牌，再对其火攻', 'they draw 1, then Greek Fire again'],
+    fireship: ['令其摸一张牌，再对其【火攻】', 'they draw 1, then {Greek Fire} again'],
     square: ['对一名角色造成 1 点伤害', 'deal 1 damage to a character'],
     // 军备
     gemini: ['其弃一张手牌，或令你摸一张牌', 'they discard a card or you draw 1'],
     winter: ['防止此伤害，改为弃置其两张牌', 'discard 2 of their cards instead of damage'],
-    ram: ['弃置两张牌，令此杀依然造成伤害', 'discard 2 cards so this Strike still deals damage'],
-    arquebus: ['将此杀改为火杀', 'turn this Strike into a Fire Strike'],
+    ram: ['弃置两张牌，令此【杀】依然造成伤害', 'discard 2 cards so this {Strike} still deals damage'],
+    arquebus: ['将此【杀】改为【火杀】', 'turn this {Strike} into a {Fire Strike}'],
     longbow: ['弃置其一匹坐骑', 'discard one of their mounts'],
-    aegis: ['天意判定，红色则视为出闪', 'invoke Fate; red counts as a Parry'],
+    aegis: ['天意判定，红色则视为出【闪】', 'invoke Fate; red counts as a {Parry}'],
   };
   const CAP_TYPES = new Set(['use', 'play', 'discard', 'discardOf', 'skill', 'judge', 'judgeResult', 'recast', 'retouch', 'vetoed', 'nullified', 'aborted', 'show']);   // 动画节拍照旧
   const CAP_SHOW = new Set(['skill', 'judgeResult', 'retouch', 'nullified', 'aborted', 'show']);   // 真正显示出来的只有这些
@@ -6459,7 +6462,7 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
       this.recs = this.recs || []; this.rec = { seed, n, level: this.settings.level, role: this.settings.role, me: meSeat, lang: this.lang, speed: this.settings.speed, started: new Date().toISOString(), answers: [], notes: [] }; if (!rep) this.recs.push(this.rec); this.recT0 = Date.now();
       this.g = new E.Game({ players: n, seed, roles: arr, fixedRoles: true, selectHeroes: true });
       this.me = meSeat; this.ui = null; this.logIdx = 0;
-      this.animIdx = 0; this.phMem = {}; this.phCur = {}; this.marks = {}; this.handOrder = []; this.vetoBars = false; this.thinkBars = null; this.revealWin = null; this.schemeWin = null; this.roleHold = null; this.introHold = null; this.groupDone = false; this.lastPh = null;
+      this.animIdx = 0; this.phMem = {}; this.phCur = {}; this.marks = {}; this.handOrder = []; this.vetoBars = false; this.thinkBars = null; this.revealWin = null; this.schemeWin = null; this.roleHold = null; this.introHold = null; this.evOpen = false; this.evDefer = null; this.groupDone = false; this.lastPh = null;
       this.closePeek(); this.closeBadgeMenu(); this.closeZoom(); this.pindian = null; this.eqHot = null; this.noVetoUid = null; this.pdHold = null; this.pdOut = null; this.skFlash = null; this.skMarkHold = null; this.skMarkNow = null; this.skHot = null; this.feast = null; this.shownCards = null; this.centerT = 0; this.locs = null; this.center = []; this.centerIds = new Set(); this.hpPrev = null; this.stepNo = 0; this.thinking = null;
       const fx = this.$('.qx-fx'); if (fx) fx.innerHTML = ''; const ls = this.$('.qx-lines'); if (ls) ls.innerHTML = '';
       // 新开一局：上一局留在桌面上的牌、状态（横置 / 翻面等）、动画残留全部清空
@@ -6655,8 +6658,9 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
       const out = [];
       if (k === 'play') {
         for (const inst of g.viewAsSkills(me, ['strike', 'remedy', 'grog', 'parry', 'veto'], { phase: true })) {
-          const v = inst.def.viewAs; const n = v.count || 1;
-          const pool = g.cardsIn(me, v.zones || 'h').filter(c => !v.filter || v.filter(g, me, c, {}));
+          const v = inst.def.viewAs; const n = E.vaCount(v, g, me);
+          let pool = g.cardsIn(me, v.zones || 'h').filter(c => !v.filter || v.filter(g, me, c, {}));
+          if (v.sameSuit && n > 1) { const by = {}; pool.forEach(c => (by[c.suit] = by[c.suit] || []).push(c)); pool = Object.values(by).find(a => a.length >= n) || []; }
           const okFor = asName => {
             if (n === 1) return pool.some(c => { const vc = g.buildCard(me, { cardIds: [c.id], skill: inst.key, asName }, null, { phase: true }); return vc && g.playable(me, vc); });
             if (pool.length >= n) { const vc = g.buildCard(me, { cardIds: pool.slice(0, n).map(c => c.id), skill: inst.key, asName }, null, { phase: true }); return !!vc && g.playable(me, vc); }
@@ -7344,7 +7348,7 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
       return list.map((e, i) => {
         const c = g.card(e.id); if (!c) return '';
         const tag = e.as && e.as !== c.name ? `<div class="qx-astag">${esc(T.t('asCard', { c: T.cardName(e.as) }))}</div>` : '';
-        const st = this.fading && this.fading.has(c.id) ? ' qx-ccfade' : D0.has(c.id) ? ' qx-ccspent' : e.judge === 'open' ? ' qx-cchi' : live.length > 1 ? (e.li === maxLi ? ' qx-cchi' : ' qx-ccdim') : '';   // 天意牌在判定结果出来前一直亮着
+        const st = this.fading && this.fading.has(c.id) ? ' qx-ccfade' : D0.has(c.id) ? ' qx-ccspent' : e.judge === 'open' ? ' qx-cchi' : live.length > 1 && e.li === maxLi ? ' qx-cchi' : '';   // 结算中的牌都保持明亮，最新的一张带高光   // 天意牌在判定结果出来前一直亮着
         const eq = e.kind === 'equip', sh = e.kind === 'show'; const hid = e.pend || (eq || sh ? e.hold : this.hideSet && this.hideSet.has(c.id));
         const jm = e.verdict ? this.brushMark(e.verdict, e.id) : '';
         return `<div class="qx-cc${st}" ${eq ? `data-mk="g${c.id}" data-gid` : sh ? `data-mk="${e.sk || 's' + c.id}" data-sk="${e.sk || ''}" data-sid` : 'data-cid'}="${c.id}" style="left:${Math.round(slotOf.has(e) ? x0 + slotOf.get(e) * step : this.bw() / 2 - cw / 2)}px;z-index:${i + 1}${hid ? ';visibility:hidden' : ''}">${this.cardHTML(c, 'qx-cpic').replace(/ data-id="\d+"/, '')}${tag}${jm}<div class="qx-ccap">${esc(e.cap || '')}</div></div>`;
@@ -7409,7 +7413,7 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
       for (const c of cards) if (!this.handOrder.includes(c.id)) this.handOrder.push(c.id);
       return this.handOrder.filter(id => cards.some(c => c.id === id)).map(id => cards.find(c => c.id === id));
     }
-    lockedAs(p, c) { for (const inst of this.g.skillList(p)) { const v = inst.def && inst.def.viewAs; if (!v || !v.locked || (v.count || 1) !== 1) continue; if (!this.g.cardsIn(p, v.zones || 'h').includes(c)) continue; if (v.filter && !v.filter(this.g, p, c, {})) continue; const nm = typeof v.as === 'function' ? v.as(this.g, p, [c], {}) : v.as; if (nm) return nm; } return null; }
+    lockedAs(p, c) { for (const inst of this.g.skillList(p)) { const v = inst.def && inst.def.viewAs; if (!v || !v.locked || E.vaCount(v, this.g, p) !== 1) continue; if (!this.g.cardsIn(p, v.zones || 'h').includes(c)) continue; if (v.filter && !v.filter(this.g, p, c, {})) continue; const nm = typeof v.as === 'function' ? v.as(this.g, p, [c], {}) : v.as; if (nm) return nm; } return null; }
     handLayout(n) { const W = 740 - 58 - 20 + Math.max(0, (this.LW || 1280) - 1280), cw = 100; const step = n > 1 ? Math.min(cw + 4, (W - cw) / (n - 1)) : 0; return { cw, step }; }
     renderMe() {
       const g = this.g, T = this.T, t = T.t, me = g.p(this.me), u = this.ui;
@@ -7611,8 +7615,11 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
         if (this.feast && this.feast.ids.includes(id)) return;
         if (!force && this.revealWin && this.revealWin.ids.includes(id)) return;
         if (this.schemeWin && this.schemeWin.cards.includes(id)) return;
-        let old = this.center.find(e => e.id === id);
+        let old = this.center.find(e => e.id === id && e.kind !== 'show') || this.center.find(e => e.id === id);
         if (old && old.kind === 'equip' && kind !== 'equip') { this.center = this.center.filter(e => e !== old); old = null; }   // 上一次留下的装备 / 天兆影子：这张牌这次是作为普通的牌上桌
+        // 之前只是「展示」在桌上的同一张牌（如【火攻】展示的手牌），现在真的被使用 / 打出 / 弃置：另起一条正常的桌面记录，展示的影子留着让真牌从那里飞过来再撤掉
+        if (old && old.kind === 'show' && !(old.log && old.log.type === 'omenShow') && kind !== 'show') old = null;
+        if (old && old.kind === 'show' && old.log && old.log.type === 'omenShow') return;   // 判定前亮出来的天兆牌：说明文字保持「某某的某某牌」
         if (old) { if (cap) old.cap = cap; if (as) old.as = as; return; }
         const pend = !!this.animMult() && !!this.stepping;
         if (this.dimmed) this.dimmed.delete(id); if (this.fading) this.fading.delete(id);   // 重新上桌的牌是新的一张记录，不能继承上一次的「已变暗」状态
@@ -7646,7 +7653,7 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
       for (const c of g.processing || []) if (!c.arranging && c.omenJudging == null && !this.center.find(e => e.id === c.id) && !(this.pdHold && this.pdHold.has(c.id)) && !(this.revealWin && this.revealWin.ids.includes(c.id)) && !(this.feast && this.feast.ids.includes(c.id))) add(c.id, '');
       if (this.center.length !== this.centerN) this.centerT = Date.now(); 
       this.center = this.center.filter(e => { const c = g.card(e.id); return c && c.loc && (c.loc.zone === 'process' || c.loc.zone === 'discard' || (e.kind === 'equip' && (c.loc.zone === 'equip' || c.loc.zone === 'judge')) || e.kind === 'show' || (this.stepping && this.animMult() && !e.ghost)); });   // 这一步里被拿走的牌（如洗牌后又被摸走）先留在桌上，飞走时再离开
-      if (this.center.length > 10) { const old = this.center.filter(e => (e.li || 0) <= (base || 0)).slice(0, this.center.length - 10).map(e => e.id); if (old.length) this.retire(old, this.animMult()); }   // 桌上太多：之前的牌先变暗再离场（不会一下子消失）；这一步上桌的牌全部留在桌上
+      if (this.center.length > 10 && !this.evOpen) { const old = this.center.filter(e => (e.li || 0) <= (base || 0)).slice(0, this.center.length - 10).map(e => e.id); if (old.length) this.retire(old, this.animMult()); }   // 桌上太多：之前的牌先变暗再离场（不会一下子消失）；这一步上桌的牌全部留在桌上
       this.centerN = this.center.length;
       this.centerIds = new Set(this.center.filter(e => e.kind !== 'equip' && e.kind !== 'show').map(e => e.id));
     }
@@ -7679,7 +7686,7 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
       if (!mult || !CAP_SHOW.has(l.type)) return; const r = this.T.logLine(this.g, l, this.me, s => this.who(s)); if (!r || !r[1]) return;
       if (l.type === 'judgeResult') {   // 说清楚：谁的、什么牌（或技能）的判定牌，判定出了什么
         const jc = this.g.card(l.card), rs = l.reason; const rn = rs ? (E.SKILLS[rs] ? this.T.skillName(rs) : this.T.cardName(rs)) : ''; const lab = jc ? this.T.cardLabel(jc) : '';
-        r[1] = this.lang === 'zh' ? `${this.who(l.seat)}的【${rn}】判定牌：${lab}` : `${l.seat === this.me ? 'Your' : this.who(l.seat) + "'s"} ${rn} Fate card: ${lab}`;
+        r[1] = this.lang === 'zh' ? `${this.who(l.seat)}的【${rn}】天意牌：${lab}` : `${l.seat === this.me ? 'Your' : this.who(l.seat) + "'s"} ${rn} Fate card: ${lab}`;
       }
       if (l.type === 'judgeResult' && l.ok != null) r[1] = r[1].replace(/\s+$/, '') + (this.lang === 'zh' ? (l.ok ? '（生效）' : '（未生效）') : (l.ok ? ' (takes effect)' : ' (no effect)'));
       // 技能发动后紧跟着的效果（弃牌、令某牌无效、摸牌、造成伤害……）不另起一行，直接接在这条播报后面
@@ -7749,7 +7756,8 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
         const proc = new Set((g && g.processing || []).map(c => c.id));
         const D0 = this.dimmed || new Set(), F0 = this.fading || new Set();
         for (const e of this.center || []) if ((e.pend || e.hold) && e.t && now - e.t > 4000) { e.pend = false; e.hold = false; }
-        const stale = (this.center || []).filter(e => e.t && now - e.t > 6000 && !proc.has(e.id) && !D0.has(e.id) && !F0.has(e.id) && !(this.hideSet && this.hideSet.has(e.id)) && !e.hold).map(e => e.id);
+        if (this.evOpen && this.evAt && now - this.evAt > 40000 && !this.inStep && !this.ui) { this.evOpen = false; const dfr = this.evDefer ? [...this.evDefer] : []; this.evDefer = null; if (dfr.length) this.retire(dfr, mult || 1); }   // 保险：一件事 40 秒还没结算完（异常），不再挡着
+        const stale = this.evOpen ? [] : (this.center || []).filter(e => e.t && now - e.t > 6000 && !proc.has(e.id) && !D0.has(e.id) && !F0.has(e.id) && !(this.hideSet && this.hideSet.has(e.id)) && !e.hold).map(e => e.id);
         if (stale.length) this.retire(stale, mult || 1);
         // 红框保险：没有任何结算在进行（处理区空、桌上没有亮着的牌）超过 2 秒，就把「被指定」红框收掉
         const liveC = (this.center || []).some(e => !D0.has(e.id) && !F0.has(e.id));
@@ -7770,7 +7778,9 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
       const ents = (this.center || []).filter(e => ids.includes(e.id)); const tok = this.token; setTimeout(() => { if (tok !== this.token) return; const still = ids.filter(id => { const e = (this.center || []).find(x => x.id === id); return !e || ents.includes(e); }); if (still.length) this.fadeIds(still, mult); }, Math.max(600, 1000 * Math.min(1, mult)));
     }
     // 结算完的牌：先暗下去，停 2 秒左右再淡出；不阻塞后面的结算
-    retire(ids, mult) {
+    retire(ids, mult, force) {
+      // 一件事（最外层的一次用牌 / 主动技能 / 天兆判定）还在结算：其中的牌（包括插入结算的响应、无懈、判定、被弃的牌）一律不暗、不走，等整件事结算完再一起变暗、淡出
+      if (this.evOpen && !force) { this.evDefer = this.evDefer || new Set(); ids.forEach(id => this.evDefer.add(id)); return; }
       this.dimmed = this.dimmed || new Set();
       ids = ids.filter(id => !this.dimmed.has(id) && !(this.fading && this.fading.has(id)) && !(this.center || []).some(e => e.id === id && e.judge === 'open' && this.g.processing && this.g.processing.some(c => c.id === id))); if (!ids.length) return;
       if (!mult) { this.fadeIds(ids, 0); return; }
@@ -7965,6 +7975,7 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
           const glow = l.card === 'veto' ? [] : tg.slice();
           const isEq = D[l.card] && ['equip', 'omen'].includes(D[l.card].type) && ty === 'use' && mv.some(m => /^(e|j):/.test(m.k1));
           beats.push(async () => {
+            if (l.top) { this.evOpen = true; this.evAt = Date.now(); this.evLi = base + logs.indexOf(l) + 1; }
             if (isEq) { tg.forEach(s => this.drawLine(this.seatPt(l.seat), this.seatPt(s), mult)); const ids = [...new Set(mv.map(m => m.id))]; for (const id of ids) await this.equipFly(mv.filter(m => m.id === id), mult); return; }
             tg.forEach(s => this.drawLine(this.seatPt(l.seat), this.seatPt(s), mult));
             if (glow.length) this.setAimed(glow, true);
@@ -8089,13 +8100,13 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
         else if (ty === 'drunk') beats.push(() => { this.stSet(l.seat, 'drunk', !l.off); return sleep(Math.max(120, 250 * mult)); });
         else if (ty === 'move' && rvDone.has(l)) continue;
         else if (ty === 'move') { const f = async () => { const mv = moves.filter(m => m.logRef === l && !claimed.has(m)); mv.forEach(m => claimed.add(m)); if (mv.length) await this.flyMany(mv, mult); this.landedDiscards(l.ids || [], mult); }; f.isMove = true; beats.push(f); }
-        else if (ty === 'tableClear') { const at = base + logs.indexOf(l) + 1; beats.push(async () => { this.setAimed(null, false); await this.clearCenter(mult, at); if (this.shownCards) { this.shownCards = null; this.renderTable(); this.renderMe(); } }); }   // 展示的牌只在这次结算期间显示
+        else if (ty === 'tableClear') { const at = base + logs.indexOf(l) + 1; beats.push(async () => { this.setAimed(null, false); this.evOpen = false; this.evAt = 0; const dfr = this.evDefer ? [...this.evDefer] : []; this.evDefer = null; await this.clearCenter(mult, at, true); if (dfr.length) this.retire(dfr, mult); if (this.shownCards) { this.shownCards = null; this.renderTable(); this.renderMe(); } }); }   // 展示的牌只在这次结算期间显示
         else if (ty === 'judgeClear') beats.push(() => this.retire(l.cards || [], mult));
         else if (ty === 'battleStart') beats.push(async () => { this.clearThinkBars(); if (mult) await this.banner('start', this.T.t('battleStart'), Math.max(2000, 2400 * mult)); });   // 开战：之后才结算「游戏开始时」的效果
         else if (ty === 'equipFx') beats.push(() => { this.eqHot = this.eqHot || new Set(); this.eqHot.add(l.key); this.renderTable(); this.renderMe(); return sleep(Math.max(200, 350 * mult)); });   // 装备效果发动：装备条弹出发光
         else if (ty === 'equipVfx') beats.push(() => { if (mult) this.vfx(l.seat, l.key); });   // 加特林（超出出杀次数）、三叉戟（额外目标）
         else if (ty === 'equipFxEnd') beats.push(() => { if (this.eqHot) { this.eqHot.delete(l.key); this.renderTable(); this.renderMe(); } });
-        else if (ty === 'turn') { const at = base + logs.indexOf(l) + 1; beats.push(async () => { this.setAimed(null, false); await this.clearCenter(mult, at, true); { const old = (this.center || []).filter(e => (e.li || 0) < at).map(e => e.id); if (old.length) this.forceRetire(old, mult); } this.shownCards = null; /* 一名角色的回合结束：桌面上属于这一回合的牌强制清空 */ this.setPhaseShown(null, null); }); }
+        else if (ty === 'turn') { const at = base + logs.indexOf(l) + 1; beats.push(async () => { this.setAimed(null, false); this.evOpen = false; { const dfr = this.evDefer ? [...this.evDefer] : []; this.evDefer = null; if (dfr.length) this.retire(dfr, mult); } await this.clearCenter(mult, at, true); { const old = (this.center || []).filter(e => (e.li || 0) < at).map(e => e.id); if (old.length) this.forceRetire(old, mult); } this.shownCards = null; /* 一名角色的回合结束：桌面上属于这一回合的牌强制清空 */ this.setPhaseShown(null, null); }); }
         else if (ty === 'damage' || ty === 'loseHp') { const seat = l.to != null ? l.to : l.seat; beats.push(() => this.hitFx(seat, '−' + l.n, ty === 'damage' ? (l.nature || 'normal') : 'lose', mult, l.hp, ty === 'damage' ? l.from : null)); }
         else if (ty === 'recover') {
           // 失去装备时回血（涅墨亚狮皮被拆 / 被顺走）：先播放这张装备离开的动画，再回血
@@ -8114,7 +8125,7 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
           }
           if (['limited', 'awaken'].includes((E.SKILLS[l.skill] || {}).type)) beats.push(() => { const k = l.seat + ':' + l.skill; if (this.skMarkHold) this.skMarkHold.delete(k); this.skMarkNow = this.skMarkNow || new Set(); this.skMarkNow.add(k); this.renderTable(); this.renderMe(); setTimeout(() => { if (this.skMarkNow) { this.skMarkNow.delete(k); } }, 1200); });
           if (l.seat === this.me && (E.SKILLS[l.skill] || {}).type === 'awaken') beats.push(() => { this.skFlash = this.skFlash || new Set(); this.skFlash.add(l.skill); this.renderMe(); setTimeout(() => { if (this.skFlash) { this.skFlash.delete(l.skill); this.renderMe(); } }, 1700); });   // 觉醒技发动：按钮亮起
-          beats.push(() => { if (l.active && tg.length) this.setAimed(tg, true); /* 主动技能的目标框保持到这次结算结束（例如交完牌之后） */ tg.forEach(s => this.drawLine(this.seatPt(l.seat), this.seatPt(s), mult)); if (mult && D[l.skill]) this.vfx(l.seat, l.skill === 'linothorax' && l.event === 'damageTaking' ? 'linothorax_fire' : l.skill); /* 军备效果发动：在装备者的武将牌上播特效 */ return this.skillFx(l.seat, l.skill, mult); });
+          beats.push(() => { if (l.active && l.top) { this.evOpen = true; this.evAt = Date.now(); } if (l.active && tg.length) this.setAimed(tg, true); /* 主动技能的目标框保持到这次结算结束（例如交完牌之后） */ tg.forEach(s => this.drawLine(this.seatPt(l.seat), this.seatPt(s), mult)); if (mult && D[l.skill]) this.vfx(l.seat, l.skill === 'linothorax' && l.event === 'damageTaking' ? 'linothorax_fire' : l.skill); /* 军备效果发动：在装备者的武将牌上播特效 */ return this.skillFx(l.seat, l.skill, mult); });
         }
         else if (ty === 'viewRole' && l.seat === this.me) beats.push(async () => {   // 观看身份：身份牌在桌面中央渐显，然后像拿牌一样飞到那名角色的武将牌上消失，身份标签随之更新
           const role = g.p(l.target).role; if (mult) await this.introCard(this.idSrc(role, true), null, l.target, 0, this.token);
@@ -8123,11 +8134,12 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
         else if (ty === 'aimEnd') beats.push(() => { this.setAimed((l.targets || []), false); });
         else if (ty === 'aim') beats.push(async () => { const tg = (l.targets || []).filter(s => s !== l.seat); if (tg.length) this.setAimed(tg, true); tg.forEach(s => this.drawLine(this.seatPt(l.seat), this.seatPt(s), mult)); if (tg.length) await sleep(Math.max(200, 380 * mult)); });
         else if (ty === 'omenShow') beats.push(async () => {
+          this.evOpen = true; this.evAt = Date.now();
           const ctr = this.$('.qx-ctr'); const ent = (this.center || []).find(e => e.log === l);
           if (!ent || !mult) { if (ent) { ent.pend = false; ent.hold = false; if (ctr) morph(ctr, this.centerHTML()); } return; }
           ent.pend = false; if (ctr) morph(ctr, this.centerHTML());
           const toEl = ctr && ctr.querySelector(`[data-sk="${ent.sk}"]`);
-          await this.fly({ id: l.card, k0: 'j:' + l.seat, k1: 'center', copyOnly: true, forceFace: true, el: toEl }, 0, mult);
+          await this.fly({ id: l.card, k0: 'j:' + l.seat, k1: 'center', copyOnly: true, forceFace: true, asReal: true, el: toEl }, 0, mult);   // 当作天兆牌使用的牌：飞出来就显示它本来的牌面（桌上那张带「当作」标记），不会中途变脸
           ent.hold = false; if (ctr) morph(ctr, this.centerHTML());
           await sleep(Math.max(400, 700 * mult));
         });
@@ -8155,7 +8167,7 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
       if (this.feast) this.feast.hidden = false; if (this.revealWin) this.revealWin.hidden = false;
       for (const e of this.center || []) { e.pend = false; e.hold = false; }   // 这一步结束：所有牌都已到场
       this.roleHold = null; this.skMarkHold = null;
-      { const left = (this.center || []).filter(e => { const c = g.card(e.id); return !(c && c.loc && (c.loc.zone === 'process' || c.loc.zone === 'discard' || (e.kind === 'equip' && (c.loc.zone === 'equip' || c.loc.zone === 'judge')) || e.kind === 'show')); }).map(e => e.id); if (left.length) this.retire(left, mult); }   // 没飞走却已不在弃牌堆的牌：变暗再离场
+      { const left = (this.center || []).filter(e => { const c = g.card(e.id); return !(c && c.loc && (c.loc.zone === 'process' || c.loc.zone === 'discard' || (e.kind === 'equip' && (c.loc.zone === 'equip' || c.loc.zone === 'judge')) || e.kind === 'show')); }).map(e => e.id); if (left.length) this.retire(left, mult, true); }   // 没飞走却已不在弃牌堆的牌：变暗再离场
       if (this.skHot) { const hot = this.skHot; setTimeout(() => { if (this.skHot === hot && !(this.ui && this.ui.req && this.ui.req.skill === hot) && !this.inStep) { this.skHot = null; this.renderMe(); } }, 60); }
       this.disp = null; this.stShown = null; this.recordLast(); this.render();
       for (const mv of moves) if (mv.el) this.unHide(mv.id, mv.el);
@@ -8368,6 +8380,8 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
     fly(mv, delay, mult, prevGhost) {
       // 依次飞进我手里的牌（连摸几张、起始手牌）：等轮到这张时再起飞，这样每张都先在手里占好位置，全部从右侧平移进来，动画完全一样
       if (delay && mv.k1 === 'h:' + this.me && !mv.keep && !mv.toRect && !!this.disp) return new Promise(res => setTimeout(() => this.fly(mv, 0, mult, prevGhost).then(res), delay));
+      // 判定前已经亮在桌面中间的天兆牌：判定结束进处理区时不再从天兆区飞一次，就地变成正常的桌面牌（位置不动）
+      if (!mv.copyOnly && mv.k1 === 'center') { const se = (this.center || []).find(e => e.id === mv.id && e.kind === 'show' && e.log && e.log.type === 'omenShow'); if (se) { se.kind = null; se.sk = null; se.pend = false; se.hold = false; if (this.disp) this.disp.set(mv.id, 'center'); this.centerIds = new Set(this.center.filter(e => e.kind !== 'equip' && e.kind !== 'show').map(e => e.id)); const ctr = this.$('.qx-ctr'); if (ctr) morph(ctr, this.centerHTML()); this.render(); return Promise.resolve(); } }
       return new Promise(res => {
         const fx = this.$('.qx-fx'); const c = this.g.card(mv.id); if (!c) return res();
         const CW = 100, CH = 152;
@@ -8406,7 +8420,7 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
           const done = () => { el.remove(); this.unHide(mv.id, dst); res(); }; a.onfinish = done; a.oncancel = done;
           return;
         }
-        el.innerHTML = face ? this.cardHTML(c, 'qx-flyc', { as: c.omenAs || c.name }).replace(/ data-id="\d+"/, '') : `<img class="qx-flyb" src="${this.backSrc('game')}" alt="">`;
+        el.innerHTML = face ? this.cardHTML(c, 'qx-flyc', { as: mv.asReal ? c.name : (c.omenAs || c.name) }).replace(/ data-id="\d+"/, '') : `<img class="qx-flyb" src="${this.backSrc('game')}" alt="">`;
         el.style.width = CW + 'px'; el.style.height = CH + 'px';
         const cx0 = from.x + from.w / 2, cy0 = from.y + from.h / 2, cx1 = to.x + to.w / 2, cy1 = to.y + to.h / 2;
         const fromDeck = mv.k0 === 'deck';
@@ -8487,7 +8501,7 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
       if (leg.ghost) leg.ghost.remove();
       showSlot();
       await sleep(Math.max(250, 450 * mult));
-      if (ent) this.retire([id], mult);   // 一张装上就暗下去，下一张再亮出来
+      if (ent) this.retire([id], mult, true);   // 一张装上就暗下去，下一张再亮出来
     }
 
     // 别人摸牌（参照无名杀 $draw）：每张牌从牌堆（桌面中央）单独飞出，相隔 50ms，落点左右散开（每张 20px，最多 ±80px），飞行 0.8 秒后淡出
@@ -8764,7 +8778,7 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
         const por = this.porEl(seat); if (por) { por.classList.remove('qx-skfx'); void por.offsetWidth; por.classList.add('qx-skfx'); }
       }
       const p = this.g.p(seat);
-      if (d && (d.type === 'limited' || d.type === 'awaken') && p.hero) return this.splash(p.hero, name, mult);
+      if (d && (d.type === 'limited' || d.type === 'awaken') && p.hero) return this.splash(p.hero, name, mult, id);
       return sleep(Math.max(120, 300 * mult));
     }
     brushBg() {
@@ -8780,13 +8794,21 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
       const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${Wv} ${Hv}" preserveAspectRatio="none"><defs><linearGradient id="g" x1="0" x2="${Wv}" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#060608" stop-opacity="0"/><stop offset=".2" stop-color="#060608" stop-opacity=".93"/><stop offset=".8" stop-color="#060608" stop-opacity=".93"/><stop offset="1" stop-color="#060608" stop-opacity="0"/></linearGradient></defs><g fill="url(#g)">${rects}</g></svg>`;
       return (this._brushBg = `url("data:image/svg+xml,${encodeURIComponent(svg)}")`);
     }
-    splash(hero, name, mult) {
+    // 限定技 / 觉醒技：横幅插画（splash/<技能>.webp，没有时先用武将原画顶上）+ 大号书法技能名
+    splash(hero, name, mult, id) {
       return new Promise(res => {
-        const s = document.createElement('div'); s.className = 'qx-splash';
-        s.innerHTML = `<img src="${this.heroSrc(hero, true)}" alt=""><div>${esc(name)}</div>`;
+        const d = E.SKILLS[id] || {}; const zh = this.lang === 'zh';
+        const s = document.createElement('div'); s.className = 'qx-splash' + (zh ? '' : ' qx-splen');
+        const tag = this.T.t(d.type === 'awaken' ? 'awakenTag' : 'limitedTag');
+        s.innerHTML = `<div class="qx-spart"><img class="qx-spimg" src="${this.asset('splash/' + id + '.webp')}" alt="" draggable="false"></div><i class="qx-spsweep"></i><div class="qx-spname"><span class="qx-sptag">${esc(tag)}</span><b>${esc(name)}</b></div>`;
+        const img = s.querySelector('.qx-spimg'); img.onerror = () => { img.onerror = null; img.src = this.seatArtSrc(hero); img.classList.add('qx-spfb'); };
         s.style.left = (this.bw() / 2) + 'px';
         this.$('.qx-fx').appendChild(s);
-        const a = s.animate([{ transform: 'translate(-50%,-50%) scale(.82)', opacity: 0 }, { transform: 'translate(-50%,-50%) scale(1)', opacity: 1, offset: .18 }, { transform: 'translate(-50%,-50%) scale(1.02)', opacity: 1, offset: .8 }, { transform: 'translate(-50%,-50%) scale(1.05)', opacity: 0 }], { duration: Math.max(900, 1700 * mult), easing: 'ease-out', fill: 'both' });
+        const D = Math.max(1400, 2400 * mult);
+        const a = s.animate([{ transform: 'translate(-50%,-50%) translateX(-40px) skewX(-6deg)', opacity: 0 }, { transform: 'translate(-50%,-50%) skewX(0deg)', opacity: 1, offset: .14, easing: 'ease-out' }, { transform: 'translate(-50%,-50%) scale(1.01)', opacity: 1, offset: .85 }, { transform: 'translate(-50%,-50%) translateX(30px) scale(1.02)', opacity: 0 }], { duration: D, fill: 'both' });
+        s.querySelector('.qx-spimg').animate([{ transform: 'scale(1.12)' }, { transform: 'scale(1)' }], { duration: D, easing: 'ease-out', fill: 'both' });
+        s.querySelector('.qx-spname b').animate([{ clipPath: 'inset(0 0 100% 0)', opacity: 0 }, { clipPath: 'inset(0 0 100% 0)', opacity: 1, offset: .12 }, { clipPath: 'inset(0 0 0% 0)', opacity: 1, offset: .36, easing: 'ease-out' }, { clipPath: 'inset(0 0 0% 0)', opacity: 1 }], { duration: D, fill: 'both' });
+        s.querySelector('.qx-spsweep').animate([{ left: '-30%', opacity: 0 }, { left: '-30%', opacity: 1, offset: .2 }, { left: '110%', opacity: 1, offset: .5 }, { left: '110%', opacity: 0 }], { duration: D, fill: 'both' });
         a.onfinish = () => { s.remove(); res(); };
       });
     }
@@ -8928,14 +8950,14 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
       const g = this.g, me = g.p(this.me); const L = this.lang === 'en' ? 1 : 0;
       const lost = Math.max(0, me.maxHp - me.hp);
       const n = { defiance: Math.min(5, lost), exile: lost, telescope: Math.min(5, g.alive.length), laws: me.marks.lawsDraw || 3, enlighten: me.hand.length }[req.skill];
-      const v = typeof H === 'function' ? H({ me, n }) : H; return v[L];
+      const v = typeof H === 'function' ? H({ me, n }) : H; return this.T.ub(v[L]);
     }
     tgText(o) { const t = this.T.t; if (+o.min === +o.max) return t(+o.max === 1 ? 'pickTarget1' : 'pickTargetsN', { c: o.c, n: o.max }); return t('pickTargets', o); }
     // 转化技能的提示：用实际选中的技能 / 装备名和它能转化成的牌
     viewAsText() {
       const u = this.ui, T = this.T, t = T.t, g = this.g, me = g.p(this.me);
       const inst = g.skillList(me).find(s => s.key === u.skill); if (!inst) return '';
-      const v = inst.def.viewAs || {}; const n = v.count == null ? 1 : v.count;
+      const v = inst.def.viewAs || {}; const n = inst.def.viewAs ? E.vaCount(v, this.g, this.g.p(this.me)) : 1;
       const k = inst.src === 'equip' ? T.cardName(inst.id) : T.skillName(inst.id);
       let as = u.asName || (typeof v.as === 'string' ? v.as : null);
       if (!as) { const pats = u.req.kind === 'play' ? null : (u.req.pattern || (u.req.kind === 'useStrike' ? ['strike'] : null)); if (pats && pats.length === 1) as = pats[0]; else if (v.patterns && v.patterns.length === 1) as = v.patterns[0]; }
