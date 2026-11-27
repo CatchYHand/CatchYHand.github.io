@@ -1036,24 +1036,15 @@
       const can = this.seatOrderFrom(this.current || this.players[0]).filter(q => q !== selfSingle && !q.dead && this.canProduce(q, ['veto'], { reason: 'veto' }));
       if (!can.length) return false;
       this.log('vetoWindow', { of: this.describeEffect(effect), skip: selfSingle ? selfSingle.seat : null, who: can.map(q => q.seat) });
-      for (let guard = 0; guard < 100; guard++) {
-        let countered = false, someone = false;
-        for (const q of this.seatOrderFrom(this.current || this.players[0])) {
-          if (q === selfSingle) continue;
-          if (!this.canProduce(q, ['veto'], { reason: 'veto' })) continue;
-          const card = yield* this.askRespond(q, { pattern: ['veto'], mode: 'use', reason: 'veto', vetoOf: this.describeEffect(effect) });
-          if (!card) continue;
-          someone = true;
-          const cancelled = yield* this.askVeto({ veto: card, from: q, target: effect });
-          if (!cancelled) { countered = true; }
-          break; // 有人出过一张后重新从头询问
-        }
-        if (!someone) return false;
-        if (countered) {
-          // 原效果被抵消；但仍可再被别人"抵消这次抵消"——这已在递归中处理，直接返回
-          return true;
-        }
-        // 出的力挽狂澜被抵消了：重新询问是否还有人要抵消原效果
+      // 无懈可击只能响应结算堆叠中的前一张牌：按座次问一轮，有人出了无懈可击，接下来就只针对这张无懈可击询问；
+      // 它没有被抵消，原效果就被抵消；它被抵消了，原效果照常生效。不会回过头再问一遍原效果。
+      for (const q of this.seatOrderFrom(this.current || this.players[0])) {
+        if (q === selfSingle) continue;
+        if (!this.canProduce(q, ['veto'], { reason: 'veto' })) continue;
+        const card = yield* this.askRespond(q, { pattern: ['veto'], mode: 'use', reason: 'veto', vetoOf: this.describeEffect(effect) });
+        if (!card) continue;
+        const cancelled = yield* this.askVeto({ veto: card, from: q, target: effect });
+        return !cancelled;
       }
       return false;
     }
@@ -1969,7 +1960,7 @@
   };
   S.vici = {
     name: ['兵贵神速', 'VICI'], type: 'normal',
-    desc: ['出牌阶段限一次，你可以减 1 点体力上限并摸三张牌，然后视为使用一张无距离限制的【杀】。当你以此法造成伤害时，你令该技能视为未发动过。', 'Once per Play phase, you may lose 1 max health and draw 3, then you are treated as using a {Strike} with no distance limit. If that {Strike} deals damage, this skill counts as unused.'],
+    desc: ['出牌阶段限一次，你可以减 1 点体力上限并摸三张牌，然后视为使用一张无距离限制的【杀】。当你以此法造成伤害时，你令该技能视为未发动过。若你已发动过【骰子已掷】，改为摸一张牌。', 'Once per Play phase, you may lose 1 max health and draw 3, then you are treated as using a {Strike} with no distance limit. If that {Strike} deals damage, this skill counts as unused. Once you have used Rubicon, draw 1 instead of 3.'],
     active: {
       cards: { min: 0, max: 0 },
       targets: { min: 1, max: (g, p) => g.maxTargets(p, V('strike', [])), filter: (g, p, t, sel) => t !== p && !sel.includes(t) && g.targetAllowed(p, t, V('strike', [])) },
@@ -1978,7 +1969,7 @@
       *use(g, p, cards, targets) {
         p.phaseState.vici = true;
         yield* g.changeMaxHp(p, -1); if (p.dead) return;
-        yield* g.draw(p, 3, 'vici');
+        yield* g.draw(p, p.skillState.rubicon ? 1 : 3, 'vici');   // 【骰子已掷】发动过之后改为摸一张
         const live = targets.filter(t => !t.dead); if (!live.length) return;
         // 视为使用的杀不计入出牌阶段的杀次数
         const u = yield* g.useCard(p, V('strike', [], { viaSkill: 'vici' }), live, { noCount: true, ignoreDistance: true });
@@ -3002,7 +2993,7 @@
     desc: ['锁定技，当你于非濒死状态下使用【杀】或谋略牌（【铁索连环】除外）仅指定一名目标时，该牌额外结算一次。', 'Compulsory skill. When you are not dying and use a {Strike} or a Stratagem (except {Chain Shot}) that targets exactly one character, it resolves one more time.'],
     triggers: {
       targetConfirmed: {
-        can: (g, o, d) => { const u = d.use; if (u.from !== o || o.dead || o.dying || u.opts.response || u.data.aborted) return false; const t = (E.CARD_DEFS[u.card.name] || {}).type; return (E.family(u.card) === 'strike' || (t === 'stratagem' && u.card.name !== 'chainshot')) && u.targets.length === 1; },
+        can: (g, o, d) => { const u = d.use; if (u.from !== o || o.dead || o.dying || u.opts.response || u.data.aborted) return false; const t = (E.CARD_DEFS[u.card.name] || {}).type; return (E.family(u.card) === 'strike' || (t === 'stratagem' && u.card.name !== 'chainshot')) && u.targets.length === 1 && !(E.CARD_DEFS[u.card.name] || {}).orderedTargets; },   // 【驱虎吞狼】指定了两名目标，不算「仅指定一名目标」
         *on(g, o, d) { d.use.data.extraResolve = (d.use.data.extraResolve || 0) + 1; },
       },
     },
@@ -3160,7 +3151,7 @@
       return [{ score: (en - fr) * 1.2 - pair.cost / 3, ans: { action: 'skill', skill: inst.key, cardIds: pair.cs.map(c => c.id) } }];
     } },
   };
-  const BASICS = ['strike', 'parry', 'remedy', 'grog'];
+  const BASICS = ['strike', 'fire_strike', 'thunder_strike', 'parry', 'remedy', 'grog'];   // 火杀、雷杀也是基本牌
   S.reform = {
     name: ['变法图强', 'REFORM'], type: 'locked', locked: true,
     desc: ['锁定技，你可以将一张军备牌当任意基本牌使用或打出。你的军备区没有牌时，你受到谋略牌造成的伤害 −1。', 'Compulsory skill. You may use or play any arsenal card as any basic card. While your arsenal area is empty, damage you take from Stratagems is reduced by 1.'],
@@ -4026,7 +4017,7 @@
         case 'skillLost': return ['skill', zh ? `${S(e.seat)}失去了技能【${skillName(e.skill)}】` : `${S(e.seat)} lost ${skillName(e.skill)}`];
         case 'skillGained': return ['skill', zh ? `${S(e.seat)}获得了技能【${skillName(e.skill)}】` : `${S(e.seat)} gained ${skillName(e.skill)}`];
         case 'pindian': return ['', zh ? `${S(e.a)}（${C(e.ca)}）与${S(e.b)}（${C(e.cb)}）拼点，${e.win ? S(e.a) + '赢' : S(e.a) + '没赢'}` : `${S(e.a)} (${C(e.ca)}) contests ${S(e.b)} (${C(e.cb)}): ${e.win ? S(e.a) + ' wins' : S(e.a) + ' does not win'}`];
-        case 'heroChosen': return ['', zh ? `${S(e.seat)}选择了武将【${heroName(e.hero)}】` : `${S(e.seat)} chose ${heroName(e.hero)}`];
+        case 'heroChosen': return ['', zh ? `${ROMAN[e.seat + 1]}号位选择了武将【${heroName(e.hero)}】` : `Seat ${ROMAN[e.seat + 1]} chose ${heroName(e.hero)}`];   // 选将时还没有武将名可用：写座位号，之后才用武将名代指
         case 'hpSet': return ['heal', zh ? `${S(e.seat)}的体力调整为 ${e.hp}` : `${S(e.seat)}'s health is set to ${e.hp}`];
         case 'maxHp': return ['', zh ? `${S(e.seat)}的体力上限${e.delta > 0 ? '+' : ''}${e.delta}（现为 ${e.maxHp}）` : `${S(e.seat)}'s max health ${e.delta > 0 ? '+' : ''}${e.delta} (now ${e.maxHp})`];
         case 'swapHands': return ['', zh ? `${S(e.seat)}与${S(e.with)}交换了手牌` : `${S(e.seat)} swapped hands with ${S(e.with)}`];
@@ -6204,7 +6195,8 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
   function morphNode(x, y) {
     if (x.nodeType !== y.nodeType || x.nodeName !== y.nodeName) { x.replaceWith(y); return; }
     if (x.nodeType !== 1) { if (x.nodeValue !== y.nodeValue) x.nodeValue = y.nodeValue; return; }
-    for (const at of [...y.attributes]) if (x.getAttribute(at.name) !== at.value) x.setAttribute(at.name, at.value);
+    const fixSt = x.hasAttribute('data-fixstyle');   // 动画已经按这个 style 开始播放：重绘时不能改它（改 animation-delay 会让动画跳帧）
+    for (const at of [...y.attributes]) { if (fixSt && at.name === 'style') continue; if (x.getAttribute(at.name) !== at.value) x.setAttribute(at.name, at.value); }
     for (const at of [...x.attributes]) if (!y.hasAttribute(at.name)) x.removeAttribute(at.name);
     morphChildren(x, y);
   }
@@ -7428,7 +7420,7 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
         const c = g.card(e.id); if (!c) return '';
         const tag = e.as && e.as !== c.name ? `<div class="qx-astag">${esc(T.t('asCard', { c: T.cardName(e.as) }))}</div>` : '';
         const st = this.fading && this.fading.has(c.id) ? ' qx-ccfade' : D0.has(c.id) ? ' qx-ccspent' : e.judge === 'open' ? ' qx-cchi' : live.length > 1 && e.li === maxLi ? ' qx-cchi' : '';   // 结算中的牌都保持明亮，最新的一张带高光   // 天意牌在判定结果出来前一直亮着
-        const eq = e.kind === 'equip', sh = e.kind === 'show'; const hid = e.pend || (eq || sh ? e.hold : this.hideSet && this.hideSet.has(c.id));
+        const eq = e.kind === 'equip', sh = e.kind === 'show'; const hid = e.pend || (eq || sh ? e.hold : this.hideSet && this.hideSet.has(c.id) && this.dKey(c.id) !== 'center');   // 藏牌名单按牌记：同一张牌稍后还要飞进手里时，已经落到桌上的这一张照常显示
         const jm = e.verdict ? this.brushMark(e.verdict, e.id) : '';
         return `<div class="qx-cc${st}" ${eq ? `data-mk="g${c.id}" data-gid` : sh ? `data-mk="${e.sk || 's' + c.id}" data-sk="${e.sk || ''}" data-sid` : 'data-cid'}="${c.id}" style="left:${Math.round(slotOf.has(e) ? x0 + slotOf.get(e) * step : this.bw() / 2 - cw / 2)}px;z-index:${i + 1}${hid ? ';visibility:hidden' : ''}">${this.cardHTML(c, 'qx-cpic').replace(/ data-id="\d+"/, '')}${tag}${jm}<div class="qx-ccap">${esc(e.cap || '')}</div></div>`;
       }).join('');
@@ -7644,7 +7636,7 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
     }
     // 渲染会重写 style，飞行中尚未落位的牌需重新隐藏
     reHide() { if (!this.hideSet || !this.hideSet.size) return; for (const id of this.hideSet) { const e = this.cardEl(id); if (e) e.style.visibility = 'hidden'; } }
-    unHide(id, el) { if (this.hideSet) this.hideSet.delete(id); const e = this.cardEl(id); if (e) e.style.visibility = ''; if (el && el !== e) el.style.visibility = ''; return e || el; }
+    unHide(id, el) { if (this.hideSet) this.hideSet.delete(id); const e = this.cardEl(id); if (e) e.style.visibility = ''; if (el && el !== e) el.style.visibility = ''; if (this.dKey(id) === 'center') { const ce = this.$(`.qx-ctr [data-cid="${id}"]`); if (ce) ce.style.visibility = ''; } return e || el; }   // 落到桌面中央的牌：桌上那一张一定要显示出来（重排后节点可能已换）
     cardEl(id) { return this.$('.qx-stage').querySelector(`.qx-board [data-cid="${id}"],.qx-dash [data-id="${id}"],.qx-board [data-id="${id}"]`); }
     locKey(c) {
       if (c.arranging) return 'deck';
@@ -8177,7 +8169,7 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
         else if (ty === 'judge') { const mv = byIds(l.card); beats.push(async () => { await this.flyMany(mv, mult); await sleep(1000 * mult); }); }   // 无名杀：亮出判定牌后停 2 个单位时长
         else if (ty === 'judgeResult') {
           const ok = this.judgeVerdict(l, omenHit);
-          if (ok != null) beats.push(async () => { this.judgeMark(l.card, ok); await sleep(Math.max(600, 1000 * mult)); });   // 勾 / 叉写完、看清楚之后，判定牌才会被收走
+          if (ok != null) beats.push(async () => { this.judgeMark(l.card, ok); await sleep(Math.max(900, 1200 * mult)); });   // 勾 / 叉写完、看清楚之后，判定牌才会被收走
         }
         else if (ty === 'vetoWindow') beats.push(() => this.vetoWindowFx(mult, l));
         else if (ty === 'damoclesMove') { const mv = claim(m => m.k1 === 'j:' + l.to); for (const m of mv) { m.omenMove = true; if (!(m.from && m.from.w < 80)) { const fe = this.$(`.qx-st[data-seat="${l.from}"] .qx-por`) || this.$('.qx-dpor .qx-por'); const r = fe ? this.rel(fe) : { x: 600, y: 300, w: 0, h: 0 }; m.from = { x: r.x + r.w / 2 - 17, y: r.y + r.h - 40, w: 34, h: 34 }; } } beats.push(() => this.flyMany(mv, mult)); }
@@ -8226,8 +8218,7 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
           this.evOpen = true; this.evAt = Date.now();
           const ctr = this.$('.qx-ctr'); const ent = (this.center || []).find(e => e.log === l);
           if (!ent || !mult) { if (ent) { ent.pend = false; ent.hold = false; if (ctr) morph(ctr, this.centerHTML()); } return; }
-          ent.pend = false; if (ctr) morph(ctr, this.centerHTML());
-          if ((this.center || []).filter(e => !e.pend).length > 1) await sleep(380);   // 先让桌上已有的牌让出位置，再飞进来，不会叠在前一张上
+          ent.pend = false; if (ctr) { const olds = [...ctr.querySelectorAll('.qx-cc')]; olds.forEach(e => { e.style.transition = 'none'; }); morph(ctr, this.centerHTML()); const all = [...ctr.querySelectorAll('.qx-cc')]; all.forEach(e => { e.style.transition = 'none'; }); void ctr.offsetWidth; requestAnimationFrame(() => all.forEach(e => { e.style.transition = ''; })); }   // 桌上原有的牌立即让位，展示的牌马上飞来，没有停顿
           const toEl = this.snapEl(ctr && ctr.querySelector(`[data-sk="${ent.sk}"]`));
           await this.fly({ id: l.card, k0: 'j:' + l.seat, k1: 'center', copyOnly: true, forceFace: true, asReal: true, el: toEl }, 0, mult);   // 当作天兆牌使用的牌：飞出来就显示它本来的牌面（桌上那张带「当作」标记），不会中途变脸
           ent.hold = false; if (ctr) morph(ctr, this.centerHTML());
@@ -8237,8 +8228,7 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
           // 展示：像出牌一样飞到桌面中间（下面写「某某展示」），只是动画，牌本身还在原处、不进弃牌堆
           const ctr = this.$('.qx-ctr'); const ent = (this.center || []).find(e => e.log === l) || (this.center || []).find(e => e.id === l.card && e.kind === 'show');
           if (!ent || !mult) { if (ent) { ent.pend = false; ent.hold = false; if (ctr) morph(ctr, this.centerHTML()); } return; }
-          ent.pend = false; if (ctr) morph(ctr, this.centerHTML());
-          if ((this.center || []).filter(e => !e.pend).length > 1) await sleep(380);   // 先让桌上已有的牌让出位置，再飞进来，不会叠在前一张上
+          ent.pend = false; if (ctr) { const olds = [...ctr.querySelectorAll('.qx-cc')]; olds.forEach(e => { e.style.transition = 'none'; }); morph(ctr, this.centerHTML()); const all = [...ctr.querySelectorAll('.qx-cc')]; all.forEach(e => { e.style.transition = 'none'; }); void ctr.offsetWidth; requestAnimationFrame(() => all.forEach(e => { e.style.transition = ''; })); }   // 桌上原有的牌立即让位，展示的牌马上飞来，没有停顿
           const toEl = this.snapEl(ctr && (ctr.querySelector(`[data-sk="${ent.sk}"]`) || ctr.querySelector(`[data-sid="${l.card}"]`))); const hc = l.seat === this.me ? this.$(`.qx-dash .qx-dhand [data-id="${l.card}"]`) : null;
           await this.fly({ id: l.card, k0: 'h:' + l.seat, k1: 'center', copyOnly: true, forceFace: true, el: toEl, from: hc ? this.rel(hc) : undefined }, 0, mult);
           ent.hold = false; if (ctr) morph(ctr, this.centerHTML());
@@ -8516,8 +8506,9 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
         }
         el.innerHTML = face ? this.cardHTML(c, 'qx-flyc', { as: mv.asReal ? c.name : (c.omenAs || c.name) }).replace(/ data-id="\d+"/, '') : `<img class="qx-flyb" src="${this.backSrc('game')}" alt="">`;
         el.style.width = CW + 'px'; el.style.height = CH + 'px';
-        const cx0 = from.x + from.w / 2, cy0 = from.y + from.h / 2, cx1 = to.x + to.w / 2, cy1 = to.y + to.h / 2;
+        let cx0 = from.x + from.w / 2, cy0 = from.y + from.h / 2; const cx1 = to.x + to.w / 2, cy1 = to.y + to.h / 2;
         const fromDeck = mv.k0 === 'deck';
+        if (fromDeck && mv.k1 === 'center') { const tEl = this.$(`.qx-ctr [data-cid="${mv.id}"]`); const r = tEl ? this.rel(tEl) : (to && to.w > 1 ? to : null); if (r) { cx0 = r.x + r.w / 2; cy0 = r.y + r.h / 2 - 90; } }   // 从牌堆翻到桌面中央的牌（判定牌、亮出的牌）：在自己的位置上方淡入落下，不从桌子正中穿过别的牌
         const s0 = mv.fromBar ? 0.4 : 1;
         const s1 = toBar ? 0.4 : 1;
         const fadeEnd = !mv.keep && (toBar || !(toEl || mv.toRect));
@@ -9246,7 +9237,7 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
       const fx = this._hpkFx || null; const now = Date.now();
       if (fx && !fx.ta && req.options[fx.i] !== fx.old) fx.ta = now;   // 新武将到了：烧完之后（或现在，如果已经烧完）翻面
       // 换一个：旧武将从下往上烧掉，露出同一格里背面朝上的新武将，再翻面
-      const fxHTML = (k2, i) => fx && fx.i === i ? `<div class="qx-hpkfx" style="--hpkd:-${now - fx.t0}ms"><div class="qx-hpkfp${fx.ta ? ' qx-hpkgo' : ''}" style="--hpkf:${fx.ta ? Math.max(fx.t0 + HPK_BURN_MS, fx.ta) - now : 0}ms"><img class="qx-hpkbk" src="${this.asset('seatgen/art/ui-heroback.webp')}" alt="" draggable="false">${fx.ta ? `<img class="qx-hpkfnt" src="${this.heroSrc(k2)}" alt="" draggable="false">` : ''}</div><img class="qx-hpkold" src="${this.heroSrc(fx.old)}" alt="" draggable="false"><img class="qx-hpkedge" src="${this.heroSrc(fx.old)}" alt="" draggable="false"><i class="qx-hpkemb"></i>${[12, 27, 41, 55, 68, 83, 34, 61].map((x, j) => { const sd = (j * 211) % 820; return `<b class="qx-hpkspk" style="left:${x}%;bottom:${Math.max(0, Math.round(sd / 950 * 124 - 12))}%;--sd:${sd}ms;--sx:${(j % 2 ? 1 : -1) * (6 + j * 2)}px"></b>`; }).join('')}</div>` : '';
+      const fxHTML = (k2, i) => fx && fx.i === i ? `<div class="qx-hpkfx" data-fixstyle style="--hpkd:-${now - fx.t0}ms"><div class="qx-hpkfp${fx.ta ? ' qx-hpkgo' : ''}"${fx.ta ? ' data-fixstyle' : ''} style="--hpkf:${fx.ta ? Math.max(fx.t0 + HPK_BURN_MS, fx.ta) - now : 0}ms"><img class="qx-hpkbk" src="${this.asset('seatgen/art/ui-heroback.webp')}" alt="" draggable="false">${fx.ta ? `<img class="qx-hpkfnt" src="${this.heroSrc(k2)}" alt="" draggable="false">` : ''}</div><img class="qx-hpkold" src="${this.heroSrc(fx.old)}" alt="" draggable="false"><img class="qx-hpkedge" src="${this.heroSrc(fx.old)}" alt="" draggable="false"><i class="qx-hpkemb"></i>${[12, 27, 41, 55, 68, 83, 34, 61].map((x, j) => { const sd = (j * 211) % 820; return `<b class="qx-hpkspk" style="left:${x}%;bottom:${Math.max(0, Math.round(sd / 950 * 124 - 12))}%;--sd:${sd}ms;--sx:${(j % 2 ? 1 : -1) * (6 + j * 2)}px"></b>`; }).join('')}</div>` : '';
       const card = (k2, i) => `<div class="qx-hpkcell"><div class="qx-hpkc${sel === k2 ? ' qx-on' : ''}${fxHTML(k2, i) ? ' qx-hpkburn' : ''}" data-hpk="${k2}" data-hpkhover="${k2}"><img src="${this.heroSrc(k2)}" alt="${esc(T.heroName(k2))}" draggable="false">${fxHTML(k2, i)}</div><button class="qx-hpkre" data-refresh="${i}"${req.refreshed[i] || (fx && fx.i === i) || (fx && !fx.ta) ? ' disabled' : ''}>${esc(t(req.refreshed[i] || (fx && fx.i === i) ? 'hpkReDone' : 'hpkRe'))}</button></div>`;
       const sovHTML = sov ? `<div class="qx-hpksov"><div class="qx-hpksovt">${esc(t('hpkSovPicked'))}</div><div class="qx-hpkc qx-hpkbig"><img src="${this.heroSrc(sov)}" alt="" draggable="false"></div><div class="qx-hpksk" style="font-size:${this._hpkFs && this._hpkFs.k === sov ? this._hpkFs.fs : 13}px">${((g.players.find(p => p.role === 'chancellor') || {}).skills || E.HEROES[sov].skills).map(id => { const d = E.SKILLS[id] || {}; const tg = this.skTagText(d), tk = this.skTagKey(d); return `<p><b>${esc(T.skillName(id))}</b>${tg ? `<i class="qx-tagi qx-tg qx-tg-${tk}">${esc(tg)}</i>` : ''}${esc(T.skillDesc(id))}</p>`; }).join('')}</div></div><div class="qx-hpkvl"></div>` : '';
       const cols = sov ? 2 : 4;
@@ -9396,296 +9387,278 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
     colossus: B('巨像模式', 'Colossus Mode'),
   };
 
-  // ── 每张游戏牌的补充说明（牌面没有写、但容易产生疑问的地方）──
+  // ── 每张游戏牌的补充说明：只写牌面效果之外需要知道的事，不重复效果原文 ──
   const CARD_NOTES = {
     strike: [
-      B('每个出牌阶段只能使用一张【杀】（【加特林】、部分技能可以改变次数）；只能对你攻击范围内的其他角色使用。', 'You may use only one Strike per Play phase (Gatling and some skills change this), and only on another character within your attack range.'),
-      B('「使用」和「打出」不同：【决斗】【铁蹄压境】中要求的是打出【杀】，打出的【杀】不计入出牌阶段的次数，也不会造成伤害。', 'Using and playing are different. Duel and Invasion ask you to play a Strike; a played Strike does not count toward your limit and deals no damage.'),
-      B('目标使用一张【闪】即可抵消此【杀】；被抵消后不造成伤害。', 'The target can cancel it by using one Parry; a cancelled Strike deals no damage.'),
+      B('与【火杀】【雷杀】合计，每个出牌阶段只能使用一张；【加特林】和部分技能可以改变这个次数。', 'Together with Fire and Thunder Strikes, you may use only one per Play phase; Gatling and some skills change this.'),
+      B('被要求「打出」【杀】时（如【决斗】【铁蹄压境】），打出的【杀】不计入次数，也不会造成伤害。', 'When asked to play a Strike (Duel, Invasion), the played Strike does not count toward your limit and deals no damage.'),
+      B('没有武器时攻击范围为 1；装备武器后按武器牌上的数字计算。', 'Without a weapon your attack range is 1; with one, it is the number on the weapon.'),
     ],
     fire_strike: [
-      B('与【杀】相同，只是造成的是火焰伤害（【雷杀】造成雷电伤害）。它们与【杀】共用每阶段一张的次数。', 'Works like Strike but deals fire damage (Thunder Strike deals thunder damage). They share the one-per-phase limit with Strike.'),
-      B('火焰伤害和雷电伤害合称「属性伤害」：处于横置状态的角色受到属性伤害后会传导给其他横置的角色（见【铁索连环】）。', 'Fire and thunder damage are elemental damage. A chained character who takes elemental damage passes it on to every other chained character (see Chain Shot).'),
-      B('「普通【杀】」专指没有属性的【杀】；【亚麻胸甲】只挡普通【杀】，挡不住【火杀】和【雷杀】。', '"Normal Strike" means a Strike with no element. Linothorax stops normal Strikes only, not Fire or Thunder Strikes.'),
+      B('属于基本牌，与【杀】【雷杀】共用每阶段一张的次数；凡是需要【杀】的地方都可以用它。', 'A Basic card. It shares the one-per-phase limit with Strike and Thunder Strike, and works anywhere a Strike is asked for.'),
+      B('火焰伤害是属性伤害：横置的角色受到后会传导（见【铁索连环】）。', 'Fire damage is elemental, so it conducts through chained characters (see Chain Shot).'),
+      B('【亚麻胸甲】挡不住它，反而让受到的火焰伤害 +1。', 'Linothorax does not stop it; it makes the fire damage 1 higher instead.'),
+    ],
+    thunder_strike: [
+      B('属于基本牌，与【杀】【火杀】共用每阶段一张的次数；凡是需要【杀】的地方都可以用它。', 'A Basic card. It shares the one-per-phase limit with Strike and Fire Strike, and works anywhere a Strike is asked for.'),
+      B('雷电伤害是属性伤害：横置的角色受到后会传导（见【铁索连环】）。', 'Thunder damage is elemental, so it conducts through chained characters (see Chain Shot).'),
+      B('【亚麻胸甲】只挡普通【杀】，挡不住它。', 'Linothorax stops only normal Strikes, not this one.'),
     ],
     parry: [
-      B('不能在出牌阶段主动使用，只能在需要时使用（抵消【杀】）或打出（应对【万箭齐发】）。', 'You cannot use it on your own in the Play phase. You use it to cancel a Strike, or play it against Arrowstorm.'),
+      B('不能在出牌阶段主动使用。抵消【杀】时是「使用」【闪】；应对【万箭齐发】时是「打出」【闪】。', 'It cannot be used on its own in your Play phase. Against a Strike you use it; against Arrowstorm you play it.'),
     ],
     remedy: [
-      B('出牌阶段，你只能在已受伤时对自己使用，回复 1 点体力。', 'In your Play phase you may use it on yourself only when you are wounded; it recovers 1 health.'),
-      B('任何角色进入濒死状态时，所有角色都可以对其使用【药】，这时不受「出牌阶段」的限制。', 'When any character is dying, everyone may use Remedy on them, at any time, not only in their own Play phase.'),
+      B('出牌阶段只能在自己已受伤时对自己使用，不能对其他角色使用。', 'In your Play phase you may use it only on yourself, and only while wounded.'),
+      B('有角色濒死时，所有角色都可以对其使用，不受回合限制。', 'When someone is dying, anyone may use it on them, whoever\'s turn it is.'),
     ],
     grog: [
-      B('出牌阶段每回合限一次：本回合你使用的下一张【杀】伤害 +1。这张【杀】一经使用，酒效就用掉了，不论它是否被【闪】抵消。', 'Once per turn in your Play phase: your next Strike this turn deals +1 damage. The bonus is spent as soon as you use that Strike, even if it is parried.'),
-      B('酒效只持续到本回合结束，没用掉也会消失。', 'The bonus lasts only until the end of the turn.'),
-      B('你处于濒死状态时，可以对自己使用【酒】回复 1 点体力；这样使用不计入每回合一次的次数。', 'While you are dying you may use Grog on yourself to recover 1 health; this does not count toward the once-per-turn limit.'),
+      B('酒效在你使用下一张【杀】（含【火杀】【雷杀】）时就用掉，不论这张【杀】是否被抵消；没用掉的在回合结束时消失。', 'The bonus is spent on your next Strike of any kind, even if it is parried; unused, it fades at the end of the turn.'),
+      B('濒死时对自己使用，不计入每回合一次的次数。', 'Using it on yourself while dying does not count toward the once-per-turn limit.'),
     ],
     duel: [
-      B('由目标先打出【杀】，然后双方轮流；打出的【杀】不计次数，也不是使用。', 'The target plays a Strike first, then you take turns. These Strikes are played, not used, and do not count toward any limit.'),
-      B('先不打出【杀】的一方受到 1 点伤害，伤害来源是另一方。', 'Whoever first fails to play a Strike takes 1 damage, and the other side is the source.'),
+      B('双方打出的【杀】都不计次数；【火杀】【雷杀】也可以打出。', 'The Strikes played do not count toward any limit; Fire and Thunder Strikes may be played too.'),
     ],
     sabotage: [
-      B('可以选择目标手牌、军备区、天兆区中的任意一张；选手牌时看不到牌面，只能随机抽一张。', 'You may pick any card in the target\'s hand, arsenal area or omen area. Hand cards are picked face down, at random.'),
-      B('可以用来拆掉别人天兆区里的【流连忘返】等天兆牌。', 'You can use it to remove an Omen such as Lotus Eaters from someone\'s omen area.'),
+      B('从手牌中选时看不到牌面，只能随机抽取；也可以拆掉对方天兆区里的牌。', 'Cards from a hand are picked face down at random. It can also remove a card from an omen area.'),
     ],
     pilfer: [
-      B('只能对距离为 1 的角色使用；获得的牌放进你的手牌。手牌同样是背面朝上随机选取。', 'Only on a character at distance 1. The card goes into your hand. Hand cards are again picked face down.'),
+      B('从手牌中选时看不到牌面，只能随机抽取。坐骑会影响「距离为 1」的判断。', 'Cards from a hand are picked face down at random. Mounts affect whether the target is at distance 1.'),
     ],
     windfall: [
-      B('只能对自己使用；和其他谋略牌一样，可以被【无懈可击】抵消。', 'You can only use it on yourself. Like every Stratagem, it can be cancelled by Veto.'),
+      B('和其他谋略牌一样，可以被【无懈可击】抵消。', 'Like every Stratagem, it can be vetoed.'),
     ],
     catspaw: [
-      B('先选的目标是「持刀者」，再选的是持刀者攻击范围内的「被杀者」（不能是你）。', 'The first target you choose holds the blade; the second must be within the first target\'s attack range and cannot be you.'),
-      B('持刀者视为对被杀者使用【杀】；若这张【杀】没有造成伤害（例如被【闪】抵消），持刀者再视为对你使用一张【杀】。', 'The first target is treated as using a Strike on the second. If that Strike deals no damage (for example, it is parried), the first target is treated as using a Strike on you.'),
-      B('这两张【杀】都不计入持刀者的次数，也不受距离限制。', 'Neither Strike counts toward the first target\'s limit, and neither is limited by distance.'),
+      B('先选的目标是持刀者，后选的是被杀者；被杀者须在持刀者的攻击范围内，且不能是你。', 'The first target holds the blade; the second must be within the first target\'s attack range and cannot be you.'),
+      B('两张视为使用的【杀】都不计入持刀者的次数，也不受距离限制。', 'Neither Strike counts toward the first target\'s limit, and neither is limited by distance.'),
+      B('这张牌指定了两名目标，因此不会触发「仅指定一名目标」的效果，例如【一唱三叹】。', 'It has two targets, so it never triggers effects for cards with a single target, such as Soliloquy.'),
     ],
     invasion: [
-      B('从你的下家开始，按座次依次结算；每名目标须打出一张【杀】，否则受到你造成的 1 点伤害。', 'Resolves in seat order starting after you. Each target must play a Strike or take 1 damage from you.'),
-      B('【无懈可击】只能抵消它对其中一名角色的效果。', 'A Veto cancels it for one character only.'),
+      B('从你的下家开始按座次结算；【无懈可击】只能抵消它对其中一名角色的效果。', 'Resolves in seat order starting after you. A Veto cancels it for one character only.'),
     ],
     arrowstorm: [
-      B('与【铁蹄压境】相同，只是要打出的是【闪】。', 'Like Invasion, but each target must play a Parry.'),
+      B('从你的下家开始按座次结算；【雅典娜之盾】可以用来应对，【亚麻胸甲】使它无效。', 'Resolves in seat order starting after you. Aegis can answer it, and Linothorax makes it miss.'),
     ],
     respite: [
-      B('对所有角色（包括你）使用；未受伤的角色不受影响。【无懈可击】只能抵消对一名角色的效果。', 'Targets everyone, you included; characters who are not wounded are unaffected. A Veto cancels it for one character only.'),
+      B('没有受伤的角色不受影响；【无懈可击】只能抵消它对其中一名角色的效果。', 'Unwounded characters are unaffected. A Veto cancels it for one character only.'),
     ],
     feast: [
-      B('亮出的牌数等于存活角色数；从你开始按座次，每人从中选一张。', 'Reveal as many cards as there are characters alive. Starting with you, in seat order, each takes one.'),
+      B('从你开始按座次挑选，先挑的人选择余地最大。', 'Choices go in seat order from you, so whoever picks first has the widest choice.'),
     ],
     veto: [
-      B('它的作用对象是一张牌，而不是一名角色：在一张谋略牌或天兆牌对某名角色生效前使用。', 'It targets a card, not a character: use it just before a Stratagem or an Omen would take effect on someone.'),
-      B('可以用另一张【无懈可击】抵消【无懈可击】，如此往复。', 'A Veto can itself be cancelled by another Veto, and so on.'),
-      B('对天兆牌使用时，抵消的是这一次天意判定的效果：【流连忘返】【粮尽援绝】随后照常弃置，【悬顶之剑】移到下家。', 'Used against an Omen, it cancels that Fate check: Lotus Eaters and Blockade are then discarded as usual, and Damocles moves on to the next player.'),
-      B('不能抵消基本牌和军备牌。', 'It cannot cancel Basic or Arsenal cards.'),
+      B('它的对象是一张牌，而不是一名角色；只能响应正在结算的前一张牌。', 'It targets a card, not a character, and can only answer the card that is resolving right before it.'),
+      B('有人用【无懈可击】抵消了一张谋略牌后，接下来只能针对这张【无懈可击】出牌；它被抵消，原来的谋略牌就照常生效，不会再回头询问。', 'Once a Stratagem has been vetoed, the next responses can only target that Veto. If the Veto is cancelled, the Stratagem goes through, and no one is asked about it again.'),
+      B('对天兆牌使用时，抵消的是这一次天意判定：【流连忘返】【粮尽援绝】照常弃置，【悬顶之剑】移到下家。', 'Against an Omen it cancels that Fate check: Lotus Eaters and Blockade are discarded as usual, and Damocles moves to the next player.'),
     ],
     greekfire: [
-      B('可以对自己使用。目标展示一张手牌后，你可以弃置一张与之花色相同的手牌造成 1 点火焰伤害；你不弃置则没有效果。', 'You may use it on yourself. After the target shows a card, you may discard a card of the same suit from your hand to deal 1 fire damage; if you do not, nothing happens.'),
+      B('可以对自己使用；你不弃置同花色的牌就没有效果。', 'You may target yourself. If you do not discard a matching card, nothing happens.'),
     ],
     chainshot: [
-      B('对已横置的角色使用会使其重置；横置的角色武将牌上会出现锁链。', 'Using it on a chained character unchains them. Chained characters show a chain across their hero card.'),
-      B('重铸：出牌阶段，你可以弃置这张牌并摸一张牌，而不是使用它。', 'Recast: in your Play phase you may discard it and draw 1 instead of using it.'),
-      B('传导：横置的角色受到属性伤害后重置，然后其他横置的角色依次受到同样的伤害。传导的是伤害的基础值：来源一方的加成（如【酒】）会一起传导，受伤角色自身的加成（如【亚麻胸甲】的火焰 +1）不会传导。传导出的伤害不会再次传导。', 'Conduction: when a chained character takes elemental damage, they become unchained, and then every other chained character takes the same damage in turn. Only the base damage is passed on: boosts on the source\'s side (such as Grog) carry over, but boosts on the damaged character\'s side (such as Linothorax\'s +1 fire damage) do not. Conducted damage never conducts again.'),
+      B('传导：横置的角色受到属性伤害后重置，然后其他横置的角色依次受到同样的伤害。传导的是基础伤害：来源一方的加成（如【酒】）一起传导，受伤角色自身的加成（如【亚麻胸甲】的 +1）不传导。传导出的伤害不会再传导。', 'Conduction: a chained character who takes elemental damage is unchained, then every other chained character takes the same damage in turn. Only the base damage passes on: the source\'s boosts (Grog) carry over, the damaged character\'s own boosts (Linothorax\'s +1) do not. Conducted damage never conducts again.'),
     ],
     damocles: [
-      B('判定为黑桃 2–9 时造成 3 点雷电伤害，这点伤害没有伤害来源（不是任何角色造成的），因此不会触发「受到其他角色造成的伤害后」这类技能。', 'If the Fate card is a Spade 2–9 you take 3 thunder damage. This damage has no source (no character dealt it), so skills that trigger on "damage from another character" do not fire.'),
-      B('雷电伤害是属性伤害，处于横置状态时会传导。', 'Thunder damage is elemental, so it conducts if you are chained.'),
-      B('没有生效或被【无懈可击】抵消时，它移到下家的天兆区，一直传下去。', 'If it misses or is vetoed, it moves to the next player\'s omen area and keeps going around.'),
+      B('它造成的伤害没有伤害来源，因此不会触发「受到其他角色造成的伤害后」这类技能。', 'Its damage has no source, so skills that react to damage from another character do not trigger.'),
+      B('雷电伤害是属性伤害，横置时会传导。', 'Thunder damage is elemental and conducts if you are chained.'),
     ],
     lotus: [
-      B('判定结果不为红桃时跳过出牌阶段；判定后无论结果如何都弃置。', 'If the Fate card is not a Heart, they skip their Play phase. It is discarded after the check either way.'),
-      B('同一名角色的天兆区里不能有两张同名的天兆牌。', 'A character cannot have two Omens of the same name in their omen area.'),
+      B('同一名角色的天兆区里不能有两张同名的天兆牌；判定后无论结果如何都弃置。', 'No one can have two Omens of the same name; it is discarded after the check either way.'),
     ],
     blockade: [
-      B('只能对距离为 1 的角色使用；判定结果不为梅花时跳过摸牌阶段。', 'Only on a character at distance 1. If the Fate card is not a Club, they skip their Draw phase.'),
+      B('判定后无论结果如何都弃置；坐骑会影响「距离为 1」的判断。', 'It is discarded after the check either way. Mounts affect whether the target is at distance 1.'),
     ],
     gatling: [
-      B('装备着它时，出牌阶段使用【杀】没有次数限制；换下或失去后恢复为每阶段一张。', 'While it is equipped there is no limit on Strikes in your Play phase. Once it leaves, the normal limit returns.'),
+      B('离开军备区后，恢复为每阶段一张【杀】。', 'Once it leaves your arsenal area, the one-Strike limit returns.'),
     ],
     excalibur: [
-      B('「无视防具」：目标的防具对这张【杀】不起作用，例如【龟甲阵】挡不住黑色【杀】，【亚麻胸甲】挡不住普通【杀】。', '"Ignore armor": the target\'s armor does nothing against this Strike. Testudo no longer stops a black Strike, and Linothorax no longer stops a normal Strike.'),
+      B('目标的防具对这张【杀】完全不起作用：【龟甲阵】挡不住黑色【杀】，【亚麻胸甲】挡不住普通【杀】，【雅典娜之盾】也不能发动。', 'The target\'s armor does nothing: Testudo cannot stop a black Strike, Linothorax cannot stop a normal Strike, and Aegis cannot be used.'),
     ],
     gemini: [
-      B('只对与你性别不同的角色有效；由目标选择弃一张手牌还是让你摸一张牌。', 'Works only against a character of the other gender. The target chooses whether to discard a card or let you draw 1.'),
+      B('由目标选择弃牌还是让你摸牌。', 'The target decides which.'),
     ],
     winter: [
-      B('发动后这次伤害被防止，改为你依次弃置目标两张牌（区域内的牌都可以选）。', 'If you use it, the damage is prevented and you discard two of the target\'s cards, one at a time, from any of their areas.'),
+      B('是否发动由你决定；可以弃置目标任意区域里的牌，不足两张时全部弃置。', 'You decide whether to use it. The cards can come from any of the target\'s areas; if there are fewer than two, discard them all.'),
     ],
     misericorde: [
-      B('锁定技：只要目标在受到伤害时没有手牌，伤害就 +1。', 'Compulsory: if the target has no cards in hand when the damage is dealt, it is increased by 1.'),
+      B('只看伤害结算那一刻目标有没有手牌。', 'Only the moment the damage is dealt matters.'),
     ],
     berserker: [
-      B('【杀】被【闪】抵消后，你可以对同一名目标再使用一张【杀】，可以一直追击下去。', 'After your Strike is parried, you may use another Strike on the same target, and keep going.'),
+      B('追击用的必须是你手里的【杀】，可以一直追击下去。', 'The follow-up must be a Strike from your hand, and you may keep going.'),
     ],
     sarissa: [
-      B('任意两张手牌都可以当【杀】使用或打出，例如应对【决斗】【铁蹄压境】时打出；当【杀】使用时同样受每阶段一张的限制。', 'Any two cards from your hand can be used or played as a Strike, for example when a Duel or Invasion asks for one. Used this way it still counts toward your Strike limit.'),
+      B('任意两张手牌都可以；当【杀】使用时同样计入每阶段一张的次数，应对【决斗】【铁蹄压境】时也可以这样打出。', 'Any two cards will do. Used as a Strike it counts toward your limit; you may also play it this way against Duel or Invasion.'),
     ],
     ram: [
-      B('【杀】被【闪】抵消后，你可以弃置两张牌，令这张【杀】依然造成伤害。', 'After your Strike is parried, you may discard two cards to make it deal its damage anyway.'),
+      B('发动后这张【杀】视为没有被抵消，【酒】等加成照常有效。', 'The Strike counts as not parried, and boosts such as Grog still apply.'),
     ],
     trident: [
-      B('只有当这张【杀】是你最后一张手牌时才能发动；额外的目标同样须在攻击范围内。', 'Only when the Strike is the last card in your hand. The extra targets must also be within your attack range.'),
+      B('额外的目标同样须在你的攻击范围内。', 'The extra targets must also be within your attack range.'),
     ],
     arquebus: [
-      B('只能把普通【杀】当【火杀】使用；本来就是【火杀】或【雷杀】的不变。', 'Only a normal Strike can become a Fire Strike; Fire and Thunder Strikes stay as they are.'),
+      B('只能转化普通【杀】；【雷杀】不能变成【火杀】。', 'Only a normal Strike can be converted; a Thunder Strike cannot become a Fire Strike.'),
     ],
     longbow: [
-      B('弃置的是目标军备区里的坐骑牌（进击战马或守御战马），由你选择。', 'You discard one of the target\'s mounts (a Charger or a Destrier), your choice.'),
+      B('目标有两匹坐骑时，由你选择弃哪一匹。', 'If the target has two mounts, you choose which.'),
     ],
     aegis: [
-      B('需要使用或打出【闪】时，可以先进行天意判定：结果为红色就视为你使用或打出了【闪】；结果为黑色你仍可以再出一张真正的【闪】。', 'When you need a Parry you may invoke Fate first: on a red card it counts as a Parry. On a black card you may still use a real Parry.'),
-      B('被【断钢圣剑】或无视防具的效果指定时不能发动。', 'It does not work against Excalibur or other effects that ignore armor.'),
+      B('判定为黑色时，你仍可以再出一张真正的【闪】。被无视防具时不能发动。', 'On a black card you may still use a real Parry. It does not work when your armor is ignored.'),
     ],
     testudo: [
-      B('黑色【杀】（包括黑色的【火杀】和【雷杀】）对你无效。', 'Black Strikes, including black Fire and Thunder Strikes, have no effect on you.'),
+      B('黑色的【火杀】【雷杀】同样无效。', 'Black Fire and Thunder Strikes are stopped too.'),
     ],
     linothorax: [
-      B('普通【杀】、【铁蹄压境】和【万箭齐发】对你无效；但你受到的火焰伤害 +1，这 +1 不会通过铁索传导给别人。', 'Normal Strikes, Invasion and Arrowstorm have no effect on you, but you take +1 fire damage. That +1 is not passed on through chains.'),
+      B('火焰伤害 +1 只作用于你自己，不会通过铁索传导给别人。', 'The +1 fire damage applies only to you and never passes along a chain.'),
     ],
     nemean: [
-      B('无论来源和加成，你每次受到的伤害至多为 1 点。', 'No matter the source or the boosts, you never take more than 1 damage at a time.'),
-      B('它离开你的军备区时（包括被新防具顶替），你回复 1 点体力。', 'When it leaves your arsenal area, even when another armor replaces it, you recover 1 health.'),
+      B('被新的防具替换掉时，也会回复 1 点体力。', 'Being replaced by new armor also recovers 1 health.'),
     ],
     destrier: [
-      B('守御战马：其他角色计算与你的距离 +1。军备区只能放一匹守御战马。', 'Destrier: other characters count their distance to you as 1 more. You can equip only one Destrier.'),
+      B('守御战马（+1 马）：其他角色计算与你的距离 +1。军备区只能放一匹守御战马。', 'Destrier (+1): others count their distance to you as 1 more. You can equip only one Destrier.'),
     ],
     charger: [
-      B('进击战马：你计算与其他角色的距离 −1，但距离至少为 1。军备区只能放一匹进击战马。', 'Charger: you count your distance to others as 1 less, but never less than 1. You can equip only one Charger.'),
+      B('进击战马（−1 马）：你计算与其他角色的距离 −1，但至少为 1。军备区只能放一匹进击战马。', 'Charger (−1): you count your distance to others as 1 less, but never below 1. You can equip only one Charger.'),
     ],
   };
 
-  // ── 武将补充说明（只写容易产生歧义的地方）──
+  // ── 武将补充说明：只写技能原文之外的解释和容易误解的地方 ──
   const HERO_NOTES = {
     alexander: [
-      B('【长驱直入】的「距离 −1」对同一名角色可以累加，并且一直持续到游戏结束。', 'Campaign: the −1 distance stacks against the same character and lasts for the rest of the game.'),
-      B('「实体的【杀】」指你使用的真实【杀】牌；转化或视为使用的【杀】造成伤害只摸一张牌。', 'A "physical Strike" is a real Strike card you use; a converted Strike, or one treated as used, draws only 1.'),
-      B('【一剑断结】：只有与所有其他角色的距离都为 1 时，才会两项都执行。', 'Gordian: both options apply only when your distance to every other character is 1.'),
+      B('距离的减少对同一名角色可以累加，并一直持续到游戏结束。', 'The distance reduction stacks against the same character and lasts for the rest of the game.'),
+      B('转化或视为使用的【杀】不是实体牌，造成伤害时只摸一张。', 'A converted Strike, or one treated as used, is not physical, so it draws only 1.'),
     ],
     caesar: [
-      B('【兵贵神速】：以此法造成伤害后，本阶段可以再次发动。', 'Vici: if it deals damage, you may use it again this phase.'),
-      B('【骰子已掷】只有手牌数大于体力上限时才能发动。', 'Rubicon can be used only when you have more cards in hand than your max health.'),
+      B('【兵贵神速】只在以此法使用的【杀】造成伤害时重置，本阶段可以再次发动。', 'Vici resets only when its own Strike deals damage; then it can be used again this phase.'),
     ],
     hannibal: [
-      B('A、3、5、7、9、J、K 都是奇数点数。', 'A, 3, 5, 7, 9, J and K are odd ranks.'),
-      B('【象越雪山】把这张牌本身的基础伤害定为 3 点，【酒】等加成照常再加；铁索传导出去的伤害不受影响。', 'Alps sets the card\'s own base damage to 3; boosts such as Grog are added on top. Damage conducted through chains is not affected.'),
+      B('A、3、5、7、9、J、K 是奇数点数。', 'A, 3, 5, 7, 9, J and K are odd ranks.'),
+      B('3 点是这张牌本身的基础伤害，【酒】等加成另外再加；铁索传导出去的伤害不受影响。', '3 is the card\'s own base damage; Grog and other boosts are added on top. Damage passed along chains is unaffected.'),
     ],
     scipio: [
-      B('【避其锋芒】：只要一张【杀】或谋略牌指定了不止一个目标（例如【铁蹄压境】），它就对你无效，你还摸一张牌。', 'Zama: whenever a Strike or Stratagem has more than one target (Invasion, for example), it has no effect on you and you draw 1.'),
+      B('【铁蹄压境】【万箭齐发】这类多目标的牌也算在内。', 'Cards with several targets, such as Invasion and Arrowstorm, count.'),
     ],
     leonidas: [
-      B('【一夫当关】的「本回合」指受到伤害时正在进行的那个回合。', 'Narrows: "this turn" is the turn in which you were damaged.'),
-      B('你造成的所有伤害都会被调整为目标当前体力的一半（向下取整，至少 1），【酒】等加成也会被这个调整覆盖。', 'All damage you deal becomes half the target\'s current health (rounded down, at least 1); this overrides boosts such as Grog.'),
+      B('「本回合」指你受到伤害时正在进行的那个回合。', '"This turn" means the turn in which you were damaged.'),
+      B('调整会覆盖【酒】等加成。', 'The adjustment overrides boosts such as Grog.'),
     ],
     spartacus: [
-      B('【挣脱枷锁】每受到 1 点伤害就可以发动一次；分配的牌可以留给自己。', 'Unchain triggers once for each point of damage. You may keep some of the cards yourself.'),
-      B('【同仇敌忾】只对体力值严格大于你的角色生效。', 'Comrades affects only characters with strictly more health than you.'),
+      B('分配的牌可以留给自己；「体力值大于你」不包括相等。', 'You may keep some cards yourself. "More health than you" does not include equal health.'),
     ],
     boudica: [
-      B('牌堆中某种战马已经没有时，就不装备那一种。', 'If the deck has no mount of one kind left, you do not equip that kind.'),
-      B('你的坐骑不能被【釜底抽薪】【探囊取物】或任何技能拿走或弃置。', 'No card or skill can take or discard your mounts.'),
-      B('【血债血偿】需要有伤害来源；没有来源的伤害（如【悬顶之剑】）不能发动。', 'Vengeance needs a damage source, so it cannot be used against sourceless damage such as Damocles.'),
+      B('牌堆中已经没有某种战马时，就不装备那一种。', 'If the deck has no mount of a kind left, you skip that kind.'),
+      B('【血债血偿】需要有伤害来源，没有来源的伤害（如【悬顶之剑】）不能发动。', 'Vengeance needs a damage source, so sourceless damage such as Damocles does not trigger it.'),
     ],
     cleopatra: [
-      B('【倾国倾城】的两名角色都不能是你；这张【决斗】不能被【无懈可击】响应。', 'Allure: neither character can be you, and the Duel cannot be vetoed.'),
-      B('【一掷千金】的 Y 计算本回合内所有角色体力值变化的次数：受到伤害、失去体力、回复体力各算一次。', 'Pearl: Y counts every change of health this turn, by anyone: each damage, health loss or recovery counts once.'),
+      B('这张【决斗】由第一名角色视为使用，伤害来源也是对应的角色，而不是你。', 'The first character is treated as using the Duel, so the damage source is one of them, not you.'),
+      B('受到伤害、失去体力、回复体力都算体力值变动，每次算一次。', 'Damage, health loss and recovery each count as one change.'),
     ],
     archimedes: [
-      B('【撬动乾坤】直接改变体力值，既不是伤害也不是回复，不会触发相关技能；调整后的体力不会超过体力上限。', 'Lever sets health directly. It is neither damage nor recovery, so it triggers nothing, and health never goes above max health.'),
-      B('【聚光焚舟】：任何角色的天意牌生效后你都获得它，包括被你代替上去的那张。', 'Mirror: you gain every Fate card after it takes effect, including one you put in place yourself.'),
+      B('【撬动乾坤】不是伤害也不是回复，不会触发相关技能；调整后的体力不会超过体力上限。', 'Lever is neither damage nor recovery, so it triggers nothing, and health never exceeds max health.'),
+      B('被你代替上去的那张也是天意牌，生效后同样归你。', 'A card you put in place becomes the Fate card, so you gain it afterwards too.'),
     ],
     hypatia: [
-      B('【传道授业】的两项每个出牌阶段各限一次，可以都发动。第 2 项只能二选一：交换手牌，或交换军备区里的所有牌。', 'Lecture: each option once per Play phase, and you may use both. Option 2 swaps either hands or everything in your arsenal areas, not both.'),
+      B('两项可以在同一个出牌阶段各发动一次。交换时只能二选一：手牌，或军备区。', 'You may use both options in the same Play phase. A swap is either hands or arsenal areas, not both.'),
     ],
     charlemagne: [
-      B('【四方来朝】拿来的牌，出牌阶段结束时还在你手里的都要还给原主；已经用掉的不用还。', 'Anoint: at the end of the phase you return the borrowed cards still in your hand; cards you used are not returned.'),
-      B('【十二圣骑】：每回合第一次「使用」【闪】时摸一张牌；打出【闪】（如应对【万箭齐发】）不算。', 'Paladins: you draw when you first use a Parry each turn; playing a Parry, against Arrowstorm for example, does not count.'),
+      B('已经用掉的牌不用归还。', 'Cards you have already used are not returned.'),
+      B('打出【闪】（如应对【万箭齐发】）不算「使用」，不会摸牌。', 'Playing a Parry (against Arrowstorm, for example) is not using it, so it draws nothing.'),
     ],
     joan: [
-      B('【舍生取义】发动后，不再询问任何角色是否对你使用【药】。', 'Martyr: once used, no one is asked to save you with a Remedy.'),
-      B('获得【感同身受】的角色从此也拥有这个技能。', 'The character who gains Calling keeps it from then on.'),
+      B('放弃求药后，不会询问任何角色是否对你使用【药】。', 'Once you give up, no one is asked to save you with a Remedy.'),
     ],
     richard: [
-      B('【狮心无畏】按手牌数与体力上限的大小决定能否成为目标：手牌少于上限时不能被拆、被拿；多于上限时不能被【流连忘返】。', 'Valiant depends on hand size against max health: with fewer cards you cannot be targeted by Sabotage or Pilfer; with more you cannot be targeted by Lotus Eaters.'),
+      B('手牌数等于体力上限时，两条限制都不生效。', 'With exactly as many cards as your max health, neither restriction applies.'),
     ],
     elcid: [
-      B('【得胜而归】的距离在造成伤害时计算；X 为实际造成的伤害值。', 'Triumph checks distance when the damage is dealt; X is the damage actually dealt.'),
+      B('距离在造成伤害时计算。', 'Distance is checked when the damage is dealt.'),
     ],
     william: [
-      B('【佯败诱敌】：伤害来源先摸一张牌再拼点。点数相同也算「没赢」。', 'Retreat: the source draws 1, then you contest. A tie counts as not winning.'),
-      B('【末日审判】的 X 为目标当前体力的一半，向上取整。', 'Domesday: X is half the target\'s current health, rounded up.'),
+      B('拼点点数相同也算「没赢」。', 'A tie counts as not winning.'),
     ],
     eleanor: [
-      B('【秦晋之好】每个出牌阶段限一次，调整的张数没有上限；手牌多了就弃置，少了就摸牌。', 'Alliance: once per Play phase, with no limit on how many cards change hands. Whoever has too many discards; whoever has too few draws.'),
+      B('调整的张数没有上限：多了就弃置，少了就摸牌。', 'There is no limit on how many cards change: extra cards are discarded, missing ones are drawn.'),
     ],
     wallace: [
-      B('【刺猬方阵】获得的是「对方」的手牌：你当【闪】用时是【杀】的使用者，当【杀】用时是目标。', 'Schiltron takes a card from the other side: the Strike\'s user when you use it as a Parry, the target when you use it as a Strike.'),
+      B('「对方」是指：当【闪】用时为【杀】的使用者，当【杀】用时为目标。', '"The other side" is the Strike\'s user when you use it as a Parry, or your target when you use it as a Strike.'),
     ],
     marcopolo: [
-      B('【东方见闻】的【流连忘返】是对你自己使用的，你的判定阶段照常判定它。', 'Journal puts Lotus Eaters on yourself, and it is checked in your Judge phase as usual.'),
-      B('你的天兆区里有牌时，【杀】【酒】等牌都没有次数限制。', 'While your omen area holds a card, Strike, Grog and other cards have no use limit.'),
+      B('转化的【流连忘返】会在你的判定阶段照常判定。', 'The Lotus Eaters is checked in your Judge phase as usual.'),
     ],
     dante: [
-      B('【涤罪升天】的四项每局各限一次。', 'Redemption: each of the four options can be chosen only once per game.'),
-      B('【流离失所】可以指定任何角色，包括你自己。「翻面」是把武将牌翻到另一面：正面朝上的翻成背面朝上，背面朝上的翻回正面朝上。', 'Exile may target anyone, yourself included. To flip is to turn the hero card over: face up becomes face down, and face down becomes face up.'),
-      B('因此对一名背面朝上的队友发动，可以让他摸牌的同时翻回正面；对同一名角色发动两次，他会翻回原来的一面并摸两次牌。', 'So using it on a face-down ally lets them draw and turn face up again, and using it twice on the same character returns them to how they started, with two rounds of cards.'),
+      B('四个选项每局各限一次。', 'Each of the four options can be chosen once per game.'),
+      B('翻面是把武将牌翻到另一面，所以对背面朝上的角色发动会让他翻回正面；对同一名角色发动两次，他会回到原来的一面，同时摸了两次牌。目标可以是你自己。', 'Flipping turns a hero card over, so using Exile on a face-down character turns them face up again; using it twice on the same character leaves them as they were, with two rounds of cards. You may target yourself.'),
     ],
     barbarossa: [
-      B('【铁骑突出】：你的【杀】须连续使用两张【闪】才能抵消。', 'Knights: your Strike needs two Parries in a row to be cancelled.'),
-      B('觉醒后获得的【王者归来】：每项每回合限一次。1. 当你使用【杀】或【决斗】对其他角色造成伤害时，你可以令其先失去等量的体力；2. 本回合你使用的下一张【杀】或【决斗】可以额外指定一个目标。', 'Resurgence, gained on awakening: once each per turn. 1. When your Strike or Duel would damage another character, you may first make them lose that much health. 2. Your next Strike or Duel this turn may take one extra target.'),
+      B('【王者归来】觉醒后才获得，开局时没有。', 'Resurgence is gained on awakening; you do not start with it.'),
     ],
     elizabeth: [
-      B('【解袍铺路】可以用任意黑色牌（包括军备区里的）当【无懈可击】。', 'Mantle can turn any black card, including one in your arsenal area, into a Veto.'),
+      B('军备区里的黑色牌也可以当【无懈可击】。', 'Black cards in your arsenal area count too.'),
     ],
     davinci: [
-      B('【步步高升】比较的是本阶段内你使用的上一张牌，所以本阶段的第一张牌不会摸牌。', 'Codex compares with the previous card you used this phase, so the first card each phase never draws.'),
-      B('【如法炮制】复制的是本回合你上一张使用的非军备牌的牌名。', 'Invert copies the name of the last non-Arsenal card you used this turn.'),
+      B('比较的是本阶段内你使用的上一张牌，所以每阶段的第一张牌不会摸牌。', 'It compares with the previous card you used this phase, so the first card each phase draws nothing.'),
     ],
     machiavelli: [
-      B('【嫁祸于人】转移后，原来的目标不再是这张【杀】的目标。', 'Sophist: once moved, the original target is no longer a target of the Strike.'),
+      B('转移后，原来的目标不再是这张【杀】的目标。', 'Once moved, the original target is no longer targeted by the Strike.'),
     ],
     shakespeare: [
-      B('【一唱三叹】：额外结算一次，目标要再次响应（例如再出一张【闪】）。', 'Soliloquy: the card resolves a second time, and the target must respond again (another Parry, for example).'),
-      B('【薪火相传】是觉醒技，但你可以选择不发动；发动后失去它。', 'Tragedy is an Awakening skill, but you may decline it. Once used, it is lost.'),
+      B('只对仅指定一名目标的牌生效：【驱虎吞狼】指定了两名目标，不会额外结算。', 'Only cards with a single target count: Cat\'s Paw has two targets, so it never resolves twice.'),
+      B('额外结算时，目标需要再次响应（例如再出一张【闪】）。', 'On the second resolution the target must respond again (another Parry, for example).'),
     ],
     galileo: [
-      B('【地仍在转】的 Y 为你的体力值且至少为 1；某个花色的牌不够 Y 张时，这个转化不可用。', 'Eppur: Y is your health and at least 1. If you lack Y cards of a suit, that conversion is unavailable.'),
-      B('手牌数少于已损失的体力值时，立即摸到相等。', 'Whenever your hand falls below your lost health, you draw up to it at once.'),
+      B('某种花色的牌不够 Y 张时，那一项不可用。', 'If you lack Y cards of a suit, that conversion is unavailable.'),
     ],
     michelangelo: [
-      B('【精雕细琢】：亮出的牌中每种花色只能拿一张，其余弃置；第一次拿到的牌少于四张时可以再来一次。', 'Chisel: take one card of each suit shown and discard the rest. If the first try gives you fewer than four cards, you may try once more.'),
-      B('【蓄势待发】：出牌阶段没有使用过【杀】就跳过弃牌阶段；但若此时手牌超过 20 张，则改为本回合手牌上限为 20。', 'David: if you used no Strike in your Play phase, you skip your Discard phase; but with more than 20 cards in hand, your hand limit this turn is 20 instead.'),
+      B('每种花色只拿一张；四种花色凑不齐时才能再来一次。', 'You take at most one card per suit, and may try again only if you got fewer than four.'),
     ],
     drake: [
-      B('【趁火打劫】只能在你的回合外发动；使用的是你手里真正的【杀】，且无距离限制。', 'Plunder works only outside your turn. You use a real Strike from your hand, ignoring distance.'),
+      B('使用的是你手里真正的【杀】。', 'You use a real Strike from your hand.'),
     ],
     gustavus: [
-      B('【变法图强】：手牌或军备区里的军备牌都可以当任意基本牌使用或打出。', 'Reform: an Arsenal card in your hand or arsenal area can be used or played as any Basic card.'),
+      B('「任意基本牌」包括【火杀】和【雷杀】。', '"Any Basic card" includes Fire Strike and Thunder Strike.'),
     ],
     newton: [
-      B('【作法自毙】只对其他角色使用的牌生效，你自己用的不会。', 'Gravity applies only to cards other characters use, not to your own.'),
-      B('【三大定律】：一回合内使用第 3、第 6、第 9 张牌时，分别可以摸 3、6、9 张。', 'Laws: when you use your 3rd, 6th and 9th card in a turn, you may draw 3, 6 and 9 respectively.'),
+      B('只对其他角色使用的牌生效。第 3、6、9 张分别摸 3、6、9 张。', 'Only cards others use. The 3rd, 6th and 9th cards draw 3, 6 and 9.'),
     ],
     napoleon: [
-      B('【百日王朝】的 X 是减少后的体力上限；4−X 不大于 0 时不造成伤害。', 'Return: X is your max health after the reduction. If 4−X is 0 or less, no damage is dealt.'),
+      B('4−X 不大于 0 时不造成伤害。', 'If 4−X is 0 or less, no damage is dealt.'),
     ],
     wellington: [
-      B('「失去一个区域内的所有牌」包括用新军备顶替你军备区里唯一的一件：新军备放好后，才询问是否发动【步兵方阵】。', 'Losing all cards in an area includes replacing the only card in your arsenal area: Square is offered once the new card is in place.'),
-      B('一张牌结算的过程中区域被清空（例如用掉最后一张手牌），要等这张牌结算完才询问【步兵方阵】。', 'If an area empties while a card is resolving (your last card in hand, for example), Square is offered after that card finishes.'),
-      B('【粮道不绝】是锁定技，失去最后的手牌后立即摸一张，不需要选择。', 'Supply is Compulsory: you draw at once after losing your last card in hand.'),
+      B('用新军备顶替军备区里唯一的一件也算失去该区域所有牌：新军备放好后才询问。', 'Replacing the only card in your arsenal area counts as losing all of them; you are asked once the new card is in place.'),
+      B('一张牌结算的过程中区域被清空时，要等这张牌结算完才询问。', 'If an area empties while a card is resolving, you are asked after that card finishes.'),
     ],
     lincoln: [
-      B('【解民倒悬】：你跳过判定阶段，因此移到你天兆区里的牌不会对你判定。', 'Emancipate: you skip your Judge phase, so Omens moved to you are never checked.'),
-      B('【兄弟阋墙】：点数相同时双方都算没赢，各被你弃置两张牌，且你不摸牌。', 'Address: on a tie, both sides count as not winning; you discard two cards from each, and you do not draw.'),
+      B('移到你天兆区里的牌永远不会对你判定。', 'Omens moved to you are never checked against you.'),
+      B('点数相同时双方都算没赢，各弃置两张，你也不摸牌。', 'On a tie neither wins: both lose two cards, and you draw nothing.'),
     ],
     nightingale: [
-      B('【起死回生】替换武将后，体力上限仍为 3，体力保持不变。', 'Tend: after the hero is replaced, max health stays 3 and health is unchanged.'),
+      B('替换武将后，体力上限仍为 3，体力不变。', 'After the hero is replaced, max health stays 3 and health is unchanged.'),
     ],
     curie: [
-      B('【辐射四方】：你造成的伤害都改为体力流失。体力流失不是伤害，不会被防具减免，也不会触发「受到伤害后」的技能。', 'Radiate: all damage you deal becomes health loss. Health loss is not damage: armor cannot reduce it, and it does not trigger skills that react to damage.'),
+      B('体力流失不是伤害：防具不能减免，也不会触发「受到伤害后」的技能。', 'Health loss is not damage: armor cannot reduce it, and it triggers nothing that reacts to damage.'),
     ],
     tesla: [
-      B('【电闪雷鸣】的第二项需要场上有横置的角色，但伤害目标可以是任意一名角色。', 'Coil: option 2 needs at least one chained character, but the damage can go to anyone.'),
+      B('第二项只要求场上有横置的角色，伤害目标可以是任意一名角色。', 'Option 2 only needs someone to be chained; the damage can go to anyone.'),
     ],
     beethoven: [
-      B('【命运叩门】：没有手牌的角色不展示。黑色与红色一样多（包括都为 0）时获得展示的牌。', 'Destiny: characters with no cards in hand show nothing. If black and red are equal (zero each counts), you gain the shown cards.'),
-      B('「翻面」会把武将牌翻到另一面：本来背面朝上时会翻回正面朝上。', 'Flipping turns your hero card over: if you were already face down, you turn face up.'),
+      B('没有手牌的角色不展示；黑红一样多（包括都为 0）时获得展示的牌。', 'Characters without cards show nothing. If black and red are equal (zero each included), you gain the shown cards.'),
+      B('翻面会把武将牌翻到另一面：已经背面朝上时会翻回正面。', 'Flipping turns your hero card over: if you are already face down, you turn face up.'),
     ],
     darwin: [
-      B('【物竞天择】：你的【闪】一律视为【酒】，所以你不能用【闪】抵消【杀】。', 'Evolve: your Parries count as Grog, so you cannot cancel a Strike with them.'),
+      B('你的【闪】都算作【酒】，所以你不能用【闪】抵消【杀】。', 'Your Parries are Grog, so you cannot cancel a Strike with them.'),
     ],
     tubman: [
-      B('【暗度陈仓】的四项每项执行过一次后不能再选，四项都执行过后重新可选。', 'Railroad: each option can be chosen once; after all four have been used, they all become available again.'),
+      B('四项都执行过后，重新全部可选。', 'Once all four have been used, all four become available again.'),
     ],
   };
   const LORD_NOTES = {
-    rally: [B('只能获得实体牌；转化或视为使用的牌不能获得。', 'Only a physical card can be gained, not a converted card or one treated as used.')],
-    escort: [B('每回合限一次；其他角色替你打出的【闪】视为由你使用或打出。', 'Once per turn. A Parry another character plays for you counts as yours.')],
-    patron: [B('其他角色按座次依次选择；每名同意的角色都会让你摸一张牌。', 'The others choose in seat order, and you draw 1 for each who agrees.')],
-    uprise: [B('「复原」：背面朝上的翻至正面朝上，横置的重置；两者都没有时没有效果。', '"Restore": a face-down character turns face up, and a chained character is unchained. A character in neither state is unaffected.')],
+    rally: [B('转化或视为使用的牌不是实体牌，不能获得。', 'A converted card, or one treated as used, is not physical and cannot be gained.')],
+    escort: [B('其他角色替你打出的【闪】视为由你使用或打出。', 'A Parry someone plays for you counts as yours.')],
+    patron: [B('其他角色按座次依次选择，每有一人同意你就摸一张。', 'The others choose in seat order, and you draw 1 for each who agrees.')],
+    uprise: [B('背面朝上的翻至正面朝上，横置的重置；两者都不是时没有效果。', 'A face-down character turns face up and a chained one is unchained; otherwise nothing happens.')],
   };
+  // 武将后来才会获得的技能（规则书里也列出，用特殊的牌匾颜色区分）
+  const LATER_SKILLS = { barbarossa: ['resurgence'] };
 
   const ERAS = ['classical', 'medieval', 'renaissance', 'revolution'];
   const CARD_GROUPS = [
-    ['basic', B('基本牌', 'Basic Cards'), ['strike', 'fire_strike', 'parry', 'remedy', 'grog']],
+    ['basic', B('基本牌', 'Basic Cards'), ['strike', 'fire_strike', 'thunder_strike', 'parry', 'remedy', 'grog']],
     ['stratagem', B('谋略牌', 'Stratagem Cards'), ['duel', 'sabotage', 'pilfer', 'windfall', 'catspaw', 'invasion', 'arrowstorm', 'respite', 'feast', 'veto', 'greekfire', 'chainshot']],
     ['omen', B('天兆牌', 'Omen Cards'), ['damocles', 'lotus', 'blockade']],
     ['arsenal', B('军备牌', 'Arsenal Cards'), ['gatling', 'excalibur', 'gemini', 'winter', 'misericorde', 'berserker', 'sarissa', 'ram', 'trident', 'arquebus', 'longbow', 'aegis', 'testudo', 'linothorax', 'nemean', 'destrier', 'charger']],
@@ -9697,9 +9670,9 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
     const x = (a, b) => L ? b : a;
     const deck = (E.Game.defaultDeck ? E.Game.defaultDeck() : []); const cnt = {}; deck.forEach(([n]) => cnt[n] = (cnt[n] || 0) + 1);
     const DATA = (window.QXCardData || []);
-    const effect = k => k === 'fire_strike' ? x('同【杀】，但【火杀】造成火焰伤害，【雷杀】造成雷电伤害。', 'As Strike, but a Fire Strike deals fire damage and a Thunder Strike deals thunder damage.') : (T.desc(k) || '');
+    const effect = k => T.desc(k) || '';
     const cn = k => T.cardName(k);
-    const ul = a => a && a.length ? `<ul class="qx-rbnotes">${a.map(n => `<li>${esc(T.ub(n[L]))}</li>`).join('')}</ul>` : '';
+    const ul = a => a && a.length ? `<div class="qx-rbnote"><div class="qx-rbnotet">${esc(x('说明', 'Notes'))}</div><ul>${a.map(n => `<li>${esc(T.ub(n[L]))}</li>`).join('')}</ul></div>` : '';
     const sec = (id, title, body) => `<section class="qx-rbsec" id="qxrb-${id}"><h3>${esc(title)}</h3>${body}</section>`;
     const sub = (title, body) => `<h4>${esc(title)}</h4>${body}`;
     const p = s => `<p>${s}</p>`;
@@ -9715,7 +9688,7 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
         const imgs = list.map(m => `<figure><img src="${this.smallSrc(m)}" alt="" loading="lazy"><figcaption>${esc(cn(m))}</figcaption></figure>`).join('');
         return `<div class="qx-rbcard qx-rbmount"><div class="qx-rbch"><b>${esc(k === 'destrier' ? x('守御战马（+1 马）', 'Destriers (+1)') : x('进击战马（−1 马）', 'Chargers (−1)'))}</b><span>${esc(typeLab(k))} · ${esc(x(`共 ${n} 张`, `${n} in the deck`))}</span></div><div class="qx-rbmrow">${imgs}</div>${ul(CARD_NOTES[k])}</div>`;
       }
-      const both = k === 'fire_strike';
+      const both = false;
       const n = both ? (cnt.fire_strike || 0) + (cnt.thunder_strike || 0) : (cnt[k] || 0);
       const range = (DATA.find(c => c.key === k) || {}).range;
       const big = `<div class="qx-rbbig"><img src="${this.largeSrc(k)}" alt="" loading="lazy">${this.tpanelHTML(k)}${this.natBadge(k, true)}</div>`;
@@ -9729,7 +9702,9 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
     const heroBlock = k => {
       const h = E.HEROES[k]; if (!h || h.hidden) return '';
       const sk = h.skills.filter(id => E.SKILLS[id] && !E.SKILLS[id].hidden).map(id => { const d = E.SKILLS[id]; const tag = this.skTagText(d), tgk = this.skTagKey(d);
-        return `<div class="qx-rbsk"><div class="qx-hvskh">${this.hvPlaque(h.faction, T.skillName(id))}<i class="qx-tg qx-tg-${tgk}">${esc(tag)}</i></div><p>${esc(T.skillDesc(id))}</p></div>`; }).join('');
+        return `<div class="qx-rbsk"><div class="qx-hvskh">${this.hvPlaque(h.faction, T.skillName(id))}<i class="qx-tg qx-tg-${tgk}">${esc(tag)}</i></div><p>${esc(T.skillDesc(id))}</p></div>`; }).join('')
+        + (LATER_SKILLS[k] || []).filter(id => E.SKILLS[id]).map(id => { const d = E.SKILLS[id]; const tag = this.skTagText(d), tgk = this.skTagKey(d);
+          return `<div class="qx-rbsk qx-rbsklater"><div class="qx-hvskh"><span class="qx-rbpqlater">${this.hvPlaque(h.faction, T.skillName(id))}</span><i class="qx-tg qx-tg-${tgk}">${esc(tag)}</i><i class="qx-tg qx-rblatertag">${esc(x('觉醒后获得', 'Gained on awakening'))}</i></div><p>${esc(T.skillDesc(id))}</p></div>`; }).join('');
       return `<div class="qx-rbhero" id="qxrb-h-${k}"><img class="qx-rbhimg" src="${this.heroSrc(k)}" alt="" loading="lazy"><div class="qx-rbhtxt"><div class="qx-rbhh"><b>${esc(T.heroName(k))}</b><em>${esc(T.heroTitle(k))}</em><span>${esc(x(`体力 ${h.hp}`, `${h.hp} health`))}</span></div>${sk}${ul(HERO_NOTES[k])}</div></div>`;
     };
     const lordBlock = f => { const id = E.Game.lordSkills[f]; if (!id) return ''; const d = E.SKILLS[id];
@@ -9756,7 +9731,7 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
     C('setup', x('准备开始', 'Getting Started'),
       sub(x('决定身份', 'Roles'), p(x('开局时每名角色随机获得一张身份牌。执笔者的身份牌一开始就亮出，其余身份牌背面朝上，只有自己知道；角色阵亡时亮出身份牌。', 'At the start each character receives a role card at random. The Chancellor\'s card is revealed at once; every other role card stays face down, known only to its owner, until that character falls.'))
         + `<table class="qx-rbtab"><tr><th>${x('人数', 'Players')}</th><th>${esc(T.role('chancellor'))}</th><th>${esc(T.role('keeper'))}</th><th>${esc(T.role('insurgent'))}</th><th>${esc(T.role('schemer'))}</th></tr><tr><td>5</td><td>1</td><td>1</td><td>2</td><td>1</td></tr><tr><td>8</td><td>1</td><td>2</td><td>3</td><td>2</td></tr></table>`)
-      + sub(x('游戏目标', 'Goals'), `<table class="qx-rbtab qx-rbroles">${['chancellor', 'keeper', 'insurgent', 'schemer'].map(roleRow).join('')}</table>` + p(x('八人局有两名伏笔者，他们之间也是对手：只有最后剩下的那一名伏笔者能获胜。', 'With 8 players there are two Schemers, and they are rivals too: only the last Schemer standing can win.')))
+      + sub(x('游戏目标', 'Goals'), `<div class="qx-rbrolecards">${['chancellor', 'keeper', 'insurgent', 'schemer'].map(r => `<div class="qx-rbrolec"><img src="${this.idSrc(r, true)}" alt="" loading="lazy"><b>${esc(T.role(r))}</b><span>${esc(t('goal_' + r))}</span></div>`).join('')}</div>` + p(x('八人局有两名伏笔者，他们之间也是对手：只有最后剩下的那一名伏笔者能获胜。', 'With 8 players there are two Schemers, and they are rivals too: only the last Schemer standing can win.')))
       + sub(x('挑选武将', 'Choosing Heroes'), p(x('执笔者先从 8 名候选武将中挑选（每个时代至少 2 名），选好后向所有人亮出；其余角色再各从 5 名候选中挑选（每个时代至少 1 名）。每名候选武将都可以「换一个」一次。', 'The Chancellor picks first from 8 candidates (at least 2 from each era) and shows the choice to everyone. Then every other character picks from 5 (at least 1 from each era). Each candidate can be swapped once.')))
       + sub(x('体力', 'Health'), p(x('武将牌上的星数是该武将的体力上限，开局时体力等于体力上限。执笔者在五人及以上的对局中体力上限 +1，并获得其武将所属时代的执笔技。', 'The stars on a hero card show that hero\'s max health; everyone starts at full health. In games of five or more, the Chancellor gets +1 max health and the Chancellor skill of their hero\'s era.')))
       + sub(x('起始手牌', 'Starting Hand'), p(x('牌堆洗匀后，每名角色摸四张牌作为起始手牌。从执笔者开始，每人可以把手牌放回牌堆洗匀后重摸，至多三次。', 'After the deck is shuffled, everyone draws four cards. Starting with the Chancellor, each player may shuffle their hand back and draw again, up to three times.'))));
@@ -9780,7 +9755,7 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
       + sub(x('天意判定', 'Fate'), p(x('「进行天意判定」就是翻开牌堆顶的一张牌，这张牌称为「天意牌」，按它的花色、点数决定结果。天意牌在生效前可能被技能替换（改判），生效后置入弃牌堆。你的天兆牌、【雅典娜之盾】和一些技能会让你进行天意判定。', 'To invoke Fate, turn over the top card of the deck; that card is the Fate card, and its suit or rank decides the result. Some skills can replace the Fate card before it takes effect. Afterwards it goes to the discard pile. Omens, Aegis and some skills ask you to invoke Fate.')))
       + sub(x('花色、颜色与点数', 'Suits, Colors and Ranks'), p(x('游戏牌有四种花色：黑桃 ♠、红桃 ♥、梅花 ♣、方块 ♦。♥♦ 为红色，♠♣ 为黑色。点数从小到大为 A（1）、2–10、J（11）、Q（12）、K（13）。', 'There are four suits: Spades ♠, Hearts ♥, Clubs ♣ and Diamonds ♦. Hearts and Diamonds are red; Spades and Clubs are black. Ranks run A (1), 2–10, J (11), Q (12), K (13).')))
       + sub(x('区域', 'Areas'), p(x('每名角色有三个区域：手牌区、军备区（放置武器、防具和坐骑）、天兆区（放置天兆牌）。手牌只有自己能看；军备区和天兆区的牌所有人都能看到。牌或技能说「区域内的牌」时，三个区域的牌都可以选。', 'Every character has three areas: the hand, the arsenal area (weapon, armor and mounts) and the omen area (Omen cards). Only you see your hand; everyone sees the other two. "A card in their areas" means a card from any of the three.')))
-      + sub(x('游戏牌的种类', 'Kinds of Cards'), p(x(`牌堆共 ${deck.length} 张，分为四类：基本牌（【杀】【闪】【药】【酒】）、谋略牌、天兆牌和军备牌。每一张都在「游戏牌」一章中介绍。`, `The deck has ${deck.length} cards in four kinds: Basic cards (Strike, Parry, Remedy, Grog), Stratagems, Omens and Arsenal cards. Each one is described in the Game Cards chapter.`))));
+      + sub(x('游戏牌的种类', 'Kinds of Cards'), p(x(`牌堆共 ${deck.length} 张，分为四类：基本牌（【杀】【火杀】【雷杀】【闪】【药】【酒】）、谋略牌、天兆牌和军备牌。每一张都在「游戏牌」一章中介绍。`, `The deck has ${deck.length} cards in four kinds: Basic cards (Strike, Fire Strike, Thunder Strike, Parry, Remedy, Grog), Stratagems, Omens and Arsenal cards. Each one is described in the Game Cards chapter.`))));
 
     C('rules', x('用牌与结算', 'Using Cards'),
       sub(x('使用、打出与弃置', 'Use, Play and Discard'), p(x('「使用」一张牌：声明这张牌并指定目标，结算它的效果，然后置入弃牌堆。「打出」一张牌：只是把牌亮出来满足要求（例如【决斗】要求打出【杀】），不结算它本身的效果。「弃置」：直接把牌放进弃牌堆。', 'To use a card, announce it and its targets, resolve its effect, then discard it. To play a card, just show it to meet a demand (Duel asks you to play a Strike); its own effect does not happen. To discard a card, put it straight into the discard pile.'))
@@ -9952,9 +9927,20 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
 #qx .qx-rbdist .s{fill:#2a2114;stroke:#c9a032;stroke-width:1.5}#qx .qx-rbdist .s.me{fill:#7a5a10}
 #qx .qx-rbdist text{fill:#f3e2bd;font:700 13px serif;text-anchor:middle}
 #qx .qx-rbdist text.c{fill:#a8946a;font-size:12px}#qx .qx-rbdist text.d{fill:#ffd36a;font-size:15px}
-#qx .qx-rbnotes{margin:4px 0 0;padding-left:18px}
-#qx .qx-rbnotes li{font-size:13.5px;line-height:1.7;color:#d6c8a2;margin-bottom:3px}
-#qx .qx-rbnotes li::marker{color:#c9a032}
+#qx .qx-rbnote{margin:8px 0 2px;padding:7px 12px 6px 12px;border:1px dashed rgba(201,160,50,.55);border-radius:6px;background:rgba(10,8,5,.45)}
+#qx .qx-rbnotet{font:700 11px/1.4 sans-serif;letter-spacing:.2em;color:#c9a032;margin-bottom:2px}
+#qx .qx-rbnote ul{margin:0;padding-left:16px}
+#qx .qx-rbnote li{font:400 12.5px/1.7 'Noto Sans SC','PingFang SC','Microsoft YaHei',system-ui,sans-serif;color:#cbbd98;margin-bottom:2px}
+#qx .qx-rbnote li::marker{color:#c9a032}
+#qx .qx-rbpqlater .qx-hvpq{background-color:#2e2410;background-blend-mode:luminosity;filter:drop-shadow(0 0 3px rgba(212,175,55,.7))}
+#qx .qx-rbpqlater .qx-hvpq>span{color:#f6d673!important;text-shadow:0 0 4px #000,0 0 8px rgba(243,207,106,.55)!important}
+#qx .qx-rbsklater{padding:6px 10px;border-radius:6px;background:linear-gradient(90deg,rgba(0,0,0,.55),rgba(60,45,10,.25));border-left:3px solid #d4af37}
+#qx i.qx-tg.qx-rblatertag{background:#141008!important;color:#f3cf6a!important;border:1px solid #d4af37}
+#qx .qx-rbrolecards{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin:8px 0 12px}
+#qx .qx-rbrolec{display:flex;flex-direction:column;align-items:center;text-align:center;gap:4px}
+#qx .qx-rbrolec img{width:100%;max-width:150px;border-radius:8px;box-shadow:0 6px 16px rgba(0,0,0,.6)}
+#qx .qx-rbrolec b{font:900 16px serif;color:#f3d98a;margin-top:4px}
+#qx .qx-rbrolec span{font-size:13px;line-height:1.6;color:#d6c8a2}
 #qx .qx-rbcard{display:flex;gap:18px;padding:14px 0;border-bottom:1px dashed rgba(176,138,60,.3)}
 #qx .qx-rbimgs{display:flex;gap:10px;align-items:flex-end;flex:none}
 #qx .qx-rbbig{position:relative;width:190px;aspect-ratio:750/1140;border-radius:8px;overflow:hidden;box-shadow:0 6px 18px rgba(0,0,0,.6);flex:none}
