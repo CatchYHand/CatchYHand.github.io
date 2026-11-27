@@ -1129,6 +1129,7 @@
       let use;
       try { use = yield* this.useCardInner(from, card, targets, opts); }
       finally { this.useDepth--; }
+      if (this.useDepth === 0) yield* this.flushAfterUse();
       if (this.useDepth === 0 && card.name !== 'veto') this.log('tableClear', { reason: 'use', card: card.name });
       return use;
     }
@@ -1222,6 +1223,8 @@
       return use;
     }
     // 视为使用（无实体牌）
+    // 用牌 / 发动技能期间触发、但要等这次结算全部完成才询问的效果（如【步兵方阵】：装备先装上、回血先回完，再问要不要造成伤害）
+    *flushAfterUse() { for (let k = 0; k < 20 && this.afterUse && this.afterUse.length; k++) { const fn = this.afterUse.shift(); yield* fn(); } }
     *useVirtual(from, name, targets, opts, subcards) { return yield* this.useCard(from, virtualCard(name, subcards || []), targets, opts); }
 
     *equip(p, card) {
@@ -1454,6 +1457,7 @@
         this.log('skill', { seat: p.seat, skill: inst.id, active: true, targets: targets.map(t => t.seat), top: !this.useDepth });
         this.useDepth = (this.useDepth || 0) + 1;
         try { yield* a.use(this, p, cards, targets, inst, ans); } finally { this.useDepth--; }
+        if (this.useDepth === 0) yield* this.flushAfterUse();
         if (this.useDepth === 0) this.log('tableClear', { reason: 'skill' });
         return true;
       }
@@ -2567,7 +2571,7 @@
   H.eleanor = { faction: 'medieval', hp: 3, gender: 'female', skills: ['alliance', 'kingmaker'], name: ['埃莉诺', 'Eleanor'], title: ['两国王后', 'The Twice Queen'], rating: 6 };
   S.alliance = {
     name: ['秦晋之好', 'ALLIANCE'], type: 'normal',
-    desc: ['出牌阶段限一次，你可以指定一名其他角色并选择一项：1. 你将手牌数调整至与其相同；2. 其将手牌数调整至与你相同。被调整的角色至多调整至 X 张手牌（X 为存活角色数）。', 'Once per Play phase, you may choose another character and pick one: 1. match your hand size to theirs; 2. they match their hand size to yours. The adjusted character can be brought up to at most X cards (X = living characters).'],
+    desc: ['出牌阶段限一次，你可以指定一名其他角色并选择一项：1. 你将手牌数调整至与其相同；2. 其将手牌数调整至与你相同。', 'Once per Play phase, you may choose another character and pick one: 1. match your hand size to theirs; 2. they match their hand size to yours.'],
     active: {
       cards: { min: 0, max: 0 }, targets: { min: 1, max: 1, filter: (g, p, t) => t !== p && t.hand.length !== p.hand.length },
       can: (g, p) => !p.phaseState.alliance && g.alive.some(t => t !== p && t.hand.length !== p.hand.length),
@@ -2577,7 +2581,7 @@
         const i = yield* g.chooseOption(o, ['allianceMe', 'allianceThem'], 'alliance', { skill: 'alliance', target: t.seat, a: o.hand.length, b: t.hand.length });
         // 调整：多了就弃（由弃牌的一方自己选弃哪些），少了就摸；最多调整到 X 张（X 为存活角色数）
         const [who, to0] = i === 0 ? [o, t.hand.length] : [t, o.hand.length];
-        const to = Math.min(to0, g.alive.length);
+        const to = to0;
         const diff = to - who.hand.length;
         if (diff > 0) yield* g.draw(who, diff, 'alliance');
         else if (diff < 0) yield* g.askDiscard(who, -diff, -diff, 'h', 'allianceDiscard', null, { skill: 'alliance', n: -diff });
@@ -2588,13 +2592,13 @@
       _best(g, me, A) {
         let best = null;
         for (const t of g.alive) { if (t === me || t.hand.length === me.hand.length) continue; const r = A.rel(g, me, t);
-          const X = g.alive.length; const v1 = (Math.min(t.hand.length, X) - me.hand.length) * (t.hand.length > me.hand.length ? 1 : 0.7);
-          const v2 = (Math.min(me.hand.length, X) - t.hand.length) * (r > 0.2 ? 0.9 : r < -0.2 ? -1 : 0);
+          const v1 = (t.hand.length - me.hand.length) * (t.hand.length > me.hand.length ? 1 : 0.7);
+          const v2 = (me.hand.length - t.hand.length) * (r > 0.2 ? 0.9 : r < -0.2 ? -1 : 0);
           for (const [i, v] of [[0, v1], [1, v2]]) if (!best || v > best.v) best = { t, i, v }; }
         return best;
       },
       play(g, me, inst, A) { const b = S.alliance.ai._best(g, me, A); return b && b.v >= 1 ? [{ score: 1 + b.v * .4, ans: { action: 'skill', skill: inst.key, cardIds: [], targets: [b.t.seat] } }] : []; },
-      option(g, me, req, A) { const t = g.p(req.target); const r = A.rel(g, me, t); const v1 = (Math.min(t.hand.length, g.alive.length) - me.hand.length) * (t.hand.length > me.hand.length ? 1 : 0.7); const v2 = (Math.min(me.hand.length, g.alive.length) - t.hand.length) * (r > 0.2 ? 0.9 : r < -0.2 ? -1 : 0); return v1 >= v2 ? 0 : 1; },
+      option(g, me, req, A) { const t = g.p(req.target); const r = A.rel(g, me, t); const v1 = (t.hand.length - me.hand.length) * (t.hand.length > me.hand.length ? 1 : 0.7); const v2 = (me.hand.length - t.hand.length) * (r > 0.2 ? 0.9 : r < -0.2 ? -1 : 0); return v1 >= v2 ? 0 : 1; },
     },
   };
   S.kingmaker = {
@@ -3086,8 +3090,9 @@
   };
   S.david = {
     name: ['蓄势待发', 'DAVID'], type: 'locked', locked: true,
-    desc: ['锁定技，若你于出牌阶段内没有使用过【杀】，你跳过本回合的弃牌阶段。', 'Compulsory skill. If you used no {Strike} during your Play phase, skip your Discard phase this turn.'],
-    triggers: { phaseEnd: { can: (g, o, d) => d.player === o && d.phase === 'play' && !o.turnState.usedStrikeInPlay, *on(g, o) { g.skipPhase(o, 'discard'); } } },
+    desc: ['锁定技，若你于出牌阶段内没有使用过【杀】，你跳过本回合的弃牌阶段；但若此时你的手牌数大于 20，则改为本回合的手牌上限为 20。', 'Compulsory skill. If you used no {Strike} during your Play phase, skip your Discard phase this turn; but if you have more than 20 cards in hand, your hand limit this turn is 20 instead.'],
+    triggers: { phaseEnd: { can: (g, o, d) => d.player === o && d.phase === 'play' && !o.turnState.usedStrikeInPlay, *on(g, o) { if (o.hand.length > 20) o.turnState.davidCap = true; else g.skipPhase(o, 'discard'); } } },
+    mods: { handLimit: (g, o, v, p) => p === o && o.turnState.davidCap ? 20 : v },
   };
 
   // ── 德雷克 ──
@@ -3340,17 +3345,19 @@
       optional: false, silent: true,
       can: (g, o, d) => !o.dead && !o.marks.squareBusy && d.moves.some(m => m.from && m.from.seat === o.seat && ['hand', 'equip', 'judge'].includes(m.from.zone)),
       *on(g, o, d) {
-        const zones = [...new Set(d.moves.filter(m => m.from && m.from.seat === o.seat).map(m => m.from.zone))];
-        for (const z of zones) {
+        const zones0 = [...new Set(d.moves.filter(m => m.from && m.from.seat === o.seat).map(m => m.from.zone))];
+        // 这次移动之后确实空了的区域（当场判断）；真正的询问等这次用牌 / 技能全部结算完再进行
+        const zones = zones0.filter(z => z === 'hand' ? (!o.hand.length || !!(d.handEmptied && d.handEmptied.has(o.seat))) : z === 'equip' ? !o.equipList.length : !o.judgeZone.length);
+        if (!zones.length) return;
+        const ask = function* () { for (const z of zones) {
           if (o.dead) break;
-          const empty = z === 'hand' ? (!o.hand.length || !!(d.handEmptied && d.handEmptied.has(o.seat))) : z === 'equip' ? !o.equipList.length : !o.judgeZone.length;
-          if (!empty) continue;
           if (!(yield* g.confirm(o, 'square', { zone: z }))) continue;
           g.log('skill', { seat: o.seat, skill: 'square' });
           const [t] = yield* g.chooseTargets(o, g.alive, 1, 1, 'squareTarget', { skill: 'square' });
           // 方阵造成的伤害结算完之前，不再触发方阵（避免与通商等形成无限循环）
           if (t) { o.marks.squareBusy = true; try { yield* g.damage({ from: o, to: t, amount: 1 }); } finally { o.marks.squareBusy = false; } }
-        }
+        } };
+        if (g.useDepth > 0) { g.afterUse = g.afterUse || []; g.afterUse.push(ask); } else yield* ask();
       },
     } },
     ai: {
@@ -3768,9 +3775,9 @@
     fbBtn: ['问题反馈', 'Report Issue'], fbTitle: ['记录一个问题', 'Note an Issue'], fbPh: ['哪里不对？比如：刚才弃牌动画卡住了', 'What looked wrong? e.g. the discard animation just froze'],
     fbSave: ['记下', 'Save Note'], fbClose: ['关闭', 'Close'], fbExport: ['下载反馈文件', 'Download Feedback File'], fbCopy: ['复制反馈内容', 'Copy Feedback'],
     fbCount: ['本次已记 {n} 条', '{n} noted so far'], fbCopied: ['已复制', 'Copied'], fbTip: ['按 F2 也能随时打开。记下后游戏继续；最后下载文件放进 qunxing-handoff 文件夹即可，我能原样重放这局。', 'Press F2 anytime to open this. The game keeps running; at the end, download the file and put it in the qunxing-handoff folder so the game can be replayed exactly.'],
- players5: ['五人军争', '5 Players'], players8: ['八人军争', '8 Players'],
+ players5: ['五人局', '5 Players'], players8: ['八人局', '8 Players'], navMode: ['人数', 'Players'], recTitle: ['对战记录', 'Battle Record'], recRoles: ['剩余身份', 'Roles Left'], recDeck: ['牌堆', 'Deck'], recShuffle: ['洗牌', 'Shuffles'], recAll: ['全部', 'All'], recTurn: ['{s}的回合', "{s}'s Turn"], recRound: ['第 {n} 轮', 'Round {n}'], recEmpty: ['暂无记录', 'No records yet'],
     yourRole: ['你的身份', 'Your Role'], random: ['随机', 'Random'], speed: ['速度', 'Speed'],
-    slow: ['慢', 'Slow'], normal: ['中', 'Normal'], fast: ['快', 'Fast'], start: ['开始', 'Start'],
+    slow: ['慢速', 'Slow'], normal: ['中速', 'Normal'], fast: ['快速', 'Fast'], start: ['开始', 'Start'],
     lang: ['English', 'Chinese'],
     confirm: ['确定', 'Confirm'], cancel: ['取消', 'Cancel'], endPlay: ['结束出牌', 'End Phase'], recast: ['重铸', 'Recast'],
     yes: ['发动', 'Yes'], no: ['不发动', 'No'],
@@ -3970,7 +3977,7 @@
     const role = r => ROLE[r] ? ROLE[r][L] : '?';
     const seat = (g, s, viewer) => s == null ? (L ? 'no source' : '无来源') : (s === viewer ? t('you') : t('seat', { n: s + 1 }));
     const cardLabel = (c) => c ? cardName(c.name) + ' ' + SUIT[c.suit] + RANK(c.rank) : '?';
-    function logLine(g, e, viewer, namer) { const r = logLine0(g, e, viewer, namer); if (r && L && r[1]) r[1] = r[1].replace(/\bYou (activate|take|lose|gain|show|reveal|play|use|equip|recover|draw|discard|pass|skip|win|look|view|give|get|flip)s\b/g, 'You $1'); return r; }
+    function logLine(g, e, viewer, namer) { const r = logLine0(g, e, viewer, namer); if (r && L && r[1]) r[1] = r[1].replace(/\bYou (activate|take|lose|gain|show|reveal|play|use|equip|recover|draw|discard|pass|skip|win|look|view|give|get|flip)s\b/g, 'You $1').replace(/\b1 card\(s\)/g, '1 card').replace(/\b(\d+) card\(s\)/g, '$1 cards').replace(/\b1 character\(s\)/g, '1 character').replace(/\b(\d+) character\(s\)/g, '$1 characters'); return r; }
     function logLine0(g, e, viewer, namer) {   // namer：桌面出牌文字里用武将名
       const S = s => namer && s != null && s !== viewer ? namer(s) : seat(g, s, viewer);; const C = id => cardLabel(g.card(id)); const N = cardName;
       const zh = !L;
@@ -4520,7 +4527,7 @@ class SmartAgent {
   }
   chooseHero(g, me, req) {
     const H = E.HEROES; let best = req.options[0], bv = -1;
-    for (const k of req.options) { const v = (H[k].rating || 5) + H[k].hp * (me.role === 'chancellor' ? 0.6 : 0.3) + this.r() * 3; if (v > bv) { bv = v; best = k; } }
+    for (const k of req.options) { const v = (H[k].rating || 5) * 0.6 + H[k].hp * 0.2 + this.r() * 5; if (v > bv) { bv = v; best = k; } }
     return { pick: best };
   }
   // 望远：整理牌堆顶
@@ -5395,6 +5402,60 @@ return { RandomAgent, SmartAgent, defaultAnswer, rel, tracker };
 @property --qxang{syntax:'<angle>';inherits:false;initial-value:0deg}
 @property --qxburn2{syntax:'<percentage>';inherits:false;initial-value:100%}
 #qx .qx-vfxpt{position:absolute;border-radius:50%;margin:-2px 0 0 -2px;opacity:0}
+#qx .qx-rec{position:absolute;right:6px;top:6px;width:230px;height:calc(524px + var(--qx-ey,0px));z-index:12;display:flex;flex-direction:column;background:linear-gradient(180deg,rgba(26,20,12,.94),rgba(14,11,7,.96));border:1px solid #7a6030;border-radius:8px;box-shadow:inset 0 0 0 1px rgba(0,0,0,.6),0 6px 18px rgba(0,0,0,.5);overflow:hidden;font-size:12px;color:#e4d8bb}
+#qx .qx-rectt{display:flex;align-items:center;gap:8px;padding:7px 10px 5px;color:#f0d080;font-weight:900;letter-spacing:.2em;font-size:13px}
+#qx .qx-rectt i{flex:1;height:1px;background:linear-gradient(90deg,transparent,#b08a3c,transparent)}
+#qx .qx-recroles{padding:2px 10px 6px;border-bottom:1px solid rgba(176,138,60,.35)}
+#qx .qx-reclab{font-size:11px;color:#a8946a;letter-spacing:.1em;margin-bottom:3px}
+#qx .qx-rrolew{display:flex;flex-wrap:wrap;gap:3px}
+#qx .qx-rrole{position:relative;width:24px;height:24px}
+#qx .qx-rrole img{width:100%;height:100%;display:block;filter:drop-shadow(0 1px 2px #000)}
+#qx .qx-rrole.qx-rdead img{filter:grayscale(1) brightness(.6)}
+#qx .qx-rrole.qx-rdead::after{content:'';position:absolute;inset:1px;background:linear-gradient(45deg,transparent 44%,#e02a20 44% 56%,transparent 56%),linear-gradient(-45deg,transparent 44%,#e02a20 44% 56%,transparent 56%);filter:drop-shadow(0 0 1px #000)}
+#qx .qx-recdeck{display:flex;gap:6px;padding:6px 10px;border-bottom:1px solid rgba(176,138,60,.35)}
+#qx .qx-recstat{flex:1;display:flex;align-items:baseline;justify-content:space-between;padding:3px 8px;border-radius:4px;background:rgba(0,0,0,.35);border:1px solid rgba(176,138,60,.3)}
+#qx .qx-recstat span{color:#a8946a;font-size:11px}
+#qx .qx-recstat b{font:700 15px/1 Cinzel,Georgia,serif;color:#f6e7bf}
+#qx .qx-recflt{display:flex;flex-wrap:wrap;gap:3px;padding:6px 8px;border-bottom:1px solid rgba(176,138,60,.35)}
+#qx .qx-recflt button{font:inherit;font-size:11px;min-width:22px;padding:2px 5px;border-radius:3px;cursor:pointer;color:#d8c8a0;background:#241c11;border:1px solid #5a4828}
+#qx .qx-recflt button:hover{border-color:#b08a3c;color:#fff1cc}
+#qx .qx-recflt button.qx-on{background:linear-gradient(#e6c060,#a88028);color:#2a1a06;border-color:#f0d080;font-weight:900}
+#qx .qx-recflt button.qx-rfdead{text-decoration:line-through;opacity:.6}
+#qx .qx-reclog{flex:1;overflow:auto;padding:4px 8px 8px;line-height:1.5}
+#qx .qx-rl{display:flex;gap:5px;align-items:flex-start;padding:2px 0}
+#qx .qx-rsn{flex:none;min-width:18px;text-align:center;font:700 10px/16px Cinzel,Georgia,serif;color:#2a1a06;background:#c9a24e;border-radius:3px;margin-top:1px}
+#qx .qx-rsn.qx-rsys{background:#5a4828;color:#e4d8bb}
+#qx .qx-recsep{display:flex;align-items:center;gap:6px;margin:6px 0 3px;color:#f0d080;font-weight:700;font-size:11.5px;white-space:nowrap}
+#qx .qx-recsep i{flex:1;height:1px;background:linear-gradient(90deg,transparent,#b08a3c,transparent)}
+#qx .qx-reclog[data-f="0"] .qx-rl:not([data-s~="0"]){display:none}
+#qx .qx-reclog[data-f="1"] .qx-rl:not([data-s~="1"]){display:none}
+#qx .qx-reclog[data-f="2"] .qx-rl:not([data-s~="2"]){display:none}
+#qx .qx-reclog[data-f="3"] .qx-rl:not([data-s~="3"]){display:none}
+#qx .qx-reclog[data-f="4"] .qx-rl:not([data-s~="4"]){display:none}
+#qx .qx-reclog[data-f="5"] .qx-rl:not([data-s~="5"]){display:none}
+#qx .qx-reclog[data-f="6"] .qx-rl:not([data-s~="6"]){display:none}
+#qx .qx-reclog[data-f="7"] .qx-rl:not([data-s~="7"]){display:none}
+#qx .qx-reclog[data-f="8"] .qx-rl:not([data-s~="8"]){display:none}
+#qx .qx-reclog[data-f="9"] .qx-rl:not([data-s~="9"]){display:none}
+#qx .qx-nav{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:8px 14px;margin-bottom:8px;border-radius:10px;background:linear-gradient(180deg,#2e2416,#1a140c);border:1px solid #8a6a30;box-shadow:inset 0 1px 0 rgba(255,230,160,.12),0 4px 14px rgba(0,0,0,.5)}
+#qx .qx-navbrand{display:flex;align-items:center;gap:10px;margin-right:auto}
+#qx .qx-navgem{width:14px;height:14px;transform:rotate(45deg);background:linear-gradient(135deg,#fff0c0,#c99a3c);box-shadow:0 0 8px rgba(255,210,120,.6)}
+#qx .qx-nav .qx-title{margin:0;font:900 22px/1.1 "Ma Shan Zheng","Noto Serif SC",serif;letter-spacing:.12em;color:#f6d98a;text-shadow:0 2px 3px #000}
+#qx.qx-l-en .qx-nav .qx-title{font:700 19px/1.1 Cinzel,Georgia,serif;letter-spacing:.06em}
+#qx .qx-navsub{font:600 9px/1.2 Cinzel,Georgia,serif;letter-spacing:.25em;color:#a8946a}
+#qx .qx-navgrp{display:flex;align-items:center;gap:6px}
+#qx .qx-navlab{font-size:12px;color:#a8946a;letter-spacing:.06em}
+#qx .qx-seg{display:flex;border:1px solid #6b5328;border-radius:6px;overflow:hidden}
+#qx .qx-seg button{font:inherit;font-size:12.5px;padding:5px 11px;cursor:pointer;color:#d8c8a0;background:#1e170e;border:0;border-left:1px solid #4a3a20}
+#qx .qx-seg button:first-child{border-left:0}
+#qx .qx-seg button:hover{color:#fff1cc;background:#2c2215}
+#qx .qx-seg button.qx-on{background:linear-gradient(#e6c060,#a88028);color:#2a1a06;font-weight:900}
+#qx .qx-navsel{font:inherit;font-size:12.5px;padding:5px 8px;color:#f0e2c0;background:#1e170e;border:1px solid #6b5328;border-radius:6px}
+#qx .qx-navnew{font:inherit;font-size:14px;font-weight:900;letter-spacing:.1em;padding:7px 18px;border-radius:7px;cursor:pointer;color:#2a1a06;background:linear-gradient(#ffe08a,#c99a2e);border:1px solid #fff0c0;box-shadow:0 0 12px rgba(255,200,90,.35)}
+#qx .qx-navnew:hover{filter:brightness(1.08)}
+#qx .qx-navtools{display:flex;gap:6px}
+#qx .qx-navbtn{font:inherit;font-size:12.5px;padding:5px 10px;border-radius:6px;cursor:pointer;color:#e4d8bb;background:#241c11;border:1px solid #5a4828}
+#qx .qx-navbtn:hover{border-color:#b08a3c;color:#fff1cc}
 #qx .qx-hpkrole{margin-top:8px;text-align:center;font-size:15px;color:#d8c597;letter-spacing:.04em}
 #qx .qx-hpkrole b{margin:0 2px;padding:1px 12px;border-radius:4px;font-weight:900;border:1px solid transparent}
 #qx .qx-hpkrole b.qx-hpkr-chancellor{background:linear-gradient(180deg,#d8453a 0%,#a3221a 55%,#7a140f 100%);border-color:#f0c860;color:#fff4cf;text-shadow:0 1px 2px rgba(60,0,0,.8);box-shadow:0 0 0 1px #6a120c,0 0 10px rgba(240,200,96,.45)}
@@ -6257,6 +6318,7 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
       { k: 'obj', o: '20% 80%', fr: F([0, { opacity: 0, transform: 'translate(-8%,8%) rotate(-6deg)', easing: 'cubic-bezier(.3,.7,.4,1)' }], [.16, { opacity: 1, transform: 'none' }], [.42, { opacity: 1, transform: 'none' }], [.46, { opacity: 1, transform: 'translate(-4%,4%) rotate(-2deg)', filter: 'brightness(1.3)' }], [.62, { opacity: 1, transform: 'translate(0,0)', filter: 'brightness(1)' }], [.82, { opacity: 1, transform: 'none' }], OUT(1)) },
       { k: 'smk', o: '58% 30%', fr: F([0, { opacity: 0, transform: 'translateY(4%) scale(.8)' }], [.16, { opacity: .9, transform: 'translateY(0) scale(1)' }], [.42, { opacity: .9, transform: 'translate(1%,-4%) scale(1.08)' }], [.7, { opacity: .5, transform: 'translate(3%,-10%) scale(1.2)' }], OUT(1, { transform: 'translate(4%,-14%) scale(1.3)' })) } ] },
   };
+  const REC_W = 236;   // 对战记录栏宽度
   const VFX_EQ_MS = 2000;   // 军备特效统一 2 秒（基本牌不再播特效）
   const BOW = { t1: [414, 90], t2: [383, 1162], nock: [105, 559], W: 1254 };   // 长弓：两端弦扣、拉满时的搭箭点（原图坐标）
   // 音效：用 Web Audio 现场合成（不需要音频文件），和动画的时间点对齐
@@ -6377,7 +6439,7 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
       if (this.base && !this.base.endsWith('/')) this.base += '/';
       if (opts.factions) Object.assign(FACTIONS, opts.factions);
       this.sfx = new QXSfx();
-      this.settings = { n: +opts.players || 5, role: opts.role || 'random', speed: opts.speed || 'normal', level: opts.level || 'normal' };
+      this.settings = { n: +opts.players || 5, role: opts.role || 'random', speed: ['slow', 'normal', 'fast'].includes(opts.speed) ? opts.speed : 'normal', level: 'hard' };   // AI 一律最强（hard），不可调
       this.token = 0; this.ui = null; this.g = null; this.me = null;
       if (!Table.escBound) { Table.escBound = true; document.addEventListener('keydown', e => { if (e.key === 'Escape') for (const t of Table.all) { t.closeZoom(); t.closeBadgeMenu(); t.closePeek(); if (t.isFull && !t.realFs && !t.peek) t.toggleFull(); } if (e.key === 'F2') { e.preventDefault(); for (const t of Table.all) t.openFeedback(); } }); }
       Table.all.push(this);
@@ -6386,29 +6448,30 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
       this.newGame();
     }
     $(sel) { return this.root.querySelector(sel); }
+    syncSeg() { this.root.querySelectorAll('[data-seg]').forEach(b => { const [k, v] = b.dataset.seg.split('|'); b.classList.toggle('qx-on', String(this.settings[k]) === v); }); }
 
     // ── 外框 ──
     shell() {
       const t = this.T.t;
       this.host.innerHTML = `<div id="qx" class="qx-l-${this.lang}">
-        <div class="qx-top">
-          <div class="qx-title">${t('title')}</div>
-          <label><select data-k="n"><option value="5">${t('players5')}</option><option value="8">${t('players8')}</option></select></label>
-          <label>${t('yourRole')} <select data-k="role"><option value="random">${t('random')}</option>${['chancellor', 'keeper', 'insurgent', 'schemer'].map(r => `<option value="${r}">${this.T.role(r)}</option>`).join('')}</select></label>
-          <label>${t('level')} <select data-k="level"><option value="easy">${t('easy')}</option><option value="normal">${t('medium')}</option><option value="hard">${t('hard')}</option></select></label>
-          <label>${t('speed')} <select data-k="speed"><option value="slow">${t('slow')}</option><option value="normal">${t('normal')}</option><option value="fast">${t('fast')}</option></select></label>
-          <button class="qx-btn qx-primary" data-act="new">${t('newGame')}</button>
-          <button class="qx-btn qx-logbtn" data-act="log">${t('log')}</button>
-          <button class="qx-btn qx-rulebtn" data-act="rules">${t('rules')}</button>
-          <button class="qx-btn qx-sfxbtn" data-act="sfx">${t(this.sfx && this.sfx.on ? 'sfxOn' : 'sfxOff')}</button>
-          <button class="qx-btn" data-act="lang">${t('lang')}</button>
-          <button class="qx-btn qx-fullbtn" data-act="full">${t(this.root && this.root.classList.contains('qx-full') ? 'fullExit' : 'fullOn')}</button>
+        <div class="qx-top qx-nav">
+          <div class="qx-navbrand"><i class="qx-navgem"></i><div><div class="qx-title">${t('title')}</div><div class="qx-navsub">${this.lang === 'zh' ? 'THE HALL OF AGES' : '群星议会'}</div></div></div>
+          <div class="qx-navgrp"><span class="qx-navlab">${t('navMode')}</span><div class="qx-seg" data-segk="n"><button data-seg="n|5">${t('players5')}</button><button data-seg="n|8">${t('players8')}</button></div></div>
+          <div class="qx-navgrp"><span class="qx-navlab">${t('yourRole')}</span><select class="qx-navsel" data-k="role"><option value="random">${t('random')}</option>${['chancellor', 'keeper', 'insurgent', 'schemer'].map(r => `<option value="${r}">${this.T.role(r)}</option>`).join('')}</select></div>
+          <div class="qx-navgrp"><span class="qx-navlab">${t('speed')}</span><div class="qx-seg" data-segk="speed"><button data-seg="speed|slow">${t('slow')}</button><button data-seg="speed|normal">${t('normal')}</button><button data-seg="speed|fast">${t('fast')}</button></div></div>
+          <button class="qx-navnew" data-act="new">${t('newGame')}</button>
+          <div class="qx-navtools">
+            <button class="qx-navbtn qx-rulebtn" data-act="rules">${t('rules')}</button>
+            <button class="qx-navbtn qx-sfxbtn" data-act="sfx">${t(this.sfx && this.sfx.on ? 'sfxOn' : 'sfxOff')}</button>
+            <button class="qx-navbtn" data-act="lang">${t('lang')}</button>
+            <button class="qx-navbtn qx-fullbtn" data-act="full">${t(this.root && this.root.classList.contains('qx-full') ? 'fullExit' : 'fullOn')}</button>
+          </div>
         </div>
         <div class="qx-side qx-logdd qx-hide"><div class="qx-logtitle">${t('log')}</div><div class="qx-log"></div></div>
         <div class="qx-note">${t('note')}</div>
         <div class="qx-stagewrap"><div class="qx-stage">
           <div class="qx-board"></div>
-          <button class="qx-fslog" data-act="log">${t('log')}</button>
+          <div class="qx-rec"><div class="qx-rectt"><i></i><span>${t('recTitle')}</span><i></i></div><div class="qx-recroles"></div><div class="qx-recdeck"></div><div class="qx-recflt"></div><div class="qx-reclog"></div></div>
           <div class="qx-tipbox"></div>
           <div class="qx-dash"></div>
           <svg class="qx-lines" width="1280" height="760" viewBox="0 0 1280 760"></svg>
@@ -6420,9 +6483,10 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
         <div class="qx-modal qx-hidden"></div>
       </div>`;
       this.root = this.host.querySelector('#qx');
+      this.syncSeg(); this.root.querySelectorAll('[data-seg]').forEach(b => b.onclick = () => { const [k, v] = b.dataset.seg.split('|'); this.settings[k] = k === 'n' ? +v : v; this.syncSeg(); });
       this.root.querySelectorAll('select[data-k]').forEach(s => { s.value = this.settings[s.dataset.k]; s.onchange = () => { this.settings[s.dataset.k] = s.dataset.k === 'n' ? +s.value : s.value; }; });
       this.$('[data-act=new]').onclick = () => this.newGame();
-      this.$('[data-act=lang]').onclick = () => { this.lang = this.lang === 'zh' ? 'en' : 'zh'; this.T = QT.mk(this.lang); this.shell(); this.logIdx = 0; this.render(); if (this.g && this.g.over) this.showGameOver(); else if (this.ui && ['chooseCard', 'pick', 'chooseOption', 'chooseSkillOrder', 'chooseHero', 'arrange'].includes(this.ui.req.kind)) this.openChoiceModal(); };
+      this.$('[data-act=lang]').onclick = () => { this.lang = this.lang === 'zh' ? 'en' : 'zh'; this.T = QT.mk(this.lang); this.shell(); this.logIdx = 0; this.recIdx = 0; this.render(); if (this.g && this.g.over) this.showGameOver(); else if (this.ui && ['chooseCard', 'pick', 'chooseOption', 'chooseSkillOrder', 'chooseHero', 'arrange'].includes(this.ui.req.kind)) this.openChoiceModal(); };
       this.$('[data-act=rules]').onclick = () => this.openRules();
       this.root.querySelectorAll('[data-act=full]').forEach(b => { b.onclick = e => { e.stopPropagation(); this.toggleFull(); }; });
       if (this.isFull) this.root.classList.add('qx-full');
@@ -6453,7 +6517,7 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
     // ── 开局 ──
     newGame(rep) {
       const tok = ++this.token; this.janitor(); this.capSk = null; this.hideSet = null; this.phSet = false; this.fading = null; this.dimmed = null; this.caps = []; { const cl = this.$('.qx-clog'); if (cl) cl.innerHTML = ''; } this.aimed = null; this.lastVetoOf = null;
-      if (rep) { this.settings.n = rep.n; this.settings.level = rep.level; this.settings.role = rep.role || 'random'; }
+      if (rep) { this.settings.n = rep.n; this.settings.level = 'hard'; this.settings.role = rep.role || 'random'; }
       this.replay = rep ? { answers: rep.answers.slice(), i: 0 } : null;
       const n = this.settings.n;
       const roles = E.ROLESETS[n].slice();
@@ -6467,7 +6531,7 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
       let meSeat = seats[Math.floor(r() * seats.length)]; if (rep && rep.me != null) meSeat = rep.me;
       this.recs = this.recs || []; this.rec = { seed, n, level: this.settings.level, role: this.settings.role, me: meSeat, lang: this.lang, speed: this.settings.speed, started: new Date().toISOString(), answers: [], notes: [] }; if (!rep) this.recs.push(this.rec); this.recT0 = Date.now();
       this.g = new E.Game({ players: n, seed, roles: arr, fixedRoles: true, selectHeroes: true });
-      this.me = meSeat; this.ui = null; this.logIdx = 0;
+      this.me = meSeat; this.ui = null; this.logIdx = 0; this.recIdx = 0; this.recF = 'all'; { const rl = this.$('.qx-reclog'); if (rl) rl.innerHTML = ''; }
       this.animIdx = 0; this.phMem = {}; this.phCur = {}; this.marks = {}; this.handOrder = []; this.vetoBars = false; this.thinkBars = null; this.revealWin = null; this.schemeWin = null; this.roleHold = null; this.introHold = null; this.skHold = null; this.evOpen = false; this.evDefer = null; this.groupDone = false; this.lastPh = null;
       this.closePeek(); this.closeBadgeMenu(); this.closeZoom(); this.pindian = null; this.eqHot = null; this.noVetoUid = null; this.pdHold = null; this.pdOut = null; this.skFlash = null; this.skMarkHold = null; this.skMarkNow = null; this.skHot = null; this.feast = null; this.shownCards = null; this.centerT = 0; this.locs = null; this.center = []; this.centerIds = new Set(); this.hpPrev = null; this.stepNo = 0; this.thinking = null;
       const fx = this.$('.qx-fx'); if (fx) fx.innerHTML = ''; const ls = this.$('.qx-lines'); if (ls) ls.innerHTML = '';
@@ -6699,6 +6763,7 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
       if (el.dataset.act === 'log') { this.logOpen = !this.logOpen; this.placeLog(el); this.render(); const lg = this.$('.qx-log'); if (lg) lg.scrollTop = lg.scrollHeight; return; }
       const u = this.ui; const g = this.g;
       if (el.dataset.act === 'again') { this.newGame(); return; }
+      if (el.dataset.recf != null) { this.recF = el.dataset.recf; this.renderRec(true); return; }
       if (el.dataset.act === 'sfx') { this.sfx.set(!this.sfx.on); el.textContent = this.T.t(this.sfx.on ? 'sfxOn' : 'sfxOff'); if (this.sfx.on) this.sfx.ensure(); return; }
       if (!u) return;
       const me = g.p(this.me); const k = u.req.kind;
@@ -6785,7 +6850,7 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
       if (!this.g || !this.g.players[0].role) return;
       if (this.ui) QXAsk.refresh(this);
       this.fit();
-      this.renderTable(); this.renderMe(); this.renderLog(); this.renderWins(); this.fitNames(); this.reHide(); this.applyAimed();
+      this.renderTable(); this.renderMe(); this.renderLog(); this.renderRec(); this.renderWins(); this.fitNames(); this.reHide(); this.applyAimed();
       this.drawSelLines(); this.chainSweep(); this.syncSnakes(); this.fitPrompt();
     }
     // 提示文字永远一行：放不下就把字号逐步调小（最小 11px），不会把按钮挤到分割线下面
@@ -7043,7 +7108,7 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
       wrap.style.height = (full ? H : Math.ceil(LH * s)) + 'px';
       return changed;
     }
-    bw() { const ex = (this.LW || 1280) - 1280; return 1272 + ex; }   // 战报改成顶部下拉窗口，不再挤占桌面
+    bw() { const ex = (this.LW || 1280) - 1280; return 1272 + ex - REC_W; }   // 右侧留给对战记录栏   // 战报改成顶部下拉窗口，不再挤占桌面
     placeLog(btn) { const d = this.$('.qx-logdd'); if (!d || !btn) return; const r = btn.getBoundingClientRect(), rr = this.root.getBoundingClientRect(); const k = Math.max(1, Math.min(1.6, this.scale || 1)); d.style.setProperty('--qxlk', k); const w2 = Math.min(380 * k, window.innerWidth - 16); d.style.width = w2 + 'px'; const w = w2; d.style.left = Math.max(8, Math.min(window.innerWidth - w - 8, r.right - w)) - rr.left + 'px'; d.style.top = (r.bottom + 6 - rr.top) + 'px'; }
     seatXY(k, n) {
       const P5 = [null, [826, 232], [612, 4], [220, 4], [8, 232]];
@@ -7564,7 +7629,7 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
     }
     // ════════════════ 动画 ════════════════
     // 节奏：参照无名杀——基础时长 D = 500ms，再乘速度系数（慢 ×1.5 / 中 ×1 / 快 ×0.7）
-    animMult() { return { slow: 1.5, normal: 1, fast: 0.7, instant: 0 }[this.settings.speed] ?? 1; }
+    animMult() { return { slow: 1, normal: 0.7, fast: 0.45, instant: 0 }[this.settings.speed] ?? 0.7; }   // 慢速 = 旧版中速，中速（默认）= 旧版快速，快速 = 更快
     rel(el) {
       const s = this.scale || 1; const r = el.getBoundingClientRect(); const b = this.$('.qx-stage').getBoundingClientRect();
       return { x: (r.left - b.left) / s, y: (r.top - b.top) / s, w: r.width / s, h: r.height / s };
@@ -7646,7 +7711,7 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
             const k0 = zrun.get(id); const m0 = /^(h|e|j):(\d+)$/.exec(k0 || '');
             // 从手里 / 装备区 / 判定区直接进弃牌堆的牌（被顶掉的装备、判定完或被拆的天兆、阵亡时弃置的所有牌……）：先放到桌面中央，再变暗、淡出
             if (l.reason === 'omenJudge' && m0) add(id, t('cap_discard', { s: who(+m0[2]) }), null, 'discard');   // 天兆判定完：从判定区落到桌面，再变暗淡出
-            if (l.to === 'discard' && m0 && !this.center.some(e => e.id === id && e.kind !== 'equip')) add(id, t('cap_discard', { s: who(+m0[2]) }), null, 'discard');   // 之前留下的装备 / 天兆影子不算：这次是弃置上桌
+            if (l.to === 'discard' && m0 && !this.center.some(e => e.id === id && e.kind !== 'equip' && !(e.kind === 'show' && !(e.log && e.log.type === 'omenShow')))) add(id, t('cap_discard', { s: who(+m0[2]) }), null, 'discard');   // 之前留下的装备 / 天兆影子不算：这次是弃置上桌
             // 雕琢等亮牌窗口里没被拿走的牌：从窗口落到桌面上，再变暗、淡出
             if (l.to === 'discard' && this.revealWin && this.revealWin.ids.includes(id) && !this.center.some(e => e.id === id)) add(id, t('cap_discard', { s: who(this.revealWin.seat) }), null, 'discard', true);
             zrun.set(id, l.to === 'hand' ? 'h:' + l.seat : l.to === 'equip' ? 'e:' + l.seat : l.to === 'judge' ? 'j:' + l.seat : l.to === 'process' ? 'center' : l.to === 'discard' ? 'pile' : 'deck');
@@ -7763,7 +7828,7 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
         const mult = this.animMult(); const now = Date.now(); const g = this.g;
         const proc = new Set((g && g.processing || []).map(c => c.id));
         const D0 = this.dimmed || new Set(), F0 = this.fading || new Set();
-        for (const e of this.center || []) if ((e.pend || e.hold) && e.t && now - e.t > 4000) { e.pend = false; e.hold = false; }
+        if (!this.inStep) for (const e of this.center || []) if ((e.pend || e.hold) && e.t && now - e.t > 4000) { e.pend = false; e.hold = false; }   // 动画还在一拍一拍播放时不提前亮出（否则后面的展示牌会先出现、再有一张飞过来叠在上面）
         if (this.evOpen && this.evAt && now - this.evAt > 40000 && !this.inStep && !this.ui) { this.evOpen = false; const dfr = this.evDefer ? [...this.evDefer] : []; this.evDefer = null; if (dfr.length) this.retire(dfr, mult || 1); }   // 保险：一件事 40 秒还没结算完（异常），不再挡着
         const stale = this.evOpen ? [] : (this.center || []).filter(e => e.t && now - e.t > 6000 && !proc.has(e.id) && !D0.has(e.id) && !F0.has(e.id) && !(this.hideSet && this.hideSet.has(e.id)) && !e.hold).map(e => e.id);
         if (stale.length) this.retire(stale, mult || 1);
@@ -7792,7 +7857,7 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
       this.dimmed = this.dimmed || new Set();
       ids = ids.filter(id => !this.dimmed.has(id) && !(this.fading && this.fading.has(id)) && !(this.center || []).some(e => e.id === id && e.judge === 'open' && this.g.processing && this.g.processing.some(c => c.id === id))); if (!ids.length) return;
       if (!mult) { this.fadeIds(ids, 0); return; }
-      ids.forEach(id => this.dimmed.add(id));
+      ids.forEach(id => this.dimmed.add(id)); this.dimAt = this.dimAt || new Map(); ids.forEach(id => this.dimAt.set(id, Date.now()));
       const ctr = this.$('.qx-ctr'); if (ctr) morph(ctr, this.centerHTML());
       const ents = (this.center || []).filter(e => ids.includes(e.id)); const tok = this.token; setTimeout(() => { if (tok !== this.token) return; const still = ids.filter(id => { const e = (this.center || []).find(x => x.id === id); return !e || ents.includes(e); }); if (still.length) this.fadeIds(still, mult); }, Math.max(800, 1000 * Math.min(1, mult)));   // 只淡出当时变暗的那条记录；同一张牌后来重新上桌是新的记录
     }
@@ -7918,7 +7983,7 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
         const z = l.to;
         if (z === 'hand') return 'h:' + l.seat; if (z === 'equip') return 'e:' + l.seat; if (z === 'judge') return 'j:' + l.seat;
         if (z === 'process') return 'center';
-        if (z === 'discard') return this.centerIds && this.centerIds.has(id) ? 'center' : 'pile';
+        if (z === 'discard') return (this.centerIds && this.centerIds.has(id)) || (this.center || []).some(e => e.id === id && e.kind === 'show' && e.log && e.log.type === 'omenShow') ? 'center' : 'pile';   // 亮在桌上的天兆牌判定完进弃牌堆：就地变成桌上的牌，再变暗淡出
         return 'deck';
       };
       const run = new Map(prevLocs); const hopped = new Set();
@@ -8147,11 +8212,14 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
         else if (ty === 'aimEnd') beats.push(() => { this.setAimed((l.targets || []), false); });
         else if (ty === 'aim') beats.push(async () => { const tg = (l.targets || []).filter(s => s !== l.seat); if (tg.length) this.setAimed(tg, true); tg.forEach(s => this.drawLine(this.seatPt(l.seat), this.seatPt(s), mult)); if (tg.length) await sleep(Math.max(200, 380 * mult)); });
         else if (ty === 'omenShow') beats.push(async () => {
+          // 上一张天兆（或上一件事）的牌先完整退场，再亮下一张，不叠在一起
+          { const prev = (this.center || []).filter(e => e.log !== l).map(e => e.id); if (prev.length && mult) { this.evOpen = false; this.evDefer = null; this.dimmed = this.dimmed || new Set(); const nd = prev.filter(id => !this.dimmed.has(id)); this.dimAt = this.dimAt || new Map(); if (nd.length) { nd.forEach(id => { this.dimmed.add(id); this.dimAt.set(id, Date.now()); }); for (const e of this.center || []) if (nd.includes(e.id)) { e.pend = false; e.hold = false; if (e.judge === 'open') e.judge = 'done'; } const c0 = this.$('.qx-ctr'); if (c0) morph(c0, this.centerHTML()); } { const dw = Math.max(400, 600 * mult); const last = Math.max(0, ...prev.map(id => this.dimAt.get(id) || 0)); const w = last + dw - Date.now(); if (w > 0) await sleep(w); } await this.fadeIds(prev, mult); await sleep(Math.max(150, 250 * mult)); } }
           this.evOpen = true; this.evAt = Date.now();
           const ctr = this.$('.qx-ctr'); const ent = (this.center || []).find(e => e.log === l);
           if (!ent || !mult) { if (ent) { ent.pend = false; ent.hold = false; if (ctr) morph(ctr, this.centerHTML()); } return; }
           ent.pend = false; if (ctr) morph(ctr, this.centerHTML());
-          const toEl = ctr && ctr.querySelector(`[data-sk="${ent.sk}"]`);
+          if ((this.center || []).filter(e => !e.pend).length > 1) await sleep(380);   // 先让桌上已有的牌让出位置，再飞进来，不会叠在前一张上
+          const toEl = this.snapEl(ctr && ctr.querySelector(`[data-sk="${ent.sk}"]`));
           await this.fly({ id: l.card, k0: 'j:' + l.seat, k1: 'center', copyOnly: true, forceFace: true, asReal: true, el: toEl }, 0, mult);   // 当作天兆牌使用的牌：飞出来就显示它本来的牌面（桌上那张带「当作」标记），不会中途变脸
           ent.hold = false; if (ctr) morph(ctr, this.centerHTML());
           await sleep(Math.max(400, 700 * mult));
@@ -8161,7 +8229,8 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
           const ctr = this.$('.qx-ctr'); const ent = (this.center || []).find(e => e.log === l) || (this.center || []).find(e => e.id === l.card && e.kind === 'show');
           if (!ent || !mult) { if (ent) { ent.pend = false; ent.hold = false; if (ctr) morph(ctr, this.centerHTML()); } return; }
           ent.pend = false; if (ctr) morph(ctr, this.centerHTML());
-          const toEl = ctr && (ctr.querySelector(`[data-sk="${ent.sk}"]`) || ctr.querySelector(`[data-sid="${l.card}"]`)); const hc = l.seat === this.me ? this.$(`.qx-dash .qx-dhand [data-id="${l.card}"]`) : null;
+          if ((this.center || []).filter(e => !e.pend).length > 1) await sleep(380);   // 先让桌上已有的牌让出位置，再飞进来，不会叠在前一张上
+          const toEl = this.snapEl(ctr && (ctr.querySelector(`[data-sk="${ent.sk}"]`) || ctr.querySelector(`[data-sid="${l.card}"]`))); const hc = l.seat === this.me ? this.$(`.qx-dash .qx-dhand [data-id="${l.card}"]`) : null;
           await this.fly({ id: l.card, k0: 'h:' + l.seat, k1: 'center', copyOnly: true, forceFace: true, el: toEl, from: hc ? this.rel(hc) : undefined }, 0, mult);
           ent.hold = false; if (ctr) morph(ctr, this.centerHTML());
           await sleep(Math.max(300, 500 * mult));
@@ -8411,7 +8480,7 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
         if (mv.k0 === 'center' && mv.k1 !== 'center' && mv.k1 !== 'pile') { const ce = (this.center || []).find(e => e.id === mv.id); if (ce) { const ctr = this.$('.qx-ctr'); const ce2 = ctr && ctr.querySelector(`[data-cid="${mv.id}"]`); if (ce2) mv.from = this.rel(ce2); leaveDim = !!(this.dimmed && this.dimmed.has(mv.id)); this.center = this.center.filter(e => e !== ce); this.centerIds = new Set(this.center.filter(e => e.kind !== 'equip' && e.kind !== 'show').map(e => e.id)); if (this.dimmed) this.dimmed.delete(mv.id); if (ctr) morph(ctr, this.centerHTML()); } }
         // 这张牌刚刚被展示在桌面中间（如命运），现在真的被拿走：从中间展示的位置飞走，展示的影子同时撤掉，不再从原主人那里突然冒出来
         if (!mv.copyOnly && mv.k0 !== 'center') { const se = (this.center || []).find(e => e.id === mv.id && e.kind === 'show'); if (se) { const ctr = this.$('.qx-ctr'); const sEl = ctr && ctr.querySelector(`[data-sid="${mv.id}"]`); if (sEl && !mv.from) mv.from = this.rel(sEl); mv.forceFace = true; this.center = this.center.filter(e => e !== se); if (ctr) morph(ctr, this.centerHTML()); } }
-        { const pe = (this.center || []).find(e => e.id === mv.id && e.pend); if (pe && mv.k1 === 'center') { pe.pend = false; const ctr = this.$('.qx-ctr'); if (ctr) morph(ctr, this.centerHTML()); } }
+        { const pe = (this.center || []).find(e => e.id === mv.id && e.pend); if (pe && mv.k1 === 'center') { pe.pend = false; const ctr = this.$('.qx-ctr'); if (ctr) { morph(ctr, this.centerHTML()); const te = ctr.querySelector(`[data-cid="${mv.id}"]`); if (te) { te.style.transition = 'none'; void te.offsetWidth; requestAnimationFrame(() => { te.style.transition = ''; }); } } } }   // 落点按排好后的位置算（不受左右平移过渡的影响），不会先落到前一张牌上
         const toEl = mv.toRect ? null : (mv.el && !mv.el.isConnected ? (this.cardEl(mv.id) || mv.el) : mv.el);
         const toBar = toEl && (toEl.classList.contains('qx-ebar') || toEl.classList.contains('qx-sbar') || toEl.classList.contains('qx-omk'));
         let from = mv.from || this.anchorRect(mv.k0);
@@ -8571,7 +8640,7 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
       const p = this.g.p(seat);
       if (this.hpShown) this.hpShown[seat] = hp;
       const rail = seat === this.me ? this.$('.qx-dpor .qx-srail') : this.$(`.qx-st[data-seat="${seat}"] .qx-srail`);
-      if (rail && !this.isDeadShown(p)) {
+      if (rail && !this.isDeadShown(p) && this.heroShown(p)) {
         const old = rail.dataset.hp != null ? +rail.dataset.hp : hp; const om = rail.dataset.max != null ? +rail.dataset.max : p.maxHp;
         if (!(quiet && old === hp && om === p.maxHp)) rail.innerHTML = this.starsHTML(p, hp, quiet ? hp : old);
         rail.dataset.hp = hp; rail.dataset.max = p.maxHp;
@@ -8614,6 +8683,8 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
     }
     // 军备特效（分层）：器物和特效各自一层单独动；粒子 / 闪光 / 枪口火光 / 震动 / 音效和单层特效共用
     // 用牌 / 军备特效的位置（所有人同样大小）：自己 —— 桌面正中、提示栏处；顶上的人 —— 武将牌正下方；左右两边的人 —— 武将牌朝内一侧的下方（左右对称）
+    // 桌面中间的牌：去掉左右平移的过渡，立刻到排好的位置（用来算飞行落点）
+    snapEl(el) { if (!el) return el; el.style.transition = 'none'; void el.offsetWidth; requestAnimationFrame(() => { el.style.transition = ''; }); return el; }
     vfxSpot(seat, pe, eq) {
       const any = this.$('.qx-st .qx-por'); const W0 = any ? this.rel(any).w : this.rel(pe).w * .75; const S = Math.round(W0 * .64);
       if (eq && seat !== this.me) {   // 军备特效：其他人 —— 武将牌上军备区（四条装备栏）的正中间
@@ -8995,6 +9066,36 @@ body .qx-fbkn{color:#c8b88a;font-size:12px}
         return t('r_veto', { f: this.who(v.from), c: T.cardName(v.card), t: v.target != null ? t('r_vetoTarget', { t: this.who(v.target) }) : '' });
       }
       return t('r_generic', { p: req.pattern.map(T.cardName).join(' / ') });
+    }
+    // 对战记录栏：剩余身份 → 牌堆 / 洗牌次数 → 按座位筛选 → 记录（新回合有分隔线）
+    renderRec(force) {
+      const g = this.g, T = this.T, t = T.t; if (!g) return; const box = this.$('.qx-rec'); if (!box) return;
+      const ROM = ['Ⅰ', 'Ⅱ', 'Ⅲ', 'Ⅳ', 'Ⅴ', 'Ⅵ', 'Ⅶ', 'Ⅷ', 'Ⅸ', 'Ⅹ'];
+      // 剩余身份：按执笔者 / 护卷人 / 焚卷人 / 伏笔者排列，阵亡的身份标记变灰并打红叉
+      const order = ['chancellor', 'keeper', 'insurgent', 'schemer'];
+      const roles = []; for (const r of order) { const ps = g.players.filter(p => p.role === r); const dead = ps.filter(p => this.isDeadShown(p)).length; ps.forEach((p, i) => roles.push({ r, dead: i < dead })); }
+      const rh = roles.map(x => `<span class="qx-rrole${x.dead ? ' qx-rdead' : ''}" title="${esc(T.role(x.r))}"><img src="${this.asset('seat/badge-' + x.r + '.png')}" alt="" draggable="false"></span>`).join('');
+      const rr = box.querySelector('.qx-recroles'); if (rr && rr.dataset.k !== rh) { rr.dataset.k = rh; rr.innerHTML = `<div class="qx-reclab">${esc(t('recRoles'))}</div><div class="qx-rrolew">${rh}</div>`; }
+      const shuf = g.logs.filter(l => l.type === 'reshuffle').length;
+      const dk = `<div class="qx-recstat"><span>${esc(t('recDeck'))}</span><b>${g.deck.length}</b></div><div class="qx-recstat"><span>${esc(t('recShuffle'))}</span><b>${shuf}</b></div>`;
+      const dd = box.querySelector('.qx-recdeck'); if (dd && dd.dataset.k !== dk) { dd.dataset.k = dk; dd.innerHTML = dk; }
+      const F = this.recF || 'all';
+      const fh = `<button data-recf="all" class="${F === 'all' ? 'qx-on' : ''}">${esc(t('recAll'))}</button>` + g.players.map(p => `<button data-recf="${p.seat}" class="${F === String(p.seat) ? 'qx-on' : ''}${p.dead ? ' qx-rfdead' : ''}">${ROM[p.seat]}</button>`).join('');
+      const ff = box.querySelector('.qx-recflt'); if (ff && ff.dataset.k !== fh) { ff.dataset.k = fh; ff.innerHTML = fh; }
+      const lg = box.querySelector('.qx-reclog'); if (!lg) return;
+      lg.dataset.f = F;
+      const name = s => { const p = g.p(s); return p && p.hero ? T.heroName(p.hero) : t('seat', { n: s + 1 }); };
+      let add = ''; this.recIdx = this.recIdx || 0;
+      for (; this.recIdx < g.logs.length; this.recIdx++) {
+        const l = g.logs[this.recIdx];
+        if (l.type === 'turn') { add += `<div class="qx-recsep"><i></i><span>${ROM[l.seat] || ''} ${esc(t('recTurn', { s: name(l.seat) }))}</span><i></i></div>`; continue; }
+        const r = T.logLine(g, l, -1, name); if (!r || !r[1] || r[0] === 'turn') continue;
+        const who = [l.seat, l.from, l.by, l.type === 'damage' ? l.to : null].filter(x => x != null && x >= 0); const actor = who.length ? who[0] : null;
+        add += `<div class="qx-rl${r[0] ? ' qx-l-' + r[0] : ''}" data-s="${[...new Set(who)].join(' ')}">${actor != null ? `<b class="qx-rsn">${ROM[actor]}</b>` : '<b class="qx-rsn qx-rsys">◆</b>'}<span>${esc(T.ub(r[1]))}</span></div>`;
+      }
+      const atEnd = lg.scrollHeight - lg.scrollTop - lg.clientHeight < 30;
+      if (add) lg.insertAdjacentHTML('beforeend', add);
+      if (add || force) { if (atEnd || force) lg.scrollTop = lg.scrollHeight; }
     }
     renderLog() {
       const g = this.g; const box = this.$('.qx-log'); let add = '';
